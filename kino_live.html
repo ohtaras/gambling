@@ -192,10 +192,17 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
           <option value="288">από τις τελευταίες 288</option>
         </select>
         <select id="simRange">
-          <option value="today">κληρώσεις σήμερα</option>
-          <option value="288">τελευταίες 288</option>
-          <option value="all" selected>όλο το ιστορικό</option>
+          <option value="10">δοκιμή σε τελευταίες 10</option>
+          <option value="20">δοκιμή σε τελευταίες 20</option>
+          <option value="50">δοκιμή σε τελευταίες 50</option>
+          <option value="100">δοκιμή σε τελευταίες 100</option>
+          <option value="288">δοκιμή σε τελευταίες 288</option>
+          <option value="1000">δοκιμή σε τελευταίες 1000</option>
+          <option value="today">δοκιμή σε σημερινές</option>
+          <option value="all" selected>δοκιμή σε όλο το ιστορικό</option>
+          <option value="x">δοκιμή σε τελευταίες Χ…</option>
         </select>
+        <input id="simX" type="number" min="1" step="1" value="30" inputmode="numeric" style="display:none;width:90px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:16px" aria-label="Χ κληρώσεις">
       </div>
       <div class="muted" id="simNextLbl">Δελτίο για την επόμενη κλήρωση</div>
       <div class="order" id="simNext"></div>
@@ -519,6 +526,7 @@ function runSim(){
   var cnt = new Array(81).fill(0), res = [];
   var startIdx = 0;
   if(rng==='today'){ var td = today.length ? today[0].d : dateOf(Date.now()); startIdx = all.findIndex(function(d){return d.d===td;}); if(startIdx<0) startIdx = all.length; }
+  else if(rng==='x'){ var X = Math.max(1, parseInt($('simX').value,10)||1); startIdx = Math.max(0, all.length - X); }
   else if(rng!=='all'){ startIdx = Math.max(0, all.length - (+rng)); }
   for(var i=0;i<all.length;i++){
     if(i>=W && i>=startIdx){
@@ -593,6 +601,8 @@ $('btnLive').addEventListener('click',function(){ viewId=null; renderBoard(); re
 $('win').addEventListener('change',renderStats);
 $('pwin').addEventListener('change',renderPos);
 ['simSrc','simWin','simRange'].forEach(function(id){ $(id).addEventListener('change',renderSim); });
+$('simRange').addEventListener('change',function(){ $('simX').style.display = $('simRange').value==='x' ? '' : 'none'; if($('simRange').value==='x') $('simX').focus(); });
+$('simX').addEventListener('input',renderSim);
 $('posTabs').addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b)return; posSel=+b.dataset.p; renderPos(); });
 $('posBody').addEventListener('click',function(e){ var r=e.target.closest('tr[data-p]'); if(!r)return; posSel=+r.dataset.p; renderPos(); });
 
