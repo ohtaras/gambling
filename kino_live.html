@@ -180,6 +180,8 @@ function norm(c){
 
 /* ---------- Fetching ---------- */
 async function getJSON(url){
+  // cache-buster: το CDN του ΟΠΑΠ (Akamai) σερβίρει αλλιώς παλιές απαντήσεις
+  url += (url.indexOf('?')<0?'?':'&') + '_=' + Date.now();
   var r = await fetch(url,{cache:'no-store'});
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
@@ -191,8 +193,8 @@ async function fetchDay(ds){
   var rest = [];
   for(var p=1;p<pages;p++) rest.push(p);
   // parallel in chunks of 8
-  for(var i=0;i<rest.length;i+=8){
-    var chunk = rest.slice(i,i+8).map(function(p){
+  for(var i=0;i<rest.length;i+=4){
+    var chunk = rest.slice(i,i+4).map(function(p){
       return getJSON(API+'/draw-date/'+ds+'/'+ds+'?page='+p+'&size=10').then(function(r){return r.content||[];}).catch(function(){return [];});
     });
     (await Promise.all(chunk)).forEach(function(c){ out = out.concat(c); });
@@ -216,8 +218,8 @@ async function loadHistory(){
   var base = dateOf(Date.now());
   var days = []; for(var k=1;k<=HIST_DAYS;k++) days.push(dayShift(base,-k));
   var done = 0;
-  for(var i=0;i<days.length;i+=3){
-    var res = await Promise.all(days.slice(i,i+3).map(function(ds){ return fetchDay(ds).catch(function(){return [];}); }));
+  for(var i=0;i<days.length;i+=2){
+    var res = await Promise.all(days.slice(i,i+2).map(function(ds){ return fetchDay(ds).catch(function(){return [];}); }));
     res.forEach(function(r){ histPool = histPool.concat(r); });
     done += res.length;
     $('prog').style.width = Math.round(done/days.length*100)+'%';
@@ -231,7 +233,9 @@ async function loadHistory(){
 
 /* Cheap poll: last result + active draw */
 async function pollLast(initial){
-  var r = await getJSON(API+'/last-result-and-active');
+  var r;
+  try{ r = await getJSON(API+'/last-result-and-active'); }
+  catch(e){ return pollFallback(e); }
   if(r.active && r.active.drawTime) activeTime = Math.max(activeTime, r.active.drawTime);
   var gotNew = false;
   if(r.last && r.last.status==='results' && r.last.drawId > lastId){
@@ -247,24 +251,47 @@ async function pollLast(initial){
   return gotNew;
 }
 
+/* Εφεδρικό: η πρώτη σελίδα της ημέρας έχει τις 10 πιο πρόσφατες κληρώσεις */
+async function pollFallback(err){
+  var ds = dateOf(Date.now());
+  var raw = await getJSON(API+'/draw-date/'+ds+'/'+ds+'?page=0&size=10');
+  var fresh = (raw.content||[]).filter(function(c){return c.status==='results';}).map(norm);
+  if(today.length && today[0].d !== ds) today = [];
+  var gotNew = false;
+  fresh.sort(function(a,b){return a.id-b.id;}).forEach(function(nd){
+    if(nd.id > lastId && !today.some(function(x){return x.id===nd.id;})){
+      today.unshift(nd); lastId = nd.id; gotNew = true;
+      activeTime = Math.max(activeTime, nd.t + 300000);
+    }
+  });
+  today.sort(function(a,b){return b.id-a.id;});
+  if(!activeTime || activeTime < Date.now() - 300000) activeTime = (today[0]?today[0].t:Date.now()) + 300000;
+  return gotNew;
+}
+
 function scheduleRefresh(){
   clearTimeout(refreshTimer);
-  var wait = Math.max(5000, (activeTime||Date.now()+60000) - Date.now() + 15000);
+  // πρώτος έλεγχος 8″ μετά την ώρα κλήρωσης, μετά κάθε 4″
+  var wait = Math.max(3000, (activeTime||Date.now()+60000) - Date.now() + 8000);
   retries = 0;
   refreshTimer = setTimeout(tryRefresh, wait);
 }
 async function tryRefresh(){
+  clearTimeout(refreshTimer);
+  var gotNew = false;
   try{
-    var prevActive = activeTime;
-    var gotNew = await pollLast(false);
+    gotNew = await pollLast(false);
     setLive(true);
-    if(gotNew){
-      onNewDraw();
-      setStatus('Νέα κλήρωση #'+lastId+' · '+hm(Date.now()));
-      scheduleRefresh(); return;
-    }
-  }catch(e){ setLive(false); setStatus('Σφάλμα σύνδεσης — νέα προσπάθεια…'); }
-  if(++retries < 20){ refreshTimer = setTimeout(tryRefresh, 10000); }
+  }catch(e){
+    setLive(false); setStatus('Σφάλμα σύνδεσης ('+(e.message||e)+') — νέα προσπάθεια…');
+  }
+  if(gotNew){
+    try{ onNewDraw(); }catch(e){ console.error(e); }
+    setStatus('Νέα κλήρωση #'+lastId+' · '+hm(Date.now()));
+    scheduleRefresh(); return;
+  }
+  if(activeTime && Date.now() < activeTime){ scheduleRefresh(); return; }
+  if(++retries < 45){ refreshTimer = setTimeout(tryRefresh, 4000); }
   else { setStatus('Δεν βρέθηκε νέα κλήρωση — ίσως διάλειμμα. Επανέλεγχος σε 1 λεπτό.'); refreshTimer=setTimeout(function(){retries=0;tryRefresh();},60000); }
 }
 
