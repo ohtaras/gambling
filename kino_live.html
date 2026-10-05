@@ -98,6 +98,15 @@ h1{font-size:22px;margin:0;display:flex;align-items:center;gap:8px}
 .pb span small{font-size:10px;color:var(--muted)}
 .ptab td.last i{font-style:normal;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--panel2);font-weight:600;font-size:12px}
 .scroll-x{overflow-x:auto}
+.exbox{border:1px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 12px}
+.exbox.on{border-color:var(--bonus);border-style:solid}
+.swl{display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600}
+.sw{position:relative;width:46px;height:26px;flex:none}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:var(--panel2);border:1px solid var(--line);border-radius:999px;transition:.2s}
+.sw span:before{content:"";position:absolute;width:20px;height:20px;left:2px;top:2px;background:var(--muted);border-radius:50%;transition:.2s}
+.sw input:checked+span{background:var(--bonus);border-color:var(--bonus)}
+.sw input:checked+span:before{transform:translateX(20px);background:#fff}
 .note{color:var(--muted);font-size:12px;margin-top:20px;text-align:center}
 .mt{margin-top:14px}
 select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:13px}
@@ -212,13 +221,17 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
         </select>
         <input id="simX" type="number" min="1" step="1" value="30" inputmode="numeric" style="display:none;width:90px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:16px" aria-label="Χ κληρώσεις">
       </div>
-      <div class="chips" style="margin:0 0 12px">
+      <div class="exbox" id="exBox">
+        <label class="swl"><span class="sw"><input type="checkbox" id="simExOn"><span></span></span>🧩 Φίλτρο συνδυασμού <span class="muted" id="exState" style="font-weight:400">κλειστό</span></label>
+        <div class="muted" style="margin:6px 0 0">Αλλάζει το δελτίο αν ο συνδυασμός έχει ήδη πιάσει πολλά σε προηγούμενη κλήρωση.</div>
+        <div class="chips" id="exOpts" style="display:none">
         <select id="simEx"></select>
         <select id="simExZ">
           <option value="288">στις προηγούμενες 288</option>
           <option value="1000">στις προηγούμενες 1000</option>
           <option value="all" selected>σε όλες τις προηγούμενες</option>
         </select>
+        </div>
       </div>
       <div class="muted" id="simNextLbl">Δελτίο για την επόμενη κλήρωση</div>
       <div class="order" id="simNext"></div>
@@ -557,17 +570,17 @@ function simN(){ return Math.min(12,Math.max(1,+$('simN').value||10)); }
 function pc32(x){ x=x-((x>>>1)&0x55555555); x=(x&0x33333333)+((x>>>2)&0x33333333); return (((x+(x>>>4))&0x0F0F0F0F)*0x01010101)>>>24; }
 function maskOf(nums){ var m=[0,0,0]; nums.forEach(function(n){ var b=n-1; m[b>>5] |= (1<<(b&31)); }); return m; }
 function fillExOptions(){
-  var K = simN(), sel = $('simEx'), prev = sel.value, h = '<option value="off">Χωρίς φίλτρο συνδυασμού</option>';
+  var K = simN(), sel = $('simEx'), prev = sel.value, h = '';
   for(var y=K;y>=Math.max(1,K-3);y--) h += '<option value="'+y+'">Να μην έχει πιάσει '+(y===K?'':'≥ ')+y+'/'+K+'</option>';
   sel.innerHTML = h;
-  sel.value = (prev && sel.querySelector('option[value="'+prev+'"]')) ? prev : 'off';
+  sel.value = (prev && sel.querySelector('option[value="'+prev+'"]')) ? prev : String(K);
 }
 var EX_TRIES = 200;
 function runSim(){
   var K = simN(), PAY = PAYS[K];
   var src = simPos(), rng = $('simRange').value;
   var W = $('simWin').value==='x' ? Math.max(1, parseInt($('simWX').value,10)||1) : +$('simWin').value;
-  var exY = $('simEx').value==='off' ? 0 : +$('simEx').value;
+  var exY = $('simExOn').checked ? (+$('simEx').value||K) : 0;
   var exZ = $('simExZ').value==='all' ? Infinity : +$('simExZ').value;
   var all = today.concat(histPool).slice().sort(function(a,b){return a.id-b.id;}); // παλιό → νέο
   var M0=new Int32Array(all.length), M1=new Int32Array(all.length), M2=new Int32Array(all.length);
@@ -682,6 +695,13 @@ $('win').addEventListener('change',renderStats);
 $('pwin').addEventListener('change',renderPos);
 fillExOptions();
 $('simN').addEventListener('change',fillExOptions);
+$('simExOn').addEventListener('change',function(){
+  var on = $('simExOn').checked;
+  $('exOpts').style.display = on ? '' : 'none';
+  $('exState').textContent = on ? 'ανοιχτό' : 'κλειστό';
+  $('exBox').classList.toggle('on', on);
+  renderSim();
+});
 ['simN','simWin','simRange','simEx','simExZ'].forEach(function(id){ $(id).addEventListener('change',renderSim); });
 ['simPF','simPT','simWX'].forEach(function(id){ $(id).addEventListener('input',renderSim); });
 $('simWin').addEventListener('change',function(){ $('simWX').style.display = $('simWin').value==='x' ? '' : 'none'; if($('simWin').value==='x') $('simWX').focus(); });
