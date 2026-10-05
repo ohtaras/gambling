@@ -76,6 +76,28 @@ h1{font-size:22px;margin:0;display:flex;align-items:center;gap:8px}
 .muted{color:var(--muted);font-size:13px}
 .prog{height:4px;background:var(--panel2);border-radius:2px;overflow:hidden;margin-top:8px}
 .prog>div{height:100%;width:0;background:var(--accent);transition:width .3s}
+.card>h2.tg{cursor:pointer;user-select:none;-webkit-user-select:none;margin-bottom:10px}
+.chev{display:inline-block;transition:transform .2s;color:var(--muted);font-size:12px;margin-right:6px}
+.card.collapsed>h2.tg{margin-bottom:0}
+.card.collapsed>h2.tg .chev{transform:rotate(-90deg)}
+.card.collapsed>.cbody{display:none}
+.hbtns{display:flex;gap:8px;align-items:center}
+.pos-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.pos-tabs button{min-width:34px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:13px;cursor:pointer;font-variant-numeric:tabular-nums}
+.pos-tabs button.act{background:var(--accent);border-color:var(--accent);color:#fff}
+.ptab{width:100%;border-collapse:collapse;font-size:13px}
+.ptab th{color:var(--muted);font-weight:600;text-align:left;padding:4px 6px;white-space:nowrap}
+.ptab td{padding:5px 6px;border-top:1px solid var(--line);vertical-align:middle}
+.ptab td.p{font-weight:700;width:34px;text-align:center}
+.ptab tr{cursor:pointer}
+.ptab tr:hover td{background:var(--panel2)}
+.pb{display:flex;gap:6px;flex-wrap:wrap}
+.pb span{display:inline-flex;flex-direction:column;align-items:center;font-variant-numeric:tabular-nums}
+.pb span i{font-style:normal;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-weight:600;font-size:12px}
+.pb.cold span i{background:#64748b}
+.pb span small{font-size:10px;color:var(--muted)}
+.ptab td.last i{font-style:normal;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--panel2);font-weight:600;font-size:12px}
+.scroll-x{overflow-x:auto}
 .note{color:var(--muted);font-size:12px;margin-top:20px;text-align:center}
 .mt{margin-top:14px}
 select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:13px}
@@ -85,27 +107,30 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
 <div class="wrap">
   <header>
     <h1><span class="dot" id="liveDot"></span> ΚΙΝΟ Live</h1>
-    <div class="cd"><small>Επόμενη κλήρωση <span id="cdNext">—</span></small><b id="cdVal">--:--</b></div>
+    <div class="hbtns"><button class="btn" id="btnAll">▾ Όλα</button>
+    <div class="cd"><small>Επόμενη κλήρωση <span id="cdNext">—</span></small><b id="cdVal">--:--</b></div></div>
   </header>
   <div class="status" id="status">Φόρτωση…</div>
 
   <div class="grid2">
-    <section class="card">
-      <h2><span style="color:var(--text);font-weight:600" id="boardTitle">Τελευταία κλήρωση</span><span id="boardMeta"></span></h2>
+    <section class="card" data-k="board">
+      <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span><span id="boardTitle">Τελευταία κλήρωση</span></span><span id="boardMeta"></span></h2>
+      <div class="cbody">
       <div class="board" id="board"></div>
       <div class="order" id="order"></div>
       <div class="chips" id="chips"></div>
       <div class="chips"><button class="btn" id="btnLive" style="display:none">↩ Πίσω στην τρέχουσα</button></div>
+      </div>
     </section>
 
-    <section class="card">
-      <h2>Σημερινές κληρώσεις <span id="todayCount"></span></h2>
-      <div class="list" id="list"></div>
+    <section class="card" data-k="today">
+      <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>Σημερινές κληρώσεις</span><span id="todayCount"></span></h2>
+      <div class="cbody"><div class="list" id="list"></div></div>
     </section>
   </div>
 
-  <section class="card mt">
-    <h2>Στατιστικά <span>
+  <section class="card mt" data-k="stats">
+    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>Στατιστικά</span><span>
       <select id="win">
         <option value="20">τελευταίες 20</option>
         <option value="50" selected>τελευταίες 50</option>
@@ -113,32 +138,36 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
         <option value="today">σήμερα</option>
         <option value="all">όλο το ιστορικό</option>
       </select></span></h2>
+    <div class="cbody">
     <div class="cols3">
       <div><h3>🔥 Συχνότερα</h3><div id="hot"></div></div>
       <div><h3>❄️ Σπανιότερα</h3><div id="cold"></div></div>
       <div><h3>⏳ Μεγαλύτερη καθυστέρηση <span class="muted">(κληρώσεις)</span></h3><div id="late"></div></div>
     </div>
     <div class="chips" id="winChips"></div>
-  </section>
-
-  <section class="card mt">
-    <h2>Χρονικό ταξίδι <span id="randMeta">ίδια ώρα, άλλη μέρα</span></h2>
-    <div class="muted" style="margin-bottom:10px">Μια τυχαία παλιά κλήρωση από την ίδια 5λεπτη θέση με την επόμενη. Όταν βγει η επόμενη κλήρωση, συγκρίνεται.</div>
-    <div class="grid2">
-      <div>
-        <div class="muted" id="randLabel">Για την κλήρωση των —</div>
-        <div class="order" id="randOrder"></div>
-        <div class="prog"><div id="prog"></div></div>
-        <div class="muted" id="histInfo" style="margin-top:6px"></div>
-      </div>
-      <div>
-        <div class="muted" id="evalLabel">Αξιολόγηση προηγούμενης</div>
-        <div class="score" id="evalScore">—</div>
-        <div class="order" id="evalOrder"></div>
-        <div class="muted" id="evalTotals" style="margin-top:6px"></div>
-      </div>
     </div>
   </section>
+
+  <section class="card mt" data-k="pos">
+    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>Στατιστικά θέσεων 1–10</span><span>
+      <select id="pwin">
+        <option value="50">τελευταίες 50</option>
+        <option value="100">τελευταίες 100</option>
+        <option value="288">τελευταίες 288 (~1 μέρα)</option>
+        <option value="1000">τελευταίες 1000</option>
+        <option value="today">σήμερα</option>
+        <option value="all" selected>όλο το ιστορικό</option>
+      </select></span></h2>
+    <div class="cbody">
+      <div class="muted" style="margin-bottom:10px">Θέση = με ποια σειρά βγήκε ο αριθμός στην κλήρωση (1η μπάλα, 2η μπάλα…).</div>
+      <div class="pos-tabs" id="posTabs"></div>
+      <div id="posBody"></div>
+      <div class="chips" id="posChips"></div>
+      <div class="prog"><div id="prog"></div></div>
+      <div class="muted" id="histInfo" style="margin-top:6px">Φόρτωση ιστορικού…</div>
+    </div>
+  </section>
+
 
   <div class="note">Δεδομένα: API ΟΠΑΠ (παιχνίδι 1100). Οι κληρώσεις είναι τυχαίες — τα στατιστικά δεν προβλέπουν το αποτέλεσμα. Παίξε υπεύθυνα, 18+.</div>
 </div>
@@ -165,8 +194,7 @@ var today = [];          // today's draws, newest first
 var histPool = [];       // past days
 var lastId = 0, activeTime = 0;
 var viewId = null;       // draw shown on board (null = latest)
-var randDraw = null, randSlot = null, randFor = null;
-var evalLog = [];        // {hits}
+var posSel = 0;          // 0 = πίνακας, 1..10 = θέση, 11 = θέσεις 1–10 μαζί
 var refreshTimer = null, retries = 0;
 
 var $ = function(id){ return document.getElementById(id); };
@@ -224,11 +252,10 @@ async function loadHistory(){
     done += res.length;
     $('prog').style.width = Math.round(done/days.length*100)+'%';
     $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις ('+done+'/'+days.length+' ημέρες)';
-    if(!randDraw) pickRandom();
-    renderStats();
+    renderStats(); renderPos();
   }
-  $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις από '+HIST_DAYS+' ημέρες';
-  pickRandom(true);
+  $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις από '+HIST_DAYS+' ημέρες + σήμερα';
+  renderPos();
 }
 
 /* Cheap poll: last result + active draw */
@@ -296,33 +323,8 @@ async function tryRefresh(){
 }
 
 function onNewDraw(){
-  var live = today[0];
-  // evaluate random pick if it was for this slot
-  if(randDraw && randFor!=null && slotMin(live.m)===randFor){
-    var hits = randDraw.arr.filter(function(n){return live.set.has(n);});
-    evalLog.push(hits.length);
-    renderEval(randDraw, live, hits);
-  }
-  randDraw = null;
-  pickRandom(true);
   renderAll();
   tick();
-}
-
-/* ---------- Random historical pick ---------- */
-function nextSlot(){
-  if(activeTime) return slotMin(minsOf(activeTime));
-  return Math.ceil(minsOf(Date.now())/5)*5 % 1440;
-}
-function pickRandom(force){
-  var s = nextSlot();
-  if(!force && randDraw && randSlot===s) return;
-  var pool = histPool.filter(function(d){ return slotMin(d.m)===s; });
-  randSlot = s;
-  if(!pool.length){ randDraw=null; randFor=s; renderRand(); return; }
-  randDraw = pool[Math.floor(Math.random()*pool.length)];
-  randFor = s;
-  renderRand();
 }
 
 /* ---------- Rendering ---------- */
@@ -342,7 +344,6 @@ function renderBoard(){
   if(!board.children.length){
     var h=''; for(var n=1;n<=80;n++) h+='<div class="b" data-n="'+n+'">'+n+'</div>'; board.innerHTML=h;
   }
-  var pickSet = randDraw ? randDraw.set : null;
   Array.prototype.forEach.call(board.children,function(c){
     var n=+c.dataset.n;
     c.className='b'+(d&&d.set.has(n)?(n===d.b?' bonus':' on'):'');
@@ -399,24 +400,71 @@ function statRow(n,v,f,cls){
   return '<div class="stat"><div class="num">'+n+'</div><div class="bar '+cls+'"><div style="width:'+Math.max(3,Math.round(f*100))+'%"></div></div><div class="v">'+v+'</div></div>';
 }
 
-function renderRand(){
-  $('randLabel').textContent = 'Για την κλήρωση των '+(randSlot!=null?hmMin(randSlot):'—');
-  if(!randDraw){
-    $('randOrder').innerHTML = '<span class="muted">'+(histPool.length?'Δεν υπάρχει παλιά κλήρωση σε αυτή τη θέση.':'Περιμένω ιστορικό…')+'</span>';
-    $('randMeta').textContent='ίδια ώρα, άλλη μέρα'; return;
-  }
-  $('randMeta').textContent = randDraw.d.split('-').reverse().join('/')+' '+hm(randDraw.t)+' · #'+randDraw.id;
-  balls($('randOrder'), randDraw.arr.slice().sort(function(a,b){return a-b;}), null);
+/* ---------- Στατιστικά θέσεων ---------- */
+var NPOS = 10;
+function posDraws(){
+  var w = $('pwin').value;
+  if(w==='today') return today;
+  var all = today.concat(histPool);
+  all.sort(function(a,b){return b.id-a.id;});
+  return w==='all' ? all : all.slice(0,+w);
 }
-function renderEval(pick, live, hits){
-  $('evalLabel').textContent = 'Αξιολόγηση: '+hm(live.t)+' vs '+pick.d.split('-').reverse().join('/');
-  $('evalScore').innerHTML = hits.length+'<span class="muted" style="font-size:15px"> / 20 κοινοί</span>';
-  balls($('evalOrder'), pick.arr.slice().sort(function(a,b){return a-b;}), null, new Set(hits));
-  var avg = evalLog.reduce(function(a,b){return a+b;},0)/evalLog.length;
-  $('evalTotals').textContent = 'Σε αυτή τη συνεδρία: '+evalLog.length+' συγκρίσεις, μ.ό. '+avg.toFixed(2)+' κοινοί (τυχαίο αναμενόμενο: 5.00)';
+function posCount(ds, p){ // p: 1..10, ή 11 = θέσεις 1–10 μαζί
+  var cnt = new Array(81).fill(0), lateBy = new Array(81).fill(-1);
+  ds.forEach(function(d,i){
+    var a = p===11 ? d.arr.slice(0,NPOS) : [d.arr[p-1]];
+    a.forEach(function(n){ if(n==null)return; cnt[n]++; if(lateBy[n]<0) lateBy[n]=i; });
+  });
+  return {cnt:cnt, lateBy:lateBy};
+}
+function pball(n,v){ return '<span><i>'+n+'</i><small>'+v+'</small></span>'; }
+function renderPosTabs(){
+  var h = '<button data-p="0"'+(posSel===0?' class="act"':'')+'>Πίνακας</button>';
+  for(var p=1;p<=NPOS;p++) h += '<button data-p="'+p+'"'+(posSel===p?' class="act"':'')+'>'+p+'η</button>';
+  h += '<button data-p="11"'+(posSel===11?' class="act"':'')+'>1–10 μαζί</button>';
+  $('posTabs').innerHTML = h;
+}
+function renderPos(){
+  renderPosTabs();
+  var ds = posDraws(), N = ds.length, last = ds[0];
+  var nums=[]; for(var n=1;n<=80;n++) nums.push(n);
+  if(!N){ $('posBody').innerHTML='<div class="muted">Δεν υπάρχουν κληρώσεις ακόμα.</div>'; $('posChips').innerHTML=''; return; }
+  if(posSel===0){
+    var rows = '';
+    for(var p=1;p<=NPOS;p++){
+      var c = posCount(ds,p).cnt;
+      var hot = nums.slice().sort(function(a,b){return c[b]-c[a]||a-b;}).slice(0,5);
+      var cold = nums.slice().sort(function(a,b){return c[a]-c[b]||a-b;}).slice(0,3);
+      rows += '<tr data-p="'+p+'"><td class="p">'+p+'η</td>'+
+        '<td><div class="pb">'+hot.map(function(n){return pball(n,c[n]);}).join('')+'</div></td>'+
+        '<td><div class="pb cold">'+cold.map(function(n){return pball(n,c[n]);}).join('')+'</div></td>'+
+        '<td class="last"><i>'+(last.arr[p-1]!=null?last.arr[p-1]:'—')+'</i></td></tr>';
+    }
+    $('posBody').innerHTML = '<div class="scroll-x"><table class="ptab"><tr><th>Θέση</th><th>🔥 Συχνότεροι</th><th>❄️ Σπανιότεροι</th><th>Τελ.</th></tr>'+rows+'</table></div>'+
+      '<div class="muted" style="margin-top:6px">Πάτα μια θέση για λεπτομέρειες. Κάτω από κάθε αριθμό: πόσες φορές βγήκε σε αυτή τη θέση.</div>';
+    $('posChips').innerHTML = chip('Κληρώσεις', N) + chip('Αναμενόμενη εμφάνιση ανά αριθμό/θέση', (N/80).toFixed(1));
+    return;
+  }
+  var r = posCount(ds,posSel), cnt=r.cnt, lateBy=r.lateBy;
+  var hot = nums.slice().sort(function(a,b){return cnt[b]-cnt[a]||a-b;}).slice(0,10);
+  var cold = nums.slice().sort(function(a,b){return cnt[a]-cnt[b]||a-b;}).slice(0,10);
+  var late = nums.map(function(n){return [n, lateBy[n]<0?N:lateBy[n]];}).sort(function(a,b){return b[1]-a[1]||a[0]-b[0];}).slice(0,10);
+  var maxC = Math.max.apply(null,cnt)||1, maxL = late[0][1]||1;
+  var never = nums.filter(function(n){return cnt[n]===0;});
+  var title = posSel===11 ? 'θέσεις 1–10' : posSel+'η θέση';
+  $('posBody').innerHTML =
+    '<div class="cols3">'+
+      '<div><h3>🔥 Συχνότεροι · '+title+'</h3>'+hot.map(function(n){return statRow(n,cnt[n],cnt[n]/maxC,'');}).join('')+'</div>'+
+      '<div><h3>❄️ Σπανιότεροι · '+title+'</h3>'+cold.map(function(n){return statRow(n,cnt[n],cnt[n]/maxC,'cold');}).join('')+'</div>'+
+      '<div><h3>⏳ Καθυστέρηση · '+title+' <span class="muted">(κληρώσεις)</span></h3>'+late.map(function(p){return statRow(p[0],p[1],p[1]/maxL,'late');}).join('')+'</div>'+
+    '</div>'+
+    (never.length && never.length<80 ? '<div class="muted" style="margin-top:8px">Δεν βγήκαν καθόλου σε αυτό το διάστημα: '+never.join(', ')+'</div>' : '');
+  var exp = posSel===11 ? N*NPOS/80 : N/80;
+  var lastTxt = posSel===11 ? last.arr.slice(0,NPOS).join(', ') : last.arr[posSel-1];
+  $('posChips').innerHTML = chip('Κληρώσεις', N) + chip('Αναμενόμενη εμφάνιση/αριθμό', exp.toFixed(1)) + chip('Τελευταία κλήρωση', lastTxt);
 }
 
-function renderAll(){ renderBoard(); renderList(); renderStats(); }
+function renderAll(){ renderBoard(); renderList(); renderStats(); renderPos(); }
 
 /* ---------- Countdown ---------- */
 function tick(){
@@ -424,7 +472,6 @@ function tick(){
   var left = Math.max(0, Math.round((activeTime - Date.now())/1000));
   $('cdVal').textContent = left>0 ? pad(Math.floor(left/60))+':'+pad(left%60) : 'κλήρωση…';
   $('cdNext').textContent = hm(activeTime);
-  if(left===0 && randSlot!==null && nextSlot()!==randSlot && !randDraw) pickRandom(true);
 }
 
 /* ---------- Events ---------- */
@@ -436,12 +483,38 @@ $('list').addEventListener('click',function(e){
 });
 $('btnLive').addEventListener('click',function(){ viewId=null; renderBoard(); renderList(); });
 $('win').addEventListener('change',renderStats);
+$('pwin').addEventListener('change',renderPos);
+$('posTabs').addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b)return; posSel=+b.dataset.p; renderPos(); });
+$('posBody').addEventListener('click',function(e){ var r=e.target.closest('tr[data-p]'); if(!r)return; posSel=+r.dataset.p; renderPos(); });
+
+/* ---------- Εμφάνιση / απόκρυψη μπλοκ ---------- */
+var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-k]'));
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); }
+function updAllBtn(){
+  var allClosed = cards.every(function(c){return c.classList.contains('collapsed');});
+  $('btnAll').textContent = allClosed ? '▸ Άνοιγμα όλων' : '▾ Κλείσιμο όλων';
+}
+cards.forEach(function(c){
+  if(lsGet('kl_col_'+c.dataset.k)==='1') c.classList.add('collapsed');
+  c.querySelector('h2.tg').addEventListener('click',function(e){
+    if(e.target.closest('select,button,option')) return;
+    setCollapsed(c, !c.classList.contains('collapsed')); updAllBtn();
+  });
+});
+$('btnAll').addEventListener('click',function(){
+  var close = !cards.every(function(c){return c.classList.contains('collapsed');});
+  cards.forEach(function(c){ setCollapsed(c, close); }); updAllBtn();
+});
+updAllBtn();
+
 document.addEventListener('visibilitychange',function(){ if(!document.hidden){ clearTimeout(refreshTimer); retries=0; tryRefresh(); }});
 
 /* ---------- Start ---------- */
 setInterval(tick,1000);
 loadToday().then(function(){
-  setLive(true); scheduleRefresh(); pickRandom(); return loadHistory();
+  setLive(true); scheduleRefresh(); return loadHistory();
 }).catch(function(e){
   setLive(false); setStatus('Αποτυχία φόρτωσης: '+e.message+' — νέα προσπάθεια σε 15″');
   setTimeout(function(){ location.reload(); },15000);
