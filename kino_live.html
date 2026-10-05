@@ -177,12 +177,12 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   <section class="card mt" data-k="sim">
     <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>Προσομοίωση δελτίου 10 αριθμών</span><span id="simMeta"></span></h2>
     <div class="cbody">
-      <div class="muted" style="margin-bottom:10px">Σε κάθε κλήρωση του ιστορικού «παίζουμε» τους 10 συχνότερους αριθμούς, όπως θα τους έδειχναν τα στατιστικά λίγο πριν από αυτήν, με 0,50€ τη στήλη. Μετά μετράμε επιτυχίες και κέρδη με τον πίνακα κερδών του ΚΙΝΟ.</div>
+      <div class="muted" style="margin-bottom:10px">Σε κάθε κλήρωση «παίζουμε» τους 10 αριθμούς που βγήκαν συχνότερα στις θέσεις που διαλέγεις (π.χ. 1 έως 3), στις Χ κληρώσεις πριν από αυτήν, με 0,50€ τη στήλη. Μετά μετράμε επιτυχίες και κέρδη με τον πίνακα κερδών του ΚΙΝΟ.</div>
       <div class="chips" style="margin:0 0 12px">
-        <select id="simSrc">
-          <option value="pos" selected>Θέσεις 1–10 μαζί</option>
-          <option value="all">Όλες οι 20 θέσεις</option>
-        </select>
+        <span class="chip" style="display:inline-flex;align-items:center;gap:6px">Θέσεις
+          <input id="simPF" type="number" min="1" max="20" step="1" value="1" inputmode="numeric" style="width:58px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:16px" aria-label="από θέση">
+          έως
+          <input id="simPT" type="number" min="1" max="20" step="1" value="10" inputmode="numeric" style="width:58px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:16px" aria-label="έως θέση"></span>
         <select id="simWin">
           <option value="5">από τις τελευταίες 5</option>
           <option value="10" selected>από τις τελευταίες 10</option>
@@ -190,7 +190,9 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
           <option value="50">από τις τελευταίες 50</option>
           <option value="100">από τις τελευταίες 100</option>
           <option value="288">από τις τελευταίες 288</option>
+          <option value="x">από τις τελευταίες Χ…</option>
         </select>
+        <input id="simWX" type="number" min="1" step="1" value="15" inputmode="numeric" style="display:none;width:90px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:16px" aria-label="Χ κληρώσεις για στατιστικά">
         <select id="simRange">
           <option value="10">δοκιμή σε τελευταίες 10</option>
           <option value="20">δοκιμή σε τελευταίες 20</option>
@@ -515,29 +517,34 @@ var PAY10 = {0:1, 5:1, 6:10, 7:40, 8:250, 9:5000, 10:50000}; // κέρδος α�
 var PROB10 = [0.045791,0.179571,0.295257,0.267402,0.147319,0.051428,0.011479,0.001611,0.000135,0.000006,0.0000001];
 var RTP10 = 0.693;
 function eur(v){ return v.toLocaleString('el-GR',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'; }
-function topN(cnt, k){
+function topN(cnt, k, last){ // ισοβαθμίες: πρώτα όποιος βγήκε πιο πρόσφατα
   var nums=[]; for(var n=1;n<=80;n++) nums.push(n);
-  return nums.sort(function(a,b){return cnt[b]-cnt[a]||a-b;}).slice(0,k);
+  return nums.sort(function(a,b){return cnt[b]-cnt[a]||(last?last[b]-last[a]:0)||a-b;}).slice(0,k);
 }
-function simPart(d, src){ return src==='pos' ? d.arr.slice(0,NPOS) : d.arr; }
+function simPos(){
+  var a = Math.min(20,Math.max(1,parseInt($('simPF').value,10)||1)), b = Math.min(20,Math.max(1,parseInt($('simPT').value,10)||a));
+  return a<=b ? [a,b] : [b,a];
+}
+function simPart(d, src){ return d.arr.slice(src[0]-1, src[1]); }
 function runSim(){
-  var src = $('simSrc').value, W = +$('simWin').value, rng = $('simRange').value;
+  var src = simPos(), rng = $('simRange').value;
+  var W = $('simWin').value==='x' ? Math.max(1, parseInt($('simWX').value,10)||1) : +$('simWin').value;
   var all = today.concat(histPool).slice().sort(function(a,b){return a.id-b.id;}); // παλιό → νέο
-  var cnt = new Array(81).fill(0), res = [];
+  var cnt = new Array(81).fill(0), last = new Array(81).fill(-1), res = [];
   var startIdx = 0;
   if(rng==='today'){ var td = today.length ? today[0].d : dateOf(Date.now()); startIdx = all.findIndex(function(d){return d.d===td;}); if(startIdx<0) startIdx = all.length; }
   else if(rng==='x'){ var X = Math.max(1, parseInt($('simX').value,10)||1); startIdx = Math.max(0, all.length - X); }
   else if(rng!=='all'){ startIdx = Math.max(0, all.length - (+rng)); }
   for(var i=0;i<all.length;i++){
     if(i>=W && i>=startIdx){
-      var ticket = topN(cnt,10), d = all[i];
+      var ticket = topN(cnt,10,last), d = all[i];
       var hits = ticket.filter(function(n){return d.set.has(n);});
       res.push({d:d, ticket:ticket, hits:hits, win:PAY10[hits.length]||0});
     }
-    simPart(all[i],src).forEach(function(n){ cnt[n]++; });
+    simPart(all[i],src).forEach(function(n){ cnt[n]++; last[n]=i; });
     if(i>=W) simPart(all[i-W],src).forEach(function(n){ cnt[n]--; });
   }
-  return {res:res, next: all.length>=W ? topN(cnt,10) : null};
+  return {res:res, next: all.length>=W ? topN(cnt,10,last) : null};
 }
 function renderSim(){
   var r = runSim(), res = r.res, N = res.length;
@@ -600,7 +607,9 @@ $('list').addEventListener('click',function(e){
 $('btnLive').addEventListener('click',function(){ viewId=null; renderBoard(); renderList(); });
 $('win').addEventListener('change',renderStats);
 $('pwin').addEventListener('change',renderPos);
-['simSrc','simWin','simRange'].forEach(function(id){ $(id).addEventListener('change',renderSim); });
+['simWin','simRange'].forEach(function(id){ $(id).addEventListener('change',renderSim); });
+['simPF','simPT','simWX'].forEach(function(id){ $(id).addEventListener('input',renderSim); });
+$('simWin').addEventListener('change',function(){ $('simWX').style.display = $('simWin').value==='x' ? '' : 'none'; if($('simWin').value==='x') $('simWX').focus(); });
 $('simRange').addEventListener('change',function(){ $('simX').style.display = $('simRange').value==='x' ? '' : 'none'; if($('simRange').value==='x') $('simX').focus(); });
 $('simX').addEventListener('input',renderSim);
 $('posTabs').addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b)return; posSel=+b.dataset.p; renderPos(); });
