@@ -175,10 +175,16 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
 
 
   <section class="card mt" data-k="sim">
-    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>Προσομοίωση δελτίου 10 αριθμών</span><span id="simMeta"></span></h2>
+    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>Προσομοίωση δελτίου <span id="simTitleN">10</span> αριθμών</span><span id="simMeta"></span></h2>
     <div class="cbody">
-      <div class="muted" style="margin-bottom:10px">Σε κάθε κλήρωση «παίζουμε» τους 10 αριθμούς που βγήκαν συχνότερα στις θέσεις που διαλέγεις (π.χ. 1 έως 3), στις Χ κληρώσεις πριν από αυτήν, με 0,50€ τη στήλη. Μετά μετράμε επιτυχίες και κέρδη με τον πίνακα κερδών του ΚΙΝΟ.</div>
+      <div class="muted" style="margin-bottom:10px">Σε κάθε κλήρωση «παίζουμε» τους Χ αριθμούς (1–12) που βγήκαν συχνότερα στις θέσεις που διαλέγεις (π.χ. 1 έως 3), στις Χ κληρώσεις πριν από αυτήν, με 0,50€ τη στήλη. Μετά μετράμε επιτυχίες και κέρδη με τον πίνακα κερδών του ΚΙΝΟ.</div>
       <div class="chips" style="margin:0 0 12px">
+        <select id="simN">
+          <option value="1">1 αριθμός</option><option value="2">2 αριθμοί</option><option value="3">3 αριθμοί</option>
+          <option value="4">4 αριθμοί</option><option value="5">5 αριθμοί</option><option value="6">6 αριθμοί</option>
+          <option value="7">7 αριθμοί</option><option value="8">8 αριθμοί</option><option value="9">9 αριθμοί</option>
+          <option value="10" selected>10 αριθμοί</option><option value="11">11 αριθμοί</option><option value="12">12 αριθμοί</option>
+        </select>
         <span class="chip" style="display:inline-flex;align-items:center;gap:6px">Θέσεις
           <input id="simPF" type="number" min="1" max="20" step="1" value="1" inputmode="numeric" style="width:58px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:16px" aria-label="από θέση">
           έως
@@ -516,9 +522,18 @@ function renderPos(){
 
 /* ---------- Προσομοίωση δελτίου 10 αριθμών ---------- */
 var STAKE = 0.5;                                        // € ανά στήλη
-var PAY10 = {0:1, 5:1, 6:10, 7:40, 8:250, 9:5000, 10:50000}; // κέρδος ανά στήλη 0,50€ (API ΟΠΑΠ)
-var PROB10 = [0.045791,0.179571,0.295257,0.267402,0.147319,0.051428,0.011479,0.001611,0.000135,0.000006,0.0000001];
-var RTP10 = 0.693;
+// κέρδος ανά στήλη 0,50€ ανά πλήθος αριθμών → {επιτυχίες: ποσό} (από τις κατηγορίες κερδών του API ΟΠΑΠ)
+var PAYS = {
+  1:{1:1.25}, 2:{1:0.5,2:2.5}, 3:{2:1.25,3:12.5}, 4:{2:0.5,3:2,4:50},
+  5:{3:1,4:10,5:225}, 6:{3:0.5,4:3.5,5:25,6:800}, 7:{3:0.5,4:1.5,5:10,6:50,7:2500},
+  8:{4:1,5:5,6:25,7:500,8:7500}, 9:{4:0.5,5:2.5,6:12.5,7:100,8:2000,9:20000},
+  10:{0:1,5:1,6:10,7:40,8:250,9:5000,10:50000},
+  11:{0:1,5:0.5,6:5,7:25,8:125,9:750,10:7500,11:250000},
+  12:{0:2,6:2.5,7:12.5,8:75,9:500,10:1250,11:12500,12:500000}
+};
+function comb(n,k){ if(k<0||k>n)return 0; var r=1; for(var i=1;i<=k;i++) r=r*(n-k+i)/i; return r; }
+function probs(N){ var t=comb(80,N), a=[]; for(var k=0;k<=N;k++) a.push(comb(20,k)*comb(60,N-k)/t); return a; }
+function theoRtp(N){ var P=probs(N), s=0; for(var k in PAYS[N]) s+=P[k]*PAYS[N][k]; return s/STAKE; }
 function eur(v){ return v.toLocaleString('el-GR',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'; }
 function topN(cnt, k, last){ // ισοβαθμίες: πρώτα όποιος βγήκε πιο πρόσφατα
   var nums=[]; for(var n=1;n<=80;n++) nums.push(n);
@@ -529,7 +544,9 @@ function simPos(){
   return a<=b ? [a,b] : [b,a];
 }
 function simPart(d, src){ return d.arr.slice(src[0]-1, src[1]); }
+function simN(){ return Math.min(12,Math.max(1,+$('simN').value||10)); }
 function runSim(){
+  var K = simN(), PAY = PAYS[K];
   var src = simPos(), rng = $('simRange').value;
   var W = $('simWin').value==='x' ? Math.max(1, parseInt($('simWX').value,10)||1) : +$('simWin').value;
   var all = today.concat(histPool).slice().sort(function(a,b){return a.id-b.id;}); // παλιό → νέο
@@ -540,21 +557,23 @@ function runSim(){
   else if(rng!=='all'){ startIdx = Math.max(0, all.length - (+rng)); }
   for(var i=0;i<all.length;i++){
     if(i>=W && i>=startIdx){
-      var ticket = topN(cnt,10,last), d = all[i];
+      var ticket = topN(cnt,K,last), d = all[i];
       var hits = ticket.filter(function(n){return d.set.has(n);});
-      res.push({d:d, ticket:ticket, hits:hits, win:PAY10[hits.length]||0});
+      res.push({d:d, ticket:ticket, hits:hits, win:PAY[hits.length]||0});
     }
     simPart(all[i],src).forEach(function(n){ cnt[n]++; last[n]=i; });
     if(i>=W) simPart(all[i-W],src).forEach(function(n){ cnt[n]--; });
   }
-  return {res:res, next: all.length>=W ? topN(cnt,10,last) : null};
+  return {res:res, next: all.length>=W ? topN(cnt,K,last) : null};
 }
 function renderSim(){
+  var K = simN(), PAY = PAYS[K], PROB = probs(K);
+  $('simTitleN').textContent = K;
   var r = runSim(), res = r.res, N = res.length;
   $('simNext').innerHTML = r.next ? r.next.slice().sort(function(a,b){return a-b;}).map(function(n){return '<i>'+n+'</i>';}).join('') : '<span class="muted">Δεν υπάρχουν αρκετές κληρώσεις.</span>';
   $('simNextLbl').textContent = 'Δελτίο για την επόμενη κλήρωση' + (activeTime ? ' ('+hm(activeTime)+')' : '');
   if(!N){ $('simChips').innerHTML=''; $('simChart').innerHTML=''; $('simDist').innerHTML=''; $('simList').innerHTML='<div class="muted">Περιμένω ιστορικό…</div>'; $('simMeta').textContent=''; return; }
-  var cost = N*STAKE, won = 0, dist = new Array(11).fill(0), wins = 0, best = res[0];
+  var cost = N*STAKE, won = 0, dist = new Array(K+1).fill(0), wins = 0, best = res[0];
   var curve = [], bal = 0;
   res.forEach(function(x){ won += x.win; dist[x.hits.length]++; if(x.win) wins++; if(x.win>best.win) best=x; bal += x.win-STAKE; curve.push(bal); });
   var net = won-cost, rtp = won/cost*100;
@@ -563,10 +582,10 @@ function renderSim(){
   $('simChips').innerHTML =
     chip('Δελτία', N) + chip('Κόστος', eur(cost)) + chip('Κέρδη', eur(won)) +
     '<span class="chip">Καθαρό: <b style="color:'+(net>=0?'var(--hit)':'var(--miss)')+'">'+(net>=0?'+':'')+eur(net)+'</b></span>' +
-    chip('Απόδοση', rtp.toFixed(1)+'% <span class="muted">(θεωρητική '+(RTP10*100).toFixed(1)+'%)</span>') +
+    chip('Απόδοση', rtp.toFixed(1)+'% <span class="muted">(θεωρητική '+(theoRtp(K)*100).toFixed(1)+'%)</span>') +
     chip('Κερδοφόρα δελτία', wins+' ('+(wins/N*100).toFixed(1)+'%)') +
-    chip('Μ.ό. επιτυχιών', avgHits.toFixed(2)+' <span class="muted">(τυχαίο 2.50)</span>') +
-    chip('Καλύτερο', best.hits.length+'/10 · '+eur(best.win));
+    chip('Μ.ό. επιτυχιών', avgHits.toFixed(2)+' <span class="muted">(τυχαίο '+(K/4).toFixed(2)+')</span>') +
+    chip('Καλύτερο', best.hits.length+'/'+K+' · '+eur(best.win));
   // γράφημα υπολοίπου
   var w=600, h=120, mn=Math.min(0,Math.min.apply(null,curve)), mx=Math.max(0,Math.max.apply(null,curve)), sp=(mx-mn)||1;
   var pts = curve.map(function(v,i){ return (i/(Math.max(1,N-1))*w).toFixed(1)+','+(h-(v-mn)/sp*h).toFixed(1); }).join(' ');
@@ -577,16 +596,15 @@ function renderSim(){
     '<polyline fill="none" stroke="'+(net>=0?'var(--hit)':'var(--miss)')+'" stroke-width="2" vector-effect="non-scaling-stroke" points="'+pts+'"/></svg>';
   // κατανομή επιτυχιών
   var rows = '<tr><th>Επιτυχίες</th><th>Δελτία</th><th>Αναμενόμενα (τυχαία)</th><th>Κέρδος/στήλη</th></tr>';
-  for(var k=10;k>=0;k--){
-    if(!dist[k] && N*PROB10[k]<0.05 && !PAY10[k]) continue;
-    rows += '<tr><td class="p">'+k+'</td><td><b>'+dist[k]+'</b></td><td class="muted">'+(N*PROB10[k]).toFixed(1)+'</td><td>'+(PAY10[k]?eur(PAY10[k]):'—')+'</td></tr>';
+  for(var k=K;k>=0;k--){
+    rows += '<tr><td class="p">'+k+'</td><td><b>'+dist[k]+'</b></td><td class="muted">'+(N*PROB[k]).toFixed(1)+'</td><td>'+(PAY[k]?eur(PAY[k]):'—')+'</td></tr>';
   }
   $('simDist').innerHTML = rows;
   // λίστα τελευταίων
   $('simList').innerHTML = res.slice(-30).reverse().map(function(x){
     var hs = new Set(x.hits);
     var nums = x.ticket.slice().sort(function(a,b){return a-b;}).map(function(n){return '<i'+(hs.has(n)?' style="background:var(--hit);color:#fff"':'')+'>'+n+'</i>';}).join('');
-    return '<div class="row" style="cursor:default"><div class="t">'+hm(x.d.t)+'<small>'+x.d.d.slice(8)+'/'+x.d.d.slice(5,7)+' · '+x.hits.length+'/10'+(x.win?' · <b style="color:var(--hit)">'+eur(x.win)+'</b>':'')+'</small></div><div class="n">'+nums+'</div></div>';
+    return '<div class="row" style="cursor:default"><div class="t">'+hm(x.d.t)+'<small>'+x.d.d.slice(8)+'/'+x.d.d.slice(5,7)+' · '+x.hits.length+'/'+K+(x.win?' · <b style="color:var(--hit)">'+eur(x.win)+'</b>':'')+'</small></div><div class="n">'+nums+'</div></div>';
   }).join('');
 }
 
@@ -610,7 +628,7 @@ $('list').addEventListener('click',function(e){
 $('btnLive').addEventListener('click',function(){ viewId=null; renderBoard(); renderList(); });
 $('win').addEventListener('change',renderStats);
 $('pwin').addEventListener('change',renderPos);
-['simWin','simRange'].forEach(function(id){ $(id).addEventListener('change',renderSim); });
+['simN','simWin','simRange'].forEach(function(id){ $(id).addEventListener('change',renderSim); });
 ['simPF','simPT','simWX'].forEach(function(id){ $(id).addEventListener('input',renderSim); });
 $('simWin').addEventListener('change',function(){ $('simWX').style.display = $('simWin').value==='x' ? '' : 'none'; if($('simWin').value==='x') $('simWX').focus(); });
 $('simRange').addEventListener('change',function(){ $('simX').style.display = $('simRange').value==='x' ? '' : 'none'; if($('simRange').value==='x') $('simX').focus(); });
