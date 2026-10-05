@@ -151,7 +151,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   </section>
 
   <section class="card mt" data-k="pos">
-    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>Στατιστικά θέσεων 1–10</span><span>
+    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>Στατιστικά θέσεων 1–20</span><span>
       <select id="pwin">
         <option value="5">τελευταίες 5</option>
         <option value="10">τελευταίες 10</option>
@@ -164,7 +164,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
         <option value="all" selected>όλο το ιστορικό</option>
       </select></span></h2>
     <div class="cbody">
-      <div class="muted" style="margin-bottom:10px">Θέση = με ποια σειρά βγήκε ο αριθμός στην κλήρωση (1η μπάλα, 2η μπάλα…).</div>
+      <div class="muted" style="margin-bottom:10px">Θέση = με ποια σειρά βγήκε ο αριθμός στην κλήρωση (1η μπάλα, 2η μπάλα… 20ή μπάλα).</div>
       <div class="pos-tabs" id="posTabs"></div>
       <div id="posBody"></div>
       <div class="chips" id="posChips"></div>
@@ -241,7 +241,7 @@ var today = [];          // today's draws, newest first
 var histPool = [];       // past days
 var lastId = 0, activeTime = 0;
 var viewId = null;       // draw shown on board (null = latest)
-var posSel = 0;          // 0 = πίνακας, 1..10 = θέση, 11 = θέσεις 1–10 μαζί
+var posSel = 0;          // 0 = πίνακας, 1..20 = θέση, 21 = θέσεις 1–10, 22 = θέσεις 11–20
 var refreshTimer = null, retries = 0;
 
 var $ = function(id){ return document.getElementById(id); };
@@ -448,7 +448,8 @@ function statRow(n,v,f,cls){
 }
 
 /* ---------- Στατιστικά θέσεων ---------- */
-var NPOS = 10;
+var NPOS = 20;
+var GROUPS = {21:[1,10], 22:[11,20]};
 function posDraws(){
   var w = $('pwin').value;
   if(w==='today') return today;
@@ -456,10 +457,10 @@ function posDraws(){
   all.sort(function(a,b){return b.id-a.id;});
   return w==='all' ? all : all.slice(0,+w);
 }
-function posCount(ds, p){ // p: 1..10, ή 11 = θέσεις 1–10 μαζί
+function posCount(ds, p){ // p: 1..20, ή 21/22 = ομάδα θέσεων
   var cnt = new Array(81).fill(0), lateBy = new Array(81).fill(-1);
   ds.forEach(function(d,i){
-    var a = p===11 ? d.arr.slice(0,NPOS) : [d.arr[p-1]];
+    var a = GROUPS[p] ? d.arr.slice(GROUPS[p][0]-1, GROUPS[p][1]) : [d.arr[p-1]];
     a.forEach(function(n){ if(n==null)return; cnt[n]++; if(lateBy[n]<0) lateBy[n]=i; });
   });
   return {cnt:cnt, lateBy:lateBy};
@@ -468,7 +469,8 @@ function pball(n,v){ return '<span><i>'+n+'</i><small>'+v+'</small></span>'; }
 function renderPosTabs(){
   var h = '<button data-p="0"'+(posSel===0?' class="act"':'')+'>Πίνακας</button>';
   for(var p=1;p<=NPOS;p++) h += '<button data-p="'+p+'"'+(posSel===p?' class="act"':'')+'>'+p+'η</button>';
-  h += '<button data-p="11"'+(posSel===11?' class="act"':'')+'>1–10 μαζί</button>';
+  h += '<button data-p="21"'+(posSel===21?' class="act"':'')+'>1–10 μαζί</button>';
+  h += '<button data-p="22"'+(posSel===22?' class="act"':'')+'>11–20 μαζί</button>';
   $('posTabs').innerHTML = h;
 }
 function renderPos(){
@@ -498,7 +500,8 @@ function renderPos(){
   var late = nums.map(function(n){return [n, lateBy[n]<0?N:lateBy[n]];}).sort(function(a,b){return b[1]-a[1]||a[0]-b[0];}).slice(0,10);
   var maxC = Math.max.apply(null,cnt)||1, maxL = late[0][1]||1;
   var never = nums.filter(function(n){return cnt[n]===0;});
-  var title = posSel===11 ? 'θέσεις 1–10' : posSel+'η θέση';
+  var G = GROUPS[posSel];
+  var title = G ? 'θέσεις '+G[0]+'–'+G[1] : posSel+'η θέση';
   $('posBody').innerHTML =
     '<div class="cols3">'+
       '<div><h3>🔥 Συχνότεροι · '+title+'</h3>'+hot.map(function(n){return statRow(n,cnt[n],cnt[n]/maxC,'');}).join('')+'</div>'+
@@ -506,8 +509,8 @@ function renderPos(){
       '<div><h3>⏳ Καθυστέρηση · '+title+' <span class="muted">(κληρώσεις)</span></h3>'+late.map(function(p){return statRow(p[0],p[1],p[1]/maxL,'late');}).join('')+'</div>'+
     '</div>'+
     (never.length && never.length<80 ? '<div class="muted" style="margin-top:8px">Δεν βγήκαν καθόλου σε αυτό το διάστημα: '+never.join(', ')+'</div>' : '');
-  var exp = posSel===11 ? N*NPOS/80 : N/80;
-  var lastTxt = posSel===11 ? last.arr.slice(0,NPOS).join(', ') : last.arr[posSel-1];
+  var exp = G ? N*(G[1]-G[0]+1)/80 : N/80;
+  var lastTxt = G ? last.arr.slice(G[0]-1,G[1]).join(', ') : last.arr[posSel-1];
   $('posChips').innerHTML = chip('Κληρώσεις', N) + chip('Αναμενόμενη εμφάνιση/αριθμό', exp.toFixed(1)) + chip('Τελευταία κλήρωση', lastTxt);
 }
 
