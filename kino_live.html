@@ -225,6 +225,10 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
         </select>
         <input id="simX" type="number" min="1" step="1" value="30" inputmode="numeric" style="display:none;width:90px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:16px" aria-label="Χ κληρώσεις">
       </div>
+      <div class="exbox" id="scBox" style="border-color:#8b5cf6">
+        <label class="swl"><span class="sw"><input type="checkbox" id="simSC"><span></span></span>🟣 Με 2η ευκαιρία <span class="muted" id="scState" style="font-weight:400">όχι · 0,50€/δελτίο</span></label>
+        <div class="muted" style="margin:6px 0 0">Δελτίο 1€. Αν κάποιος αριθμός σου βγει στους 3 της 2ης ευκαιρίας, οι επιτυχίες μετράνε σε όλους τους 23 αριθμούς με τον πίνακα της 2ης ευκαιρίας. Αλλιώς πληρώνει ο κανονικός πίνακας. Μόνο κληρώσεις από 7/10/2026.</div>
+      </div>
       <div class="exbox" id="exBox">
         <label class="swl"><span class="sw"><input type="checkbox" id="simExOn"><span></span></span>🧩 Φίλτρο συνδυασμού <span class="muted" id="exState" style="font-weight:400">κλειστό</span></label>
         <div class="muted" style="margin:6px 0 0">Αλλάζει το δελτίο αν ο συνδυασμός έχει ήδη πιάσει πολλά σε προηγούμενη κλήρωση.</div>
@@ -624,7 +628,24 @@ function renderPos(){
 }
 
 /* ---------- Προσομοίωση δελτίου 10 αριθμών ---------- */
-var STAKE = 0.5;                                        // € ανά στήλη
+var STAKE = 0.5;                                        // € ανά στήλη (με 2η ευκαιρία: 1€)
+/* 2η ευκαιρία: κέρδη ανά πλήθος αριθμών → {επιτυχίες στους 23: ποσό} (κατηγορίες «SecondChance» του API ΟΠΑΠ).
+   Κανόνας (συμπέρασμα από τις αποδόσεις, ~69% για κάθε πλήθος): αν ≥1 αριθμός του δελτίου είναι στους 3 της 2ης ευκαιρίας,
+   πληρώνει το μεγαλύτερο από κανονικό κέρδος (20 αριθμοί) και κέρδος 2ης ευκαιρίας (23 αριθμοί)· αλλιώς το κανονικό. */
+var SCPAYS = {
+  12:{12:500000,11:6250,10:625,9:250,8:37.5,7:8,6:3}, 11:{11:250000,10:3750,9:375,8:62.5,7:12.5,6:5,5:1},
+  10:{10:50000,9:2500,8:125,7:25,6:8,5:1.5}, 9:{9:20000,8:1000,7:50,6:7.5,5:2,4:1},
+  8:{8:7500,7:250,6:17.5,5:4,4:1.5}, 7:{7:2500,6:40,5:8,4:1.5,3:1}, 6:{6:800,5:20,4:3.5,3:1},
+  5:{5:225,4:12.5,3:1.5}, 4:{4:62.5,3:4,2:1.75}, 3:{3:25,2:3.75}, 2:{2:8,1:3.5}, 1:{1:8.5}
+};
+function useSC(){ return $('simSC').checked; }
+function scWin(K,a,b){ var m = PAYS[K][a]||0; return b>0 ? Math.max(m, SCPAYS[K][a+b]||0) : m; }
+function theoRtpSC(K){ // ακριβής υπολογισμός: a επιτυχίες στους 20, b στους 3, υπόλοιπα στους 57
+  var t=comb(80,K), s=0;
+  for(var a=0;a<=K;a++) for(var b=0;b<=Math.min(3,K-a);b++){ var p=comb(20,a)*comb(3,b)*comb(57,K-a-b)/t; s+=p*scWin(K,a,b); }
+  return s/1;
+}
+function probs23(K){ var t=comb(80,K), a=[]; for(var k=0;k<=K;k++) a.push(comb(23,k)*comb(57,K-k)/t); return a; }
 // κέρδος ανά στήλη 0,50€ ανά πλήθος αριθμών → {επιτυχίες: ποσό} (από τις κατηγορίες κερδών του API ΟΠΑΠ)
 var PAYS = {
   1:{1:1.25}, 2:{1:0.5,2:2.5}, 3:{2:1.25,3:12.5}, 4:{2:0.5,3:2,4:50},
@@ -659,7 +680,7 @@ function fillExOptions(){
 }
 var EX_TRIES = 200;
 function runSim(){
-  var K = simN(), PAY = PAYS[K];
+  var K = simN(), PAY = PAYS[K], SCm = useSC();
   var src = simPos(), rng = $('simRange').value;
   var W = $('simWin').value==='x' ? Math.max(1, parseInt($('simWX').value,10)||1) : +$('simWin').value;
   var exY = $('simExOn').checked ? (+$('simEx').value||K) : 0;
@@ -696,13 +717,14 @@ function runSim(){
   else if(rng==='x'){ var X = Math.max(1, parseInt($('simX').value,10)||1); startIdx = Math.max(0, all.length - X); }
   else if(rng!=='all'){ startIdx = Math.max(0, all.length - (+rng)); }
   for(var i=0;i<all.length;i++){
-    if(i>=W && i>=startIdx){
+    if(i>=W && i>=startIdx && (!SCm || all[i].sc.length)){
       var pk = pick(i), d = all[i];
       if(!pk){ skipped++; }
       else {
         if(pk.sw) swapped++;
         var hits = pk.t.filter(function(n){return d.set.has(n);});
-        res.push({d:d, ticket:pk.t, hits:hits, win:PAY[hits.length]||0});
+        var sch = SCm ? pk.t.filter(function(n){return d.sc.indexOf(n)>=0;}) : [];
+        res.push({d:d, ticket:pk.t, hits:hits, sch:sch, win: SCm ? scWin(K,hits.length,sch.length) : (PAY[hits.length]||0)});
       }
     }
     simPart(all[i],src).forEach(function(n){ cnt[n]++; last[n]=i; });
@@ -714,25 +736,27 @@ function runSim(){
 function renderSim(){
   var card = document.querySelector && document.querySelector('.card[data-k="sim"]');
   if(card && card.classList.contains('collapsed')) return; // δεν υπολογίζεται όσο είναι κλειστό
-  var K = simN(), PAY = PAYS[K], PROB = probs(K);
+  var K = simN(), PAY = PAYS[K], SCm = useSC(), PROB = SCm ? probs23(K) : probs(K), ST = SCm ? 1 : STAKE;
   $('simTitleN').textContent = K;
+  var tot = function(x){ return x.hits.length + (x.sch?x.sch.length:0); };
   var r = runSim(), res = r.res, N = res.length;
   $('simNext').innerHTML = r.nextNone ? '<span class="muted">Δεν βρέθηκε συνδυασμός που να περνάει το φίλτρο.</span>' : r.next ? r.next.slice().sort(function(a,b){return a-b;}).map(function(n){return '<i>'+n+'</i>';}).join('') : '<span class="muted">Δεν υπάρχουν αρκετές κληρώσεις.</span>';
   $('simNextLbl').textContent = 'Δελτίο για την επόμενη κλήρωση' + (activeTime ? ' ('+hm(activeTime)+')' : '');
-  if(!N){ $('simChips').innerHTML=''; $('simChart').innerHTML=''; $('simDist').innerHTML=''; $('simList').innerHTML='<div class="muted">Περιμένω ιστορικό…</div>'; $('simMeta').textContent=''; return; }
-  var cost = N*STAKE, won = 0, dist = new Array(K+1).fill(0), wins = 0, best = res[0];
+  if(!N){ $('simChips').innerHTML=''; $('simChart').innerHTML=''; $('simDist').innerHTML=''; $('simList').innerHTML='<div class="muted">'+(SCm?'Δεν υπάρχουν ακόμα κληρώσεις με 2η ευκαιρία σε αυτό το διάστημα.':'Περιμένω ιστορικό…')+'</div>'; $('simMeta').textContent=''; return; }
+  var cost = N*ST, won = 0, dist = new Array(K+1).fill(0), wins = 0, best = res[0];
   var curve = [], bal = 0;
-  res.forEach(function(x){ won += x.win; dist[x.hits.length]++; if(x.win) wins++; if(x.win>best.win) best=x; bal += x.win-STAKE; curve.push(bal); });
+  res.forEach(function(x){ won += x.win; dist[SCm?tot(x):x.hits.length]++; if(x.win) wins++; if(x.win>best.win) best=x; bal += x.win-ST; curve.push(bal); });
   var net = won-cost, rtp = won/cost*100;
-  var avgHits = res.reduce(function(a,x){return a+x.hits.length;},0)/N;
+  var avgHits = res.reduce(function(a,x){return a+(SCm?tot(x):x.hits.length);},0)/N;
   $('simMeta').textContent = N+' δελτία';
   $('simChips').innerHTML =
     chip('Δελτία', N) + chip('Κόστος', eur(cost)) + chip('Κέρδη', eur(won)) +
     '<span class="chip">Καθαρό: <b style="color:'+(net>=0?'var(--hit)':'var(--miss)')+'">'+(net>=0?'+':'')+eur(net)+'</b></span>' +
-    chip('Απόδοση', rtp.toFixed(1)+'% <span class="muted">(θεωρητική '+(theoRtp(K)*100).toFixed(1)+'%)</span>') +
+    chip('Απόδοση', rtp.toFixed(1)+'% <span class="muted">(θεωρητική '+((SCm?theoRtpSC(K):theoRtp(K))*100).toFixed(1)+'%)</span>') +
     chip('Κερδοφόρα δελτία', wins+' ('+(wins/N*100).toFixed(1)+'%)') +
-    chip('Μ.ό. επιτυχιών', avgHits.toFixed(2)+' <span class="muted">(τυχαίο '+(K/4).toFixed(2)+')</span>') +
-    chip('Καλύτερο', best.hits.length+'/'+K+' · '+eur(best.win)) +
+    chip('Μ.ό. επιτυχιών'+(SCm?' (στους 23)':''), avgHits.toFixed(2)+' <span class="muted">(τυχαίο '+(SCm?K*23/80:K/4).toFixed(2)+')</span>') +
+    chip('Καλύτερο', (SCm?tot(best):best.hits.length)+'/'+K+' · '+eur(best.win)) +
+    (SCm ? chip('Δελτία με αριθμό στη 2η ευκαιρία', res.filter(function(x){return x.sch.length;}).length) : '') +
     (r.exY ? chip('Άλλαξε συνδυασμός λόγω φίλτρου', r.swapped) + chip('Δεν παίχτηκαν (κανένας συνδυασμός δεν πέρασε)', r.skipped) : '');
   // γράφημα υπολοίπου
   var w=600, h=120, mn=Math.min(0,Math.min.apply(null,curve)), mx=Math.max(0,Math.max.apply(null,curve)), sp=(mx-mn)||1;
@@ -743,16 +767,18 @@ function renderSim(){
     '<line x1="0" x2="'+w+'" y1="'+zy+'" y2="'+zy+'" stroke="var(--muted)" stroke-dasharray="4 4" stroke-width="1" vector-effect="non-scaling-stroke"/>'+
     '<polyline fill="none" stroke="'+(net>=0?'var(--hit)':'var(--miss)')+'" stroke-width="2" vector-effect="non-scaling-stroke" points="'+pts+'"/></svg>';
   // κατανομή επιτυχιών
-  var rows = '<tr><th>Επιτυχίες</th><th>Δελτία</th><th>Αναμενόμενα (τυχαία)</th><th>Κέρδος/στήλη</th></tr>';
+  var rows = SCm ? '<tr><th>Επιτυχίες στους 23</th><th>Δελτία</th><th>Αναμενόμενα (τυχαία)</th><th>Κανονικό κέρδος</th><th>2η ευκαιρία</th></tr>'
+                 : '<tr><th>Επιτυχίες</th><th>Δελτία</th><th>Αναμενόμενα (τυχαία)</th><th>Κέρδος/στήλη</th></tr>';
   for(var k=K;k>=0;k--){
-    rows += '<tr><td class="p">'+k+'</td><td><b>'+dist[k]+'</b></td><td class="muted">'+(N*PROB[k]).toFixed(1)+'</td><td>'+(PAY[k]?eur(PAY[k]):'—')+'</td></tr>';
+    rows += '<tr><td class="p">'+k+'</td><td><b>'+dist[k]+'</b></td><td class="muted">'+(N*PROB[k]).toFixed(1)+'</td><td>'+(PAY[k]?eur(PAY[k]):'—')+'</td>'+
+      (SCm ? '<td style="color:#a78bfa">'+(SCPAYS[K][k]?eur(SCPAYS[K][k]):'—')+'</td>' : '')+'</tr>';
   }
   $('simDist').innerHTML = rows;
   // λίστα τελευταίων
   $('simList').innerHTML = res.slice(-30).reverse().map(function(x){
-    var hs = new Set(x.hits);
-    var nums = x.ticket.slice().sort(function(a,b){return a-b;}).map(function(n){return '<i'+(hs.has(n)?' style="background:var(--hit);color:#fff"':'')+'>'+n+'</i>';}).join('');
-    return '<div class="row" style="cursor:default"><div class="t">'+hm(x.d.t)+'<small>'+x.d.d.slice(8)+'/'+x.d.d.slice(5,7)+' · '+x.hits.length+'/'+K+(x.win?' · <b style="color:var(--hit)">'+eur(x.win)+'</b>':'')+'</small></div><div class="n">'+nums+'</div></div>';
+    var hs = new Set(x.hits), ss = new Set(x.sch||[]);
+    var nums = x.ticket.slice().sort(function(a,b){return a-b;}).map(function(n){return '<i'+(hs.has(n)?' style="background:var(--hit);color:#fff"':ss.has(n)?' class="sc"':'')+'>'+n+'</i>';}).join('');
+    return '<div class="row" style="cursor:default"><div class="t">'+hm(x.d.t)+'<small>'+x.d.d.slice(8)+'/'+x.d.d.slice(5,7)+' · '+x.hits.length+(x.sch&&x.sch.length?'+'+x.sch.length:'')+'/'+K+(x.win?' · <b style="color:var(--hit)">'+eur(x.win)+'</b>':'')+'</small></div><div class="n">'+nums+'</div></div>';
   }).join('');
 }
 
@@ -780,6 +806,12 @@ fillExOptions();
 $('simN').addEventListener('change',fillExOptions);
 $('simExZ').addEventListener('change',function(){ $('simExZX').style.display = $('simExZ').value==='x' ? '' : 'none'; if($('simExZ').value==='x') $('simExZX').focus(); });
 $('simExZX').addEventListener('input',renderSim);
+$('simSC').addEventListener('change',function(){
+  var on = $('simSC').checked;
+  $('scState').textContent = on ? 'ναι · 1€/δελτίο' : 'όχι · 0,50€/δελτίο';
+  $('scBox').classList.toggle('on', on); $('scBox').style.borderStyle = on ? 'solid' : 'dashed';
+  renderSim();
+});
 $('simExOn').addEventListener('change',function(){
   var on = $('simExOn').checked;
   $('exOpts').style.display = on ? '' : 'none';
