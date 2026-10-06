@@ -295,28 +295,49 @@ async function getJSON(url){
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 }
-async function fetchDay(ds){
-  var first = await getJSON(API+'/draw-date/'+ds+'/'+ds+'?page=0&size=10');
+/* ΣΗΜΑΝΤΙΚΟ: το API ομαδοποιεί τις κληρώσεις ανά ημέρα UTC
+   (π.χ. «2026-10-05» = 03:00 5/10 έως 02:55 6/10 ώρα Ελλάδας, το καλοκαίρι).
+   Γι' αυτό μια ημέρα Ελλάδας χρειάζεται δύο ημέρες του API. */
+function utcDay(ms){ return new Date(ms).toISOString().slice(0,10); }
+async function getRetry(url, tries){
+  for(var a=0;;a++){
+    try{ return await getJSON(url); }
+    catch(e){ if(a>=(tries||3)-1) throw e; await new Promise(function(r){setTimeout(r,600*(a+1));}); }
+  }
+}
+async function fetchApiDay(ds){ // ds = ημέρα του API (UTC)
+  var url = function(p){ return API+'/draw-date/'+ds+'/'+ds+'?page='+p+'&size=10'; };
+  var first = await getRetry(url(0));
   var out = (first.content||[]).slice();
-  var pages = first.totalPages || 1;
-  var rest = [];
+  var pages = first.totalPages || 1, rest = [];
   for(var p=1;p<pages;p++) rest.push(p);
-  // parallel in chunks of 8
   for(var i=0;i<rest.length;i+=4){
-    var chunk = rest.slice(i,i+4).map(function(p){
-      return getJSON(API+'/draw-date/'+ds+'/'+ds+'?page='+p+'&size=10').then(function(r){return r.content||[];}).catch(function(){return [];});
-    });
+    var chunk = rest.slice(i,i+4).map(function(p){ return getRetry(url(p)).then(function(r){return r.content||[];}); });
     (await Promise.all(chunk)).forEach(function(c){ out = out.concat(c); });
   }
   var seen = {};
-  return out.filter(function(c){ if(c.status!=='results'||seen[c.drawId])return false; seen[c.drawId]=1; return true; })
-            .map(norm).sort(function(a,b){return b.id-a.id;});
+  return out.filter(function(c){ if(c.status!=='results'||seen[c.drawId])return false; seen[c.drawId]=1; return true; }).map(norm);
+}
+// Όλες οι κληρώσεις της ημέρας Ελλάδας ds → {mine: της ημέρας, other: γειτονικές}
+async function fetchDay(ds){
+  var res = await Promise.all([fetchApiDay(dayShift(ds,-1)), fetchApiDay(ds)]);
+  var all = res[0].concat(res[1]), seen = {}, mine = [], other = [];
+  all.forEach(function(d){ if(seen[d.id])return; seen[d.id]=1; (d.d===ds?mine:other).push(d); });
+  var byId = function(a,b){return b.id-a.id;};
+  return {mine:mine.sort(byId), other:other.sort(byId)};
+}
+function addHist(arr){
+  var have = {}; histPool.forEach(function(d){have[d.id]=1;});
+  today.forEach(function(d){have[d.id]=1;});
+  arr.forEach(function(d){ if(!have[d.id]){ have[d.id]=1; histPool.push(d); } });
 }
 
 async function loadToday(){
   setStatus('Φόρτωση σημερινών κληρώσεων…');
   var ds = dateOf(Date.now());
-  today = await fetchDay(ds);
+  var r = await fetchDay(ds);
+  today = r.mine;
+  addHist(r.other);
   if(today.length){ lastId = today[0].id; }
   await pollLast(true);
   renderAll();
@@ -325,18 +346,31 @@ async function loadToday(){
 
 async function loadHistory(){
   var base = dateOf(Date.now());
-  var days = []; for(var k=1;k<=HIST_DAYS;k++) days.push(dayShift(base,-k));
-  var done = 0;
+  // οι ημέρες API base-1 και base έχουν ήδη φορτωθεί· συνεχίζουμε από base-2
+  var days = []; for(var k=2;k<=HIST_DAYS+1;k++) days.push(dayShift(base,-k));
+  var done = 0, failed = 0;
   for(var i=0;i<days.length;i+=2){
-    var res = await Promise.all(days.slice(i,i+2).map(function(ds){ return fetchDay(ds).catch(function(){return [];}); }));
-    res.forEach(function(r){ histPool = histPool.concat(r); });
+    var res = await Promise.all(days.slice(i,i+2).map(function(ds){ return fetchApiDay(ds).catch(function(){ failed++; return []; }); }));
+    res.forEach(function(r){ addHist(r); });
     done += res.length;
     $('prog').style.width = Math.round(done/days.length*100)+'%';
     $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις ('+done+'/'+days.length+' ημέρες)';
     renderStats(); renderPos(); renderSim();
   }
-  $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις από '+HIST_DAYS+' ημέρες + σήμερα';
+  histPool.sort(function(a,b){return b.id-a.id;});
+  var gaps = 0; for(var j=1;j<histPool.length;j++) if(histPool[j-1].id-histPool[j].id>1) gaps += histPool[j-1].id-histPool[j].id-1;
+  $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις από '+HIST_DAYS+' ημέρες + σήμερα'+
+    (failed||gaps ? ' · ⚠️ λείπουν '+gaps+' κληρώσεις'+(failed?' ('+failed+' ημέρες απέτυχαν)':'') : ' · πλήρες, χωρίς κενά');
   renderPos(); renderSim();
+}
+
+/* νέα κλήρωση: αν άλλαξε η ημέρα (μεσάνυχτα Ελλάδας), οι χθεσινές πάνε στο ιστορικό */
+function pushDraw(nd){
+  if(today.length && nd.d > today[0].d){ addHist(today); histPool.sort(function(a,b){return b.id-a.id;}); today = []; viewId = null; }
+  if(!today.length || nd.d === today[0].d){
+    if(!today.some(function(x){return x.id===nd.id;})) today.unshift(nd);
+    today.sort(function(a,b){return b.id-a.id;});
+  } else addHist([nd]);
 }
 
 /* Cheap poll: last result + active draw */
@@ -348,31 +382,32 @@ async function pollLast(initial){
   var gotNew = false;
   if(r.last && r.last.status==='results' && r.last.drawId > lastId){
     var nd = norm(r.last);
-    if(nd.d !== dateOf(Date.now()) && today.length && nd.d !== today[0].d){ today = []; }
-    // fill any gap (missed draws)
-    if(lastId && nd.id - lastId > 1 && !initial){
-      try{ var fresh = await fetchDay(nd.d); today = fresh; }catch(e){ today.unshift(nd); }
-    } else if(!today.some(function(x){return x.id===nd.id;})) today.unshift(nd);
+    if(lastId && nd.id - lastId > 1){ // λείπουν ενδιάμεσες κληρώσεις → τις συμπληρώνουμε
+      try{
+        var api = await fetchApiDay(utcDay(nd.t));
+        if(nd.id - lastId > 10 || utcDay(nd.t) !== utcDay(nd.t - (nd.id-lastId)*300000)) api = api.concat(await fetchApiDay(utcDay(nd.t - 86400000)));
+        api.filter(function(d){return d.id>lastId && d.id<nd.id;}).sort(function(a,b){return a.id-b.id;}).forEach(pushDraw);
+      }catch(e){}
+    }
+    pushDraw(nd);
     lastId = nd.id; gotNew = true;
     activeTime = Math.max(activeTime, nd.t + 300000);
   }
   return gotNew;
 }
 
-/* Εφεδρικό: η πρώτη σελίδα της ημέρας έχει τις 10 πιο πρόσφατες κληρώσεις */
+/* Εφεδρικό: η πρώτη σελίδα της τρέχουσας ημέρας API έχει τις 10 πιο πρόσφατες κληρώσεις */
 async function pollFallback(err){
-  var ds = dateOf(Date.now());
+  var ds = utcDay(Date.now());
   var raw = await getJSON(API+'/draw-date/'+ds+'/'+ds+'?page=0&size=10');
   var fresh = (raw.content||[]).filter(function(c){return c.status==='results';}).map(norm);
-  if(today.length && today[0].d !== ds) today = [];
   var gotNew = false;
   fresh.sort(function(a,b){return a.id-b.id;}).forEach(function(nd){
-    if(nd.id > lastId && !today.some(function(x){return x.id===nd.id;})){
-      today.unshift(nd); lastId = nd.id; gotNew = true;
+    if(nd.id > lastId){
+      pushDraw(nd); lastId = nd.id; gotNew = true;
       activeTime = Math.max(activeTime, nd.t + 300000);
     }
   });
-  today.sort(function(a,b){return b.id-a.id;});
   if(!activeTime || activeTime < Date.now() - 300000) activeTime = (today[0]?today[0].t:Date.now()) + 300000;
   return gotNew;
 }
