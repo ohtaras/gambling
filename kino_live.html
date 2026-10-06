@@ -276,7 +276,7 @@ var histPool = [];       // past days
 var lastId = 0, activeTime = 0;
 var viewId = null;       // draw shown on board (null = latest)
 var posSel = 0;          // 0 = πίνακας, 1..20 = θέση, 21 = θέσεις 1–10, 22 = θέσεις 11–20
-var refreshTimer = null, retries = 0;
+var refreshTimer = null, retries = 0, errStreak = 0;
 
 var $ = function(id){ return document.getElementById(id); };
 
@@ -305,18 +305,40 @@ async function getRetry(url, tries){
     catch(e){ if(a>=(tries||3)-1) throw e; await new Promise(function(r){setTimeout(r,600*(a+1));}); }
   }
 }
+/* Τοπική αποθήκευση ολοκληρωμένων ημερών, για να μη ζητάμε ξανά τα ίδια (λιγότερες κλήσεις → λιγότερος κίνδυνος μπλοκαρίσματος) */
+var CACHE_V = 'kl_d1_';
+function cacheGet(ds){
+  try{
+    var s = localStorage.getItem(CACHE_V+ds); if(!s) return null;
+    return JSON.parse(s).map(function(x){ return norm({drawId:x[0], drawTime:x[1], winningNumbers:{list:x[2], bonus:[x[3]], sidebets:x[4]||null}}); });
+  }catch(e){ return null; }
+}
+function cachePut(ds, arr){
+  try{
+    localStorage.setItem(CACHE_V+ds, JSON.stringify(arr.map(function(d){ return [d.id,d.t,d.arr,d.b]; })));
+    var keep = dayShift(utcDay(Date.now()), -(HIST_DAYS+4));
+    for(var i=localStorage.length-1;i>=0;i--){ var k=localStorage.key(i); if(k && k.indexOf(CACHE_V)===0 && k.slice(CACHE_V.length)<keep) localStorage.removeItem(k); }
+  }catch(e){}
+}
 async function fetchApiDay(ds){ // ds = ημέρα του API (UTC)
+  var past = ds < utcDay(Date.now() - 600000); // ολοκληρωμένη ημέρα (με 10' περιθώριο)
+  if(past){ var c = cacheGet(ds); if(c && c.length) return c; }
   var url = function(p){ return API+'/draw-date/'+ds+'/'+ds+'?page='+p+'&size=10'; };
   var first = await getRetry(url(0));
   var out = (first.content||[]).slice();
   var pages = first.totalPages || 1, rest = [];
   for(var p=1;p<pages;p++) rest.push(p);
-  for(var i=0;i<rest.length;i+=4){
-    var chunk = rest.slice(i,i+4).map(function(p){ return getRetry(url(p)).then(function(r){return r.content||[];}); });
+  for(var i=0;i<rest.length;i+=3){
+    var chunk = rest.slice(i,i+3).map(function(p){ return getRetry(url(p)).then(function(r){return r.content||[];}); });
     (await Promise.all(chunk)).forEach(function(c){ out = out.concat(c); });
   }
   var seen = {};
-  return out.filter(function(c){ if(c.status!=='results'||seen[c.drawId])return false; seen[c.drawId]=1; return true; }).map(norm);
+  var res = out.filter(function(c){ if(c.status!=='results'||seen[c.drawId])return false; seen[c.drawId]=1; return true; }).map(norm);
+  if(past && res.length && res.length === (first.totalElements||0)){
+    var ids = res.map(function(d){return d.id;}); var mn = Math.min.apply(null,ids), mx = Math.max.apply(null,ids);
+    if(mx-mn+1 === res.length) cachePut(ds, res);
+  }
+  return res;
 }
 // Όλες οι κληρώσεις της ημέρας Ελλάδας ds → {mine: της ημέρας, other: γειτονικές}
 async function fetchDay(ds){
@@ -349,8 +371,8 @@ async function loadHistory(){
   // οι ημέρες API base-1 και base έχουν ήδη φορτωθεί· συνεχίζουμε από base-2
   var days = []; for(var k=2;k<=HIST_DAYS+1;k++) days.push(dayShift(base,-k));
   var done = 0, failed = 0;
-  for(var i=0;i<days.length;i+=2){
-    var res = await Promise.all(days.slice(i,i+2).map(function(ds){ return fetchApiDay(ds).catch(function(){ failed++; return []; }); }));
+  for(var i=0;i<days.length;i+=1){
+    var res = await Promise.all(days.slice(i,i+1).map(function(ds){ return fetchApiDay(ds).catch(function(){ failed++; return []; }); }));
     res.forEach(function(r){ addHist(r); });
     done += res.length;
     $('prog').style.width = Math.round(done/days.length*100)+'%';
@@ -424,9 +446,12 @@ async function tryRefresh(){
   var gotNew = false;
   try{
     gotNew = await pollLast(false);
-    setLive(true);
+    setLive(true); errStreak = 0;
   }catch(e){
-    setLive(false); setStatus('Σφάλμα σύνδεσης ('+(e.message||e)+') — νέα προσπάθεια…');
+    errStreak++;
+    var back = Math.min(60000, 4000*Math.pow(2, errStreak-1));
+    setLive(false); setStatus('Σφάλμα σύνδεσης ('+(e.message||e)+') — νέα προσπάθεια σε '+Math.round(back/1000)+'″ (απόπειρα '+errStreak+')');
+    refreshTimer = setTimeout(tryRefresh, back); return;
   }
   if(gotNew){
     try{ onNewDraw(); }catch(e){ console.error(e); }
