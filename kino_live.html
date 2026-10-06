@@ -258,6 +258,17 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     </div>
   </section>
 
+  <section class="card mt" data-k="fwd">
+    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🧪 Δοκιμή κανόνων από εδώ και πέρα</span><span id="fwdMeta"></span></h2>
+    <div class="cbody">
+      <div class="muted" style="margin-bottom:10px">Οι 5 κανόνες βγήκαν από 4.008 κληρώσεις (22/9–6/10/2026), ο καλύτερος για κάθε πλήθος αριθμών ανάμεσα σε 520 κανόνες θέσεων. «Πάγωσαν» και δοκιμάζονται μόνο σε κληρώσεις <b id="fwdStartLbl"></b> και μετά, που δεν είχαν δει. Δίπλα, για σύγκριση, ένα τυχαίο δελτίο ίδιου μεγέθους σε κάθε κλήρωση. Στήλη 0,50€, κανονικός πίνακας κερδών.</div>
+      <div class="scroll-x"><table class="ptab" id="fwdTable"></table></div>
+      <div class="chips" id="fwdChips"></div>
+      <h3 class="muted" style="font-size:13px;margin:14px 0 6px">Δελτία για την επόμενη κλήρωση</h3>
+      <div id="fwdNext"></div>
+    </div>
+  </section>
+
   <div class="note">Δεδομένα: API ΟΠΑΠ (παιχνίδι 1100). Οι κληρώσεις είναι τυχαίες — τα στατιστικά δεν προβλέπουν το αποτέλεσμα. Παίξε υπεύθυνα, 18+.</div>
 </div>
 
@@ -265,7 +276,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
 (function(){
 'use strict';
 var GAME = 1100, API = 'https://api.opap.gr/draws/v3.0/' + GAME;
-var HIST_DAYS = 14;
+var HIST_DAYS = Math.max(14, Math.ceil((Date.now() - Date.UTC(2026,9,6,23,0)) / 864e5) + 3); // καλύπτει και τη δοκιμή κανόνων
 
 /* ---------- Athens time (DST-aware) ---------- */
 var fmt = new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Athens',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
@@ -392,7 +403,7 @@ async function loadHistory(){
   var gaps = 0; for(var j=1;j<histPool.length;j++) if(histPool[j-1].id-histPool[j].id>1) gaps += histPool[j-1].id-histPool[j].id-1;
   $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις από '+HIST_DAYS+' ημέρες + σήμερα'+
     (failed||gaps ? ' · ⚠️ λείπουν '+gaps+' κληρώσεις'+(failed?' ('+failed+' ημέρες απέτυχαν)':'') : ' · πλήρες, χωρίς κενά');
-  renderPos(); renderSim();
+  renderPos(); renderSim(); renderFwd();
 }
 
 /* νέα κλήρωση: αν άλλαξε η ημέρα (μεσάνυχτα Ελλάδας), οι χθεσινές πάνε στο ιστορικό */
@@ -782,7 +793,73 @@ function renderSim(){
   }).join('');
 }
 
-function renderAll(){ renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); }
+/* ---------- Δοκιμή «παγωμένων» κανόνων σε μελλοντικές κληρώσεις ---------- */
+var FWD_START = 1340470;                 // 7/10/2026 02:00 — πρώτη κλήρωση της δοκιμής
+var FWD_LATECAP = 576;
+var FWD_RULES = [ // καλύτερος ανά πλήθος αριθμών στις 4.008 κληρώσεις 22/9–6/10 (απόδοση εκεί)
+  {K:3,  pos:[1,10],  m:'cold', W:100, hist:85.3},
+  {K:5,  pos:[1,1],   m:'cold', W:20,  hist:120.5},
+  {K:6,  pos:[1,1],   m:'cold', W:10,  hist:135.5},
+  {K:8,  pos:[6,10],  m:'cold', W:50,  hist:471.3},
+  {K:10, pos:[16,20], m:'hot',  W:5,   hist:310.1}
+];
+var MNAME = {hot:'συχνότεροι', cold:'σπανιότεροι', late:'καθυστερημένοι'};
+function ruleTxt(r){ return r.K+' αρ. · θέση '+(r.pos[0]===r.pos[1]?r.pos[0]+'η':r.pos[0]+'–'+r.pos[1])+' · '+MNAME[r.m]+(r.m==='late'?'':' από '+r.W); }
+function fwdTicket(all, i, r){ // all: παλιό→νέο, χρησιμοποιεί μόνο κληρώσεις πριν από την i
+  var key = new Array(81);
+  if(r.m==='late'){
+    var last = new Array(81).fill(-1e9);
+    for(var j=Math.max(0,i-FWD_LATECAP); j<i; j++) for(var c=r.pos[0]-1;c<r.pos[1];c++) last[all[j].arr[c]] = j;
+    for(var n=1;n<=80;n++) key[n] = last[n]*1000+n;
+  } else {
+    var cnt = new Array(81).fill(0);
+    for(var j2=Math.max(0,i-r.W); j2<i; j2++) for(var c2=r.pos[0]-1;c2<r.pos[1];c2++) cnt[all[j2].arr[c2]]++;
+    for(var n2=1;n2<=80;n2++) key[n2] = (r.m==='hot' ? -cnt[n2] : cnt[n2])*1000+n2;
+  }
+  var nums=[]; for(var q=1;q<=80;q++) nums.push(q);
+  return nums.sort(function(a,b){return key[a]-key[b];}).slice(0,r.K);
+}
+function rndTicket(seed, K){ // σταθερό «τυχαίο» δελτίο ανά κλήρωση (ίδιο σε κάθε φόρτωση)
+  var s = seed>>>0, pool=[]; for(var n=1;n<=80;n++) pool.push(n);
+  function rnd(){ s=(s+0x6D2B79F5)>>>0; var t=s; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return ((t^(t>>>14))>>>0)/4294967296; }
+  for(var i=0;i<K;i++){ var j=i+Math.floor(rnd()*(80-i)); var x=pool[i]; pool[i]=pool[j]; pool[j]=x; }
+  return pool.slice(0,K);
+}
+function renderFwd(){
+  var card = document.querySelector && document.querySelector('.card[data-k="fwd"]');
+  if(card && card.classList.contains('collapsed')) return;
+  var all = today.concat(histPool).slice().sort(function(a,b){return a.id-b.id;});
+  var s0 = all.findIndex(function(d){return d.id>=FWD_START;});
+  var st = all.find(function(d){return d.id===FWD_START;});
+  $('fwdStartLbl').textContent = st ? 'από '+st.d.split('-').reverse().join('/')+' '+hm(st.t) : 'από την κλήρωση #'+FWD_START;
+  var rows = '<tr><th>Κανόνας</th><th>Ιστορικό</th><th>Δελτία</th><th>Κόστος → Κέρδη</th><th>Απόδοση</th><th>Μ.ό. επιτ.</th><th>Τυχαίο ίδιου μεγέθους</th></tr>';
+  var totC=0, totW=0, totRW=0, N=0, nextH='';
+  FWD_RULES.forEach(function(r){
+    var P = PAYS[r.K], won=0, rwon=0, hs=0, best=0, n=0;
+    if(s0>=0) for(var i=s0;i<all.length;i++){
+      var d = all[i], t = fwdTicket(all,i,r), h = t.filter(function(x){return d.set.has(x);}).length;
+      var rt = rndTicket(d.id*131+r.K, r.K), rh = rt.filter(function(x){return d.set.has(x);}).length;
+      won += P[h]||0; rwon += P[rh]||0; hs += h; best = Math.max(best,h); n++;
+    }
+    N = n; var cost = n*STAKE; totC += cost; totW += won; totRW += rwon;
+    var rtp = cost ? won/cost*100 : 0, rrtp = cost ? rwon/cost*100 : 0;
+    rows += '<tr><td style="white-space:nowrap">'+ruleTxt(r)+'</td><td class="muted">'+r.hist.toFixed(1)+'%</td><td>'+n+'</td>'+
+      '<td style="white-space:nowrap">'+eur(cost)+' → '+eur(won)+'</td>'+
+      '<td><b style="color:'+(n? (rtp>=100?'var(--hit)':'var(--miss)') : 'var(--muted)')+'">'+(n?rtp.toFixed(1)+'%':'—')+'</b></td>'+
+      '<td>'+(n?(hs/n).toFixed(2):'—')+' <span class="muted">/ '+(r.K/4).toFixed(2)+'</span></td>'+
+      '<td class="muted">'+(n?rrtp.toFixed(1)+'%':'—')+'</td></tr>';
+    var nt = fwdTicket(all, all.length, r).sort(function(a,b){return a-b;});
+    nextH += '<div style="margin:6px 0"><div class="muted" style="font-size:12px">'+ruleTxt(r)+'</div><div class="order" style="margin-top:4px">'+nt.map(function(x){return '<i>'+x+'</i>';}).join('')+'</div></div>';
+  });
+  $('fwdTable').innerHTML = rows;
+  $('fwdMeta').textContent = N ? N+' κληρώσεις' : 'ξεκινάει';
+  $('fwdChips').innerHTML = N ? chip('Σύνολο 5 κανόνων', eur(totC)+' → '+eur(totW)+' ('+(totW/totC*100).toFixed(1)+'%)') +
+    chip('Σύνολο τυχαίων', eur(totC)+' → '+eur(totRW)+' ('+(totRW/totC*100).toFixed(1)+'%)') + chip('Θεωρητική απόδοση', '≈69%')
+    : '<span class="muted">Η δοκιμή ξεκινάει με την κλήρωση #'+FWD_START+'.</span>';
+  $('fwdNext').innerHTML = nextH;
+}
+
+function renderAll(){ renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); }
 
 /* ---------- Countdown ---------- */
 function tick(){
@@ -831,7 +908,7 @@ $('posBody').addEventListener('click',function(e){ var r=e.target.closest('tr[da
 var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-k]'));
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); if(!on && c.dataset.k==='sim') renderSim(); }
+function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); if(!on && c.dataset.k==='sim') renderSim(); if(!on && c.dataset.k==='fwd') renderFwd(); }
 function updAllBtn(){
   var allClosed = cards.every(function(c){return c.classList.contains('collapsed');});
   $('btnAll').textContent = allClosed ? '▸ Άνοιγμα όλων' : '▾ Κλείσιμο όλων';
