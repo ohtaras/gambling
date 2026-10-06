@@ -42,6 +42,10 @@ h1{font-size:22px;margin:0;display:flex;align-items:center;gap:8px}
 .b.on{background:var(--drawn);color:var(--drawnTxt)}
 .b.bonus{background:var(--bonus);color:#1a1300}
 .b.hit{background:var(--hit);color:#fff}
+.b.sc{background:#8b5cf6;color:#fff}
+.order i.sc{background:#8b5cf6;color:#fff}
+.order .sep{font-style:normal;color:var(--muted);font-size:12px;align-self:center;padding:0 4px}
+.row .n i.sc{background:#8b5cf6;color:#fff}
 .b.pick{box-shadow:inset 0 0 0 2px var(--bonus)}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .chip{background:var(--panel2);border-radius:999px;padding:4px 10px;font-size:13px}
@@ -160,7 +164,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   </section>
 
   <section class="card mt" data-k="pos">
-    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>Στατιστικά θέσεων 1–20</span><span>
+    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>Στατιστικά θέσεων 1–23</span><span>
       <select id="pwin">
         <option value="5">τελευταίες 5</option>
         <option value="10">τελευταίες 10</option>
@@ -173,7 +177,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
         <option value="all" selected>όλο το ιστορικό</option>
       </select></span></h2>
     <div class="cbody">
-      <div class="muted" style="margin-bottom:10px">Θέση = με ποια σειρά βγήκε ο αριθμός στην κλήρωση (1η μπάλα, 2η μπάλα… 20ή μπάλα).</div>
+      <div class="muted" style="margin-bottom:10px">Θέση = με ποια σειρά βγήκε ο αριθμός στην κλήρωση (1η μπάλα… 20ή μπάλα, και 21η–23η για τη 2η ευκαιρία).</div>
       <div class="pos-tabs" id="posTabs"></div>
       <div id="posBody"></div>
       <div class="chips" id="posChips"></div>
@@ -195,9 +199,9 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
           <option value="10" selected>10 αριθμοί</option><option value="11">11 αριθμοί</option><option value="12">12 αριθμοί</option>
         </select>
         <span class="chip" style="display:inline-flex;align-items:center;gap:6px">Θέσεις
-          <input id="simPF" type="number" min="1" max="20" step="1" value="1" inputmode="numeric" style="width:58px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:16px" aria-label="από θέση">
+          <input id="simPF" type="number" min="1" max="23" step="1" value="1" inputmode="numeric" style="width:58px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:16px" aria-label="από θέση">
           έως
-          <input id="simPT" type="number" min="1" max="20" step="1" value="10" inputmode="numeric" style="width:58px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:16px" aria-label="έως θέση"></span>
+          <input id="simPT" type="number" min="1" max="23" step="1" value="10" inputmode="numeric" style="width:58px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:16px" aria-label="έως θέση"></span>
         <select id="simWin">
           <option value="5">από τις τελευταίες 5</option>
           <option value="10" selected>από τις τελευταίες 10</option>
@@ -283,7 +287,8 @@ var $ = function(id){ return document.getElementById(id); };
 function norm(c){
   var w = c.winningNumbers || {};
   var arr = (w.list||[]).slice();
-  return { id:c.drawId, t:c.drawTime, arr:arr, set:new Set(arr), b:(w.bonus||[])[0],
+  var sc = (w.secondChance||[]).slice();          // 3 αριθμοί «2ης ευκαιρίας» (από 7/10/2026)
+  return { id:c.drawId, t:c.drawTime, arr:arr, sc:sc, all:arr.concat(sc), set:new Set(arr), b:(w.bonus||[])[0],
            d:dateOf(c.drawTime), m:minsOf(c.drawTime), sb:w.sidebets||null };
 }
 
@@ -306,18 +311,18 @@ async function getRetry(url, tries){
   }
 }
 /* Τοπική αποθήκευση ολοκληρωμένων ημερών, για να μη ζητάμε ξανά τα ίδια (λιγότερες κλήσεις → λιγότερος κίνδυνος μπλοκαρίσματος) */
-var CACHE_V = 'kl_d1_';
+var CACHE_V = 'kl_d2_';
 function cacheGet(ds){
   try{
     var s = localStorage.getItem(CACHE_V+ds); if(!s) return null;
-    return JSON.parse(s).map(function(x){ return norm({drawId:x[0], drawTime:x[1], winningNumbers:{list:x[2], bonus:[x[3]], sidebets:x[4]||null}}); });
+    return JSON.parse(s).map(function(x){ return norm({drawId:x[0], drawTime:x[1], winningNumbers:{list:x[2], bonus:[x[3]], secondChance:x[4]||[]}}); });
   }catch(e){ return null; }
 }
 function cachePut(ds, arr){
   try{
-    localStorage.setItem(CACHE_V+ds, JSON.stringify(arr.map(function(d){ return [d.id,d.t,d.arr,d.b]; })));
+    localStorage.setItem(CACHE_V+ds, JSON.stringify(arr.map(function(d){ return d.sc.length ? [d.id,d.t,d.arr,d.b,d.sc] : [d.id,d.t,d.arr,d.b]; })));
     var keep = dayShift(utcDay(Date.now()), -(HIST_DAYS+4));
-    for(var i=localStorage.length-1;i>=0;i--){ var k=localStorage.key(i); if(k && k.indexOf(CACHE_V)===0 && k.slice(CACHE_V.length)<keep) localStorage.removeItem(k); }
+    for(var i=localStorage.length-1;i>=0;i--){ var k=localStorage.key(i); if(k && ((k.indexOf(CACHE_V)===0 && k.slice(CACHE_V.length)<keep) || k.indexOf('kl_d1_')===0)) localStorage.removeItem(k); }
   }catch(e){}
 }
 async function fetchApiDay(ds){ // ds = ημέρα του API (UTC)
@@ -487,20 +492,21 @@ function renderBoard(){
   }
   Array.prototype.forEach.call(board.children,function(c){
     var n=+c.dataset.n;
-    c.className='b'+(d&&d.set.has(n)?(n===d.b?' bonus':' on'):'');
+    c.className='b'+(d&&d.set.has(n)?(n===d.b?' bonus':' on'):(d&&d.sc.indexOf(n)>=0?' sc':''));
   });
   $('btnLive').style.display = viewId ? '' : 'none';
   if(!d){ $('boardMeta').textContent='—'; $('order').innerHTML=''; $('chips').innerHTML=''; return; }
   $('boardTitle').textContent = viewId ? 'Κλήρωση '+hm(d.t) : 'Τελευταία κλήρωση';
   $('boardMeta').textContent = '#'+d.id+' · '+hm(d.t);
   balls($('order'), d.arr, d.b);
+  if(d.sc.length) $('order').innerHTML += '<i class="sep">2η ευκαιρία</i>' + d.sc.map(function(n){return '<i class="sc">'+n+'</i>';}).join('');
   var odd = d.arr.filter(function(n){return n%2;}).length, even = 20-odd;
   var lo = d.arr.filter(function(n){return n<=40;}).length;
   var sum = d.arr.reduce(function(a,b){return a+b;},0);
   var sb = d.sb||{};
   var par = sb.winningParity==='odd'?'Μονά':sb.winningParity==='even'?'Ζυγά':sb.winningParity==='draw'?'Ισοπαλία':'—';
   $('chips').innerHTML =
-    chip('Bonus', d.b!=null?d.b:'—') + chip('Μονά/Ζυγά', odd+' / '+even) + chip('Νικ. μονά-ζυγά', par) +
+    chip('Bonus', d.b!=null?d.b:'—') + (d.sc.length ? '<span class="chip">2η ευκαιρία: <b style="color:#a78bfa">'+d.sc.join(', ')+'</b></span>' : '') + chip('Μονά/Ζυγά', odd+' / '+even) + chip('Νικ. μονά-ζυγά', par) +
     chip('Νικ. στήλη', sb.winningColumn!=null?sb.winningColumn:'—') + chip('1–40 / 41–80', lo+' / '+(20-lo)) + chip('Άθροισμα', sum);
 }
 function chip(k,v){ return '<span class="chip">'+k+': <b>'+v+'</b></span>'; }
@@ -509,7 +515,8 @@ function renderList(){
   $('todayCount').textContent = today.length+' κληρώσεις';
   var sel = viewId || (today[0]&&today[0].id);
   $('list').innerHTML = today.map(function(d){
-    var nums = d.arr.slice().sort(function(a,b){return a-b;}).map(function(n){return '<i'+(n===d.b?' class="bonus"':'')+'>'+n+'</i>';}).join('');
+    var nums = d.arr.slice().sort(function(a,b){return a-b;}).map(function(n){return '<i'+(n===d.b?' class="bonus"':'')+'>'+n+'</i>';}).join('') +
+      d.sc.map(function(n){return '<i class="sc">'+n+'</i>';}).join('');
     return '<div class="row'+(d.id===sel?' sel':'')+'" data-id="'+d.id+'"><div class="t">'+hm(d.t)+'<small>#'+d.id+'</small></div><div class="n">'+nums+'</div></div>';
   }).join('') || '<div class="muted">Καμία κλήρωση ακόμα σήμερα.</div>';
 }
@@ -542,8 +549,9 @@ function statRow(n,v,f,cls){
 }
 
 /* ---------- Στατιστικά θέσεων ---------- */
-var NPOS = 20;
-var GROUPS = {21:[1,10], 22:[11,20]};
+var NPOS = 23;   // 20 κανονικές + 3 «2η ευκαιρία»
+var GROUPS = {101:[1,10], 102:[11,20], 103:[21,23]};
+function hasPos(d,p){ return d.all.length>=p; }
 function posDraws(){
   var w = $('pwin').value;
   if(w==='today') return today;
@@ -551,10 +559,10 @@ function posDraws(){
   all.sort(function(a,b){return b.id-a.id;});
   return w==='all' ? all : all.slice(0,+w);
 }
-function posCount(ds, p){ // p: 1..20, ή 21/22 = ομάδα θέσεων
+function posCount(ds, p){ // p: 1..23, ή 101/102/103 = ομάδα θέσεων
   var cnt = new Array(81).fill(0), lateBy = new Array(81).fill(-1);
   ds.forEach(function(d,i){
-    var a = GROUPS[p] ? d.arr.slice(GROUPS[p][0]-1, GROUPS[p][1]) : [d.arr[p-1]];
+    var a = GROUPS[p] ? d.all.slice(GROUPS[p][0]-1, GROUPS[p][1]) : [d.all[p-1]];
     a.forEach(function(n){ if(n==null)return; cnt[n]++; if(lateBy[n]<0) lateBy[n]=i; });
   });
   return {cnt:cnt, lateBy:lateBy};
@@ -562,9 +570,10 @@ function posCount(ds, p){ // p: 1..20, ή 21/22 = ομάδα θέσεων
 function pball(n,v){ return '<span><i>'+n+'</i><small>'+v+'</small></span>'; }
 function renderPosTabs(){
   var h = '<button data-p="0"'+(posSel===0?' class="act"':'')+'>Πίνακας</button>';
-  for(var p=1;p<=NPOS;p++) h += '<button data-p="'+p+'"'+(posSel===p?' class="act"':'')+'>'+p+'η</button>';
-  h += '<button data-p="21"'+(posSel===21?' class="act"':'')+'>1–10 μαζί</button>';
-  h += '<button data-p="22"'+(posSel===22?' class="act"':'')+'>11–20 μαζί</button>';
+  for(var p=1;p<=NPOS;p++) h += '<button data-p="'+p+'"'+(posSel===p?' class="act"':'')+(p>20?' style="border-color:#8b5cf6"':'')+'>'+p+'η</button>';
+  h += '<button data-p="101"'+(posSel===101?' class="act"':'')+'>1–10 μαζί</button>';
+  h += '<button data-p="102"'+(posSel===102?' class="act"':'')+'>11–20 μαζί</button>';
+  h += '<button data-p="103"'+(posSel===103?' class="act"':'')+' style="border-color:#8b5cf6">21–23 μαζί (2η ευκαιρία)</button>';
   $('posTabs').innerHTML = h;
 }
 function renderPos(){
@@ -578,16 +587,22 @@ function renderPos(){
       var c = posCount(ds,p).cnt;
       var hot = nums.slice().sort(function(a,b){return c[b]-c[a]||a-b;}).slice(0,5);
       var cold = nums.slice().sort(function(a,b){return c[a]-c[b]||a-b;}).slice(0,3);
-      rows += '<tr data-p="'+p+'"><td class="p">'+p+'η</td>'+
+      var np = ds.filter(function(d){return hasPos(d,p);}).length;
+      if(!np){ rows += '<tr data-p="'+p+'"><td class="p" style="color:#a78bfa">'+p+'η</td><td colspan="3" class="muted">2η ευκαιρία — δεν υπάρχουν δεδομένα σε αυτό το διάστημα</td></tr>'; continue; }
+      rows += '<tr data-p="'+p+'"><td class="p"'+(p>20?' style="color:#a78bfa"':'')+'>'+p+'η'+(p>20?'<br><small class="muted">2η ευκ.</small>':'')+'</td>'+
         '<td><div class="pb">'+hot.map(function(n){return pball(n,c[n]);}).join('')+'</div></td>'+
         '<td><div class="pb cold">'+cold.map(function(n){return pball(n,c[n]);}).join('')+'</div></td>'+
-        '<td class="last"><i>'+(last.arr[p-1]!=null?last.arr[p-1]:'—')+'</i></td></tr>';
+        '<td class="last"><i>'+(last.all[p-1]!=null?last.all[p-1]:'—')+'</i></td></tr>';
     }
     $('posBody').innerHTML = '<div class="scroll-x"><table class="ptab"><tr><th>Θέση</th><th>🔥 Συχνότεροι</th><th>❄️ Σπανιότεροι</th><th>Τελ.</th></tr>'+rows+'</table></div>'+
-      '<div class="muted" style="margin-top:6px">Πάτα μια θέση για λεπτομέρειες. Κάτω από κάθε αριθμό: πόσες φορές βγήκε σε αυτή τη θέση.</div>';
+      '<div class="muted" style="margin-top:6px">Πάτα μια θέση για λεπτομέρειες. Κάτω από κάθε αριθμό: πόσες φορές βγήκε σε αυτή τη θέση. Οι θέσεις 21–23 είναι η «2η ευκαιρία» (από 7/10/2026).</div>';
     $('posChips').innerHTML = chip('Κληρώσεις', N) + chip('Αναμενόμενη εμφάνιση ανά αριθμό/θέση', (N/80).toFixed(1));
     return;
   }
+  var G0 = GROUPS[posSel], pMax = G0 ? G0[1] : posSel;
+  ds = ds.filter(function(d){return hasPos(d,pMax);}); N = ds.length;
+  if(!N){ $('posBody').innerHTML='<div class="muted">Δεν υπάρχουν κληρώσεις με 2η ευκαιρία σε αυτό το διάστημα.</div>'; $('posChips').innerHTML=''; return; }
+  last = ds[0];
   var r = posCount(ds,posSel), cnt=r.cnt, lateBy=r.lateBy;
   var hot = nums.slice().sort(function(a,b){return cnt[b]-cnt[a]||a-b;}).slice(0,10);
   var cold = nums.slice().sort(function(a,b){return cnt[a]-cnt[b]||a-b;}).slice(0,10);
@@ -604,7 +619,7 @@ function renderPos(){
     '</div>'+
     (never.length && never.length<80 ? '<div class="muted" style="margin-top:8px">Δεν βγήκαν καθόλου σε αυτό το διάστημα: '+never.join(', ')+'</div>' : '');
   var exp = G ? N*(G[1]-G[0]+1)/80 : N/80;
-  var lastTxt = G ? last.arr.slice(G[0]-1,G[1]).join(', ') : last.arr[posSel-1];
+  var lastTxt = G ? last.all.slice(G[0]-1,G[1]).join(', ') : last.all[posSel-1];
   $('posChips').innerHTML = chip('Κληρώσεις', N) + chip('Αναμενόμενη εμφάνιση/αριθμό', exp.toFixed(1)) + chip('Τελευταία κλήρωση', lastTxt);
 }
 
@@ -628,10 +643,10 @@ function topN(cnt, k, last){ // ισοβαθμίες: πρώτα όποιος β
   return nums.sort(function(a,b){return cnt[b]-cnt[a]||(last?last[b]-last[a]:0)||a-b;}).slice(0,k);
 }
 function simPos(){
-  var a = Math.min(20,Math.max(1,parseInt($('simPF').value,10)||1)), b = Math.min(20,Math.max(1,parseInt($('simPT').value,10)||a));
+  var a = Math.min(23,Math.max(1,parseInt($('simPF').value,10)||1)), b = Math.min(23,Math.max(1,parseInt($('simPT').value,10)||a));
   return a<=b ? [a,b] : [b,a];
 }
-function simPart(d, src){ return d.arr.slice(src[0]-1, src[1]); }
+function simPart(d, src){ return d.all.slice(src[0]-1, src[1]); }
 function simN(){ return Math.min(12,Math.max(1,+$('simN').value||10)); }
 /* μάσκες 80 bit (3 × 32) για γρήγορο μέτρημα κοινών αριθμών */
 function pc32(x){ x=x-((x>>>1)&0x55555555); x=(x&0x33333333)+((x>>>2)&0x33333333); return (((x+(x>>>4))&0x0F0F0F0F)*0x01010101)>>>24; }
