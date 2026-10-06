@@ -227,10 +227,17 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
         <div class="chips" id="exOpts" style="display:none">
         <select id="simEx"></select>
         <select id="simExZ">
+          <option value="5">στις προηγούμενες 5</option>
+          <option value="10">στις προηγούμενες 10</option>
+          <option value="20">στις προηγούμενες 20</option>
+          <option value="50">στις προηγούμενες 50</option>
+          <option value="100">στις προηγούμενες 100</option>
           <option value="288">στις προηγούμενες 288</option>
           <option value="1000">στις προηγούμενες 1000</option>
           <option value="all" selected>σε όλες τις προηγούμενες</option>
+          <option value="x">στις προηγούμενες Χ…</option>
         </select>
+        <input id="simExZX" type="number" min="1" step="1" value="30" inputmode="numeric" style="display:none;width:90px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:16px" aria-label="Χ προηγούμενες κληρώσεις">
         </div>
       </div>
       <div class="muted" id="simNextLbl">Δελτίο για την επόμενη κλήρωση</div>
@@ -581,7 +588,8 @@ function runSim(){
   var src = simPos(), rng = $('simRange').value;
   var W = $('simWin').value==='x' ? Math.max(1, parseInt($('simWX').value,10)||1) : +$('simWin').value;
   var exY = $('simExOn').checked ? (+$('simEx').value||K) : 0;
-  var exZ = $('simExZ').value==='all' ? Infinity : +$('simExZ').value;
+  var zv = $('simExZ').value;
+  var exZ = zv==='all' ? Infinity : zv==='x' ? Math.max(1, parseInt($('simExZX').value,10)||1) : +zv;
   var all = today.concat(histPool).slice().sort(function(a,b){return a.id-b.id;}); // παλιό → νέο
   var M0=new Int32Array(all.length), M1=new Int32Array(all.length), M2=new Int32Array(all.length);
   if(exY) all.forEach(function(d,i){ var m=maskOf(d.arr); M0[i]=m[0]; M1[i]=m[1]; M2[i]=m[2]; });
@@ -695,6 +703,8 @@ $('win').addEventListener('change',renderStats);
 $('pwin').addEventListener('change',renderPos);
 fillExOptions();
 $('simN').addEventListener('change',fillExOptions);
+$('simExZ').addEventListener('change',function(){ $('simExZX').style.display = $('simExZ').value==='x' ? '' : 'none'; if($('simExZ').value==='x') $('simExZX').focus(); });
+$('simExZX').addEventListener('input',renderSim);
 $('simExOn').addEventListener('change',function(){
   var on = $('simExOn').checked;
   $('exOpts').style.display = on ? '' : 'none';
