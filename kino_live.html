@@ -292,7 +292,7 @@ function dayShift(ds,k){ var d=new Date(ds+'T12:00:00Z'); d.setUTCDate(d.getUTCD
 /* ---------- State ---------- */
 var today = [];          // today's draws, newest first
 var histPool = [];       // past days
-var lastId = 0, activeTime = 0;
+var lastId = 0, lastT = 0, activeTime = 0;   // lastT = ώρα της τελευταίας κλήρωσης που έχουμε
 var viewId = null;       // draw shown on board (null = latest)
 var posSel = 0;          // 0 = πίνακας, 1..20 = θέση, 21 = θέσεις 1–10, 22 = θέσεις 11–20
 var refreshTimer = null, retries = 0, errStreak = 0;
@@ -380,7 +380,7 @@ async function loadToday(){
   var r = await fetchDay(ds);
   today = r.mine;
   addHist(r.other);
-  if(today.length){ lastId = today[0].id; }
+  if(today.length){ lastId = today[0].id; lastT = today[0].t; }
   await pollLast(true);
   renderAll();
   setStatus('Ενημερώθηκε ' + hm(Date.now()));
@@ -432,7 +432,7 @@ async function pollLast(initial){
       }catch(e){}
     }
     pushDraw(nd);
-    lastId = nd.id; gotNew = true;
+    lastId = nd.id; lastT = Math.max(lastT, nd.t); gotNew = true;
     activeTime = Math.max(activeTime, nd.t + 300000);
   }
   return gotNew;
@@ -446,7 +446,7 @@ async function pollFallback(err){
   var gotNew = false;
   fresh.sort(function(a,b){return a.id-b.id;}).forEach(function(nd){
     if(nd.id > lastId){
-      pushDraw(nd); lastId = nd.id; gotNew = true;
+      pushDraw(nd); lastId = nd.id; lastT = Math.max(lastT, nd.t); gotNew = true;
       activeTime = Math.max(activeTime, nd.t + 300000);
     }
   });
@@ -454,10 +454,14 @@ async function pollFallback(err){
   return gotNew;
 }
 
+/* Η επόμενη κλήρωση που περιμένουμε είναι 5' μετά την τελευταία που έχουμε.
+   ΠΡΟΣΟΧΗ: το API γυρίζει το «active» στην ΜΕΘΕΠΟΜΕΝΗ ~3″ μετά την ώρα κλήρωσης,
+   ενώ τα αποτελέσματα βγαίνουν ~9–15″ μετά. Γι' αυτό δεν βασιζόμαστε στο activeTime. */
+function expectedTime(){ return lastT ? lastT + 300000 : (activeTime || Date.now()+60000); }
 function scheduleRefresh(){
   clearTimeout(refreshTimer);
-  // πρώτος έλεγχος 8″ μετά την ώρα κλήρωσης, μετά κάθε 4″
-  var wait = Math.max(3000, (activeTime||Date.now()+60000) - Date.now() + 8000);
+  // πρώτος έλεγχος 8″ μετά την ώρα κλήρωσης, μετά κάθε 3″ μέχρι να βγει
+  var wait = Math.max(2000, expectedTime() - Date.now() + 8000);
   retries = 0;
   refreshTimer = setTimeout(tryRefresh, wait);
 }
@@ -478,8 +482,8 @@ async function tryRefresh(){
     setStatus('Νέα κλήρωση #'+lastId+' · '+hm(Date.now()));
     scheduleRefresh(); return;
   }
-  if(activeTime && Date.now() < activeTime){ scheduleRefresh(); return; }
-  if(++retries < 45){ refreshTimer = setTimeout(tryRefresh, 4000); }
+  if(Date.now() < expectedTime()){ scheduleRefresh(); return; }
+  if(++retries < 60){ refreshTimer = setTimeout(tryRefresh, 3000); }
   else { setStatus('Δεν βρέθηκε νέα κλήρωση — ίσως διάλειμμα. Επανέλεγχος σε 1 λεπτό.'); refreshTimer=setTimeout(function(){retries=0;tryRefresh();},60000); }
 }
 
@@ -752,7 +756,7 @@ function renderSim(){
   var tot = function(x){ return x.hits.length + (x.sch?x.sch.length:0); };
   var r = runSim(), res = r.res, N = res.length;
   $('simNext').innerHTML = r.nextNone ? '<span class="muted">Δεν βρέθηκε συνδυασμός που να περνάει το φίλτρο.</span>' : r.next ? r.next.slice().sort(function(a,b){return a-b;}).map(function(n){return '<i>'+n+'</i>';}).join('') : '<span class="muted">Δεν υπάρχουν αρκετές κληρώσεις.</span>';
-  $('simNextLbl').textContent = 'Δελτίο για την επόμενη κλήρωση' + (activeTime ? ' ('+hm(activeTime)+')' : '');
+  $('simNextLbl').textContent = 'Δελτίο για την επόμενη κλήρωση' + (lastT||activeTime ? ' ('+hm(expectedTime())+')' : '');
   if(!N){ $('simChips').innerHTML=''; $('simChart').innerHTML=''; $('simDist').innerHTML=''; $('simList').innerHTML='<div class="muted">'+(SCm?'Δεν υπάρχουν ακόμα κληρώσεις με 2η ευκαιρία σε αυτό το διάστημα.':'Περιμένω ιστορικό…')+'</div>'; $('simMeta').textContent=''; return; }
   var cost = N*ST, won = 0, dist = new Array(K+1).fill(0), wins = 0, best = res[0];
   var curve = [], bal = 0;
@@ -863,10 +867,11 @@ function renderAll(){ renderBoard(); renderList(); renderStats(); renderPos(); r
 
 /* ---------- Countdown ---------- */
 function tick(){
-  if(!activeTime){ $('cdVal').textContent='--:--'; return; }
-  var left = Math.max(0, Math.round((activeTime - Date.now())/1000));
+  if(!lastT && !activeTime){ $('cdVal').textContent='--:--'; return; }
+  var nt = expectedTime();
+  var left = Math.max(0, Math.round((nt - Date.now())/1000));
   $('cdVal').textContent = left>0 ? pad(Math.floor(left/60))+':'+pad(left%60) : 'κλήρωση…';
-  $('cdNext').textContent = hm(activeTime);
+  $('cdNext').textContent = hm(nt);
 }
 
 /* ---------- Events ---------- */
