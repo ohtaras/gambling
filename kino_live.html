@@ -968,11 +968,15 @@ async function agAsk(force){
   try{
     var r = await fetch('https://api.anthropic.com/v1/messages', { method:'POST',
       headers:{ 'content-type':'application/json', 'x-api-key':key, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
-      body: JSON.stringify({ model:model, max_tokens:700, system:AG_SYS, messages:[{role:'user', content:agPrompt(s, target)}] }) });
-    var data = await r.json();
+      // τα νέα μοντέλα «σκέφτονται» πριν απαντήσουν (adaptive thinking): χαμηλή προσπάθεια και αρκετό περιθώριο tokens
+      body: JSON.stringify({ model:model, max_tokens:4000, output_config:{effort:'low'}, system:AG_SYS, messages:[{role:'user', content:agPrompt(s, target)}] }) });
+    var raw = await r.text(), data = null;
+    try{ data = JSON.parse(raw); }catch(e){ throw new Error('Μη αναμενόμενη απάντηση ('+r.status+'): '+raw.slice(0,160)); }
     if(!r.ok) throw new Error((data.error && data.error.message) || ('HTTP '+r.status));
-    var txt = (data.content||[]).map(function(c){return c.text||'';}).join('');
-    var j = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}')+1));
+    var txt = (data.content||[]).filter(function(c){return c.type==='text';}).map(function(c){return c.text||'';}).join('');
+    var a = txt.indexOf('{'), b = txt.lastIndexOf('}');
+    if(a<0 || b<a) throw new Error('Δεν έδωσε απόφαση σε JSON (stop: '+data.stop_reason+')'+(txt?': '+txt.slice(0,160):''));
+    var j = JSON.parse(txt.slice(a, b+1));
     // έλεγχος απόφασης
     var dec = { id:target, t:Date.now(), play: !!j.play, mood: String(j.mood||'').slice(0,40), thought: String(j.thought||'').slice(0,400), model:model };
     if(dec.play){
