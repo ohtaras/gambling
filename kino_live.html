@@ -136,7 +136,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
 <button class="ah-tab" id="ahTab">🤖 Agent</button>
 <aside class="ah-panel" id="ahPanel" aria-label="AI Agent">
   <div class="ah-head"><h2>🤖 Agent</h2><button class="ah-x" id="ahClose" aria-label="Κλείσιμο">×</button></div>
-  <div class="muted">Ένας παίκτης-AI (Claude) με χαρακτήρα και συναίσθημα. Σε κάθε κλήρωση βλέπει το ιστορικό, θυμάται τι έπαιξε και πώς του πήγε, και αποφασίζει μόνος του: πόσους αριθμούς, ποιους, πόσα θα ποντάρει, για πόσες συνεχόμενες κληρώσεις, αν θα ξεκινήσει αργότερα, αν θα βάλει 2η ευκαιρία, αν θα μείνει εκτός ή θα κάνει διάλειμμα. Παίζει με εικονικό ταμείο.</div>
+  <div class="muted">Ένας παίκτης-AI (Claude) με χαρακτήρα και συναίσθημα. Σε κάθε κλήρωση βλέπει το ιστορικό, θυμάται τι έπαιξε και πώς του πήγε, και αποφασίζει μόνος του: πόσους αριθμούς, ποιους, πόσα θα ποντάρει, για πόσες συνεχόμενες κληρώσεις, αν θα ξεκινήσει αργότερα, αν θα βάλει 2η ευκαιρία, Μονά/Ζυγά ή Στήλη, αν θα μείνει εκτός ή θα κάνει διάλειμμα. Ξέρει όλους τους κανόνες του ΚΙΝΟ (εκτός από BONUS και ΠΑΡΑ 1, που δεν παίζει). Παίζει με εικονικό ταμείο.</div>
   <details class="ah-sec" id="agSet"><summary style="cursor:pointer;font-weight:600">⚙️ Ρυθμίσεις</summary>
     <div style="margin-top:10px;display:grid;gap:8px">
       <label class="muted" style="font-size:12px">Κλειδί API Anthropic (μένει μόνο σε αυτόν τον browser)</label>
@@ -919,11 +919,32 @@ function agNorm(x){ // συμβατότητα με παλιές εγγραφές
   return x;
 }
 function agRange(x){ var a = x.id + (x.start||0); return [a, a + (x.draws||1) - 1]; }
+/* Μονά/Ζυγά και Στήλες, υπολογισμένα από τους 20 αριθμούς (επαληθευμένο με τα sidebets του API) */
+function sideOf(d){
+  var odd = d.arr.filter(function(x){return x%2;}).length;
+  var par = odd>10 ? 'odd' : odd<10 ? 'even' : 'draw';
+  var cnt = {}, reach = {};
+  d.arr.forEach(function(x,i){ var c = x%10 || 10; cnt[c]=(cnt[c]||0)+1; (reach[c]=reach[c]||{})[cnt[c]] = i; });
+  var m = 0, col = null, at = 1e9; Object.keys(cnt).forEach(function(c){ if(cnt[c]>m) m = cnt[c]; });
+  Object.keys(cnt).forEach(function(c){ if(cnt[c]===m && reach[c][m]<at){ at = reach[c][m]; col = +c; } });
+  return {par:par, col:col};
+}
+var PAR_NAME = {odd:'Μονά', even:'Ζυγά', draw:'Ισοπαλία'};
 function agTicketWin(dec, d){ // πληρωμή ενός δελτίου σε μία κλήρωση
-  var hits = dec.n.filter(function(x){return d.set.has(x);}).length;
-  var b = dec.sc && d.sc.length ? dec.n.filter(function(x){return d.sc.indexOf(x)>=0;}).length : 0;
-  var per = dec.sc ? scWin(dec.k, hits, b) : (PAYS[dec.k][hits]||0);   // ανά στήλη 0,50€
-  return { h:hits, b:b, w: Math.round(per * (dec.stake/0.5) * 100)/100 };
+  var o = {h:0, b:0, w:0};
+  if(dec.n && dec.n.length){
+    o.h = dec.n.filter(function(x){return d.set.has(x);}).length;
+    o.b = dec.sc && d.sc.length ? dec.n.filter(function(x){return d.sc.indexOf(x)>=0;}).length : 0;
+    var per = dec.sc ? scWin(dec.k, o.h, o.b) : (PAYS[dec.k][o.h]||0);   // ανά στήλη 0,50€
+    o.w += Math.min(1000000, per * (dec.stake/0.5));                       // ανώτατο κέρδος ανά κλήρωση
+  }
+  if(dec.par || dec.col){
+    var sd = sideOf(d);
+    if(dec.par && dec.par===sd.par){ o.w += dec.parStake * (sd.par==='draw' ? 4 : 2); o.par = 1; }
+    if(dec.col && dec.col===sd.col){ o.w += dec.colStake * 8; o.col = 1; }
+  }
+  o.w = Math.round(o.w*100)/100;
+  return o;
 }
 function agSettle(){ // εκκαθαρίζει κάθε κλήρωση που καλύπτει κάθε δελτίο
   var s = agLoad(), byId = {}, changed = false;
@@ -949,13 +970,14 @@ function agSettle(){ // εκκαθαρίζει κάθε κλήρωση που κ
 function agTicketTxt(x){
   if(!x.play) return '#'+x.id+' έμεινε εκτός';
   var r = agRange(x), n = Object.keys(x.res||{}).length;
-  var lastRes = Object.keys(x.res||{}).sort().slice(-4).map(function(k){var o=x.res[k]; return o.h+(o.b?'+'+o.b:'')+'/'+x.k+(o.w?'('+o.w+'€)':'');}).join(' ');
-  return '#'+x.id+': '+x.k+' αρ. ['+x.n.join(' ')+'] '+x.stake+'€'+(x.sc?' +2η':'')+(x.draws>1||x.start?' για κληρώσεις #'+r[0]+'–#'+r[1]+' ('+x.draws+')':'')+
+  var lastRes = Object.keys(x.res||{}).sort().slice(-4).map(function(k){var o=x.res[k]; return (x.k? o.h+(o.b?'+'+o.b:'')+'/'+x.k : '')+(o.par?' ✓'+PAR_NAME[x.par]:'')+(o.col?' ✓Στ'+x.col:'')+(o.w?'('+o.w+'€)':'');}).join(' ');
+  var side = (x.par?' · '+PAR_NAME[x.par]+' '+x.parStake+'€':'')+(x.col?' · Στήλη '+x.col+' '+x.colStake+'€':'');
+  return '#'+x.id+': '+(x.k? x.k+' αρ. ['+x.n.join(' ')+'] '+x.stake+'€'+(x.sc?' +2η':'') : 'χωρίς αριθμούς')+side+(x.draws>1||x.start?' για κληρώσεις #'+r[0]+'–#'+r[1]+' ('+x.draws+')':'')+
     ', κόστος '+x.cost+'€ → '+(n? 'εκκαθαρίστηκαν '+n+'/'+x.draws+', κέρδη '+x.win+'€'+(lastRes?' [τελευταίες: '+lastRes+']':'') : 'δεν έχει τρέξει ακόμα');
 }
 function agPrompt(s, target){
   var all = today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;});
-  var last = all.slice(0,30).map(function(d){ return hm(d.t)+' #'+d.id+': '+d.arr.join(' ')+(d.sc.length?' | 2η: '+d.sc.join(' '):''); }).join('\n');
+  var last = all.slice(0,30).map(function(d){ var sd = sideOf(d); return hm(d.t)+' #'+d.id+': '+d.arr.join(' ')+(d.sc.length?' | 2η: '+d.sc.join(' '):'')+' | '+PAR_NAME[sd.par]+', Στήλη '+sd.col; }).join('\n');
   var W = all.slice(0,50), cnt = new Array(81).fill(0), pos = new Array(81).fill(0), gap = new Array(81).fill(-1);
   W.forEach(function(d){ d.arr.forEach(function(x){ cnt[x]++; }); d.arr.slice(0,10).forEach(function(x){ pos[x]++; }); });
   all.slice(0,300).forEach(function(d,i){ d.arr.forEach(function(x){ if(gap[x]<0) gap[x]=i; }); });
@@ -972,25 +994,28 @@ function agPrompt(s, target){
     'Σημειώσεις που άφησες στον εαυτό σου: '+(s.notes||'(καμία)')+'\n\n'+
     'ΕΝΕΡΓΑ ΔΕΛΤΙΑ ΣΟΥ (πληρωμένα, τρέχουν ή θα τρέξουν):\n'+active+'\n\n'+
     'ΤΑ ΤΕΛΕΥΤΑΙΑ ΣΟΥ ΔΕΛΤΙΑ ΠΟΥ ΤΕΛΕΙΩΣΑΝ (παλιότερο πρώτο):\n'+hist+'\n\n'+
-    'ΤΕΛΕΥΤΑΙΕΣ 30 ΚΛΗΡΩΣΕΙΣ (νεότερη πρώτη· οι 20 αριθμοί με τη σειρά που βγήκαν, μετά οι 3 της 2ης ευκαιρίας):\n'+last+'\n\n'+
+    'ΤΕΛΕΥΤΑΙΕΣ 30 ΚΛΗΡΩΣΕΙΣ (νεότερη πρώτη· οι 20 αριθμοί με τη σειρά που βγήκαν, οι 3 της 2ης ευκαιρίας, και τι κέρδισε σε Μονά/Ζυγά και Στήλες):\n'+last+'\n\n'+
     'ΣΤΑΤΙΣΤΙΚΑ: συχνότεροι στις τελευταίες 50: '+hot+'\nπιο καθυστερημένοι (κληρώσεις χωρίς εμφάνιση): '+late+'\nσυχνότεροι στις θέσεις 1–10 (50): '+pz+'\n\n'+
     'ΠΙΝΑΚΑΣ ΚΕΡΔΩΝ ΚΙΝΟ (ποσό για στήλη 0,50€ σε μία κλήρωση· με μεγαλύτερο ποντάρισμα πολλαπλασιάζεται):\n'+pay+'\n\n'+
     '2η ΕΥΚΑΙΡΙΑ: το δελτίο κοστίζει διπλάσιο. Αν τουλάχιστον 1 αριθμός σου βγει στους 3 της 2ης ευκαιρίας, οι επιτυχίες μετράνε σε όλους τους 23 και πληρώνει ο παρακάτω πίνακας (ή ο κανονικός αν δίνει περισσότερα)· αλλιώς ο κανονικός.\n'+scp+'\n\n'+
     'Αποφάσισε τώρα (για την #'+target+' ή και για αργότερα). Απάντησε ΜΟΝΟ με JSON.';
 }
 var AG_SYS = 'Είσαι ένας έμπειρος Έλληνας παίκτης ΚΙΝΟ με χαρακτήρα, συναισθήματα, χιούμορ και ένστικτο. Παρατηρείς τις κληρώσεις, θυμάσαι τι έπαιξες και πώς σου πήγε, και ελίσσεσαι. Παίζεις με εικονικά χρήματα σε προσομοίωση· δεν δίνεις συμβουλές σε κανέναν, απλώς παίζεις. Ξέρεις ότι η κλήρωση είναι τυχαία, αλλά παίζεις σαν άνθρωπος.\n\n'+
-  'ΟΛΕΣ ΟΙ ΔΥΝΑΤΟΤΗΤΕΣ ΣΟΥ ΣΤΟ ΔΕΛΤΙΟ ΚΙΝΟ:\n'+
-  '• Πλήθος αριθμών: 1 έως 12 (κάθε πλήθος έχει δικό του πίνακα κερδών).\n'+
-  '• Ποντάρισμα ανά κλήρωση: 0,50€ έως 5€ (πολλαπλάσια του 0,50· τα κέρδη πολλαπλασιάζονται ανάλογα).\n'+
-  '• Συνεχόμενες κληρώσεις: το ίδιο δελτίο για 1 έως 200 συνεχόμενες κληρώσεις («draws»). Κόστος = ποντάρισμα × κληρώσεις.\n'+
-  '• Μελλοντικές κληρώσεις: μπορείς να ξεκινήσεις το δελτίο αργότερα, π.χ. μετά από 12 ή 100 κληρώσεις («start_after»: 0 = από την επόμενη).\n'+
-  '• 2η ευκαιρία: διπλασιάζει το κόστος, πληρώνει όταν ένας αριθμός σου βγει στους 3 επιπλέον.\n'+
-  '• Μπορείς να έχεις πολλά δελτία ενεργά ταυτόχρονα, να μην παίξεις τίποτα καινούργιο αν σε καλύπτουν όσα τρέχουν, ή να μείνεις εκτός.\n'+
-  '• Μπορείς να πάρεις ανάσα: «pause» = για πόσες κληρώσεις δεν θέλεις να σε ξαναρωτήσουν (0 = ρώτα με στην επόμενη· τα ενεργά σου δελτία συνεχίζουν).\n'+
-  '• Πληρώνεις όλο το κόστος του δελτίου τη στιγμή που το παίζεις· δεν μπορείς να ξοδέψεις πάνω από το ταμείο σου.\n'+
-  'Δεν παίζεις KINO BONUS, ΠΑΡΑ 1, Μονά/Ζυγά ή Στήλες.\n\n'+
+  'ΟΙ ΚΑΝΟΝΕΣ ΤΟΥ ΚΙΝΟ (ΟΠΑΠ/Allwyn):\n'+
+  '• Κλήρωση κάθε 5 λεπτά, 288 τη μέρα, όλο το 24ωρο. Βγαίνουν 20 αριθμοί από το 1–80 (γεννήτρια τυχαίων αριθμών) και, από 7/10/2026, 3 επιπλέον αριθμοί «2ης ευκαιρίας».\n'+
+  '• Κύριο παιχνίδι: διαλέγεις 1 έως 12 αριθμούς· κάθε πλήθος έχει δικό του πίνακα κερδών (δίνεται παρακάτω, για στήλη 0,50€). Στα 10, 11, 12 κερδίζεις και με 0 επιτυχίες.\n'+
+  '• Αξία στήλης 0,50€. Πολλαπλασιαστής 1 έως 70 → ποντάρισμα 0,50€ έως 35€ ανά κλήρωση· τα κέρδη πολλαπλασιάζονται ανάλογα.\n'+
+  '• Συνεχόμενες κληρώσεις: το ίδιο δελτίο για 1 έως 200 συνεχόμενες κληρώσεις. Μελλοντικές κληρώσεις: μπορεί να ξεκινήσει αργότερα (π.χ. μετά από 12 ή 100 κληρώσεις).\n'+
+  '• Μέγιστο κόστος δελτίου: 1.999,75€. Πληρώνεις όλο το κόστος όταν παίζεις το δελτίο.\n'+
+  '• Ανώτατο κέρδος ανά κλήρωση στις κορυφαίες κατηγορίες (12, 11, 10, 9 αριθμοί): 1.000.000€ (μοιράζεται αν το ξεπεράσουν οι νικητές).\n'+
+  '• 2η ευκαιρία: διπλασιάζει το κόστος των αριθμών. Αν ≥1 αριθμός σου βγει στους 3 επιπλέον, οι επιτυχίες μετράνε σε όλους τους 23 και πληρώνει ο πίνακας της 2ης ευκαιρίας (ή ο κανονικός, αν δίνει περισσότερα)· αλλιώς ο κανονικός.\n'+
+  '• Μονά/Ζυγά: ποντάρεις αν οι 20 αριθμοί θα έχουν περισσότερα μονά (απόδοση ×2), περισσότερα ζυγά (×2) ή 10–10 ισοπαλία (×4). Ποντάρισμα από 0,50€ (πολλαπλάσια του 0,50, έως 35€).\n'+
+  '• Στήλες: οι 80 αριθμοί χωρίζονται σε 10 στήλες με βάση το τελευταίο ψηφίο (Στήλη 1 = 1,11,…,71· … · Στήλη 10 = 10,20,…,80). Κερδίζει η στήλη με τους περισσότερους από τους 20· σε ισοπαλία, αυτή που συμπλήρωσε πρώτη το πλήθος της με τη σειρά κλήρωσης. Απόδοση ×8, ποντάρισμα από 1€ (έως 35€).\n'+
+  '• Μπορείς να συνδυάσεις σε ένα δελτίο αριθμούς, Μονά/Ζυγά και Στήλη, ή να παίξεις μόνο κάποιο από αυτά. Μπορείς να έχεις πολλά δελτία ενεργά ταυτόχρονα, να μην παίξεις κάτι καινούργιο, να μείνεις εκτός ή να κάνεις διάλειμμα («pause» = για πόσες κληρώσεις να μη σε ξαναρωτήσουν· τα ενεργά δελτία συνεχίζουν).\n'+
+  '• ΔΕΝ παίζεις KINO BONUS ούτε ΠΑΡΑ 1.\n'+
+  '• Δεν ξοδεύεις ποτέ πάνω από το ταμείο σου.\n\n'+
   'Ελίσσεσαι: αλλάζεις πλήθος, ποσό, διάρκεια και τακτική· κυνηγάς μικρά κέρδη (π.χ. 4 αριθμοί για το 4/4) ή μεγάλα «χτυπήματα» (9/9, 10/10) όταν κάτι σου λέει ότι πάει να γίνει· χαίρεσαι όταν πιάνεις, εκνευρίζεσαι ή κάνεις διάλειμμα μετά από χασούρες, προσέχεις το ταμείο.\n\n'+
-  'Απάντηση ΜΟΝΟ JSON, χωρίς άλλο κείμενο: {"play": true|false, "k": 1–12, "numbers": [k διαφορετικοί ακέραιοι 1–80], "stake": 0.5–5, "draws": 1–200, "start_after": 0–200, "second_chance": true|false, "pause": 0–288, "mood": "emoji + 1–3 λέξεις", "thought": "1–3 σύντομες προτάσεις στα ελληνικά, σε πρώτο πρόσωπο", "note": "σύντομη σημείωση για τον εαυτό σου"}. Αν play=false, άφησε numbers κενό.';
+  'Απάντηση ΜΟΝΟ JSON, χωρίς άλλο κείμενο: {"play": true|false, "numbers": [0 έως 12 διαφορετικοί ακέραιοι 1–80], "stake": 0.5–35 (ανά κλήρωση, για τους αριθμούς), "second_chance": true|false, "parity": "odd"|"even"|"draw"|null, "parity_stake": 0.5–35, "column": 1–10|null, "column_stake": 1–35, "draws": 1–200, "start_after": 0–200, "pause": 0–288, "mood": "emoji + 1–3 λέξεις", "thought": "1–3 σύντομες προτάσεις στα ελληνικά, σε πρώτο πρόσωπο", "note": "σύντομη σημείωση για τον εαυτό σου"}. Αν play=false, άφησε τα υπόλοιπα κενά.';
 async function agAsk(force){
   var key = lsGet(AG.key); if(!key){ $('agDec').innerHTML = '<span class="muted">Βάλε κλειδί API στις ρυθμίσεις.</span>'; return; }
   if(agBusy || !lastId) return;
@@ -1012,14 +1037,21 @@ async function agAsk(force){
     var j = JSON.parse(txt.slice(a, b+1));
     var dec = { id:target, t:Date.now(), play: !!j.play, mood: String(j.mood||'').slice(0,40), thought: String(j.thought||'').slice(0,400), model:model, draws:1, start:0 };
     if(dec.play){
+      var half = function(v,lo,hi){ return Math.max(lo, Math.min(hi, Math.round((+v||lo)*2)/2)); };
       var nums = (j.numbers||[]).map(Number).filter(function(x,i,arr){ return x>=1 && x<=80 && Math.floor(x)===x && arr.indexOf(x)===i; }).slice(0,12);
-      var stake = Math.max(0.5, Math.min(5, Math.round((+j.stake||0.5)*2)/2));
+      var stake = half(j.stake, 0.5, 35);
       var draws = Math.max(1, Math.min(200, Math.round(+j.draws||1)));
       var start = Math.max(0, Math.min(200, Math.round(+j.start_after||0)));
-      var sc = !!j.second_chance, cost = Math.round(stake*(sc?2:1)*draws*100)/100;
-      if(!nums.length) dec.play = false;
+      var sc = !!j.second_chance && nums.length>0;
+      var par = ['odd','even','draw'].indexOf(j.parity)>=0 ? j.parity : null, parStake = par ? half(j.parity_stake, 0.5, 35) : 0;
+      var col = (+j.column>=1 && +j.column<=10) ? Math.round(+j.column) : null, colStake = col ? half(j.column_stake, 1, 35) : 0;
+      var perDraw = (nums.length ? stake*(sc?2:1) : 0) + parStake + colStake;
+      var cost = Math.round(perDraw*draws*100)/100;
+      if(!nums.length && !par && !col) dec.play = false;
+      else if(cost > 1999.75){ dec.play = false; dec.thought += ' (Ξεπερνά το μέγιστο δελτίο 1.999,75€.)'; }
       else if(cost > s.bank){ dec.play = false; dec.thought += ' (Δεν φτάνει το ταμείο για '+eur(cost)+'.)'; }
-      else { dec.n = nums; dec.k = nums.length; dec.stake = stake; dec.sc = sc; dec.draws = draws; dec.start = start; dec.cost = cost; dec.res = {}; s.bank = Math.round((s.bank-cost)*100)/100; }
+      else { dec.n = nums; dec.k = nums.length; dec.stake = nums.length ? stake : 0; dec.sc = sc; dec.par = par; dec.parStake = parStake; dec.col = col; dec.colStake = colStake;
+             dec.perDraw = perDraw; dec.draws = draws; dec.start = start; dec.cost = cost; dec.res = {}; s.bank = Math.round((s.bank-cost)*100)/100; }
     }
     var pause = Math.max(0, Math.min(288, Math.round(+j.pause||0)));
     s.pauseUntil = pause ? target + 1 + pause : 0; dec.pause = pause;
@@ -1049,19 +1081,19 @@ function renderAgent(){
     var x = lastDec, r = x.play ? agRange(x) : null;
     $('agDec').innerHTML = '<div class="muted" style="font-size:12px;margin-bottom:4px">Για την κλήρωση των '+agWhen(x.id)+'</div>' + (x.play ?
       '<div class="order">'+x.n.slice().sort(function(a,b){return a-b;}).map(function(y){return '<i class="sc">'+y+'</i>';}).join('')+'</div>'+
-      '<div class="chips">'+chip('Αριθμοί', x.k)+chip('Ποντάρισμα', eur(x.stake))+(x.draws>1?chip('Κληρώσεις', x.draws):'')+(x.start?chip('Ξεκινά', 'μετά από '+x.start+' ('+agWhen(r[0])+')'):'')+(x.sc?chip('2η ευκαιρία','ναι'):'')+chip('Κόστος', eur(x.cost))+'</div>'
+      '<div class="chips">'+(x.k?chip('Αριθμοί', x.k)+chip('Ποντάρισμα', eur(x.stake)):'')+(x.par?chip(PAR_NAME[x.par], eur(x.parStake)):'')+(x.col?chip('Στήλη '+x.col, eur(x.colStake)):'')+(x.draws>1?chip('Κληρώσεις', x.draws):'')+(x.start?chip('Ξεκινά', 'μετά από '+x.start+' ('+agWhen(r[0])+')'):'')+(x.sc?chip('2η ευκαιρία','ναι'):'')+chip('Κόστος', eur(x.cost))+'</div>'
       : '<div><b>Δεν έπαιξε κάτι καινούργιο.</b></div>') +
       (x.pause ? '<div class="muted" style="font-size:12px;margin-top:4px">☕ Διάλειμμα για '+x.pause+' κληρώσεις.</div>' : '') +
       '<div style="margin-top:8px;font-size:13.5px">'+esc(x.mood)+' — «'+esc(x.thought)+'»</div>';
   } else if(!agBusy) $('agDec').innerHTML = '<span class="muted">Δεν έχει αποφασίσει ακόμα. '+($('agOn').checked?'Θα σκεφτεί με την επόμενη ενημέρωση.':'Πάτα «Ρώτα τώρα» ή ενεργοποίησέ τον.')+'</span>';
   var tk = s.log.filter(function(x){return x.play;});
   var settled = 0, won = 0, costRun = 0, best = null;
-  tk.forEach(function(x){ var n = Object.keys(x.res||{}).length; settled += n; won += x.win||0; costRun += n * x.stake * (x.sc?2:1);
-    Object.keys(x.res||{}).forEach(function(k){ var o=x.res[k]; if(!best || o.w>best.w) best = {w:o.w, h:o.h, b:o.b, k:x.k}; }); });
+  tk.forEach(function(x){ var n = Object.keys(x.res||{}).length; settled += n; won += x.win||0; costRun += n * (x.perDraw!=null ? x.perDraw : x.stake * (x.sc?2:1));
+    Object.keys(x.res||{}).forEach(function(k){ var o=x.res[k]; if(!best || o.w>best.w) best = {w:o.w, h:o.h, b:o.b, k:x.k, par:o.par, col:o.col}; }); });
   var paid = tk.reduce(function(a,x){return a+x.cost;},0);
   var totalApi = Object.keys(s.cost).reduce(function(a,k){return a+s.cost[k];},0);
   $('agPerf').innerHTML = chip('Δελτία', tk.length) + chip('Κληρώσεις που έτρεξαν', settled) + chip('Πληρωμένα', eur(paid)) + chip('Κέρδη', eur(won)) +
-    chip('Απόδοση', costRun ? (won/costRun*100).toFixed(1)+'%' : '—') + (best && best.w ? chip('Καλύτερο', best.h+(best.b?'+'+best.b:'')+'/'+best.k+' · '+eur(best.w)) : '') +
+    chip('Απόδοση', costRun ? (won/costRun*100).toFixed(1)+'%' : '—') + (best && best.w ? chip('Καλύτερο', (best.k? best.h+(best.b?'+'+best.b:'')+'/'+best.k : (best.par?'Μονά/Ζυγά':'Στήλη'))+' · '+eur(best.w)) : '') +
     chip('Κόστος API συνολικά', '$'+totalApi.toFixed(3));
   $('agNotes').textContent = s.notes || '—';
   var act = tk.filter(function(x){return !x.done;});
@@ -1069,6 +1101,7 @@ function renderAgent(){
     var r = agRange(x), n = Object.keys(x.res||{}).length;
     return '<div class="row" style="cursor:default"><div class="t">'+agWhen(r[0])+(x.draws>1?'<small>έως '+agWhen(r[1])+'</small>':'')+'</div><div class="n">'+
       x.n.slice().sort(function(a,b){return a-b;}).map(function(y){return '<i>'+y+'</i>';}).join('')+
+      (x.par?'<span class="chip" style="padding:1px 6px;font-size:11px">'+PAR_NAME[x.par]+'</span>':'')+(x.col?'<span class="chip" style="padding:1px 6px;font-size:11px">Στ.'+x.col+'</span>':'')+
       '<span class="muted" style="font-size:11px;margin-left:4px">'+n+'/'+x.draws+' κλ. · '+eur(x.win||0)+(x.sc?' · +2η':'')+'</span></div></div>';
   }).join('') : '<span class="muted">Κανένα.</span>';
   var rows = [];
@@ -1079,9 +1112,9 @@ function renderAgent(){
   var byId = {}; today.concat(histPool).forEach(function(d){ byId[d.id]=d; });
   $('agLog').innerHTML = rows.slice(0,25).map(function(rw){
     var d = byId[rw.id], x = rw.x, o = rw.o;
-    return '<div class="row" style="cursor:default"><div class="t">'+(d?hm(d.t):'#'+rw.id)+'<small>'+o.h+(o.b?'+'+o.b:'')+'/'+x.k+(o.w?' · <b style="color:var(--hit)">'+eur(o.w)+'</b>':'')+'</small></div><div class="n">'+
+    return '<div class="row" style="cursor:default"><div class="t">'+(d?hm(d.t):'#'+rw.id)+'<small>'+(x.k? o.h+(o.b?'+'+o.b:'')+'/'+x.k : '')+(x.par?(o.par?' ✓':' ✗')+PAR_NAME[x.par].slice(0,3):'')+(x.col?(o.col?' ✓':' ✗')+'Στ'+x.col:'')+(o.w?' · <b style="color:var(--hit)">'+eur(o.w)+'</b>':'')+'</small></div><div class="n">'+
       x.n.slice().sort(function(a,b){return a-b;}).map(function(y){ return '<i'+(d&&d.set.has(y)?' class="h"':d&&d.sc.indexOf(y)>=0&&x.sc?' class="sc"':'')+'>'+y+'</i>'; }).join('')+
-      '<span class="muted" style="font-size:11px;margin-left:4px">'+eur(x.stake*(x.sc?2:1))+'</span></div></div>';
+      '<span class="muted" style="font-size:11px;margin-left:4px">'+eur(x.perDraw!=null ? x.perDraw : x.stake*(x.sc?2:1))+'</span></div></div>';
   }).join('') || '<span class="muted">Καμία κλήρωση ακόμα.</span>';
 }
 function agTick(){ // σε κάθε νέα κλήρωση: κλείσιμο αποτελεσμάτων και νέα απόφαση
