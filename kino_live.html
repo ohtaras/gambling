@@ -114,9 +114,41 @@ h1{font-size:22px;margin:0;display:flex;align-items:center;gap:8px}
 .note{color:var(--muted);font-size:12px;margin-top:20px;text-align:center}
 .mt{margin-top:14px}
 select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:13px}
+/* ---------- Almost Human (πλαϊνό πάνελ) ---------- */
+.ah-tab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:60;writing-mode:vertical-rl;background:#8b5cf6;color:#fff;border:0;border-radius:10px 0 0 10px;padding:14px 7px;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.ah-panel{position:fixed;top:0;right:0;bottom:0;width:min(440px,94vw);z-index:70;background:var(--panel);border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(0,0,0,.35);transform:translateX(105%);transition:transform .25s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
+.ah-panel.open{transform:none}
+.ah-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.ah-head h2{margin:0;font-size:19px}
+.ah-x{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer}
+.ah-sec{margin-top:16px}
+.ah-sec h3{font-size:13px;color:var(--muted);margin:0 0 8px;font-weight:600}
+.ah-why{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:center;font-size:12.5px;margin:5px 0}
+.ah-why i{font-style:normal;width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#8b5cf6;color:#fff;font-weight:700;font-size:13px}
+.ah-w{display:grid;grid-template-columns:118px 1fr 40px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0}
+.ah-w .bar>div{background:#8b5cf6}
+.ah-hist .row{grid-template-columns:62px 1fr}
+.ah-hist .n i.h{background:var(--hit);color:#fff}
+@media(min-width:1300px){ .ah-panel.open ~ .wrap{margin-right:460px} }
 </style>
 </head>
 <body>
+<button class="ah-tab" id="ahTab">🧠 Almost Human</button>
+<aside class="ah-panel" id="ahPanel" aria-label="Almost Human">
+  <div class="ah-head"><h2>🧠 Almost Human</h2><button class="ah-x" id="ahClose" aria-label="Κλείσιμο">×</button></div>
+  <div class="muted">Κοιτάζει πίσω τις κληρώσεις και διαλέγει όπως ένας προσεκτικός παίκτης: ζεστοί αριθμοί, σερί, αυτοί που «χρωστάνε», επαναλήψεις από την προηγούμενη, γείτονες και οι θέσεις 1–10. Μετά ισορροπεί το δελτίο (μονά/ζυγά, μικρά/μεγάλα, δεκάδες) και, όπως ένας άνθρωπος, εμπιστεύεται περισσότερο ό,τι του «βγαίνει» τελευταία. Δεν προβλέπει: οι κληρώσεις είναι τυχαίες — δείχνει πώς θα τα πήγαινε ένας τέτοιος παίκτης.</div>
+  <div class="chips" style="margin-top:10px">
+    <select id="ahK">
+      <option value="3">3 αριθμοί</option><option value="4">4 αριθμοί</option><option value="5" selected>5 αριθμοί</option>
+      <option value="6">6 αριθμοί</option><option value="7">7 αριθμοί</option><option value="8">8 αριθμοί</option>
+      <option value="10">10 αριθμοί</option><option value="12">12 αριθμοί</option>
+    </select>
+  </div>
+  <div class="ah-sec"><h3 id="ahNextLbl">Δελτίο για την επόμενη κλήρωση</h3><div class="order" id="ahNext"></div><div id="ahWhy" style="margin-top:8px"></div></div>
+  <div class="ah-sec"><h3>Σε τι εμπιστεύεται τώρα <span class="muted" style="font-weight:400">(από τις τελευταίες 50)</span></h3><div id="ahMood"></div></div>
+  <div class="ah-sec"><h3>Πώς τα πάει</h3><div class="scroll-x"><table class="ptab" id="ahPerf"></table></div><div class="muted" id="ahPerfNote" style="margin-top:6px;font-size:12px"></div></div>
+  <div class="ah-sec ah-hist"><h3>Τελευταία δελτία</h3><div class="list" id="ahList" style="max-height:none"></div></div>
+</aside>
 <div class="wrap">
   <header>
     <h1><span class="dot" id="liveDot"></span> ΚΙΝΟ Live</h1>
@@ -403,7 +435,7 @@ async function loadHistory(){
   var gaps = 0; for(var j=1;j<histPool.length;j++) if(histPool[j-1].id-histPool[j].id>1) gaps += histPool[j-1].id-histPool[j].id-1;
   $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις από '+HIST_DAYS+' ημέρες + σήμερα'+
     (failed||gaps ? ' · ⚠️ λείπουν '+gaps+' κληρώσεις'+(failed?' ('+failed+' ημέρες απέτυχαν)':'') : ' · πλήρες, χωρίς κενά');
-  renderPos(); renderSim(); renderFwd();
+  renderPos(); renderSim(); renderFwd(); renderAH();
 }
 
 /* νέα κλήρωση: αν άλλαξε η ημέρα (μεσάνυχτα Ελλάδας), οι χθεσινές πάνε στο ιστορικό */
@@ -863,7 +895,133 @@ function renderFwd(){
   $('fwdNext').innerHTML = nextH;
 }
 
-function renderAll(){ renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); }
+/* ---------- Almost Human: παίκτης με ανθρώπινη λογική ---------- */
+var AH_START = 1340685;   // από εδώ ξεκινάει η μέτρηση «από εδώ και πέρα»
+var AH_H = [ // ευρετικές «ανθρώπινες» σκέψεις
+  {k:'hot',  name:'🔥 Ζεστοί (20)',      base:1.0},
+  {k:'mom',  name:'⚡ Σερί (3)',          base:0.7},
+  {k:'due',  name:'⏳ Χρωστάνε',          base:0.6},
+  {k:'pos',  name:'🎯 Θέσεις 1–10 (50)',  base:0.5},
+  {k:'nbr',  name:'↔ Γείτονες',          base:0.3},
+  {k:'rep',  name:'🔁 Από την προηγούμενη',base:0.6}
+];
+var ahCache = {key:'', res:null};
+function zs(a){ var m=0,s=0,n; for(n=1;n<=80;n++) m+=a[n]; m/=80; for(n=1;n<=80;n++) s+=(a[n]-m)*(a[n]-m); s=Math.sqrt(s/80)||1; var z=new Array(81).fill(0); for(n=1;n<=80;n++) z[n]=(a[n]-m)/s; return z; }
+function topK(score, K){ var nums=[]; for(var n=1;n<=80;n++) nums.push(n); return nums.sort(function(a,b){return score[b]-score[a]||a-b;}).slice(0,K); }
+function ahBuild(S, K){ // άπληστη επιλογή με «ανθρώπινους» περιορισμούς ισορροπίας
+  var order=[]; for(var n=1;n<=80;n++) order.push(n); order.sort(function(a,b){return S[b]-S[a]||a-b;});
+  var maxDec = K<=8 ? 2 : 3, half = Math.ceil(K/2)+1;
+  for(var relax=0; relax<3; relax++){
+    var t=[], dec={}, odd=0, ev=0, lo=0, hi=0;
+    for(var i=0;i<80 && t.length<K;i++){
+      var x=order[i], d=Math.floor((x-1)/10);
+      if(relax<2){
+        if((dec[d]||0)>=maxDec) continue;
+        if(x%2 ? odd>=half : ev>=half) continue;
+        if(relax<1 && (x<=40 ? lo>=half : hi>=half)) continue;
+      }
+      t.push(x); dec[d]=(dec[d]||0)+1; if(x%2) odd++; else ev++; if(x<=40) lo++; else hi++;
+    }
+    if(t.length===K) return t;
+  }
+  return order.slice(0,K);
+}
+function ahRun(K){
+  var all = today.concat(histPool).slice().sort(function(a,b){return a.id-b.id;});
+  var key = K+':'+all.length+':'+(all.length?all[all.length-1].id:0);
+  if(ahCache.key===key) return ahCache.res;
+  var N = all.length, PERF = 50, START = Math.min(300, N);
+  var cnt20=new Array(81).fill(0), cnt3=new Array(81).fill(0), pos50=new Array(81).fill(0), lastSeen=new Array(81).fill(-1);
+  var hHits = AH_H.map(function(){return [];});   // επιτυχίες κάθε ευρετικής μόνης της
+  var res = [], next = null;
+  for(var i=0;i<=N;i++){
+    if(i>=START){
+      var prev = all[i-1], raw = {}, n;
+      raw.hot = cnt20.slice(); raw.mom = cnt3.slice(); raw.pos = pos50.slice();
+      raw.due = new Array(81).fill(0); raw.nbr = new Array(81).fill(0); raw.rep = new Array(81).fill(0);
+      for(n=1;n<=80;n++){
+        raw.due[n] = Math.min(40, (i-1) - lastSeen[n]);
+        raw.nbr[n] = (prev.set.has(n-1)?1:0) + (prev.set.has(n+1)?1:0);
+        raw.rep[n] = prev.set.has(n) ? 1 + cnt20[n]/20 : 0;
+      }
+      var Z = {}, picks = {}, w = {}, S = new Array(81).fill(0);
+      AH_H.forEach(function(h, hi){
+        Z[h.k] = zs(raw[h.k]); picks[h.k] = topK(raw[h.k], K);
+        var hh = hHits[hi], L = Math.min(PERF, hh.length), sum = 0;
+        for(var q=hh.length-L;q<hh.length;q++) sum += hh[q];
+        var avg = L ? sum/L : K/4;
+        w[h.k] = h.base * Math.max(0.25, Math.min(2.5, 1 + (avg - K/4)/(K/4)*1.5));
+        for(var m=1;m<=80;m++) S[m] += w[h.k]*Z[h.k][m];
+      });
+      var ticket = ahBuild(S, K);
+      var why = ticket.map(function(x){
+        var parts = AH_H.map(function(h){ return {h:h, v:w[h.k]*Z[h.k][x]}; }).filter(function(p){return p.v>0.35;}).sort(function(a,b){return b.v-a.v;}).slice(0,2);
+        var txt = parts.map(function(p){
+          if(p.h.k==='hot') return '🔥 '+raw.hot[x]+'/20';
+          if(p.h.k==='mom') return '⚡ '+raw.mom[x]+' στις 3';
+          if(p.h.k==='due') return '⏳ '+raw.due[x]+' κληρ. απών';
+          if(p.h.k==='pos') return '🎯 '+raw.pos[x]+'× στις θέσεις 1–10';
+          if(p.h.k==='nbr') return '↔ γείτονας της προηγ.';
+          return '🔁 ήρθε στην προηγ.';
+        });
+        return {n:x, txt: txt.length ? txt.join(' · ') : 'για ισορροπία δελτίου'};
+      });
+      if(i===N){ next = {ticket:ticket, why:why, w:w}; }
+      else {
+        var d = all[i], hits = ticket.filter(function(x){return d.set.has(x);});
+        res.push({d:d, ticket:ticket, hits:hits, win:PAYS[K][hits.length]||0});
+        AH_H.forEach(function(h, hi){ hHits[hi].push(picks[h.k].filter(function(x){return d.set.has(x);}).length); });
+      }
+    }
+    if(i===N) break;
+    // ενημέρωση κατάστασης με την κλήρωση i
+    var di = all[i];
+    di.arr.forEach(function(x){ cnt20[x]++; cnt3[x]++; lastSeen[x]=i; });
+    di.arr.slice(0,10).forEach(function(x){ pos50[x]++; });
+    if(i-20>=0) all[i-20].arr.forEach(function(x){ cnt20[x]--; });
+    if(i-3>=0) all[i-3].arr.forEach(function(x){ cnt3[x]--; });
+    if(i-50>=0) all[i-50].arr.slice(0,10).forEach(function(x){ pos50[x]--; });
+  }
+  ahCache = {key:key, res:{res:res, next:next}};
+  return ahCache.res;
+}
+function ahStats(rows, K){
+  var n=rows.length, cost=n*STAKE, won=0, hs=0, rw=0;
+  rows.forEach(function(x){ won+=x.win; hs+=x.hits.length; var rt=rndTicket(x.d.id*131+K, K); rw += PAYS[K][rt.filter(function(y){return x.d.set.has(y);}).length]||0; });
+  return {n:n, cost:cost, won:won, rtp:cost?won/cost*100:0, avg:n?hs/n:0, rrtp:cost?rw/cost*100:0};
+}
+function renderAH(){
+  if(!$('ahPanel').classList.contains('open')) return;
+  var K = +$('ahK').value;
+  if(!histPool.length && today.length<60){ $('ahNext').innerHTML='<span class="muted">Περιμένω ιστορικό…</span>'; return; }
+  var r = ahRun(K);
+  $('ahNextLbl').textContent = 'Δελτίο για την κλήρωση των '+hm(expectedTime());
+  if(r.next){
+    $('ahNext').innerHTML = r.next.ticket.slice().sort(function(a,b){return a-b;}).map(function(x){return '<i class="sc">'+x+'</i>';}).join('');
+    $('ahWhy').innerHTML = r.next.why.slice().sort(function(a,b){return a.n-b.n;}).map(function(o){return '<div class="ah-why"><i>'+o.n+'</i><span>'+o.txt+'</span></div>';}).join('');
+    var mx = Math.max.apply(null, AH_H.map(function(h){return r.next.w[h.k];}));
+    $('ahMood').innerHTML = AH_H.slice().sort(function(a,b){return r.next.w[b.k]-r.next.w[a.k];}).map(function(h){
+      var v=r.next.w[h.k]; return '<div class="ah-w"><span>'+h.name+'</span><div class="bar"><div style="width:'+Math.max(4,Math.round(v/mx*100))+'%"></div></div><span class="muted" style="text-align:right">'+(v/h.base).toFixed(2)+'×</span></div>';
+    }).join('');
+  }
+  var fw = r.res.filter(function(x){return x.d.id>=AH_START;}), hist = r.res.filter(function(x){return x.d.id<AH_START;});
+  var A = ahStats(fw,K), B = ahStats(hist,K);
+  function line(lbl,s){ return '<tr><td>'+lbl+'</td><td>'+s.n+'</td><td style="white-space:nowrap">'+eur(s.cost)+' → '+eur(s.won)+'</td><td><b style="color:'+(s.n?(s.rtp>=100?'var(--hit)':'var(--miss)'):'var(--muted)')+'">'+(s.n?s.rtp.toFixed(1)+'%':'—')+'</b></td><td>'+(s.n?s.avg.toFixed(2):'—')+'</td><td class="muted">'+(s.n?s.rrtp.toFixed(1)+'%':'—')+'</td></tr>'; }
+  $('ahPerf').innerHTML = '<tr><th></th><th>Δελτία</th><th>Κόστος → Κέρδη</th><th>Απόδοση</th><th>Μ.ό. επιτ.</th><th>Τυχαίο</th></tr>'+
+    line('Από εδώ και πέρα', A) + line('Στο ιστορικό', B);
+  $('ahPerfNote').textContent = 'Στήλη 0,50€. Αναμενόμενος μ.ό. επιτυχιών για τυχαίο δελτίο: '+(K/4).toFixed(2)+'. «Από εδώ και πέρα» = κληρώσεις από #'+AH_START+', μετά τη δημιουργία του αλγορίθμου.';
+  $('ahList').innerHTML = r.res.slice(-12).reverse().map(function(x){
+    var hs = new Set(x.hits);
+    return '<div class="row" style="cursor:default"><div class="t">'+hm(x.d.t)+'<small>'+x.hits.length+'/'+K+(x.win?' · <b style="color:var(--hit)">'+eur(x.win)+'</b>':'')+'</small></div><div class="n">'+
+      x.ticket.slice().sort(function(a,b){return a-b;}).map(function(y){return '<i'+(hs.has(y)?' class="h"':'')+'>'+y+'</i>';}).join('')+'</div></div>';
+  }).join('');
+}
+function ahOpen(on){
+  $('ahPanel').classList.toggle('open', on); $('ahTab').style.display = on ? 'none' : '';
+  lsSet('kl_ah_open', on?'1':'0'); if(on) renderAH();
+}
+
+function renderAll(){ renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderAH(); }
 
 /* ---------- Countdown ---------- */
 function tick(){
@@ -930,6 +1088,10 @@ $('btnAll').addEventListener('click',function(){
   cards.forEach(function(c){ setCollapsed(c, close); }); updAllBtn();
 });
 updAllBtn();
+$('ahTab').addEventListener('click',function(){ ahOpen(true); });
+$('ahClose').addEventListener('click',function(){ ahOpen(false); });
+$('ahK').addEventListener('change',renderAH);
+if(lsGet('kl_ah_open')==='1') ahOpen(true);
 
 document.addEventListener('visibilitychange',function(){ if(!document.hidden){ clearTimeout(refreshTimer); retries=0; tryRefresh(); }});
 
