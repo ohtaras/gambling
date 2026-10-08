@@ -312,6 +312,19 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     </div>
   </section>
 
+  <section class="card mt" data-k="k8">
+    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🎯 10 στήλες × 8 αριθμοί (όλοι οι 80)</span><span id="k8Meta"></span></h2>
+    <div class="cbody">
+      <div class="muted" style="margin-bottom:10px">Σε κάθε κλήρωση παίζονται 10 στήλες των 8 αριθμών που καλύπτουν και τους 80 αριθμούς, 0,50€ η στήλη = <b>5€ ανά κλήρωση</b>. Οι κανόνες μοιράσματος βγήκαν από 8.813 κληρώσεις (8/9–8/10/2026): ο καλύτερος ανάμεσα σε 71 τρόπους. «Πάγωσαν» και μετράνε μόνο σε κληρώσεις <b id="k8StartLbl"></b> και μετά. Για σύγκριση: τυχαίο μοίρασμα και οι κάθετες στήλες του δελτίου.</div>
+      <div class="scroll-x"><table class="ptab" id="k8Table"></table></div>
+      <div class="chips" id="k8Chips"></div>
+      <div style="display:flex;gap:8px;align-items:center;margin:14px 0 6px;flex-wrap:wrap"><h3 class="muted" style="font-size:13px;margin:0">Στήλες για την επόμενη κλήρωση</h3><select id="k8Sel"></select></div>
+      <div id="k8Next" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px"></div>
+      <h3 class="muted" style="font-size:13px;margin:14px 0 6px">Τελευταίες κληρώσεις (επιλεγμένος κανόνας)</h3>
+      <div class="list" id="k8List" style="max-height:300px"></div>
+    </div>
+  </section>
+
   <div class="note">Δεδομένα: API ΟΠΑΠ (παιχνίδι 1100). Οι κληρώσεις είναι τυχαίες — τα στατιστικά δεν προβλέπουν το αποτέλεσμα. Παίξε υπεύθυνα, 18+.</div>
 </div>
 
@@ -446,7 +459,7 @@ async function loadHistory(){
   var gaps = 0; for(var j=1;j<histPool.length;j++) if(histPool[j-1].id-histPool[j].id>1) gaps += histPool[j-1].id-histPool[j].id-1;
   $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις από '+HIST_DAYS+' ημέρες + σήμερα'+
     (failed||gaps ? ' · ⚠️ λείπουν '+gaps+' κληρώσεις'+(failed?' ('+failed+' ημέρες απέτυχαν)':'') : ' · πλήρες, χωρίς κενά');
-  renderPos(); renderSim(); renderFwd(); agTick();
+  renderPos(); renderSim(); renderFwd(); renderK8(); agTick();
 }
 
 /* νέα κλήρωση: αν άλλαξε η ημέρα (μεσάνυχτα Ελλάδας), οι χθεσινές πάνε στο ιστορικό */
@@ -1192,7 +1205,69 @@ function ahOpen(on){
   lsSet('kl_ah_open', on?'1':'0'); if(on) renderAgent();
 }
 
-function renderAll(){ renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); agTick(); }
+/* ---------- 10 στήλες × 8 αριθμοί (κάλυψη όλων των 80) ---------- */
+var K8_START = 1340969;   // πρώτη κλήρωση της δοκιμής
+var K8_PAY = [0,0,0,0,1,5,25,500,7500];   // 8 αριθμοί, στήλη 0,50€
+var K8_RULES = [
+  {id:'hot50',  name:'Συχνότεροι (50), μοιρασμένοι εναλλάξ', hist:98.2, m:'hot',  W:50,  lay:'inter'},
+  {id:'cold100',name:'Σπανιότεροι (100), μοιρασμένοι εναλλάξ', hist:86.5, m:'cold', W:100, lay:'inter'},
+  {id:'prev',   name:'Προηγούμενη κλήρωση μαζεμένη στις πρώτες στήλες', hist:81.8, m:'hot', W:1, lay:'chunk'},
+  {id:'rnd',    name:'Τυχαίο μοίρασμα (σύγκριση)', hist:111.8, m:'rnd'},
+  {id:'digit',  name:'Κάθετες στήλες δελτίου (σύγκριση)', hist:65.7, m:'digit'}
+];
+function k8Parts(all, i, r){ // 10 ομάδες των 8 για την κλήρωση i, με δεδομένα μόνο πριν από αυτήν
+  var n, g = [];
+  if(r.m==='digit'){ for(var c=1;c<=10;c++){ var a=[]; for(n=1;n<=80;n++) if((n%10||10)===c) a.push(n); g.push(a); } return g; }
+  var order = [];
+  if(r.m==='rnd'){
+    var s = (all[i] ? all[i].id : all[i-1].id+1) * 2654435761 >>> 0;
+    function rnd(){ s=(s+0x6D2B79F5)>>>0; var t=s; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return ((t^(t>>>14))>>>0)/4294967296; }
+    for(n=1;n<=80;n++) order.push(n);
+    for(var q=79;q>0;q--){ var j=Math.floor(rnd()*(q+1)); var x=order[q]; order[q]=order[j]; order[j]=x; }
+  } else {
+    var cnt = new Array(81).fill(0);
+    for(var k=Math.max(0,i-r.W); k<i; k++) all[k].arr.forEach(function(x){ cnt[x]++; });
+    for(n=1;n<=80;n++) order.push(n);
+    order.sort(function(a,b){ var ka = r.m==='hot' ? -cnt[a] : cnt[a], kb = r.m==='hot' ? -cnt[b] : cnt[b]; return ka-kb || a-b; });
+  }
+  for(var c2=0;c2<10;c2++){ var grp=[]; for(var j2=0;j2<8;j2++) grp.push(r.lay==='chunk' ? order[c2*8+j2] : order[c2+10*j2]); g.push(grp); }
+  return g;
+}
+function renderK8(){
+  var card = document.querySelector && document.querySelector('.card[data-k="k8"]');
+  if(card && card.classList.contains('collapsed')) return;
+  var all = today.concat(histPool).slice().sort(function(a,b){return a.id-b.id;});
+  var s0 = all.findIndex(function(d){return d.id>=K8_START;});
+  var st = all.find(function(d){return d.id===K8_START;});
+  $('k8StartLbl').textContent = st ? 'από '+st.d.split('-').reverse().join('/')+' '+hm(st.t) : 'από την κλήρωση #'+K8_START;
+  var sel = $('k8Sel'); if(!sel.options.length) sel.innerHTML = K8_RULES.map(function(r){return '<option value="'+r.id+'">'+r.name+'</option>';}).join('');
+  var rows = '<tr><th>Κανόνας</th><th>Ιστορικό</th><th>Κληρώσεις</th><th>Κόστος → Κέρδη</th><th>Απόδοση</th><th>5/8 · 6/8 · 7/8 · 8/8</th><th>Καλύτερη κλήρωση</th></tr>';
+  var N = 0, selRes = [];
+  K8_RULES.forEach(function(r){
+    var won=0, n=0, d5=0,d6=0,d7=0,d8=0, best=0;
+    if(s0>=0) for(var i=s0;i<all.length;i++){
+      var d = all[i], w = 0;
+      k8Parts(all,i,r).forEach(function(grp){ var h = grp.filter(function(x){return d.set.has(x);}).length; w += K8_PAY[h]; if(h===5)d5++; if(h===6)d6++; if(h===7)d7++; if(h===8)d8++; });
+      won += w; n++; if(w>best) best=w;
+      if(r.id===sel.value) selRes.push({d:d, w:w, parts:k8Parts(all,i,r)});
+    }
+    N = n; var cost = n*5, rtp = cost ? won/cost*100 : 0;
+    rows += '<tr><td style="white-space:nowrap">'+r.name+'</td><td class="muted">'+r.hist.toFixed(1)+'%</td><td>'+n+'</td><td style="white-space:nowrap">'+eur(cost)+' → '+eur(won)+'</td>'+
+      '<td><b style="color:'+(n?(rtp>=100?'var(--hit)':'var(--miss)'):'var(--muted)')+'">'+(n?rtp.toFixed(1)+'%':'—')+'</b></td><td>'+d5+' · '+d6+' · <b>'+d7+'</b> · <b>'+d8+'</b></td><td>'+(best?eur(best):'—')+'</td></tr>';
+  });
+  $('k8Table').innerHTML = rows;
+  $('k8Meta').textContent = N ? N+' κληρώσεις' : 'ξεκινάει';
+  $('k8Chips').innerHTML = chip('Κόστος ανά κλήρωση', '5,00€') + chip('Θεωρητική απόδοση 8 αριθμών', '≈69% (−1,55€ ανά κλήρωση)') + chip('Ανά 7/8', '1 στις ~6.200 στήλες') + chip('Ανά 8/8', '1 στις ~230.000 στήλες');
+  var rr = K8_RULES.filter(function(r){return r.id===sel.value;})[0];
+  var parts = k8Parts(all, all.length, rr);
+  $('k8Next').innerHTML = parts.map(function(g,ci){ return '<div class="row" style="cursor:default;grid-template-columns:28px 1fr"><div class="t"><b>'+(ci+1)+'</b></div><div class="n">'+g.slice().sort(function(a,b){return a-b;}).map(function(x){return '<i>'+x+'</i>';}).join('')+'</div></div>'; }).join('');
+  $('k8List').innerHTML = selRes.slice(-15).reverse().map(function(x){
+    var hs = x.parts.map(function(g){ return g.filter(function(y){return x.d.set.has(y);}).length; });
+    return '<div class="row" style="cursor:default"><div class="t">'+hm(x.d.t)+'<small>'+(x.w?'<b style="color:var(--hit)">'+eur(x.w)+'</b>':'0€')+'</small></div><div class="n" style="font-size:12px">επιτυχίες ανά στήλη: '+hs.map(function(h){return h>=5?'<b style="color:var(--hit)">'+h+'</b>':h;}).join(' · ')+'</div></div>';
+  }).join('') || '<span class="muted">Η δοκιμή ξεκινάει με την κλήρωση #'+K8_START+'.</span>';
+}
+
+function renderAll(){ renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderK8(); agTick(); }
 
 /* ---------- Countdown ---------- */
 function tick(){
@@ -1242,7 +1317,7 @@ $('posBody').addEventListener('click',function(e){ var r=e.target.closest('tr[da
 var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-k]'));
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); if(!on && c.dataset.k==='sim') renderSim(); if(!on && c.dataset.k==='fwd') renderFwd(); }
+function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); if(!on && c.dataset.k==='sim') renderSim(); if(!on && c.dataset.k==='fwd') renderFwd(); if(!on && c.dataset.k==='k8') renderK8(); }
 function updAllBtn(){
   var allClosed = cards.every(function(c){return c.classList.contains('collapsed');});
   $('btnAll').textContent = allClosed ? '▸ Άνοιγμα όλων' : '▾ Κλείσιμο όλων';
@@ -1259,6 +1334,7 @@ $('btnAll').addEventListener('click',function(){
   cards.forEach(function(c){ setCollapsed(c, close); }); updAllBtn();
 });
 updAllBtn();
+$('k8Sel').addEventListener('change',renderK8);
 $('ahTab').addEventListener('click',function(){ ahOpen(true); });
 $('ahClose').addEventListener('click',function(){ ahOpen(false); });
 $('agKey').value = '';
