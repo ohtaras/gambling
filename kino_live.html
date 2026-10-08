@@ -147,6 +147,8 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
         <option value="claude-sonnet-5-5">Sonnet 5.5 — πιο έξυπνο (~3$ τη μέρα)</option>
       </select>
       <label class="swl"><span class="sw"><input type="checkbox" id="agOn"><span></span></span>Ενεργός σε κάθε κλήρωση</label>
+      <label class="muted" style="font-size:12px">GitHub token για μόνιμη μνήμη (Contents: Read and write στο gambling· μένει μόνο σε αυτόν τον browser)</label>
+      <div style="display:flex;gap:6px"><input id="ghTok" type="password" autocomplete="off" placeholder="github_pat_…" style="flex:1;min-width:0;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:16px"><button class="btn" id="ghTokSave">Αποθήκευση</button></div>
       <div class="chips" style="margin:0"><button class="btn" id="agAsk">💭 Ρώτα τώρα</button><button class="btn" id="agReset">↺ Νέο ταμείο 100€</button><button class="btn" id="agForget">🗑 Διαγραφή κλειδιού</button></div>
     </div>
   </details>
@@ -154,6 +156,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   <div class="ah-sec"><h3 id="agDecLbl">Απόφαση για την επόμενη κλήρωση</h3><div id="agDec" class="muted">—</div></div>
   <div class="ah-sec"><h3>Πώς τα πάει</h3><div class="chips" id="agPerf" style="margin:0"></div></div>
   <div class="ah-sec"><h3>Σημειώσεις στον εαυτό του</h3><div id="agNotes" class="muted" style="font-size:13px">—</div></div>
+  <div class="ah-sec"><h3>📚 Μαθήματα <span class="muted" style="font-weight:400" id="agSync"></span></h3><div id="agLessons" style="font-size:13px">—</div></div>
   <div class="ah-sec ah-hist"><h3>Ενεργά δελτία</h3><div class="list" id="agActive" style="max-height:none"></div></div>
   <div class="ah-sec ah-hist"><h3>Ημερολόγιο κληρώσεων</h3><div class="list" id="agLog" style="max-height:none"></div></div>
 </aside>
@@ -909,10 +912,11 @@ var AG_PRICE = { 'claude-haiku-5-5':[0.10,0.50], 'claude-sonnet-5-5':[2,10] }; /
 var agBusy = false;
 function agLoad(){
   var s = null; try{ s = JSON.parse(lsGet(AG.state)||'null'); }catch(e){}
-  if(!s) s = { bank:100, start:100, log:[], notes:'', mood:'🙂 ήρεμος', cost:{}, since:Date.now() };
+  if(!s) s = { bank:100, start:100, log:[], notes:'', lessons:[], mood:'🙂 ήρεμος', cost:{}, since:Date.now() };
+  if(!s.lessons) s.lessons = [];
   return s;
 }
-function agSave(s){ if(s.log.length>400) s.log = s.log.slice(-400); lsSet(AG.state, JSON.stringify(s)); }
+function agSave(s){ if(s.log.length>300) s.log = s.log.slice(-300); s.updatedAt = Date.now(); lsSet(AG.state, JSON.stringify(s)); ghDirty = true; ghSchedule(); }
 function agNorm(x){ // συμβατότητα με παλιές εγγραφές
   if(x.draws==null){ x.draws = 1; x.start = 0; if(x.play && x.done && x.res==null){ x.res = {}; x.res[x.id] = {h:x.hits||0, b:x.b||0, w:x.win||0}; } }
   if(x.play && !x.res) x.res = {};
@@ -992,12 +996,19 @@ function agPrompt(s, target){
   var tk = s.log.filter(function(x){return x.play;}), nRun=0, spent=0, won=0, wins=0, byK={};
   tk.forEach(function(x){ Object.keys(x.res||{}).forEach(function(id){ var o=x.res[id], c=(x.perDraw!=null?x.perDraw:x.stake*(x.sc?2:1)); nRun++; spent+=c; won+=o.w; if(o.w>0) wins++;
     var g=(x.k||0)+' αρ.'+(x.sc?' +2η':''); byK[g]=byK[g]||{n:0,c:0,w:0}; byK[g].n++; byK[g].c+=c; byK[g].w+=o.w; }); });
+  var byIdH = {}; all.forEach(function(d){ byIdH[d.id]=d; });
+  var hind = s.log.filter(function(x){return x.play && x.done && x.k;}).slice(-8).map(function(x){
+    var hs = agHindsight(x, byIdH, 12); if(!hs) return null;
+    return '#'+x.id+' ['+x.n.join(' ')+'] '+x.stake+'€'+(x.sc?' +2η':'')+': επόμενες '+hs.n+' → επιτυχίες '+hs.hits.join(',')+' · θα κόστιζε '+hs.cost+'€, θα έφερνε '+hs.won+'€'+(hs.best>=Math.max(3,x.k-1)?' · ⚠ '+hs.best+'/'+x.k+' στην +'+hs.bestAt:'');
+  }).filter(Boolean).join('\n') || '(δεν υπάρχουν ακόμα)';
   var recap = nRun ? 'ΑΠΟΛΟΓΙΣΜΟΣ ΣΟΥ: '+nRun+' κληρώσεις παιγμένες, έδωσες '+spent.toFixed(2)+'€, πήρες '+won.toFixed(2)+'€ ('+(won/spent*100).toFixed(0)+'%), κερδοφόρες '+wins+'. Ανά είδος δελτίου: '+
     Object.keys(byK).map(function(g){var b=byK[g]; return g+': '+b.n+' κλ., '+b.c.toFixed(2)+'€→'+b.w.toFixed(2)+'€';}).join(' · ')+'. Αν κάτι δεν σου βγαίνει, άλλαξέ το.\n' : '';
   return 'Επόμενη κλήρωση: #'+target+' στις '+hm(expectedTime())+'. (Κάθε 5 λεπτά μία κλήρωση· #'+(target+12)+' = σε μία ώρα.)\n\n'+
     'ΤΑΜΕΙΟ: '+s.bank.toFixed(2)+'€ (ξεκίνησες με '+s.start+'€). Διάθεσή σου πριν: '+s.mood+'.\n'+recap+
     'Σημειώσεις που άφησες στον εαυτό σου: '+(s.notes||'(καμία)')+'\n\n'+
     'ΕΝΕΡΓΑ ΔΕΛΤΙΑ ΣΟΥ (πληρωμένα, τρέχουν ή θα τρέξουν):\n'+active+'\n\n'+
+    'ΜΑΘΗΜΑΤΑ ΠΟΥ ΕΧΕΙΣ ΚΡΑΤΗΣΕΙ (από τα λάθη και τις επιτυχίες σου):\n'+((s.lessons||[]).map(function(l,i){return (i+1)+'. '+l;}).join('\n')||'(κανένα ακόμα)')+'\n\n'+
+    'ΤΙ ΘΑ ΓΙΝΟΤΑΝ ΑΝ ΚΡΑΤΟΥΣΕΣ ΤΟΥΣ ΙΔΙΟΥΣ ΑΡΙΘΜΟΥΣ στις επόμενες κληρώσεις (ίδιο ποσό):\n'+hind+'\n\n'+
     'ΤΑ ΤΕΛΕΥΤΑΙΑ ΣΟΥ ΔΕΛΤΙΑ ΠΟΥ ΤΕΛΕΙΩΣΑΝ (παλιότερο πρώτο):\n'+hist+'\n\n'+
     'ΤΕΛΕΥΤΑΙΕΣ 30 ΚΛΗΡΩΣΕΙΣ (νεότερη πρώτη· οι 20 αριθμοί με τη σειρά που βγήκαν, και οι 3 της 2ης ευκαιρίας):\n'+last+'\n\n'+
     'ΣΤΑΤΙΣΤΙΚΑ: συχνότεροι στις τελευταίες 50: '+hot+'\nπιο καθυστερημένοι (κληρώσεις χωρίς εμφάνιση): '+late+'\nσυχνότεροι στις θέσεις 1–10 (50): '+pz+'\n\n'+
@@ -1017,8 +1028,10 @@ var AG_SYS = 'Είσαι ένας συνηθισμένος Έλληνας παί
   '• Μπορείς να έχεις πολλά δελτία ενεργά ταυτόχρονα, να μην παίξεις κάτι καινούργιο, να μείνεις εκτός ή να κάνεις διάλειμμα («pause» = για πόσες κληρώσεις να μη σε ξαναρωτήσουν· τα ενεργά δελτία συνεχίζουν).\n'+
   '• Παίζεις ΜΟΝΟ αριθμούς (με ή χωρίς 2η ευκαιρία). ΔΕΝ παίζεις KINO BONUS, ΠΑΡΑ 1, Μονά/Ζυγά ούτε Στήλες.\n'+
   '• Δεν ξοδεύεις ποτέ πάνω από το ταμείο σου.\n\n'+
-  'ΠΩΣ ΠΑΙΖΕΙΣ: σαν κανονικός άνθρωπος με λογικά ποσά. Συνήθως 0,50€–1€ τη στήλη, σπάνια 2–3€ όταν κάτι σε πείθει πολύ· το μέγιστο ποντάρισμα σχεδόν ποτέ. Συνήθως παίζεις μία κλήρωση τη φορά· συνεχόμενες ή μελλοντικές κληρώσεις μόνο αν κάτι που βλέπεις στις κληρώσεις σου δίνει λόγο — δεν είναι υποχρεωτικό να χρησιμοποιείς τις δυνατότητες, είναι στην κρίση σου. Ελίσσεσαι: αλλάζεις πλήθος αριθμών και τακτική ανάλογα με ό,τι βλέπεις· κυνηγάς μικρά κέρδη (π.χ. 4 αριθμοί για το 4/4) ή ένα μεγάλο «χτύπημα» (9/9, 10/10) όταν κάτι σου λέει ότι πάει να γίνει· χαίρεσαι όταν πιάνεις, εκνευρίζεσαι ή κάνεις διάλειμμα μετά από χασούρες, προσέχεις το ταμείο σου.\n\n'+
-  'Απάντηση ΜΟΝΟ JSON, χωρίς άλλο κείμενο: {"play": true|false, "numbers": [0 έως 12 διαφορετικοί ακέραιοι 1–80], "stake": 0.5–35 (ανά κλήρωση, για τους αριθμούς), "second_chance": true|false, "draws": 1–200, "start_after": 0–200, "pause": 0–288, "mood": "emoji + 1–3 λέξεις", "thought": "1–3 σύντομες προτάσεις στα ελληνικά, σε πρώτο πρόσωπο", "note": "σύντομη σημείωση για τον εαυτό σου"}. Αν play=false, άφησε τα υπόλοιπα κενά.';
+  'Ο ΣΤΟΧΟΣ ΣΟΥ: να πιάσεις ένα ΜΕΓΑΛΟ δελτίο (π.χ. 8/8, 9/9, 10/10, ή ένα δυνατό ποντάρισμα που κάθεται). Τα μικρά δελτία είναι το «καύσιμο»: παίζεις π.χ. 4 αριθμούς με 0,50–1€ για να πιάσεις κάνα 4/4 (50€ στη στήλη των 0,50€) και να έχεις να παίζεις. Όταν βλέπεις ΠΡΑΓΜΑΤΙΚΗ ευκαιρία, ρισκάρεις: π.χ. 10€ στα 4 αριθμά για να πάρεις 1.000€ στο 4/4, ή πας για μεγάλο πλήθος αριθμών. Αυτά είναι σπάνια και τα δικαιολογείς στο thought. Τον υπόλοιπο καιρό παίζεις λογικά ποσά (0,50–1€) ή κάθεσαι.\n'+
+  'ΠΩΣ ΜΑΘΑΙΝΕΙΣ: κοιτάς τι θα έφερναν οι αριθμοί σου αν τους κρατούσες στις επόμενες κληρώσεις, και τον απολογισμό ανά είδος δελτίου. Όταν μαθαίνεις κάτι πραγματικό (π.χ. «άλλαζα αριθμούς πολύ γρήγορα», «τα 10άρια μου τρώνε το ταμείο»), το γράφεις στο "lesson". Τα μαθήματα αποθηκεύονται μόνιμα και τα βλέπεις κάθε φορά — λαμβάνεις τα υπόψη. Μη γράφεις μάθημα κάθε φορά, μόνο όταν όντως έμαθες κάτι καινούργιο.\n'+
+  'ΠΩΣ ΠΑΙΖΕΙΣ: σαν κανονικός άνθρωπος. Συνήθως παίζεις μία κλήρωση τη φορά· συνεχόμενες ή μελλοντικές κληρώσεις μόνο αν κάτι σου δίνει λόγο — είναι στην κρίση σου. Ελίσσεσαι: αλλάζεις πλήθος αριθμών και τακτική ανάλογα με ό,τι βλέπεις· χαίρεσαι όταν πιάνεις, εκνευρίζεσαι ή κάνεις διάλειμμα μετά από χασούρες, προσέχεις το ταμείο σου.\n\n'+
+  'Απάντηση ΜΟΝΟ JSON, χωρίς άλλο κείμενο: {"play": true|false, "numbers": [0 έως 12 διαφορετικοί ακέραιοι 1–80], "stake": 0.5–35 (ανά κλήρωση, για τους αριθμούς), "second_chance": true|false, "draws": 1–200, "start_after": 0–200, "pause": 0–288, "mood": "emoji + 1–3 λέξεις", "thought": "1–3 σύντομες προτάσεις στα ελληνικά, σε πρώτο πρόσωπο", "note": "σύντομη σημείωση για τον εαυτό σου", "lesson": "νέο μάθημα σε μία πρόταση ή κενό"}. Αν play=false, άφησε τα υπόλοιπα κενά.';
 async function agAsk(force){
   var key = lsGet(AG.key); if(!key){ $('agDec').innerHTML = '<span class="muted">Βάλε κλειδί API στις ρυθμίσεις.</span>'; return; }
   if(agBusy || !lastId) return;
@@ -1060,6 +1073,7 @@ async function agAsk(force){
     s.pauseUntil = pause ? target + 1 + pause : 0; dec.pause = pause;
     s.log = s.log.filter(function(x){return x.id!==target || x.play;});
     s.log.push(dec); s.mood = dec.mood || s.mood; if(j.note) s.notes = String(j.note).slice(0,300);
+    if(j.lesson && String(j.lesson).trim().length>5){ var ls = String(j.lesson).trim().slice(0,220); if(s.lessons.indexOf(ls)<0){ s.lessons.push(ls); if(s.lessons.length>30) s.lessons = s.lessons.slice(-30); dec.lesson = ls; } }
     var u = data.usage||{}, pr = AG_PRICE[model]||[0,0], day = dateOf(Date.now());
     s.cost[day] = (s.cost[day]||0) + ((u.input_tokens||0)*pr[0] + (u.output_tokens||0)*pr[1])/1e6;
     agSave(s);
@@ -1099,6 +1113,8 @@ function renderAgent(){
     chip('Απόδοση', costRun ? (won/costRun*100).toFixed(1)+'%' : '—') + (best && best.w ? chip('Καλύτερο', (best.k? best.h+(best.b?'+'+best.b:'')+'/'+best.k : (best.par?'Μονά/Ζυγά':'Στήλη'))+' · '+eur(best.w)) : '') +
     chip('Κόστος API συνολικά', '$'+totalApi.toFixed(3));
   $('agNotes').textContent = s.notes || '—';
+  $('agLessons').innerHTML = (s.lessons||[]).length ? '<ol style="margin:0;padding-left:20px">'+s.lessons.map(function(l){return '<li style="margin:3px 0">'+esc(l)+'</li>';}).join('')+'</ol>' : '<span class="muted">Δεν έχει κρατήσει ακόμα μαθήματα.</span>';
+  renderAgentStatusOnly();
   var act = tk.filter(function(x){return !x.done;});
   $('agActive').innerHTML = act.length ? act.slice().reverse().map(function(x){
     var r = agRange(x), n = Object.keys(x.res||{}).length;
@@ -1120,6 +1136,53 @@ function renderAgent(){
       '<span class="muted" style="font-size:11px;margin-left:4px">'+eur(x.perDraw!=null ? x.perDraw : x.stake*(x.sc?2:1))+'</span></div></div>';
   }).join('') || '<span class="muted">Καμία κλήρωση ακόμα.</span>';
 }
+/* ---------- Μνήμη agent στο GitHub (κλάδος agent-data) — ίδια σε κάθε browser/συσκευή ---------- */
+var GH = { repo:'ohtaras/gambling', branch:'agent-data', path:'agent/state.json', tok:'kl_gh_tok' };
+var ghSha = null, ghDirty = false, ghTimer = null, ghStatus = 'τοπικά μόνο', ghPulled = false;
+function b64utf8(str){ var b = new TextEncoder().encode(str), s=''; for(var i=0;i<b.length;i+=0x8000) s += String.fromCharCode.apply(null, b.subarray(i,i+0x8000)); return btoa(s); }
+function utf8b64(b64){ var s = atob(b64.replace(/\s/g,'')), a = new Uint8Array(s.length); for(var i=0;i<s.length;i++) a[i]=s.charCodeAt(i); return new TextDecoder().decode(a); }
+function ghHeaders(){ var h = {'Accept':'application/vnd.github+json'}, t = lsGet(GH.tok); if(t) h.Authorization = 'Bearer '+t; return h; }
+async function ghPull(){
+  try{
+    var r = await fetch('https://api.github.com/repos/'+GH.repo+'/contents/'+GH.path+'?ref='+GH.branch+'&_='+Date.now(), {headers:ghHeaders(), cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    var j = await r.json(); ghSha = j.sha;
+    var remote = JSON.parse(utf8b64(j.content||''));
+    var local = null; try{ local = JSON.parse(lsGet(AG.state)||'null'); }catch(e){}
+    if(remote && remote.bank!=null && (!local || (remote.updatedAt||0) > (local.updatedAt||0))){ lsSet(AG.state, JSON.stringify(remote)); ghStatus = '☁️ φορτώθηκε από GitHub'; }
+    else if(local && (!remote || (local.updatedAt||0) > (remote.updatedAt||0))){ ghDirty = true; ghStatus = '☁️ συγχρονίζεται'; ghSchedule(1000); }
+    else ghStatus = '☁️ συγχρονισμένο';
+  }catch(e){ ghStatus = '⚠️ GitHub: '+(e.message||e); }
+  ghPulled = true; renderAgent();
+}
+function ghSchedule(ms){ clearTimeout(ghTimer); ghTimer = setTimeout(ghPush, ms==null ? 20000 : ms); }
+async function ghPush(retry){
+  if(!ghDirty) return;
+  if(!lsGet(GH.tok)){ ghStatus = 'τοπικά μόνο (χωρίς GitHub token)'; renderAgentStatusOnly(); return; }
+  var body = lsGet(AG.state); if(!body) return;
+  try{
+    var r = await fetch('https://api.github.com/repos/'+GH.repo+'/contents/'+GH.path, {method:'PUT', headers:ghHeaders(),
+      body: JSON.stringify({message:'agent: ενημέρωση μνήμης', content:b64utf8(body), sha:ghSha||undefined, branch:GH.branch})});
+    if(r.status===409 || r.status===422){ // κάποιος άλλος browser έγραψε: παίρνουμε το sha και ξαναδοκιμάζουμε
+      if(!retry){ var g = await fetch('https://api.github.com/repos/'+GH.repo+'/contents/'+GH.path+'?ref='+GH.branch+'&_='+Date.now(), {headers:ghHeaders(), cache:'no-store'}); if(g.ok){ ghSha = (await g.json()).sha; return ghPush(true); } }
+      throw new Error('σύγκρουση εκδόσεων');
+    }
+    if(!r.ok){ var t = await r.text(); throw new Error('HTTP '+r.status+' '+t.slice(0,80)); }
+    ghSha = (await r.json()).content.sha; ghDirty = false; ghStatus = '☁️ αποθηκεύτηκε '+hm(Date.now());
+  }catch(e){ ghStatus = '⚠️ GitHub: '+(e.message||e); ghSchedule(60000); }
+  renderAgentStatusOnly();
+}
+function renderAgentStatusOnly(){ var el = $('agSync'); if(el) el.textContent = ghStatus; }
+
+/* «Τι θα γινόταν αν…»: πώς θα πήγαιναν οι αριθμοί ενός τελειωμένου δελτίου στις επόμενες κληρώσεις */
+function agHindsight(x, byId, L){
+  if(!x.play || !x.done || !x.k) return null;
+  var r = agRange(x), out = [], won = 0, best = 0, bestAt = 0;
+  for(var id=r[1]+1; id<=r[1]+L; id++){ var d = byId[id]; if(!d) break; var o = agTicketWin({n:x.n,k:x.k,sc:x.sc,stake:x.stake}, d); out.push(o.h); won += o.w; if(o.h>best){ best=o.h; bestAt=id-r[1]; } }
+  if(!out.length) return null;
+  return {n:out.length, hits:out, won:Math.round(won*100)/100, cost:Math.round(out.length*x.stake*(x.sc?2:1)*100)/100, best:best, bestAt:bestAt};
+}
+
 function agTick(){ // σε κάθε νέα κλήρωση: κλείσιμο αποτελεσμάτων και νέα απόφαση
   renderAgent();
   if($('agOn').checked && lsGet(AG.key)) agAsk(false);
@@ -1202,11 +1265,13 @@ $('agKey').value = '';
 $('agModel').value = lsGet(AG.model) || 'claude-haiku-5-5';
 $('agOn').checked = lsGet(AG.on)==='1';
 $('agKeySave').addEventListener('click',function(){ var v=$('agKey').value.trim(); if(v){ lsSet(AG.key,v); $('agKey').value=''; renderAgent(); if($('agOn').checked) agAsk(false); } });
+$('ghTokSave').addEventListener('click',function(){ var v=$('ghTok').value.trim(); if(v){ lsSet(GH.tok,v); $('ghTok').value=''; ghPull(); } });
+ghPull();
 $('agForget').addEventListener('click',function(){ try{ localStorage.removeItem(AG.key); }catch(e){} renderAgent(); });
 $('agModel').addEventListener('change',function(){ lsSet(AG.model,$('agModel').value); });
 $('agOn').addEventListener('change',function(){ lsSet(AG.on,$('agOn').checked?'1':'0'); agTick(); });
 $('agAsk').addEventListener('click',function(){ agAsk(true); });
-$('agReset').addEventListener('click',function(){ if(confirm('Νέο εικονικό ταμείο 100€; Το ημερολόγιο θα σβηστεί.')){ var s=agLoad(); agSave({bank:100,start:100,log:[],notes:'',mood:'🙂 ήρεμος',cost:s.cost,since:Date.now(),pauseUntil:0}); renderAgent(); } });
+$('agReset').addEventListener('click',function(){ if(confirm('Νέο εικονικό ταμείο 100€; Το ημερολόγιο θα σβηστεί, τα μαθήματα μένουν.')){ var s=agLoad(); agSave({bank:100,start:100,log:[],notes:'',lessons:s.lessons||[],mood:'🙂 ήρεμος',cost:s.cost,since:Date.now(),pauseUntil:0}); renderAgent(); } });
 if(lsGet('kl_ah_open')==='1') ahOpen(true);
 
 document.addEventListener('visibilitychange',function(){ if(!document.hidden){ clearTimeout(refreshTimer); retries=0; tryRefresh(); }});
