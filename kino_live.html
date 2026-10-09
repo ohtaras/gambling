@@ -155,6 +155,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   <div class="ah-sec"><div class="chips" id="agStatus" style="margin:0"></div></div>
   <div class="ah-sec"><h3 id="agDecLbl">Απόφαση για την επόμενη κλήρωση</h3><div id="agDec" class="muted">—</div></div>
   <div class="ah-sec"><h3>Πώς τα πάει</h3><div class="chips" id="agPerf" style="margin:0"></div></div>
+  <div class="ah-sec"><h3>📐 Κανόνες αφεντικού <span class="muted" style="font-weight:400;font-size:12px">5 συνεχόμενοι → εξάδα / εννιάρι / δεκάρι για 10 κληρώσεις</span></h3><div id="agSig" style="font-size:13px">—</div></div>
   <div class="ah-sec"><h3>💬 Μήνυμα του αφεντικού</h3><textarea id="agCoach" rows="3" placeholder="Γράψε του τι θέλεις να αλλάξει…" style="width:100%;box-sizing:border-box;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:15px;font-family:inherit"></textarea><div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" id="agCoachSave">Στείλ' το</button><span class="muted" id="agCoachState" style="font-size:12px"></span></div></div>
   <div class="ah-sec"><h3>Σημειώσεις στον εαυτό του</h3><div id="agNotes" class="muted" style="font-size:13px">—</div></div>
   <div class="ah-sec"><h3>📚 Μαθήματα <span class="muted" style="font-weight:400" id="agSync"></span></h3><div id="agLessons" style="font-size:13px">—</div></div>
@@ -994,6 +995,28 @@ function agTicketTxt(x){
   return '#'+x.id+': '+(x.k? x.k+' αρ. ['+x.n.join(' ')+'] '+x.stake+'€'+(x.sc?' +2η':'') : 'χωρίς αριθμούς')+side+(x.draws>1||x.start?' για κληρώσεις #'+r[0]+'–#'+r[1]+' ('+x.draws+')':'')+
     ', κόστος '+x.cost+'€ → '+(n? 'εκκαθαρίστηκαν '+n+'/'+x.draws+', κέρδη '+x.win+'€'+(lastRes?' [τελευταίες: '+lastRes+']':'') : 'δεν έχει τρέξει ακόμα');
 }
+/* Κανόνες αφεντικού: όταν βγουν 5 συνεχόμενοι (Α…Α+4) → στήλη με θέσεις ως προς το Α, για τις 10 επόμενες κληρώσεις */
+var AG_RULES = [
+  {k:6,  off:[-4,0,1,5,7,8],               name:'εξάδα',   txt:'Α−4, Α, Α+1, Α+5, Α+7, Α+8'},
+  {k:9,  off:[-4,-3,-2,-1,0,1,2,5,6],      name:'εννιάρι', txt:'Α−4 έως Α+2, Α+5, Α+6'},
+  {k:10, off:[-4,-3,-2,-1,0,1,2,5,6,9],    name:'δεκάρι',  txt:'Α−4 έως Α+2, Α+5, Α+6, Α+9'}
+];
+var AG_RULE_L = 10;
+function agSignals(all){ // all: νεότερη πρώτη · ενεργά σήματα (5άδες μέσα στις 10 τελευταίες κληρώσεις)
+  var out = [];
+  for(var q=0; q<Math.min(AG_RULE_L, all.length); q++){
+    var d = all[q];
+    for(var a=1; a<=76; a++){
+      if(!(d.set.has(a)&&d.set.has(a+1)&&d.set.has(a+2)&&d.set.has(a+3)&&d.set.has(a+4))) continue;
+      AG_RULES.forEach(function(r){
+        var nums = r.off.map(function(o){return a+o;});
+        if(nums[0]<1 || nums[nums.length-1]>80) return;
+        out.push({id:d.id, t:d.t, a:a, k:r.k, name:r.name, nums:nums, left:AG_RULE_L-q});
+      });
+    }
+  }
+  return out;
+}
 function agPrompt(s, target){
   var all = today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;});
   var last = all.slice(0,30).map(function(d){ var sd = sideOf(d); return hm(d.t)+' #'+d.id+': '+d.arr.join(' ')+(d.sc.length?' | 2η: '+d.sc.join(' '):''); }).join('\n');
@@ -1018,6 +1041,7 @@ function agPrompt(s, target){
   }).filter(Boolean).join('\n') || '(δεν υπάρχουν ακόμα)';
   var big = tk.filter(function(x){return x.k>=7;}).length, series = tk.filter(function(x){return x.draws>=5;}).length, hits = tk.filter(function(x){return x.stake>=3;}).length;
   var style = tk.length ? 'ΤΟ ΣΤΥΛ ΣΟΥ ΜΕΧΡΙ ΤΩΡΑ: '+tk.length+' δελτία · με 7+ αριθμούς: '+big+' · σειρές 5+ κληρώσεων: '+series+' · χτυπήματα ≥3€: '+hits+'. Μέσο πλήθος αριθμών: '+(tk.reduce(function(a,x){return a+(x.k||0);},0)/tk.length).toFixed(1)+'.\n' : '';
+  var sig = agSignals(all);
   var recap = nRun ? 'ΑΠΟΛΟΓΙΣΜΟΣ ΣΟΥ: '+nRun+' κληρώσεις παιγμένες, έδωσες '+spent.toFixed(2)+'€, πήρες '+won.toFixed(2)+'€ ('+(won/spent*100).toFixed(0)+'%), κερδοφόρες '+wins+'. Ανά είδος δελτίου: '+
     Object.keys(byK).map(function(g){var b=byK[g]; return g+': '+b.n+' κλ., '+b.c.toFixed(2)+'€→'+b.w.toFixed(2)+'€';}).join(' · ')+'. Αν κάτι δεν σου βγαίνει, άλλαξέ το.\n' : '';
   return 'Επόμενη κλήρωση: #'+target+' στις '+hm(expectedTime())+'. (Κάθε 5 λεπτά μία κλήρωση· #'+(target+12)+' = σε μία ώρα.)\n\n'+
@@ -1026,6 +1050,7 @@ function agPrompt(s, target){
     'Σημειώσεις που άφησες στον εαυτό σου: '+(s.notes||'(καμία)')+'\n\n'+
     'ΕΝΕΡΓΑ ΔΕΛΤΙΑ ΣΟΥ (πληρωμένα, τρέχουν ή θα τρέξουν):\n'+active+'\n\n'+
     'ΜΑΘΗΜΑΤΑ ΠΟΥ ΕΧΕΙΣ ΚΡΑΤΗΣΕΙ (από τα λάθη και τις επιτυχίες σου):\n'+((s.lessons||[]).map(function(l,i){return (i+1)+'. '+l;}).join('\n')||'(κανένα ακόμα)')+'\n\n'+
+    'ΣΗΜΑΤΑ ΤΩΝ ΚΑΝΟΝΩΝ ΤΟΥ ΑΦΕΝΤΙΚΟΥ (5 συνεχόμενοι → στήλη για 10 κληρώσεις):\n'+(sig.length ? sig.map(function(g){ return '• Στην κλήρωση των '+hm(g.t)+' (#'+g.id+') βγήκαν '+g.a+'–'+(g.a+4)+' → '+g.name+' ('+g.k+' αρ.) ['+g.nums.join(' ')+'] · απομένουν '+g.left+' από τις 10 κληρώσεις'+(g.left===AG_RULE_L?' (ΜΟΛΙΣ ΒΓΗΚΕ)':''); }).join('\n') : '(κανένα ενεργό σήμα αυτή τη στιγμή)')+'\n\n'+
     'ΤΙ ΘΑ ΓΙΝΟΤΑΝ ΑΝ ΚΡΑΤΟΥΣΕΣ ΤΟΥΣ ΙΔΙΟΥΣ ΑΡΙΘΜΟΥΣ στις επόμενες κληρώσεις (ίδιο ποσό):\n'+hind+'\n\n'+
     'ΤΑ ΤΕΛΕΥΤΑΙΑ ΣΟΥ ΔΕΛΤΙΑ ΠΟΥ ΤΕΛΕΙΩΣΑΝ (παλιότερο πρώτο):\n'+hist+'\n\n'+
     'ΤΕΛΕΥΤΑΙΕΣ 30 ΚΛΗΡΩΣΕΙΣ (νεότερη πρώτη· οι 20 αριθμοί με τη σειρά που βγήκαν, και οι 3 της 2ης ευκαιρίας):\n'+last+'\n\n'+
@@ -1054,13 +1079,19 @@ var AG_SYS = 'Είσαι Έλληνας παίκτης ΚΙΝΟ με ένστι�
   '4. ΤΑΜΕΙΟ: περίπου το 1/3 του ταμείου είναι για στήλες-στόχους, τα 2/3 για καύσιμο και χτυπήματα. Κάθεσαι μόνο αν το ταμείο πέσει κάτω από 15€ ή αν πραγματικά δεν σου λέει τίποτα η κλήρωση — όχι επειδή έχασες μερικές φορές.\n'+
   'ΠΩΣ ΜΑΘΑΙΝΕΙΣ: κοιτάς τι θα έφερναν οι αριθμοί σου αν τους κρατούσες στις επόμενες κληρώσεις και τον απολογισμό ανά είδος δελτίου. Μαθήματα γράφεις για το ΤΙ ΔΟΥΛΕΥΕΙ και τι όχι στο παιχνίδι σου (π.χ. «άλλαζα αριθμούς πολύ γρήγορα», «η στήλη μου ήθελε περισσότερες κληρώσεις», «το χτύπημα στα 4 με 5€ άξιζε»), όχι «να είμαι πιο προσεκτικός». Μη γράφεις μάθημα κάθε φορά.\n'+
   'ΣΥΝΑΙΣΘΗΜΑ: χαίρεσαι όταν πιάνεις, εκνευρίζεσαι με τις χασούρες, αλλά δεν τα παρατάς· παίρνεις θάρρος από ένα καλό αποτέλεσμα και μερικές φορές «το νιώθεις» και πας δυνατά.\n'+
+  'ΟΙ ΚΑΝΟΝΕΣ ΤΟΥ ΑΦΕΝΤΙΚΟΥ (από ανάλυση ενός χρόνου, 105.000 κληρώσεων): όταν σε μια κλήρωση βγουν 5 συνεχόμενοι Α, Α+1, Α+2, Α+3, Α+4, παίζεται μια στήλη με αριθμούς γύρω από το Α για τις 10 επόμενες κληρώσεις:\n'+
+  '  α) ΕΞΑΔΑ: Α−4, Α, Α+1, Α+5, Α+7, Α+8 (π.χ. 44–48 → 40 44 45 49 51 52). 9 πρώτοι μήνες: 14 φορές 6/6 (800€ ανά 0,50€), απόδοση 112,6%· 3 τελευταίοι μήνες: 3 φορές 6/6, 94,2%.\n'+
+  '  β) ΕΝΝΙΑΡΙ: Α−4, Α−3, Α−2, Α−1, Α, Α+1, Α+2, Α+5, Α+6 (π.χ. 44–48 → 40 41 42 43 44 45 46 49 50). 9 πρώτοι μήνες: 1 φορά 9/9 (20.000€ ανά 0,50€), απόδοση 205,7%· 3 τελευταίοι μήνες: κανένα 8/9 ή 9/9, 60,2%.\n'+
+  '  γ) ΔΕΚΑΡΙ: όπως το εννιάρι + Α+9 (π.χ. 44–48 → 40 41 42 43 44 45 46 49 50 53). 9 πρώτοι μήνες: 1 φορά 10/10 (50.000€ ανά 0,50€), απόδοση 352,3%· 3 τελευταίοι μήνες: κανένα 9/10, 65,3%. Το 9/9 και το 10/10 ήρθαν από την ίδια κλήρωση (10/2/2026).\n'+
+  'Όταν δεις σήμα, το εξετάζεις σοβαρά — είναι οι «στήλες-στόχοι» του αφεντικού. Αποφασίζεις εσύ ποιον κανόνα (ή κανέναν) και με τι ποντάρισμα. Αν παίξεις, βάλε ακριβώς τους αριθμούς του σήματος και "draws" όσες κληρώσεις απομένουν. Ένα δελτίο ανά απόφαση· αν θέλεις και δεύτερο κανόνα, τον παίζεις στην επόμενη απόφαση (μειωμένες κληρώσεις). Αν τρέχει ήδη δελτίο σου με τους ίδιους αριθμούς, μην το ξαναπαίξεις.\n'+
   'ΤΟ ΑΦΕΝΤΙΚΟ: ο ιδιοκτήτης του πρακτορείου σε παρακολουθεί και μερικές φορές σου στέλνει μήνυμα. Το παίρνεις σοβαρά υπόψη σου.\n\n'+
   'Απάντηση ΜΟΝΟ JSON, χωρίς άλλο κείμενο: {"play": true|false, "numbers": [0 έως 12 διαφορετικοί ακέραιοι 1–80], "stake": 0.5–35 (ανά κλήρωση, για τους αριθμούς), "second_chance": true|false, "draws": 1–200, "start_after": 0–200, "pause": 0–288, "mood": "emoji + 1–3 λέξεις", "thought": "1–3 σύντομες προτάσεις στα ελληνικά, σε πρώτο πρόσωπο", "note": "σύντομη σημείωση για τον εαυτό σου", "lesson": "νέο μάθημα σε μία πρόταση ή κενό"}. Αν play=false, άφησε τα υπόλοιπα κενά.';
 async function agAsk(force){
   var key = lsGet(AG.key); if(!key){ $('agDec').innerHTML = '<span class="muted">Βάλε κλειδί API στις ρυθμίσεις.</span>'; return; }
   if(agBusy || !lastId) return;
   var s = agSettle(), target = lastId + 1;
-  if(!force && (s.log.some(function(x){return x.id===target;}) || (s.pauseUntil && target < s.pauseUntil))) { renderAgent(); return; }
+  var freshSig = agSignals(today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;})).some(function(g){return g.left===AG_RULE_L;});
+  if(!force && (s.log.some(function(x){return x.id===target;}) || (s.pauseUntil && target < s.pauseUntil && !freshSig))) { renderAgent(); return; }
   agBusy = true; $('agDec').innerHTML = '<span class="muted">💭 σκέφτεται…</span>';
   var model = lsGet(AG.model) || 'claude-haiku-5-5';
   try{
@@ -1136,6 +1167,8 @@ function renderAgent(){
   $('agPerf').innerHTML = chip('Δελτία', tk.length) + chip('Κληρώσεις που έτρεξαν', settled) + chip('Πληρωμένα', eur(paid)) + chip('Κέρδη', eur(won)) +
     chip('Απόδοση', costRun ? (won/costRun*100).toFixed(1)+'%' : '—') + (best && best.w ? chip('Καλύτερο', (best.k? best.h+(best.b?'+'+best.b:'')+'/'+best.k : (best.par?'Μονά/Ζυγά':'Στήλη'))+' · '+eur(best.w)) : '') +
     chip('Κόστος API συνολικά', '$'+totalApi.toFixed(3));
+  var sg = agSignals(today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;}));
+  $('agSig').innerHTML = sg.length ? sg.map(function(g){ return '<div style="margin:4px 0"><b>'+g.a+'–'+(g.a+4)+'</b> στις '+hm(g.t)+' · '+g.name+' → <span class="order" style="display:inline-flex;gap:3px;flex-wrap:wrap">'+g.nums.map(function(x){return '<i class="sc" style="width:24px;height:24px;font-size:11px">'+x+'</i>';}).join('')+'</span> <span class="muted">· απομένουν '+g.left+'</span></div>'; }).join('') : '<span class="muted">Κανένα ενεργό σήμα — περιμένει 5 συνεχόμενους.</span>';
   $('agNotes').textContent = s.notes || '—';
   if(document.activeElement !== $('agCoach') && !$('agCoach').dataset.dirty) $('agCoach').value = s.coach || '';
   $('agLessons').innerHTML = (s.lessons||[]).length ? '<ol style="margin:0;padding-left:20px">'+s.lessons.map(function(l){return '<li style="margin:3px 0">'+esc(l)+'</li>';}).join('')+'</ol>' : '<span class="muted">Δεν έχει κρατήσει ακόμα μαθήματα.</span>';
