@@ -127,6 +127,10 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
 .ah-why i{font-style:normal;width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#8b5cf6;color:#fff;font-weight:700;font-size:13px}
 .ah-w{display:grid;grid-template-columns:118px 1fr 40px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0}
 .ah-w .bar>div{background:#8b5cf6}
+.ah-sec[data-ak]>h3{cursor:pointer;user-select:none;-webkit-user-select:none}
+.ah-sec[data-ak]>h3:before{content:"▼";display:inline-block;font-size:10px;margin-right:6px;transition:transform .2s;color:var(--muted)}
+.ah-sec[data-ak].closed>h3:before{transform:rotate(-90deg)}
+.ah-sec[data-ak].closed>:not(h3){display:none}
 .ah-hist .row{grid-template-columns:62px 1fr}
 .ah-hist .n i.h{background:var(--hit);color:#fff}
 @media(min-width:1300px){ .ah-panel.open ~ .wrap{margin-right:460px} }
@@ -154,13 +158,13 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   </details>
   <div class="ah-sec"><div class="chips" id="agStatus" style="margin:0"></div></div>
   <div class="ah-sec"><h3 id="agDecLbl">Απόφαση για την επόμενη κλήρωση</h3><div id="agDec" class="muted">—</div></div>
-  <div class="ah-sec"><h3>Πώς τα πάει</h3><div class="chips" id="agPerf" style="margin:0"></div></div>
-  <div class="ah-sec"><h3>📐 Κανόνες αφεντικού <span class="muted" style="font-weight:400;font-size:12px">5 συνεχόμενοι → εξάδα / εννιάρι / δεκάρι για 10 κληρώσεις</span></h3><div id="agSig" style="font-size:13px">—</div></div>
-  <div class="ah-sec"><h3>💬 Μήνυμα του αφεντικού</h3><textarea id="agCoach" rows="3" placeholder="Γράψε του τι θέλεις να αλλάξει…" style="width:100%;box-sizing:border-box;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:15px;font-family:inherit"></textarea><div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" id="agCoachSave">Στείλ' το</button><span class="muted" id="agCoachState" style="font-size:12px"></span></div></div>
-  <div class="ah-sec"><h3>Σημειώσεις στον εαυτό του</h3><div id="agNotes" class="muted" style="font-size:13px">—</div></div>
-  <div class="ah-sec"><h3>📚 Μαθήματα <span class="muted" style="font-weight:400" id="agSync"></span></h3><div id="agLessons" style="font-size:13px">—</div></div>
-  <div class="ah-sec ah-hist"><h3>Ενεργά δελτία</h3><div class="list" id="agActive" style="max-height:none"></div></div>
-  <div class="ah-sec ah-hist"><h3>Ημερολόγιο κληρώσεων</h3><div class="list" id="agLog" style="max-height:none"></div></div>
+  <div class="ah-sec" data-ak="perf"><h3>Πώς τα πάει</h3><div class="chips" id="agPerf" style="margin:0"></div></div>
+  <div class="ah-sec" data-ak="rules"><h3>📐 Κανόνες αφεντικού <span class="muted" style="font-weight:400;font-size:12px">5 συνεχόμενοι → εξάδα / εννιάρι / δεκάρι για 10 κληρώσεις</span></h3><div id="agSig" style="font-size:13px">—</div></div>
+  <div class="ah-sec" data-ak="coach"><h3>💬 Μήνυμα του αφεντικού</h3><textarea id="agCoach" rows="3" placeholder="Γράψε του τι θέλεις να αλλάξει…" style="width:100%;box-sizing:border-box;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:15px;font-family:inherit"></textarea><div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" id="agCoachSave">Στείλ' το</button><span class="muted" id="agCoachState" style="font-size:12px"></span></div></div>
+  <div class="ah-sec" data-ak="notes"><h3>Σημειώσεις στον εαυτό του</h3><div id="agNotes" class="muted" style="font-size:13px">—</div></div>
+  <div class="ah-sec" data-ak="lessons" data-def="closed"><h3>📚 Μαθήματα <span class="muted" style="font-weight:400" id="agLessonsN"></span> <span class="muted" style="font-weight:400" id="agSync"></span></h3><div id="agLessons" style="font-size:13px">—</div></div>
+  <div class="ah-sec ah-hist" data-ak="active"><h3>Ενεργά δελτία</h3><div class="list" id="agActive" style="max-height:none"></div></div>
+  <div class="ah-sec ah-hist" data-ak="log" data-def="closed"><h3>Ημερολόγιο κληρώσεων</h3><div class="list" id="agLog" style="max-height:none"></div></div>
 </aside>
 <div class="wrap">
   <header>
@@ -1171,6 +1175,7 @@ function renderAgent(){
   $('agSig').innerHTML = sg.length ? sg.map(function(g){ return '<div style="margin:4px 0"><b>'+g.a+'–'+(g.a+4)+'</b> στις '+hm(g.t)+' · '+g.name+' → <span class="order" style="display:inline-flex;gap:3px;flex-wrap:wrap">'+g.nums.map(function(x){return '<i class="sc" style="width:24px;height:24px;font-size:11px">'+x+'</i>';}).join('')+'</span> <span class="muted">· απομένουν '+g.left+'</span></div>'; }).join('') : '<span class="muted">Κανένα ενεργό σήμα — περιμένει 5 συνεχόμενους.</span>';
   $('agNotes').textContent = s.notes || '—';
   if(document.activeElement !== $('agCoach') && !$('agCoach').dataset.dirty) $('agCoach').value = s.coach || '';
+  $('agLessonsN').textContent = '('+(s.lessons||[]).length+')';
   $('agLessons').innerHTML = (s.lessons||[]).length ? '<ol style="margin:0;padding-left:20px">'+s.lessons.map(function(l){return '<li style="margin:3px 0">'+esc(l)+'</li>';}).join('')+'</ol>' : '<span class="muted">Δεν έχει κρατήσει ακόμα μαθήματα.</span>';
   renderAgentStatusOnly();
   var act = tk.filter(function(x){return !x.done;});
@@ -1380,6 +1385,12 @@ $('btnAll').addEventListener('click',function(){
 });
 updAllBtn();
 $('k8Sel').addEventListener('change',renderK8);
+/* Εμφάνιση/απόκρυψη τμημάτων στο πάνελ του agent */
+Array.prototype.forEach.call(document.querySelectorAll('.ah-sec[data-ak]'), function(sec){
+  var key = 'kl_ak_'+sec.dataset.ak, v = lsGet(key);
+  if(v==='1' || (v===null && sec.dataset.def==='closed')) sec.classList.add('closed');
+  sec.querySelector('h3').addEventListener('click', function(){ var c = !sec.classList.contains('closed'); sec.classList.toggle('closed', c); lsSet(key, c?'1':'0'); });
+});
 $('ahTab').addEventListener('click',function(){ ahOpen(true); });
 $('ahClose').addEventListener('click',function(){ ahOpen(false); });
 $('agKey').value = '';
