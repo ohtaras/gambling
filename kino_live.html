@@ -1007,10 +1007,12 @@ var AG_RULES = [
   {k:10, off:[-4,-3,-2,-1,0,1,2,5,6,9],    name:'δεκάρι',  txt:'Α−4 έως Α+2, Α+5, Α+6, Α+9'}
 ];
 var AG_RULE_L = 10;
-function agSignals(all){ // all: νεότερη πρώτη · ενεργά σήματα (5άδες μέσα στις 10 τελευταίες κληρώσεις)
-  var out = [];
-  for(var q=0; q<Math.min(AG_RULE_L, all.length); q++){
-    var d = all[q];
+function agSignals(all){ // all: νεότερη πρώτη · ενεργά σήματα (5άδες μέσα στις 10 τελευταίες κληρώσεις, με βάση τον αριθμό κλήρωσης)
+  var out = []; if(!all.length) return out;
+  var top = all[0].id;
+  for(var q0=0; q0<all.length; q0++){
+    var d = all[q0], q = top - d.id;
+    if(q >= AG_RULE_L) break;   // πιο παλιά από τις 10 τελευταίες κληρώσεις → όχι σήμα (ακόμα κι αν λείπουν ενδιάμεσες)
     for(var a=1; a<=76; a++){
       if(!(d.set.has(a)&&d.set.has(a+1)&&d.set.has(a+2)&&d.set.has(a+3)&&d.set.has(a+4))) continue;
       AG_RULES.forEach(function(r){
@@ -1021,6 +1023,25 @@ function agSignals(all){ // all: νεότερη πρώτη · ενεργά σή�
     }
   }
   return out;
+}
+/* Ακεραιότητα δεδομένων: λείπουν κληρώσεις από τις τελευταίες 60; (π.χ. ο browser «κοιμήθηκε» και δεν συμπληρώθηκαν) */
+function agMissing(){
+  var all = today.concat(histPool), have = {}, top = 0;
+  all.forEach(function(d){ have[d.id] = 1; if(d.id>top) top = d.id; });
+  var miss = []; for(var id=top-59; id<=top; id++) if(!have[id]) miss.push(id);
+  return {top:top, miss:miss};
+}
+async function agEnsureData(){
+  var m = agMissing(); if(!m.miss.length) return true;
+  try{
+    var days = {}; m.miss.forEach(function(id){ var t = lastT - (m.top-id)*300000; days[utcDay(t)] = 1; days[utcDay(t-3600000)] = 1; days[utcDay(t+3600000)] = 1; });
+    for(var ds in days){
+      var arr = await fetchApiDay(ds), want = {}; m.miss.forEach(function(id){ want[id]=1; });
+      arr.filter(function(d){return want[d.id];}).sort(function(a,b){return a.id-b.id;}).forEach(function(d){ if(today.length && d.d===today[0].d) pushDraw(d); else addHist([d]); });
+    }
+    histPool.sort(function(a,b){return b.id-a.id;}); today.sort(function(a,b){return b.id-a.id;});
+  }catch(e){}
+  return !agMissing().miss.length;
 }
 function agPrompt(s, target){
   var all = today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;});
@@ -1125,6 +1146,12 @@ async function agAsk(force){
   // κανονικά: ένα δελτίο τη φορά (0,50€ ανά κλήρωση) — όσο τρέχει δελτίο δεν ρωτάμε, εκτός αν βγει καινούργιο σήμα
   if(!force && (s.log.some(function(x){return x.id===target;}) || (covered && !freshSig) || (s.pauseUntil && target < s.pauseUntil && !freshSig))) { renderAgent(); return; }
   agBusy = true; $('agDec').innerHTML = '<span class="muted">💭 σκέφτεται…</span>';
+  if(!(await agEnsureData())){   // δεν αποφασίζει με ελλιπή δεδομένα
+    var mm = agMissing().miss;
+    $('agDec').innerHTML = '<span style="color:var(--miss)">⚠ Λείπουν '+mm.length+' πρόσφατες κληρώσεις (π.χ. #'+mm[0]+') — δεν αποφασίζει μέχρι να συμπληρωθούν. Κάνε ανανέωση της σελίδας.</span>';
+    agBusy = false; return;
+  }
+  sigs = agSignals(today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;}));
   var model = lsGet(AG.model) || 'claude-haiku-5-5', pr = AG_PRICE[model]||[0,0], day = dateOf(Date.now());
   try{
     var msgs = [{role:'user', content:agPrompt(s, target)}], j = null, note = '';
