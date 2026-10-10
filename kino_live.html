@@ -131,6 +131,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
 .ah-sec[data-ak]>h3:before{content:"▼";display:inline-block;font-size:10px;margin-right:6px;transition:transform .2s;color:var(--muted)}
 .ah-sec[data-ak].closed>h3:before{transform:rotate(-90deg)}
 .ah-sec[data-ak].closed>:not(h3){display:none}
+.agdbox{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:2px 0 8px;font-size:13px}
 .ah-hist .row{grid-template-columns:62px 1fr}
 .ah-hist .n i.h{background:var(--hit);color:#fff}
 @media(min-width:1300px){ .ah-panel.open ~ .wrap{margin-right:460px} }
@@ -1092,7 +1093,7 @@ var AG_SYS = 'Είσαι Έλληνας παίκτης ΚΙΝΟ με ένστι�
   '  γ) ΔΕΚΑΡΙ: όπως το εννιάρι + Α+9 (π.χ. 44–48 → 40 41 42 43 44 45 46 49 50 53). 9 πρώτοι μήνες: 1 φορά 10/10 (50.000€ ανά 0,50€), απόδοση 352,3%· 3 τελευταίοι μήνες: κανένα 9/10, 65,3%. Το 9/9 και το 10/10 ήρθαν από την ίδια κλήρωση (10/2/2026).\n'+
   'Όταν δεις σήμα, το εξετάζεις σοβαρά — είναι οι «στήλες-στόχοι» του αφεντικού. Αποφασίζεις εσύ ποιον κανόνα (ή κανέναν). Αν παίξεις, βάλε ακριβώς τους αριθμούς του σήματος και "draws" όσες κληρώσεις απομένουν. Ένα δελτίο ανά απόφαση· αν θέλεις και δεύτερο κανόνα, τον παίζεις στην επόμενη απόφαση (μειωμένες κληρώσεις). Αν τρέχει ήδη δελτίο σου με τους ίδιους αριθμούς, μην το ξαναπαίξεις.\n'+
   'ΤΟ ΑΦΕΝΤΙΚΟ: ο ιδιοκτήτης του πρακτορείου σε παρακολουθεί και μερικές φορές σου στέλνει μήνυμα. Το παίρνεις σοβαρά υπόψη σου.\n\n'+
-  'Απάντηση ΜΟΝΟ JSON, χωρίς άλλο κείμενο: {"play": true|false, "numbers": [0 έως 12 διαφορετικοί ακέραιοι 1–80], "draws": 1–5 (ή έως όσες απομένουν σε σήμα κανόνα), "start_after": 0–200, "pause": 0–288, "mood": "emoji + 1–3 λέξεις", "thought": "1–3 σύντομες προτάσεις στα ελληνικά, σε πρώτο πρόσωπο", "note": "σύντομη σημείωση για τον εαυτό σου", "lesson": "νέο μάθημα σε μία πρόταση ή κενό"}. Αν play=false, άφησε τα υπόλοιπα κενά.';
+  'Απάντηση ΜΟΝΟ JSON, χωρίς άλλο κείμενο: {"play": true|false, "numbers": [0 έως 12 διαφορετικοί ακέραιοι 1–80], "draws": 1–5 (ή έως όσες απομένουν σε σήμα κανόνα), "start_after": 0–200, "pause": 0–288, "mood": "emoji + 1–3 λέξεις", "thought": "2–4 προτάσεις στα ελληνικά, σε πρώτο πρόσωπο: γιατί ΑΥΤΟΙ οι αριθμοί (από πού τους πήρες), γιατί τόσοι και γιατί τόσες κληρώσεις", "note": "σύντομη σημείωση για τον εαυτό σου", "lesson": "νέο μάθημα σε μία πρόταση ή κενό"}. Αν play=false, άφησε τα υπόλοιπα κενά.';
 /* Έλεγχος: έχει βγει ποτέ ολόκληρος αυτός ο συνδυασμός σε όσο ιστορικό έχουμε; */
 function agSeenBefore(nums){
   var all = today.concat(histPool), hit = null;
@@ -1111,7 +1112,8 @@ async function agCall(key, model, msgs){
   var txt = (data.content||[]).filter(function(c){return c.type==='text';}).map(function(c){return c.text||'';}).join('');
   var a = txt.indexOf('{'), b = txt.lastIndexOf('}');
   if(a<0 || b<a) throw new Error('Δεν έδωσε απόφαση σε JSON (stop: '+data.stop_reason+')'+(txt?': '+txt.slice(0,160):''));
-  return {j:JSON.parse(txt.slice(a, b+1)), txt:txt, usage:data.usage||{}};
+  var think = (data.content||[]).filter(function(c){return c.type==='thinking' && c.thinking;}).map(function(c){return c.thinking;}).join('\n').trim();
+  return {j:JSON.parse(txt.slice(a, b+1)), txt:txt, usage:data.usage||{}, think:think};
 }
 async function agAsk(force){
   var key = lsGet(AG.key); if(!key){ $('agDec').innerHTML = '<span class="muted">Βάλε κλειδί API στις ρυθμίσεις.</span>'; return; }
@@ -1127,7 +1129,7 @@ async function agAsk(force){
   try{
     var msgs = [{role:'user', content:agPrompt(s, target)}], j = null, note = '';
     for(var attempt=0; attempt<2; attempt++){
-      var res = await agCall(key, model, msgs); j = res.j;
+      var res = await agCall(key, model, msgs); j = res.j; var think = res.think || ''; var bankBefore = s.bank;
       s.cost[day] = (s.cost[day]||0) + ((res.usage.input_tokens||0)*pr[0] + (res.usage.output_tokens||0)*pr[1])/1e6;
       if(!j.play) break;
       var nums0 = (j.numbers||[]).map(Number).filter(function(x,i,arr){ return x>=1 && x<=80 && Math.floor(x)===x && arr.indexOf(x)===i; }).slice(0,12);
@@ -1139,7 +1141,7 @@ async function agAsk(force){
         msgs.push({role:'user', content:'Αυτή η στήλη των '+nums0.length+' αριθμών έχει ήδη βγει ολόκληρη σε προηγούμενη κλήρωση ('+seen.d.split('-').reverse().join('/')+' '+hm(seen.t)+', #'+seen.id+'). Ο κανόνας του αφεντικού λέει ότι στήλες 7 αριθμών και πάνω πρέπει να είναι εντελώς καινούργιες. Διάλεξε άλλη στήλη (ή άλλο πλήθος). Απάντησε πάλι ΜΟΝΟ με JSON.'});
       } else { j.play = false; }
     }
-    var dec = { id:target, t:Date.now(), play: !!j.play, mood: String(j.mood||'').slice(0,40), thought: String(j.thought||'').slice(0,400)+(j.play?'':note), model:model, draws:1, start:0 };
+    var dec = { id:target, t:Date.now(), why: think.slice(0,1500), note: String(j.note||'').slice(0,300), bankBefore: bankBefore, rejected: note.trim(), play: !!j.play, mood: String(j.mood||'').slice(0,40), thought: String(j.thought||'').slice(0,400)+(j.play?'':note), model:model, draws:1, start:0 };
     if(dec.play){
       var nums = (j.numbers||[]).map(Number).filter(function(x,i,arr){ return x>=1 && x<=80 && Math.floor(x)===x && arr.indexOf(x)===i; }).slice(0,12);
       var key2 = nums.slice().sort(function(a,b){return a-b;}).join(',');
@@ -1152,7 +1154,7 @@ async function agAsk(force){
       if(!nums.length) dec.play = false;
       else if(covered && !sig){ dec.play = false; dec.thought += ' (Τρέχει ήδη δελτίο· νέο μόνο για σήμα κανόνα.)'; }
       else if(cost > s.bank){ dec.play = false; dec.thought += ' (Δεν φτάνει το ταμείο για '+eur(cost)+'.)'; }
-      else { dec.n = nums; dec.k = nums.length; dec.stake = stake; dec.sc = sc; dec.par = null; dec.parStake = 0; dec.col = null; dec.colStake = 0; dec.sig = sig ? sig.name : null;
+      else { dec.n = nums; dec.k = nums.length; dec.stake = stake; dec.sc = sc; dec.par = null; dec.parStake = 0; dec.col = null; dec.colStake = 0; dec.sig = sig ? sig.name : null; dec.sigTxt = sig ? (sig.a+'–'+(sig.a+4)+' στις '+hm(sig.t)+' (#'+sig.id+')') : '';
              dec.perDraw = perDraw; dec.draws = draws; dec.start = start; dec.cost = cost; dec.res = {}; s.bank = Math.round((s.bank-cost)*100)/100; }
     }
     var pause = Math.max(0, Math.min(288, Math.round(+j.pause||0)));
@@ -1168,6 +1170,26 @@ async function agAsk(force){
   agBusy = false; renderAgent();
 }
 function agWhen(id){ var d = (today.concat(histPool)).find(function(q){return q.id===id;}); return d ? hm(d.t) : hm(expectedTime() + (id - lastId - 1)*300000); }
+function agDetail(x){
+  var esc = function(t){ return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); };
+  var byId = {}; today.concat(histPool).forEach(function(d){ byId[d.id]=d; });
+  var r = agRange(x), when = new Date(x.t||Date.now());
+  var rows = [];
+  for(var id=r[0]; id<=r[1]; id++){
+    var o = (x.res||{})[id], d = byId[id];
+    rows.push('<tr><td>'+(d?hm(d.t):agWhen(id))+'</td><td>'+(o? o.h+'/'+x.k : '<span class="muted">—</span>')+'</td><td>'+(o? (o.w?'<b style="color:var(--hit)">'+eur(o.w)+'</b>':'0€') : '<span class="muted">εκκρεμεί</span>')+'</td></tr>');
+  }
+  return '<div class="agd">'+
+    '<div class="chips" style="margin:0 0 6px">'+chip('Αποφασίστηκε', pad(when.getDate())+'/'+pad(when.getMonth()+1)+' '+pad(when.getHours())+':'+pad(when.getMinutes()))+chip('Αριθμοί', x.k)+chip('Κληρώσεις', x.draws)+chip('Κόστος', eur(x.cost||0))+chip('Κέρδη', eur(x.win||0))+(x.bankBefore!=null?chip('Ταμείο πριν', eur(x.bankBefore)):'')+'</div>'+
+    (x.sig ? '<div style="margin:4px 0">📐 <b>Σήμα κανόνα:</b> '+esc(x.sig)+(x.sigTxt?' · '+esc(x.sigTxt):'')+'</div>' : '<div class="muted" style="margin:4px 0">Δική του επιλογή (όχι σήμα κανόνα).</div>')+
+    '<div style="margin:6px 0"><b>'+esc(x.mood)+'</b> «'+esc(x.thought)+'»</div>'+
+    (x.why ? '<details style="margin:6px 0"><summary style="cursor:pointer" class="muted">🧠 Πώς το σκέφτηκε</summary><div style="white-space:pre-wrap;font-size:12.5px;margin-top:4px">'+esc(x.why)+'</div></details>' : '')+
+    (x.rejected ? '<div class="muted" style="font-size:12px">↩ Πρώτη επιλογή απορρίφθηκε: '+esc(x.rejected)+'</div>' : '')+
+    (x.note ? '<div class="muted" style="font-size:12px;margin:4px 0">📝 Σημείωση: '+esc(x.note)+'</div>' : '')+
+    (x.lesson ? '<div class="muted" style="font-size:12px;margin:4px 0">📚 Μάθημα: '+esc(x.lesson)+'</div>' : '')+
+    '<table class="ptab" style="margin-top:6px"><tr><th>Κλήρωση</th><th>Επιτυχίες</th><th>Κέρδος</th></tr>'+rows.join('')+'</table></div>';
+}
+function agRowWrap(x, inner){ return '<div class="agt" data-t="'+x.t+'">'+inner.replace('style="cursor:default"','style="cursor:pointer" title="Πάτα για λεπτομέρειες"')+'<div class="agdbox" hidden></div></div>'; }
 function renderAgent(){
   var s = agSettle(), esc = function(t){ return String(t||'').replace(/</g,'&lt;'); };
   $('agKeyState').textContent = lsGet(AG.key) ? '✅ Υπάρχει αποθηκευμένο κλειδί.' : 'Δεν έχει μπει κλειδί.';
@@ -1185,7 +1207,8 @@ function renderAgent(){
       '<div class="chips">'+(x.k?chip('Αριθμοί', x.k)+chip('Ποντάρισμα', eur(x.stake)):'')+(x.par?chip(PAR_NAME[x.par], eur(x.parStake)):'')+(x.col?chip('Στήλη '+x.col, eur(x.colStake)):'')+(x.draws>1?chip('Κληρώσεις', x.draws):'')+(x.start?chip('Ξεκινά', 'μετά από '+x.start+' ('+agWhen(r[0])+')'):'')+(x.sc?chip('2η ευκαιρία','ναι'):'')+chip('Κόστος', eur(x.cost))+'</div>'
       : '<div><b>Δεν έπαιξε κάτι καινούργιο.</b></div>') +
       (x.pause ? '<div class="muted" style="font-size:12px;margin-top:4px">☕ Διάλειμμα για '+x.pause+' κληρώσεις.</div>' : '') +
-      '<div style="margin-top:8px;font-size:13.5px">'+esc(x.mood)+' — «'+esc(x.thought)+'»</div>';
+      '<div style="margin-top:8px;font-size:13.5px">'+esc(x.mood)+' — «'+esc(x.thought)+'»</div>'+
+      (x.why ? '<details style="margin-top:6px"><summary style="cursor:pointer" class="muted">🧠 Πώς το σκέφτηκε</summary><div style="white-space:pre-wrap;font-size:12.5px;margin-top:4px">'+esc(x.why)+'</div></details>' : '');
   } else if(!agBusy) $('agDec').innerHTML = '<span class="muted">Δεν έχει αποφασίσει ακόμα. '+($('agOn').checked?'Θα σκεφτεί με την επόμενη ενημέρωση.':'Πάτα «Ρώτα τώρα» ή ενεργοποίησέ τον.')+'</span>';
   var tk = s.log.filter(function(x){return x.play;});
   var settled = 0, won = 0, costRun = 0, best = null;
@@ -1206,10 +1229,11 @@ function renderAgent(){
   var act = tk.filter(function(x){return !x.done;});
   $('agActive').innerHTML = act.length ? act.slice().reverse().map(function(x){
     var r = agRange(x), n = Object.keys(x.res||{}).length;
-    return '<div class="row" style="cursor:default"><div class="t">'+agWhen(r[0])+(x.draws>1?'<small>έως '+agWhen(r[1])+'</small>':'')+'</div><div class="n">'+
+    return agRowWrap(x, '<div class="row" style="cursor:default"><div class="t">'+agWhen(r[0])+(x.draws>1?'<small>έως '+agWhen(r[1])+'</small>':'')+'</div><div class="n">'+
       x.n.slice().sort(function(a,b){return a-b;}).map(function(y){return '<i>'+y+'</i>';}).join('')+
       (x.par?'<span class="chip" style="padding:1px 6px;font-size:11px">'+PAR_NAME[x.par]+'</span>':'')+(x.col?'<span class="chip" style="padding:1px 6px;font-size:11px">Στ.'+x.col+'</span>':'')+
-      '<span class="muted" style="font-size:11px;margin-left:4px">'+n+'/'+x.draws+' κλ. · '+eur(x.win||0)+(x.sc?' · +2η':'')+'</span></div></div>';
+      (x.sig?'<span class="chip" style="padding:1px 6px;font-size:11px">📐 '+x.sig+'</span>':'')+
+      '<span class="muted" style="font-size:11px;margin-left:4px">'+n+'/'+x.draws+' κλ. · '+eur(x.win||0)+(x.sc?' · +2η':'')+'</span></div></div>');
   }).join('') : '<span class="muted">Κανένα.</span>';
   var rows = [];
   tk.slice().reverse().forEach(function(x){
@@ -1219,10 +1243,12 @@ function renderAgent(){
   var byId = {}; today.concat(histPool).forEach(function(d){ byId[d.id]=d; });
   $('agLog').innerHTML = rows.slice(0,25).map(function(rw){
     var d = byId[rw.id], x = rw.x, o = rw.o;
-    return '<div class="row" style="cursor:default"><div class="t">'+(d?hm(d.t):'#'+rw.id)+'<small>'+(x.k? o.h+(o.b?'+'+o.b:'')+'/'+x.k : '')+(x.par?(o.par?' ✓':' ✗')+PAR_NAME[x.par].slice(0,3):'')+(x.col?(o.col?' ✓':' ✗')+'Στ'+x.col:'')+(o.w?' · <b style="color:var(--hit)">'+eur(o.w)+'</b>':'')+'</small></div><div class="n">'+
+    return agRowWrap(x, '<div class="row" style="cursor:default"><div class="t">'+(d?hm(d.t):'#'+rw.id)+'<small>'+(x.k? o.h+(o.b?'+'+o.b:'')+'/'+x.k : '')+(x.par?(o.par?' ✓':' ✗')+PAR_NAME[x.par].slice(0,3):'')+(x.col?(o.col?' ✓':' ✗')+'Στ'+x.col:'')+(o.w?' · <b style="color:var(--hit)">'+eur(o.w)+'</b>':'')+'</small></div><div class="n">'+
       x.n.slice().sort(function(a,b){return a-b;}).map(function(y){ return '<i'+(d&&d.set.has(y)?' class="h"':d&&d.sc.indexOf(y)>=0&&x.sc?' class="sc"':'')+'>'+y+'</i>'; }).join('')+
-      '<span class="muted" style="font-size:11px;margin-left:4px">'+eur(x.perDraw!=null ? x.perDraw : x.stake*(x.sc?2:1))+'</span></div></div>';
+      '<span class="muted" style="font-size:11px;margin-left:4px">'+eur(x.perDraw!=null ? x.perDraw : x.stake*(x.sc?2:1))+(x.sig?' · 📐':'')+'</span></div></div>');
   }).join('') || '<span class="muted">Καμία κλήρωση ακόμα.</span>';
+  // ξανανοίγει όσα δελτία είχε ανοιχτά ο χρήστης
+  Array.prototype.forEach.call(document.querySelectorAll('.agt'), function(el){ if(agOpenT[el.dataset.t]){ var bx = el.querySelector('.agdbox'); var x = agFindT(el.dataset.t); if(x){ bx.innerHTML = agDetail(x); bx.hidden = false; } } });
 }
 /* ---------- Μνήμη agent στο GitHub (κλάδος agent-data) — ίδια σε κάθε browser/συσκευή ---------- */
 var GH = { repo:'ohtaras/gambling', branch:'agent-data', path:'agent/state.json', tok:'kl_gh_tok' };
@@ -1410,6 +1436,14 @@ $('btnAll').addEventListener('click',function(){
 });
 updAllBtn();
 $('k8Sel').addEventListener('change',renderK8);
+var agOpenT = {};
+function agFindT(t){ var s = agLoad(); return s.log.filter(function(x){return String(x.t)===String(t) && x.play;})[0]; }
+['agActive','agLog'].forEach(function(id){ $(id).addEventListener('click', function(e){
+  if(e.target.closest('.agdbox')) return;
+  var el = e.target.closest('.agt'); if(!el) return;
+  var bx = el.querySelector('.agdbox'), x = agFindT(el.dataset.t); if(!x) return;
+  if(bx.hidden){ bx.innerHTML = agDetail(x); bx.hidden = false; agOpenT[el.dataset.t] = 1; } else { bx.hidden = true; delete agOpenT[el.dataset.t]; }
+}); });
 /* Εμφάνιση/απόκρυψη τμημάτων στο πάνελ του agent */
 Array.prototype.forEach.call(document.querySelectorAll('.ah-sec[data-ak]'), function(sec){
   var key = 'kl_ak_'+sec.dataset.ak, v = lsGet(key);
