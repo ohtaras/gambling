@@ -331,6 +331,19 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     </div>
   </section>
 
+  <section class="card mt" data-k="rally">
+    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🏁 Ράλι πεντάδων</span><span id="rlMeta"></span></h2>
+    <div class="cbody">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><select id="rlWin"><option value="day">Σήμερα (από 00:00)</option><option value="24">Τελευταίες 24 ώρες</option></select>
+        <span class="muted" style="font-size:12px">Μπαίνουν στο ράλι οι πεντάδες που βγήκαν ολόκληρες <b>3 φορές</b>· μετά βλέπουμε ποια φτάνει 4, 5, 6… Ρεκόρ μέρας στον τελευταίο χρόνο: 5 φορές (35% των ημερών), 6 (62%), 7 (3%), ποτέ 8.</span></div>
+      <div class="chips" id="rlChips"></div>
+      <h3 class="muted" style="font-size:13px;margin:12px 0 6px">Κατάταξη</h3>
+      <div class="scroll-x"><table class="ptab" id="rlTable"></table></div>
+      <h3 class="muted" style="font-size:13px;margin:14px 0 6px">Τελευταίες προσπεράσεις (4+ φορές)</h3>
+      <div class="list" id="rlFeed" style="max-height:260px"></div>
+    </div>
+  </section>
+
   <section class="card mt" data-k="k8">
     <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🎯 10 στήλες × 8 αριθμοί (όλοι οι 80)</span><span id="k8Meta"></span></h2>
     <div class="cbody">
@@ -478,7 +491,7 @@ async function loadHistory(){
   var gaps = 0; for(var j=1;j<histPool.length;j++) if(histPool[j-1].id-histPool[j].id>1) gaps += histPool[j-1].id-histPool[j].id-1;
   $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις από '+HIST_DAYS+' ημέρες + σήμερα'+
     (failed||gaps ? ' · ⚠️ λείπουν '+gaps+' κληρώσεις'+(failed?' ('+failed+' ημέρες απέτυχαν)':'') : ' · πλήρες, χωρίς κενά');
-  renderPos(); renderSim(); renderFwd(); renderGef(); renderK8(); agTick();
+  renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderK8(); agTick();
 }
 
 /* νέα κλήρωση: αν άλλαξε η ημέρα (μεσάνυχτα Ελλάδας), οι χθεσινές πάνε στο ιστορικό */
@@ -967,6 +980,60 @@ function renderGef(){
   $('gefNext').innerHTML = !nx ? '<span class="muted">Περιμένει δεδομένα.</span>' : nx.length<5 ?
       '<span class="muted">Οι 2 τελευταίες κληρώσεις έχουν '+nx.length+' κοινούς ('+(nx.join(' ')||'—')+') — δεν παίζει.</span>' :
       '<div class="order">'+nx.map(function(x){return '<i class="sc">'+x+'</i>';}).join('')+'</div><div class="muted" style="font-size:12px;margin-top:4px">'+nx.length+' κοινοί → '+comb(nx.length,5)+(nx.length===5?' πεντάδα':' πεντάδες')+' × 0,50€ = <b>'+eur(comb(nx.length,5)*STAKE)+'</b></div>';
+}
+
+/* ---------- Ράλι πεντάδων: ποια πεντάδα βγαίνει ολόκληρη τις περισσότερες φορές ---------- */
+var rlCache = {key:'', ids:[], M:null};
+function rlBuild(draws){ // draws: παλιό→νέο· επαυξητικά: για κάθε νέα κλήρωση, τομές με όλες τις προηγούμενες
+  var key = draws.length ? draws[0].id : 0;
+  if(rlCache.key!==key || rlCache.ids.length>draws.length || rlCache.ids.some(function(id,i){return draws[i].id!==id;})) rlCache = {key:key, ids:[], M:new Map()};
+  var M = rlCache.M;
+  for(var i=rlCache.ids.length; i<draws.length; i++){
+    var di = draws[i];
+    for(var j=0;j<i;j++){
+      var dj = draws[j], inter = dj.arr.filter(function(x){return di.set.has(x);});
+      if(inter.length<5) continue; inter.sort(function(a,b){return a-b;});
+      var n = inter.length, c = [0,1,2,3,4];
+      while(true){
+        var k = inter[c[0]]+' '+inter[c[1]]+' '+inter[c[2]]+' '+inter[c[3]]+' '+inter[c[4]], e = M.get(k);
+        if(!e){ e = [dj.id, di.id]; M.set(k, e); }
+        else { if(e.indexOf(dj.id)<0) e.push(dj.id); if(e.indexOf(di.id)<0) e.push(di.id); }
+        var p = 4; while(p>=0 && c[p]===n-5+p) p--; if(p<0) break; c[p]++; for(var q=p+1;q<5;q++) c[q] = c[q-1]+1;
+      }
+    }
+    rlCache.ids.push(di.id);
+  }
+  return M;
+}
+function renderRally(){
+  var card = document.querySelector && document.querySelector('.card[data-k="rally"]');
+  if(card && card.classList.contains('collapsed')) return;
+  var mode = $('rlWin').value, draws;
+  if(mode==='day') draws = today.slice();
+  else draws = today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;}).slice(0,288);
+  draws.sort(function(a,b){return a.id-b.id;});
+  if(draws.length<3){ $('rlMeta').textContent=''; $('rlChips').innerHTML='<span class="muted">Περιμένει κληρώσεις.</span>'; $('rlTable').innerHTML=''; $('rlFeed').innerHTML=''; return; }
+  var M = rlBuild(draws), byId = {}; draws.forEach(function(d){ byId[d.id]=d; });
+  var lastId0 = draws[draws.length-1].id, rows = [], tally = {}, feed = [];
+  M.forEach(function(ids, k){
+    if(ids.length<3) return;
+    ids.sort(function(a,b){return a-b;});
+    var n = ids.length; tally[n] = (tally[n]||0)+1;
+    rows.push({k:k, ids:ids, n:n, at:ids[n-1]});
+    for(var q=3;q<n;q++) feed.push({k:k, n:q+1, id:ids[q]});
+  });
+  rows.sort(function(a,b){ return b.n-a.n || a.at-b.at; });
+  var mx = rows.length ? rows[0].n : 0;
+  $('rlMeta').textContent = draws.length+' κληρώσεις · πρωτοπόρος '+(mx?mx+' φορές':'—');
+  $('rlChips').innerHTML = Object.keys(tally).sort(function(a,b){return b-a;}).map(function(n){ return chip(n+' φορές', tally[n]+(tally[n]===1?' πεντάδα':' πεντάδες')); }).join('') || '<span class="muted">Καμία πεντάδα δεν έχει φτάσει ακόμα τις 3 φορές.</span>';
+  var top = rows.slice(0,20);
+  $('rlTable').innerHTML = top.length ? '<tr><th>#</th><th>Πεντάδα</th><th>Φορές</th><th>Πότε βγήκε</th></tr>'+top.map(function(r,i){
+      var hot = r.at===lastId0;
+      return '<tr'+(hot?' style="background:rgba(139,92,246,.15)"':'')+'><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+r.k+'</b></td><td><b style="color:'+(r.n>=5?'var(--hit)':'var(--text)')+'">'+r.n+'</b>'+(hot?' 🔥':'')+'</td><td class="muted" style="font-size:12px">'+r.ids.map(function(id){return byId[id]?hm(byId[id].t):'#'+id;}).join(', ')+'</td></tr>';
+    }).join('') + (rows.length>20 ? '<tr><td colspan="4" class="muted">… και άλλες '+(rows.length-20)+' με 3+ φορές</td></tr>' : '') : '<tr><td class="muted">Καμία ακόμα.</td></tr>';
+  feed.sort(function(a,b){ return b.id-a.id || b.n-a.n; });
+  $('rlFeed').innerHTML = feed.slice(0,40).map(function(f){ var d = byId[f.id];
+    return '<div style="display:block;padding:5px 2px;border-bottom:1px solid var(--line);font-size:13px"><span class="muted">'+(d?hm(d.t):'#'+f.id)+'</span> — η <b>'+f.k+'</b> έφτασε τις <b style="color:'+(f.n>=5?'var(--hit)':'var(--text)')+'">'+f.n+'</b>'+(f.n>=5?' 🏆':'')+'</div>'; }).join('') || '<span class="muted">Καμία πεντάδα δεν έχει φτάσει ακόμα τις 4.</span>';
 }
 
 /* ---------- AI Agent (Claude μέσω του κλειδιού API του χρήστη) ---------- */
@@ -1570,7 +1637,7 @@ function renderK8(){
   }).join('') || '<span class="muted">Η δοκιμή ξεκινάει με την κλήρωση #'+K8_START+'.</span>';
 }
 
-function renderAll(){ renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderK8(); agTick(); }
+function renderAll(){ renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderK8(); agTick(); }
 
 /* ---------- Countdown ---------- */
 function tick(){
@@ -1620,7 +1687,7 @@ $('posBody').addEventListener('click',function(e){ var r=e.target.closest('tr[da
 var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-k]'));
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); if(!on && c.dataset.k==='sim') renderSim(); if(!on && c.dataset.k==='fwd') renderFwd(); if(!on && c.dataset.k==='gef') renderGef(); if(!on && c.dataset.k==='k8') renderK8(); }
+function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); if(!on && c.dataset.k==='sim') renderSim(); if(!on && c.dataset.k==='fwd') renderFwd(); if(!on && c.dataset.k==='gef') renderGef(); if(!on && c.dataset.k==='rally') renderRally(); if(!on && c.dataset.k==='k8') renderK8(); }
 function updAllBtn(){
   var allClosed = cards.every(function(c){return c.classList.contains('collapsed');});
   $('btnAll').textContent = allClosed ? '▸ Άνοιγμα όλων' : '▾ Κλείσιμο όλων';
@@ -1670,6 +1737,8 @@ $('agStatus').addEventListener('click',function(e){ var id = e.target && e.targe
   if(id==='agGefOn' || id==='agGefOff'){ var g=agLoad(); g.gefOn = id==='agGefOn'; if(g.gefOn){ g.sixUntil=0; g.pauseUntil=0; } agSave(g); renderAgent(); if(g.gefOn) agGef(false); return; }
   if(id==='agSixOn' || id==='agFiveOn' || id==='agSixOff'){ var s0=agLoad(), on = id!=='agSixOff'; s0.sixUntil = on ? Date.now()+3600000 : 0; if(on){ s0.modeK = id==='agFiveOn' ? 5 : 6; s0.pauseUntil = 0; } agSave(s0); renderAgent(); if(on) agAsk(true); return; }
   if(id!=='agNudge') return; var s=agLoad(); s.pauseUntil=0; s.nudge=Date.now(); agSave(s); renderAgent(); agAsk(true); });
+$('rlWin').addEventListener('change', function(){ lsSet('kl_rl_win', this.value); renderRally(); });
+(function(){ var v = lsGet('kl_rl_win'); if(v) $('rlWin').value = v; })();
 $('agReset').addEventListener('click',function(){ if(confirm('Νέο εικονικό ταμείο 100€; Το ημερολόγιο θα σβηστεί, τα μαθήματα μένουν.')){ var s=agLoad(); agSave({bank:100,start:100,log:[],notes:'',lessons:s.lessons||[],mood:'🙂 ήρεμος',cost:s.cost,since:Date.now(),pauseUntil:0}); renderAgent(); } });
 if(lsGet('kl_ah_open')==='1') ahOpen(true);
 
