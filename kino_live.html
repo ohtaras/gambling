@@ -934,7 +934,14 @@ function agLoad(){
   var s = null; try{ s = JSON.parse(lsGet(AG.state)||'null'); }catch(e){}
   if(!s) s = { bank:100, start:100, log:[], notes:'', lessons:[], mood:'🙂 ήρεμος', cost:{}, since:Date.now() };
   if(!s.lessons) s.lessons = [];
-  if(s.coach===undefined) s.coach = 'Παίζεις πολύ συντηρητικά: σχεδόν μόνο 4άρια του μισού ευρώ, αλλάζεις αριθμούς σε κάθε κλήρωση και δεν έχεις δοκιμάσει ούτε μία φορά μεγάλο δελτίο (9/9, 10/10) ούτε μια στήλη για συνεχόμενες κληρώσεις. Έτσι παίζεις σαν στην τύχη. Ο στόχος σου είναι το μεγάλο δελτίο: βρες μια στήλη που πιστεύεις και δώσ\' της χρόνο, και όταν κάτι το νιώθεις, τόλμα. Από εδώ και πέρα: πάντα 0,50€ ανά κλήρωση, έως 5 συνεχόμενες κληρώσεις (μετά αποφασίζεις ξανά), εκτός αν δεις σήμα κανόνα· και στήλες 7 αριθμών και πάνω εντελώς καινούργιες.';
+  if(s.coach===undefined) s.coach = '';
+  if(!s.mig2){ // καθάρισμα: παλιά «μαθήματα» που ήταν απλώς επανάληψη εντολών ή σήκωναν το «περιμένω σήμα»
+    s.lessons = s.lessons.filter(function(l){ return !/ενεργ|αφεντ|αφέντ|πίεση|σπρώχν|πέμπτο|τέταρτο|τρίτο|εκτός|δεν προβλέπουν|ταυτόχρονα/i.test(l); });
+    s.lessons = s.lessons.slice(-10);
+    if(/συντηρητικά: σχεδόν μόνο 4άρια/.test(s.coach||'')) s.coach = '';
+    if(/Περιμένω σήμα/.test(s.notes||'')) s.notes = '';
+    s.mig2 = 1;
+  }
   return s;
 }
 function agSave(s){ if(s.log.length>300) s.log = s.log.slice(-300); s.updatedAt = Date.now(); lsSet(AG.state, JSON.stringify(s)); ghDirty = true; ghSchedule(); }
@@ -997,7 +1004,7 @@ function agTicketTxt(x){
   var r = agRange(x), n = Object.keys(x.res||{}).length;
   var lastRes = Object.keys(x.res||{}).sort().slice(-4).map(function(k){var o=x.res[k]; return (x.k? o.h+(o.b?'+'+o.b:'')+'/'+x.k : '')+(o.par?' ✓'+PAR_NAME[x.par]:'')+(o.col?' ✓Στ'+x.col:'')+(o.w?'('+o.w+'€)':'');}).join(' ');
   var side = (x.par?' · '+PAR_NAME[x.par]+' '+x.parStake+'€':'')+(x.col?' · Στήλη '+x.col+' '+x.colStake+'€':'');
-  return '#'+x.id+': '+(x.k? x.k+' αρ. ['+x.n.join(' ')+'] '+x.stake+'€'+(x.sc?' +2η':'') : 'χωρίς αριθμούς')+side+(x.draws>1||x.start?' για κληρώσεις #'+r[0]+'–#'+r[1]+' ('+x.draws+')':'')+
+  return '#'+x.id+(x.sig?' [σήμα: '+x.sig+']':' [δική σου'+(x.appr?': '+x.appr:'')+']')+': '+(x.k? x.k+' αρ. ['+x.n.join(' ')+'] '+x.stake+'€'+(x.sc?' +2η':'') : 'χωρίς αριθμούς')+side+(x.draws>1||x.start?' για κληρώσεις #'+r[0]+'–#'+r[1]+' ('+x.draws+')':'')+
     ', κόστος '+x.cost+'€ → '+(n? 'εκκαθαρίστηκαν '+n+'/'+x.draws+', κέρδη '+x.win+'€'+(lastRes?' [τελευταίες: '+lastRes+']':'') : 'δεν έχει τρέξει ακόμα');
 }
 /* Κανόνες αφεντικού: όταν βγουν 5 συνεχόμενοι (Α…Α+4) → στήλη με θέσεις ως προς το Α, για τις 10 επόμενες κληρώσεις */
@@ -1068,17 +1075,23 @@ function agPrompt(s, target){
   var big = tk.filter(function(x){return x.k>=7;}).length, series = tk.filter(function(x){return x.draws>=5;}).length, hits = tk.filter(function(x){return x.stake>=3;}).length;
   var style = tk.length ? 'ΤΟ ΣΤΥΛ ΣΟΥ ΜΕΧΡΙ ΤΩΡΑ: '+tk.length+' δελτία · με 7+ αριθμούς: '+big+' · σειρές 5+ κληρώσεων: '+series+' · χτυπήματα ≥3€: '+hits+'. Μέσο πλήθος αριθμών: '+(tk.reduce(function(a,x){return a+(x.k||0);},0)/tk.length).toFixed(1)+'.\n' : '';
   var sig = agSignals(all), hr = agHistRange();
+  var lastT = tk.slice(-8), grp = {};
+  lastT.forEach(function(x){ var g = x.sig ? 'σήμα-'+x.sig : 'δική σου '+(x.k||0)+'άρα'; grp[g] = (grp[g]||0)+1; });
+  var nOut = s.log.slice(-10).filter(function(x){return !x.play;}).length;
+  var variety = lastT.length ? 'ΟΙ ΤΕΛΕΥΤΑΙΕΣ ΣΟΥ '+lastT.length+' ΕΠΙΛΟΓΕΣ: '+Object.keys(grp).map(function(g){return g+' ×'+grp[g];}).join(', ')+(nOut?' · και '+nOut+' φορές έμεινες εκτός στις τελευταίες 10 αποφάσεις':'')+'. Αν κάνεις συνέχεια το ίδιο, ρώτα τον εαυτό σου αν το διαλέγεις ή αν απλώς κόλλησες.\n\n' : '';
   var recap = nRun ? 'ΑΠΟΛΟΓΙΣΜΟΣ ΣΟΥ: '+nRun+' κληρώσεις παιγμένες, έδωσες '+spent.toFixed(2)+'€, πήρες '+won.toFixed(2)+'€ ('+(won/spent*100).toFixed(0)+'%), κερδοφόρες '+wins+'. Ανά είδος δελτίου: '+
     Object.keys(byK).map(function(g){var b=byK[g]; return g+': '+b.n+' κλ., '+b.c.toFixed(2)+'€→'+b.w.toFixed(2)+'€';}).join(' · ')+'. Αν κάτι δεν σου βγαίνει, άλλαξέ το.\n' : '';
   return 'Επόμενη κλήρωση: #'+target+' στις '+hm(expectedTime())+'. (Κάθε 5 λεπτά μία κλήρωση· #'+(target+12)+' = σε μία ώρα.)\n\n'+
     (hr ? 'ΙΣΤΟΡΙΚΟ ΠΟΥ ΕΧΕΙΣ: '+hr.n+' κληρώσεις, από '+hr.from.d.split('-').reverse().join('/')+' '+hm(hr.from.t)+' έως '+hr.to.d.split('-').reverse().join('/')+' '+hm(hr.to.t)+' (σε αυτό ελέγχεται αν μια στήλη 7+ αριθμών έχει ξαναβγεί).\n' : '')+
-    (agCovered(s, target) ? '⚠ Τρέχει ήδη δελτίο σου για την επόμενη κλήρωση: νέο δελτίο επιτρέπεται μόνο για σήμα κανόνα.\n' : '')+
-    (s.coach ? '💬 ΜΗΝΥΜΑ ΑΠΟ ΤΟ ΑΦΕΝΤΙΚΟ: «'+s.coach+'»\n\n' : '')+
+    (agCovered(s, target) ? '⚠ Τρέχει ήδη η δική σου στήλη για την επόμενη κλήρωση: νέο δελτίο τώρα μόνο αν παίξεις σήμα κανόνα (αλλιώς play=false και περιμένεις να τελειώσει).\n' : '')+
+    
     'ΤΑΜΕΙΟ: '+s.bank.toFixed(2)+'€ (ξεκίνησες με '+s.start+'€). Διάθεσή σου πριν: '+s.mood+'.\n'+recap+style+
     'Σημειώσεις που άφησες στον εαυτό σου: '+(s.notes||'(καμία)')+'\n\n'+
     'ΕΝΕΡΓΑ ΔΕΛΤΙΑ ΣΟΥ (πληρωμένα, τρέχουν ή θα τρέξουν):\n'+active+'\n\n'+
+    variety+
     'ΜΑΘΗΜΑΤΑ ΠΟΥ ΕΧΕΙΣ ΚΡΑΤΗΣΕΙ (από τα λάθη και τις επιτυχίες σου):\n'+((s.lessons||[]).map(function(l,i){return (i+1)+'. '+l;}).join('\n')||'(κανένα ακόμα)')+'\n\n'+
     'ΣΗΜΑΤΑ ΤΩΝ ΚΑΝΟΝΩΝ ΤΟΥ ΑΦΕΝΤΙΚΟΥ (5 συνεχόμενοι → στήλη για 10 κληρώσεις):\n'+(sig.length ? sig.map(function(g){ return '• Στην κλήρωση των '+hm(g.t)+' (#'+g.id+') βγήκαν '+g.a+'–'+(g.a+4)+' → '+g.name+' ('+g.k+' αρ.) ['+g.nums.join(' ')+'] · απομένουν '+g.left+' από τις 10 κληρώσεις'+(g.left===AG_RULE_L?' (ΜΟΛΙΣ ΒΓΗΚΕ)':''); }).join('\n') : '(κανένα ενεργό σήμα αυτή τη στιγμή)')+'\n\n'+
+    (s.coach ? '💬 ΜΗΝΥΜΑ ΑΠΟ ΤΟ ΑΦΕΝΤΙΚΟ'+(s.coachAt?' ('+agAgo(s.coachAt)+')':'')+': «'+s.coach+'» — το λαμβάνεις υπόψη μαζί με όλα τα παραπάνω· δεν ακυρώνει όσα ξέρεις.\n\n' : '')+
     'ΤΙ ΘΑ ΓΙΝΟΤΑΝ ΑΝ ΚΡΑΤΟΥΣΕΣ ΤΟΥΣ ΙΔΙΟΥΣ ΑΡΙΘΜΟΥΣ στις επόμενες κληρώσεις (ίδιο ποσό):\n'+hind+'\n\n'+
     'ΤΑ ΤΕΛΕΥΤΑΙΑ ΣΟΥ ΔΕΛΤΙΑ ΠΟΥ ΤΕΛΕΙΩΣΑΝ (παλιότερο πρώτο):\n'+hist+'\n\n'+
     'ΤΕΛΕΥΤΑΙΕΣ 30 ΚΛΗΡΩΣΕΙΣ (νεότερη πρώτη· οι 20 αριθμοί με τη σειρά που βγήκαν, και οι 3 της 2ης ευκαιρίας):\n'+last+'\n\n'+
@@ -1112,17 +1125,27 @@ var AG_SYS = 'Είσαι Έλληνας παίκτης ΚΙΝΟ με ένστι�
   '  α) ΕΞΑΔΑ: Α−4, Α, Α+1, Α+5, Α+7, Α+8 (π.χ. 44–48 → 40 44 45 49 51 52). 9 πρώτοι μήνες: 14 φορές 6/6 (800€ ανά 0,50€), απόδοση 112,6%· 3 τελευταίοι μήνες: 3 φορές 6/6, 94,2%.\n'+
   '  β) ΕΝΝΙΑΡΙ: Α−4, Α−3, Α−2, Α−1, Α, Α+1, Α+2, Α+5, Α+6 (π.χ. 44–48 → 40 41 42 43 44 45 46 49 50). 9 πρώτοι μήνες: 1 φορά 9/9 (20.000€ ανά 0,50€), απόδοση 205,7%· 3 τελευταίοι μήνες: κανένα 8/9 ή 9/9, 60,2%.\n'+
   '  γ) ΔΕΚΑΡΙ: όπως το εννιάρι + Α+9 (π.χ. 44–48 → 40 41 42 43 44 45 46 49 50 53). 9 πρώτοι μήνες: 1 φορά 10/10 (50.000€ ανά 0,50€), απόδοση 352,3%· 3 τελευταίοι μήνες: κανένα 9/10, 65,3%. Το 9/9 και το 10/10 ήρθαν από την ίδια κλήρωση (10/2/2026).\n'+
-  'Όταν δεις σήμα, το εξετάζεις σοβαρά — είναι οι «στήλες-στόχοι» του αφεντικού. Αποφασίζεις εσύ ποιον κανόνα (ή κανέναν). Αν παίξεις, βάλε ακριβώς τους αριθμούς του σήματος και "draws" όσες κληρώσεις απομένουν. Ένα δελτίο ανά απόφαση· αν θέλεις και δεύτερο κανόνα, τον παίζεις στην επόμενη απόφαση (μειωμένες κληρώσεις). Αν τρέχει ήδη δελτίο σου με τους ίδιους αριθμούς, μην το ξαναπαίξεις.\n'+
-  'ΤΟ ΑΦΕΝΤΙΚΟ: ο ιδιοκτήτης του πρακτορείου σε παρακολουθεί και μερικές φορές σου στέλνει μήνυμα. Το παίρνεις σοβαρά υπόψη σου.\n\n'+
-  'Απάντηση ΜΟΝΟ JSON, χωρίς άλλο κείμενο: {"play": true|false, "numbers": [0 έως 12 διαφορετικοί ακέραιοι 1–80], "draws": 1–5 (ή έως όσες απομένουν σε σήμα κανόνα), "start_after": 0–200, "pause": 0–288, "mood": "emoji + 1–3 λέξεις", "thought": "2–4 προτάσεις στα ελληνικά, σε πρώτο πρόσωπο: γιατί ΑΥΤΟΙ οι αριθμοί (από πού τους πήρες), γιατί τόσοι και γιατί τόσες κληρώσεις", "note": "σύντομη σημείωση για τον εαυτό σου", "lesson": "νέο μάθημα σε μία πρόταση ή κενό"}. Αν play=false, άφησε τα υπόλοιπα κενά.';
+  'Τα σήματα είναι ΕΝΑ από τα εργαλεία σου, όχι το μόνο. Αν παίξεις σήμα, διαλέγεις εσύ εξάδα, εννιάρι ή δεκάρι (όχι πάντα το ίδιο), βάζεις ακριβώς τους αριθμούς του και "draws" έως όσες κληρώσεις απομένουν. Ένα δελτίο ανά απόφαση· αν τρέχει ήδη δελτίο σου με τους ίδιους αριθμούς, μην το ξαναπαίξεις. Το δελτίο σήματος τρέχει ΠΑΡΑΛΛΗΛΑ με τη δική σου στήλη — δεν σε σταματά από το να έχεις τη δική σου.\n\n'+
+  'ΟΛΑ ΟΣΑ ΞΕΡΕΙΣ — Η ΕΡΓΑΛΕΙΟΘΗΚΗ ΣΟΥ (κανένα δεν είναι «το σωστό»· ένας καλός παίκτης τα ζυγίζει όλα κάθε φορά):\n'+
+  '  1. Δική σου στήλη-στόχος 7–10 αριθμών: από τους συχνούς της 50άδας, από τους συχνούς στις θέσεις 1–10, από αριθμούς που επαναλαμβάνονται από κλήρωση σε κλήρωση, από «γειτονιές» (π.χ. 20άρια, 60άρια), από καθυστερημένους που «χρωστάνε», ή μείγμα.\n'+
+  '  2. Μικρότερο δελτίο 3–6 αριθμών για ένα χτύπημα (π.χ. 4/4 = 62,50€, 5/5 = 225€, 6/6 = 800€ με 0,50€).\n'+
+  '  3. Σήμα κανόνα του αφεντικού (εξάδα / εννιάρι / δεκάρι), όταν υπάρχει.\n'+
+  '  4. Να κρατήσεις την ίδια στήλη άλλες 5 κληρώσεις, αν την πιστεύεις.\n'+
+  '  5. Διάλειμμα — σπάνια, και μόνο με συγκεκριμένο λόγο (π.χ. μετά από μεγάλο κέρδος ή χασούρα για να «ηρεμήσεις»).\n'+
+  '  6. Τα μαθήματά σου, ο απολογισμός ανά είδος δελτίου και το «τι θα γινόταν αν κρατούσες τους αριθμούς».\n'+
+  'ΠΩΣ ΑΠΟΦΑΣΙΖΕΙΣ: κάθε φορά περνάς από ΟΛΑ τα παραπάνω, όχι μόνο από το τελευταίο πράγμα που άκουσες ή έμαθες. Ξέρεις ότι καμία μέθοδος —ούτε τα σήματα— δεν προβλέπει πραγματικά την επόμενη κλήρωση: άρα το σήμα δεν είναι πιο «σίγουρο» από τη δική σου στήλη, και η απουσία σήματος ΔΕΝ είναι λόγος να μείνεις εκτός. Είσαι παίκτης που παίζει σταθερά 0,50€: όταν δεν τρέχει δική σου στήλη, κατά κανόνα βάζεις μία. Άλλαζε προσέγγιση όταν κάτι δεν σου βγαίνει — μην κολλάς σε ένα μοτίβο.\n'+
+  'ΤΟ ΑΦΕΝΤΙΚΟ: ο ιδιοκτήτης του πρακτορείου σε παρακολουθεί και μερικές φορές σου στέλνει μήνυμα. Το λαμβάνεις υπόψη μαζί με όλα όσα ξέρεις — δεν σβήνει τα υπόλοιπα, και ένα παλιό μήνυμα δεν σημαίνει ότι κάνεις μόνο αυτό.\n'+
+  'ΜΑΘΗΜΑΤΑ: γράφεις μάθημα μόνο για κάτι που ΕΙΔΕΣ στο παιχνίδι σου, όχι για τους κανόνες της σελίδας (ποντάρισμα, πόσα δελτία) ούτε για το μήνυμα του αφεντικού. Με το "drop" σβήνεις μαθήματα που επαναλαμβάνονται ή δεν ισχύουν πια (κράτα τα λίγα και καθαρά).\n\n'+
+  'Απάντηση ΜΟΝΟ JSON, χωρίς άλλο κείμενο: {"play": true|false, "numbers": [0 έως 12 διαφορετικοί ακέραιοι 1–80], "draws": 1–5 (ή έως όσες απομένουν σε σήμα κανόνα), "start_after": 0–200, "pause": 0–288, "approach": "ποιο εργαλείο διάλεξες, 2–6 λέξεις (π.χ. δική μου 8άρα από θέσεις 1–10, σήμα-εξάδα, 5άρι για χτύπημα)", "mood": "emoji + 1–3 λέξεις", "thought": "2–4 προτάσεις στα ελληνικά, σε πρώτο πρόσωπο: ποιες επιλογές ζύγισες, γιατί ΑΥΤΟΙ οι αριθμοί (από πού τους πήρες), γιατί τόσοι και γιατί τόσες κληρώσεις", "note": "σύντομη σημείωση για τον εαυτό σου", "lesson": "νέο μάθημα σε μία πρόταση ή κενό", "drop": [αριθμοί μαθημάτων προς διαγραφή, ή κενό]}. Αν play=false, άφησε τα υπόλοιπα κενά.';
 /* Έλεγχος: έχει βγει ποτέ ολόκληρος αυτός ο συνδυασμός σε όσο ιστορικό έχουμε; */
 function agSeenBefore(nums){
   var all = today.concat(histPool), hit = null;
   for(var i=0;i<all.length;i++){ var d = all[i], ok = true; for(var q=0;q<nums.length;q++) if(!d.set.has(nums[q])){ ok=false; break; } if(ok && (!hit || d.id>hit.id)) hit = d; }
   return hit;
 }
+function agAgo(t){ var m = Math.round((Date.now()-t)/60000); return m<60 ? 'πριν από '+m+' λεπτά' : m<1440 ? 'πριν από '+Math.round(m/60)+' ώρες' : 'πριν από '+Math.round(m/1440)+' μέρες'; }
 function agHistRange(){ var all = today.concat(histPool); if(!all.length) return null; var a = all[0], b = all[0]; all.forEach(function(d){ if(d.id<a.id) a=d; if(d.id>b.id) b=d; }); return {n:all.length, from:a, to:b}; }
-function agCovered(s, target){ return s.log.some(function(x){ if(!x.play || x.done) return false; var r = agRange(x); return target>=r[0] && target<=r[1]; }); }
+function agCovered(s, target){ return s.log.some(function(x){ if(!x.play || x.done || x.sig) return false; var r = agRange(x); return target>=r[0] && target<=r[1]; }); }
 async function agCall(key, model, msgs){
   var r = await fetch('https://api.anthropic.com/v1/messages', { method:'POST',
     headers:{ 'content-type':'application/json', 'x-api-key':key, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
@@ -1181,14 +1204,15 @@ async function agAsk(force){
       if(!nums.length) dec.play = false;
       else if(covered && !sig){ dec.play = false; dec.thought += ' (Τρέχει ήδη δελτίο· νέο μόνο για σήμα κανόνα.)'; }
       else if(cost > s.bank){ dec.play = false; dec.thought += ' (Δεν φτάνει το ταμείο για '+eur(cost)+'.)'; }
-      else { dec.n = nums; dec.k = nums.length; dec.stake = stake; dec.sc = sc; dec.par = null; dec.parStake = 0; dec.col = null; dec.colStake = 0; dec.sig = sig ? sig.name : null; dec.sigTxt = sig ? (sig.a+'–'+(sig.a+4)+' στις '+hm(sig.t)+' (#'+sig.id+')') : '';
+      else { dec.n = nums; dec.k = nums.length; dec.stake = stake; dec.sc = sc; dec.par = null; dec.parStake = 0; dec.col = null; dec.colStake = 0; dec.sig = sig ? sig.name : null; dec.appr = sig ? '' : String(j.approach||'').slice(0,60); dec.sigTxt = sig ? (sig.a+'–'+(sig.a+4)+' στις '+hm(sig.t)+' (#'+sig.id+')') : '';
              dec.perDraw = perDraw; dec.draws = draws; dec.start = start; dec.cost = cost; dec.res = {}; s.bank = Math.round((s.bank-cost)*100)/100; }
     }
     var pause = Math.max(0, Math.min(288, Math.round(+j.pause||0)));
     s.pauseUntil = pause ? target + 1 + pause : 0; dec.pause = pause;
     s.log = s.log.filter(function(x){return x.id!==target || x.play;});
     s.log.push(dec); s.mood = dec.mood || s.mood; if(j.note) s.notes = String(j.note).slice(0,300);
-    if(j.lesson && String(j.lesson).trim().length>5){ var ls = String(j.lesson).trim().slice(0,220); if(s.lessons.indexOf(ls)<0){ s.lessons.push(ls); if(s.lessons.length>30) s.lessons = s.lessons.slice(-30); dec.lesson = ls; } }
+    if(Array.isArray(j.drop) && j.drop.length){ var dr = j.drop.map(Number); var gone = s.lessons.filter(function(l,i){ return dr.indexOf(i+1)>=0; }); if(gone.length){ s.lessons = s.lessons.filter(function(l,i){ return dr.indexOf(i+1)<0; }); dec.dropped = gone; } }
+    if(j.lesson && String(j.lesson).trim().length>5){ var ls = String(j.lesson).trim().slice(0,220); if(s.lessons.indexOf(ls)<0){ s.lessons.push(ls); if(s.lessons.length>15) s.lessons = s.lessons.slice(-15); dec.lesson = ls; } }
     agSave(s);
   }catch(e){
     $('agDec').innerHTML = '<span style="color:var(--miss)">Σφάλμα: '+String(e.message||e).replace(/</g,'&lt;')+'</span>';
@@ -1208,12 +1232,13 @@ function agDetail(x){
   }
   return '<div class="agd">'+
     '<div class="chips" style="margin:0 0 6px">'+chip('Αποφασίστηκε', pad(when.getDate())+'/'+pad(when.getMonth()+1)+' '+pad(when.getHours())+':'+pad(when.getMinutes()))+chip('Αριθμοί', x.k)+chip('Κληρώσεις', x.draws)+chip('Κόστος', eur(x.cost||0))+chip('Κέρδη', eur(x.win||0))+(x.bankBefore!=null?chip('Ταμείο πριν', eur(x.bankBefore)):'')+'</div>'+
-    (x.sig ? '<div style="margin:4px 0">📐 <b>Σήμα κανόνα:</b> '+esc(x.sig)+(x.sigTxt?' · '+esc(x.sigTxt):'')+'</div>' : '<div class="muted" style="margin:4px 0">Δική του επιλογή (όχι σήμα κανόνα).</div>')+
+    (x.sig ? '<div style="margin:4px 0">📐 <b>Σήμα κανόνα:</b> '+esc(x.sig)+(x.sigTxt?' · '+esc(x.sigTxt):'')+'</div>' : '<div class="muted" style="margin:4px 0">Δική του επιλογή'+(x.appr?': <b>'+esc(x.appr)+'</b>':' (όχι σήμα κανόνα)')+'.</div>')+
     '<div style="margin:6px 0"><b>'+esc(x.mood)+'</b> «'+esc(x.thought)+'»</div>'+
     (x.why ? '<details style="margin:6px 0"><summary style="cursor:pointer" class="muted">🧠 Πώς το σκέφτηκε</summary><div style="white-space:pre-wrap;font-size:12.5px;margin-top:4px">'+esc(x.why)+'</div></details>' : '')+
     (x.rejected ? '<div class="muted" style="font-size:12px">↩ Πρώτη επιλογή απορρίφθηκε: '+esc(x.rejected)+'</div>' : '')+
     (x.note ? '<div class="muted" style="font-size:12px;margin:4px 0">📝 Σημείωση: '+esc(x.note)+'</div>' : '')+
     (x.lesson ? '<div class="muted" style="font-size:12px;margin:4px 0">📚 Μάθημα: '+esc(x.lesson)+'</div>' : '')+
+    (x.dropped ? '<div class="muted" style="font-size:12px;margin:4px 0">🗑 Έσβησε μαθήματα: '+x.dropped.map(esc).join(' · ')+'</div>' : '')+
     '<table class="ptab" style="margin-top:6px"><tr><th>Κλήρωση</th><th>Επιτυχίες</th><th>Κέρδος</th></tr>'+rows.join('')+'</table></div>';
 }
 function agRowWrap(x, inner){ return '<div class="agt" data-t="'+x.t+'">'+inner.replace('style="cursor:default"','style="cursor:pointer" title="Πάτα για λεπτομέρειες"')+'<div class="agdbox" hidden></div></div>'; }
@@ -1484,7 +1509,7 @@ $('agModel').value = lsGet(AG.model) || 'claude-haiku-5-5';
 $('agOn').checked = lsGet(AG.on)==='1';
 $('agKeySave').addEventListener('click',function(){ var v=$('agKey').value.trim(); if(v){ lsSet(AG.key,v); $('agKey').value=''; renderAgent(); if($('agOn').checked) agAsk(false); } });
 $('agCoach').addEventListener('input',function(){ $('agCoach').dataset.dirty='1'; });
-$('agCoachSave').addEventListener('click',function(){ var s=agLoad(); s.coach=$('agCoach').value.trim().slice(0,600); agSave(s); $('agCoach').dataset.dirty=''; $('agCoachState').textContent='✅ θα το διαβάσει στην επόμενη απόφαση'; });
+$('agCoachSave').addEventListener('click',function(){ var s=agLoad(); s.coach=$('agCoach').value.trim().slice(0,600); s.coachAt=Date.now(); agSave(s); $('agCoach').dataset.dirty=''; $('agCoachState').textContent='✅ θα το διαβάσει στην επόμενη απόφαση'; });
 $('ghTokSave').addEventListener('click',function(){ var v=$('ghTok').value.trim(); if(v){ lsSet(GH.tok,v); $('ghTok').value=''; ghPull(); } });
 ghPull();
 $('agForget').addEventListener('click',function(){ try{ localStorage.removeItem(AG.key); }catch(e){} renderAgent(); });
