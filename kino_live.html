@@ -1091,6 +1091,7 @@ function agPrompt(s, target){
     variety+
     'ΜΑΘΗΜΑΤΑ ΠΟΥ ΕΧΕΙΣ ΚΡΑΤΗΣΕΙ (από τα λάθη και τις επιτυχίες σου):\n'+((s.lessons||[]).map(function(l,i){return (i+1)+'. '+l;}).join('\n')||'(κανένα ακόμα)')+'\n\n'+
     'ΣΗΜΑΤΑ ΤΩΝ ΚΑΝΟΝΩΝ ΤΟΥ ΑΦΕΝΤΙΚΟΥ (5 συνεχόμενοι → στήλη για 10 κληρώσεις):\n'+(sig.length ? sig.map(function(g){ return '• Στην κλήρωση των '+hm(g.t)+' (#'+g.id+') βγήκαν '+g.a+'–'+(g.a+4)+' → '+g.name+' ('+g.k+' αρ.) ['+g.nums.join(' ')+'] · απομένουν '+g.left+' από τις 10 κληρώσεις'+(g.left===AG_RULE_L?' (ΜΟΛΙΣ ΒΓΗΚΕ)':''); }).join('\n') : '(κανένα ενεργό σήμα αυτή τη στιγμή)')+'\n\n'+
+    (s.nudge && Date.now()-s.nudge < 900000 ? '👉 ΤΟ ΑΦΕΝΤΙΚΟ ΣΕ ΣΚΟΥΝΤΗΞΕ: τέλος το διάλειμμα, ξαναμπές στο παιχνίδι τώρα. Διάλεξε τι θα παίξεις (όχι νέο διάλειμμα).\n\n' : '')+
     (s.coach ? '💬 ΜΗΝΥΜΑ ΑΠΟ ΤΟ ΑΦΕΝΤΙΚΟ'+(s.coachAt?' ('+agAgo(s.coachAt)+')':'')+': «'+s.coach+'» — το λαμβάνεις υπόψη μαζί με όλα τα παραπάνω· δεν ακυρώνει όσα ξέρεις.\n\n' : '')+
     'ΤΙ ΘΑ ΓΙΝΟΤΑΝ ΑΝ ΚΡΑΤΟΥΣΕΣ ΤΟΥΣ ΙΔΙΟΥΣ ΑΡΙΘΜΟΥΣ στις επόμενες κληρώσεις (ίδιο ποσό):\n'+hind+'\n\n'+
     'ΤΑ ΤΕΛΕΥΤΑΙΑ ΣΟΥ ΔΕΛΤΙΑ ΠΟΥ ΤΕΛΕΙΩΣΑΝ (παλιότερο πρώτο):\n'+hist+'\n\n'+
@@ -1207,7 +1208,8 @@ async function agAsk(force){
       else { dec.n = nums; dec.k = nums.length; dec.stake = stake; dec.sc = sc; dec.par = null; dec.parStake = 0; dec.col = null; dec.colStake = 0; dec.sig = sig ? sig.name : null; dec.appr = sig ? '' : String(j.approach||'').slice(0,60); dec.sigTxt = sig ? (sig.a+'–'+(sig.a+4)+' στις '+hm(sig.t)+' (#'+sig.id+')') : '';
              dec.perDraw = perDraw; dec.draws = draws; dec.start = start; dec.cost = cost; dec.res = {}; s.bank = Math.round((s.bank-cost)*100)/100; }
     }
-    var pause = Math.max(0, Math.min(288, Math.round(+j.pause||0)));
+    var nudged = s.nudge && Date.now()-s.nudge < 900000; if(nudged){ dec.nudged = true; s.nudge = 0; }
+    var pause = nudged ? 0 : Math.max(0, Math.min(288, Math.round(+j.pause||0)));   // μετά από σκούντημα δεν ξαναπάει για διάλειμμα
     s.pauseUntil = pause ? target + 1 + pause : 0; dec.pause = pause;
     s.log = s.log.filter(function(x){return x.id!==target || x.play;});
     s.log.push(dec); s.mood = dec.mood || s.mood; if(j.note) s.notes = String(j.note).slice(0,300);
@@ -1235,6 +1237,7 @@ function agDetail(x){
     (x.sig ? '<div style="margin:4px 0">📐 <b>Σήμα κανόνα:</b> '+esc(x.sig)+(x.sigTxt?' · '+esc(x.sigTxt):'')+'</div>' : '<div class="muted" style="margin:4px 0">Δική του επιλογή'+(x.appr?': <b>'+esc(x.appr)+'</b>':' (όχι σήμα κανόνα)')+'.</div>')+
     '<div style="margin:6px 0"><b>'+esc(x.mood)+'</b> «'+esc(x.thought)+'»</div>'+
     (x.why ? '<details style="margin:6px 0"><summary style="cursor:pointer" class="muted">🧠 Πώς το σκέφτηκε</summary><div style="white-space:pre-wrap;font-size:12.5px;margin-top:4px">'+esc(x.why)+'</div></details>' : '')+
+    (x.nudged ? '<div class="muted" style="font-size:12px">👉 Αποφάσισε αφού τον σκούντηξες.</div>' : '')+
     (x.rejected ? '<div class="muted" style="font-size:12px">↩ Πρώτη επιλογή απορρίφθηκε: '+esc(x.rejected)+'</div>' : '')+
     (x.note ? '<div class="muted" style="font-size:12px;margin:4px 0">📝 Σημείωση: '+esc(x.note)+'</div>' : '')+
     (x.lesson ? '<div class="muted" style="font-size:12px;margin:4px 0">📚 Μάθημα: '+esc(x.lesson)+'</div>' : '')+
@@ -1248,7 +1251,8 @@ function renderAgent(){
   var day = dateOf(Date.now()), target = lastId+1;
   var state = !$('agOn').checked ? '⏸ σε παύση' : (s.pauseUntil && target < s.pauseUntil) ? '☕ διάλειμμα έως τις '+agWhen(s.pauseUntil) : '🟢 ενεργός';
   $('agStatus').innerHTML = chip('Διάθεση', esc(s.mood)) + chip('Ταμείο', '<span style="color:'+(s.bank>=s.start?'var(--hit)':'var(--miss)')+'">'+eur(s.bank)+'</span>') +
-    chip('Κόστος API σήμερα', '$'+(s.cost[day]||0).toFixed(4)) + chip('Κατάσταση', state);
+    chip('Κόστος API σήμερα', '$'+(s.cost[day]||0).toFixed(4)) + chip('Κατάσταση', state) +
+    ((s.pauseUntil && target < s.pauseUntil) ? '<button class="btn" id="agNudge" title="Σταματά το διάλειμμα και τον ρωτάει αμέσως">👉 Σκούντα τον</button>' : '');
   var cur = s.log.filter(function(x){return x.id===target;}).slice(-1)[0];
   $('agDecLbl').textContent = 'Τελευταία απόφαση';
   var lastDec = cur || s.log.slice(-1)[0];
@@ -1516,6 +1520,7 @@ $('agForget').addEventListener('click',function(){ try{ localStorage.removeItem(
 $('agModel').addEventListener('change',function(){ lsSet(AG.model,$('agModel').value); });
 $('agOn').addEventListener('change',function(){ lsSet(AG.on,$('agOn').checked?'1':'0'); agTick(); });
 $('agAsk').addEventListener('click',function(){ agAsk(true); });
+$('agStatus').addEventListener('click',function(e){ if(!e.target || e.target.id!=='agNudge') return; var s=agLoad(); s.pauseUntil=0; s.nudge=Date.now(); agSave(s); renderAgent(); agAsk(true); });
 $('agReset').addEventListener('click',function(){ if(confirm('Νέο εικονικό ταμείο 100€; Το ημερολόγιο θα σβηστεί, τα μαθήματα μένουν.')){ var s=agLoad(); agSave({bank:100,start:100,log:[],notes:'',lessons:s.lessons||[],mood:'🙂 ήρεμος',cost:s.cost,since:Date.now(),pauseUntil:0}); renderAgent(); } });
 if(lsGet('kl_ah_open')==='1') ahOpen(true);
 
