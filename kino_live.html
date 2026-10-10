@@ -1088,7 +1088,7 @@ function agPrompt(s, target){
     Object.keys(byK).map(function(g){var b=byK[g]; return g+': '+b.n+' κλ., '+b.c.toFixed(2)+'€→'+b.w.toFixed(2)+'€';}).join(' · ')+'. Αν κάτι δεν σου βγαίνει, άλλαξέ το.\n' : '';
   return 'Επόμενη κλήρωση: #'+target+' στις '+hm(expectedTime())+'. (Κάθε 5 λεπτά μία κλήρωση· #'+(target+12)+' = σε μία ώρα.)\n\n'+
     (hr ? 'ΙΣΤΟΡΙΚΟ ΠΟΥ ΕΧΕΙΣ: '+hr.n+' κληρώσεις, από '+hr.from.d.split('-').reverse().join('/')+' '+hm(hr.from.t)+' έως '+hr.to.d.split('-').reverse().join('/')+' '+hm(hr.to.t)+' (σε αυτό ελέγχεται αν μια στήλη 7+ αριθμών έχει ξαναβγεί).\n' : '')+
-    (agCovered(s, target) ? '⚠ Τρέχει ήδη η δική σου στήλη για την επόμενη κλήρωση: νέο δελτίο τώρα μόνο αν παίξεις σήμα κανόνα (αλλιώς play=false και περιμένεις να τελειώσει).\n' : '')+
+    (agCovered(s, target) && !agSixMode(s) ? '⚠ Τρέχει ήδη η δική σου στήλη για την επόμενη κλήρωση: νέο δελτίο τώρα μόνο αν παίξεις σήμα κανόνα (αλλιώς play=false και περιμένεις να τελειώσει).\n' : '')+
     
     'ΤΑΜΕΙΟ: '+s.bank.toFixed(2)+'€ (ξεκίνησες με '+s.start+'€). Διάθεσή σου πριν: '+s.mood+'.\n'+recap+style+
     'Σημειώσεις που άφησες στον εαυτό σου: '+(s.notes||'(καμία)')+'\n\n'+
@@ -1104,6 +1104,15 @@ function agPrompt(s, target){
     'ΣΤΑΤΙΣΤΙΚΑ: συχνότεροι στις τελευταίες 50: '+hot+'\nπιο καθυστερημένοι (κληρώσεις χωρίς εμφάνιση): '+late+'\nσυχνότεροι στις θέσεις 1–10 (50): '+pz+'\n\n'+
     'ΠΙΝΑΚΑΣ ΚΕΡΔΩΝ ΚΙΝΟ (ποσό για στήλη 0,50€ σε μία κλήρωση· με μεγαλύτερο ποντάρισμα πολλαπλασιάζεται):\n'+pay+'\n\n'+
     '2η ΕΥΚΑΙΡΙΑ: το δελτίο κοστίζει διπλάσιο. Αν τουλάχιστον 1 αριθμός σου βγει στους 3 της 2ης ευκαιρίας, οι επιτυχίες μετράνε σε όλους τους 23 και πληρώνει ο παρακάτω πίνακας (ή ο κανονικός αν δίνει περισσότερα)· αλλιώς ο κανονικός.\n'+scp+'\n\n'+
+    (agSixMode(s) ? '🎯 ΕΝΤΟΛΗ ΤΟΥ ΑΦΕΝΤΙΚΟΥ ΕΩΣ ΤΙΣ '+hm(s.sixUntil)+' (υπερισχύει της εργαλειοθήκης για αυτό το διάστημα): παίζεις ΜΟΝΟ ΕΞΑΔΕΣ (ακριβώς 6 αριθμούς), 0,50€, για ΜΙΑ κλήρωση ("draws":1, "start_after":0). Δεν κάνεις διάλειμμα. Διάλεξε από τις εξάδες που βγαίνουν και ξαναβγαίνουν — οι πιο συχνές στο τελευταίο 24ωρο (×φορές, τελευταία εμφάνιση):\n'+
+      (function(){ var sc = agSC(288), top = sc.top;
+        var six = agSixes(288).filter(function(x){ return x.k.split(' ').some(function(v){ return top.indexOf(+v)>=0; }); }).slice(0,20);
+        return six.map(function(x){ return '['+x.k+'] ×'+x.n+' (τελ. '+agWhen(x.last)+')'; }).join('\n')+
+          '\n\nΣΤΑΤΙΣΤΙΚΑ ΜΟΝΟ ΤΗΣ 2ης ΕΥΚΑΙΡΙΑΣ (τελευταίες '+sc.n+' κληρώσεις, 3 αριθμοί η καθεμία· αναμενόμενο ~'+(sc.n*3/80).toFixed(1)+' εμφανίσεις ανά αριθμό):\nσυχνότεροι: '+
+          sc.hot.slice(0,15).map(function(x){return x+'('+sc.cnt[x]+')';}).join(' ')+
+          '\nπιο καθυστερημένοι στη 2η ευκαιρία: '+sc.hot.slice().sort(function(a,b){return (sc.gap[b]<0?1e9:sc.gap[b])-(sc.gap[a]<0?1e9:sc.gap[a]);}).slice(0,10).map(function(x){return x+'('+(sc.gap[x]<0?sc.n+'+':sc.gap[x])+')';}).join(' ')+
+          '\nΥΠΟΧΡΕΩΤΙΚΟ: η εξάδα σου πρέπει να έχει τουλάχιστον έναν από τους 10 συχνότερους της 2ης ευκαιρίας: '+top.join(' ')+'. (Οι εξάδες παραπάνω το τηρούν ήδη.)';
+      })()+'\nΜπορείς να κρατήσεις την ίδια εξάδα και στην επόμενη κλήρωση ή να αλλάξεις — πες στο "thought" γιατί.\n\n' : '')+
     'Αποφάσισε τώρα (για την #'+target+' ή και για αργότερα). Απάντησε ΜΟΝΟ με JSON.';
 }
 var AG_SYS = 'Είσαι Έλληνας παίκτης ΚΙΝΟ με ένστικτο, τόλμη, χιούμορ και συναισθήματα. Δεν είσαι λογιστής που φοβάται να χάσει· παίζεις για να πιάσεις το μεγάλο, με λογικό ταμείο. Παρατηρείς τις κληρώσεις, «πιστεύεις» σε στήλες, θυμάσαι τι έπαιξες και πώς σου πήγε, και ελίσσεσαι. Παίζεις με εικονικά χρήματα σε προσομοίωση· δεν δίνεις συμβουλές σε κανέναν, απλώς παίζεις.\n\n'+
@@ -1151,6 +1160,38 @@ function agSeenBefore(nums){
   for(var i=0;i<all.length;i++){ var d = all[i], ok = true; for(var q=0;q<nums.length;q++) if(!d.set.has(nums[q])){ ok=false; break; } if(ok && (!hit || d.id>hit.id)) hit = d; }
   return hit;
 }
+/* Εξάδες που βγαίνουν και ξαναβγαίνουν: για κάθε ζευγάρι κληρώσεων του τελευταίου 24ώρου, όλες οι εξάδες της τομής τους */
+var agSixCache = {id:0, list:[]};
+function agSixes(W){
+  var all = today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;}).slice(0, W||288);
+  if(!all.length) return [];
+  if(agSixCache.id===all[0].id) return agSixCache.list;
+  var M = new Map();
+  for(var i=0;i<all.length;i++) for(var j=i+1;j<all.length;j++){
+    var inter = all[i].arr.filter(function(x){ return all[j].set.has(x); });
+    if(inter.length<6) continue; inter.sort(function(a,b){return a-b;});
+    var n = inter.length, c = [0,1,2,3,4,5];
+    while(true){
+      var k = c.map(function(q){return inter[q];}).join(' '), e = M.get(k);
+      if(!e){ e = {}; M.set(k, e); } e[all[i].id] = 1; e[all[j].id] = 1;
+      var p = 5; while(p>=0 && c[p]===n-6+p) p--; if(p<0) break; c[p]++; for(var q=p+1;q<6;q++) c[q] = c[q-1]+1;
+    }
+  }
+  var out = []; M.forEach(function(e,k){ var ids = Object.keys(e).map(Number); out.push({k:k, n:ids.length, last:Math.max.apply(null, ids)}); });
+  out.sort(function(a,b){ return b.n-a.n || b.last-a.last; });
+  agSixCache = {id:all[0].id, list:out.slice(0,400)};
+  return agSixCache.list;
+}
+/* Στατιστικά μόνο για τους 3 αριθμούς της 2ης ευκαιρίας */
+function agSC(W){
+  var all = today.concat(histPool).filter(function(d){return d.sc && d.sc.length;}).sort(function(a,b){return b.id-a.id;}).slice(0, W||288);
+  var cnt = new Array(81).fill(0), gap = new Array(81).fill(-1);
+  all.forEach(function(d,i){ d.sc.forEach(function(x){ cnt[x]++; if(gap[x]<0) gap[x]=i; }); });
+  var nums=[]; for(var n=1;n<=80;n++) nums.push(n);
+  var hot = nums.slice().sort(function(a,b){ return cnt[b]-cnt[a] || gap[a]-gap[b]; });
+  return {n:all.length, cnt:cnt, gap:gap, hot:hot, top:hot.slice(0,10)};
+}
+function agSixMode(s){ return s.sixUntil && Date.now() < s.sixUntil; }
 function agAgo(t){ var m = Math.round((Date.now()-t)/60000); return m<60 ? 'πριν από '+m+' λεπτά' : m<1440 ? 'πριν από '+Math.round(m/60)+' ώρες' : 'πριν από '+Math.round(m/1440)+' μέρες'; }
 function agHistRange(){ var all = today.concat(histPool); if(!all.length) return null; var a = all[0], b = all[0]; all.forEach(function(d){ if(d.id<a.id) a=d; if(d.id>b.id) b=d; }); return {n:all.length, from:a, to:b}; }
 function agCovered(s, target){ return s.log.some(function(x){ if(!x.play || x.done || x.sig) return false; var r = agRange(x); return target>=r[0] && target<=r[1]; }); }
@@ -1175,7 +1216,7 @@ async function agAsk(force){
   var freshSig = sigs.some(function(g){return g.left===AG_RULE_L;});
   var covered = agCovered(s, target);
   // κανονικά: ένα δελτίο τη φορά (0,50€ ανά κλήρωση) — όσο τρέχει δελτίο δεν ρωτάμε, εκτός αν βγει καινούργιο σήμα
-  if(!force && (s.log.some(function(x){return x.id===target;}) || (covered && !freshSig) || (s.pauseUntil && target < s.pauseUntil && !freshSig))) { renderAgent(); return; }
+  if(!force && (s.log.some(function(x){return x.id===target;}) || (covered && !freshSig && !agSixMode(s)) || (s.pauseUntil && target < s.pauseUntil && !freshSig && !agSixMode(s)))) { renderAgent(); return; }
   agBusy = true; $('agDec').innerHTML = '<span class="muted">💭 σκέφτεται…</span>';
   if(!(await agEnsureData())){   // δεν αποφασίζει με ελλιπή δεδομένα
     var mm = agMissing().miss;
@@ -1192,13 +1233,22 @@ async function agAsk(force){
       var res = await agCall(key, model, msgs); j = res.j; var think = res.think || ''; var bankBefore = s.bank;
       s.cost[day] = (s.cost[day]||0) + ((res.usage.input_tokens||0)*pr[0] + (res.usage.output_tokens||0)*pr[1])/1e6;
       if(!j.play){
-        var pz = Math.round(+j.pause||0), okPause = pz>0 && pz<=12 && !outStreak && !nudgedNow;
+        var pz = Math.round(+j.pause||0), okPause = pz>0 && pz<=12 && !outStreak && !nudgedNow && !agSixMode(s);
         if(covered || okPause || attempt>=2) break;
         msgs.push({role:'assistant', content:res.txt});
         msgs.push({role:'user', content:'Δεν τρέχει δική σου στήλη και '+(nudgedNow?'το αφεντικό σε σκούντηξε να μπεις':outStreak?'έμεινες ήδη εκτός και την προηγούμενη φορά':'δεν έδωσες σύντομο διάλειμμα (έως 12 κληρώσεις)')+'. Κανόνας 5: είσαι πάντα μέσα στο παιχνίδι — δεν περιμένεις σήμα. Διάλεξε ΤΩΡΑ μια δική σου στήλη (από την εργαλειοθήκη σου: συχνοί, θέσεις 1–10, επαναλήψεις, γειτονιές, καθυστερημένοι, μικρό δελτίο για χτύπημα…), 0,50€, έως 5 κληρώσεις. Απάντησε πάλι ΜΟΝΟ με JSON, με play=true.'});
         note = ''; continue;
       }
       var nums0 = (j.numbers||[]).map(Number).filter(function(x,i,arr){ return x>=1 && x<=80 && Math.floor(x)===x && arr.indexOf(x)===i; }).slice(0,12);
+      var scTop = agSixMode(s) ? agSC(288).top : [];
+      if(agSixMode(s) && nums0.length===6 && !nums0.some(function(x){ return scTop.indexOf(x)>=0; })){
+        if(attempt<2){ msgs.push({role:'assistant', content:res.txt}); msgs.push({role:'user', content:'Η εξάδα πρέπει να έχει τουλάχιστον έναν από τους 10 συχνότερους αριθμούς της 2ης ευκαιρίας: '+scTop.join(' ')+'. Διάλεξε πάλι. Απάντησε ΜΟΝΟ με JSON.'}); continue; }
+        j.play = false; break;
+      }
+      if(agSixMode(s) && nums0.length!==6){
+        if(attempt<2){ msgs.push({role:'assistant', content:res.txt}); msgs.push({role:'user', content:'Μέχρι τις '+hm(s.sixUntil)+' παίζεις ΜΟΝΟ εξάδες (ακριβώς 6 αριθμούς), 0,50€, μία κλήρωση. Διάλεξε εξάδα. Απάντησε πάλι ΜΟΝΟ με JSON.'}); continue; }
+        j.play = false; break;
+      }
       var seen = nums0.length>=7 ? agSeenBefore(nums0) : null;   // 7άρια και πάνω: πρέπει να είναι εντελώς καινούργια
       if(nums0.length>=3 && nums0.length<=5 && !agSeenBefore(nums0)){   // 3άρια–5άρια: πρέπει να έχουν ξαναβγεί
         if(attempt<2){
@@ -1220,18 +1270,18 @@ async function agAsk(force){
       var key2 = nums.slice().sort(function(a,b){return a-b;}).join(',');
       var sig = sigs.filter(function(g){ return g.nums.slice().sort(function(a,b){return a-b;}).join(',')===key2; }).sort(function(a,b){return b.left-a.left;})[0];
       var maxDraws = sig ? sig.left : 5;                       // συνεχόμενες: έως 5, εκτός αν παίζει σήμα κανόνα
-      var draws = Math.max(1, Math.min(maxDraws, Math.round(+j.draws||1)));
-      var start = sig ? 0 : Math.max(0, Math.min(200, Math.round(+j.start_after||0)));
+      var draws = agSixMode(s) ? 1 : Math.max(1, Math.min(maxDraws, Math.round(+j.draws||1)));
+      var start = (sig || agSixMode(s)) ? 0 : Math.max(0, Math.min(200, Math.round(+j.start_after||0)));
       var stake = 0.5, sc = false;                             // πάντα 0,50€ ανά κλήρωση, χωρίς 2η ευκαιρία
       var perDraw = stake, cost = Math.round(perDraw*draws*100)/100;
       if(!nums.length) dec.play = false;
-      else if(covered && !sig){ dec.play = false; dec.thought += ' (Τρέχει ήδη δελτίο· νέο μόνο για σήμα κανόνα.)'; }
+      else if(covered && !sig && !agSixMode(s)){ dec.play = false; dec.thought += ' (Τρέχει ήδη δελτίο· νέο μόνο για σήμα κανόνα.)'; }
       else if(cost > s.bank){ dec.play = false; dec.thought += ' (Δεν φτάνει το ταμείο για '+eur(cost)+'.)'; }
       else { dec.n = nums; dec.k = nums.length; dec.stake = stake; dec.sc = sc; dec.par = null; dec.parStake = 0; dec.col = null; dec.colStake = 0; dec.sig = sig ? sig.name : null; dec.appr = sig ? '' : String(j.approach||'').slice(0,60); dec.sigTxt = sig ? (sig.a+'–'+(sig.a+4)+' στις '+hm(sig.t)+' (#'+sig.id+')') : '';
              dec.perDraw = perDraw; dec.draws = draws; dec.start = start; dec.cost = cost; dec.res = {}; s.bank = Math.round((s.bank-cost)*100)/100; }
     }
     var nudged = s.nudge && Date.now()-s.nudge < 900000; if(nudged){ dec.nudged = true; s.nudge = 0; }
-    var pause = (nudged || outStreak) ? 0 : Math.max(0, Math.min(12, Math.round(+j.pause||0)));   // μετά από σκούντημα δεν ξαναπάει για διάλειμμα
+    var pause = (nudged || outStreak || agSixMode(s)) ? 0 : Math.max(0, Math.min(12, Math.round(+j.pause||0)));   // μετά από σκούντημα δεν ξαναπάει για διάλειμμα
     s.pauseUntil = pause ? target + 1 + pause : 0; dec.pause = pause;
     s.log = s.log.filter(function(x){return x.id!==target || x.play;});
     s.log.push(dec); s.mood = dec.mood || s.mood; if(j.note) s.notes = String(j.note).slice(0,300);
@@ -1274,6 +1324,7 @@ function renderAgent(){
   var state = !$('agOn').checked ? '⏸ σε παύση' : (s.pauseUntil && target < s.pauseUntil) ? '☕ διάλειμμα έως τις '+agWhen(s.pauseUntil) : '🟢 ενεργός';
   $('agStatus').innerHTML = chip('Διάθεση', esc(s.mood)) + chip('Ταμείο', '<span style="color:'+(s.bank>=s.start?'var(--hit)':'var(--miss)')+'">'+eur(s.bank)+'</span>') +
     chip('Κόστος API σήμερα', '$'+(s.cost[day]||0).toFixed(4)) + chip('Κατάσταση', state) +
+    (agSixMode(s) ? chip('🎯 Μόνο εξάδες', 'έως '+hm(s.sixUntil))+'<button class="btn" id="agSixOff">✖ Τέλος εξάδων</button>' : '<button class="btn" id="agSixOn" title="Για 1 ώρα: μόνο εξάδες, 0,50€, μία κλήρωση τη φορά">🎯 Μόνο εξάδες 1 ώρα</button>') +
     ((s.pauseUntil && target < s.pauseUntil) ? '<button class="btn" id="agNudge" title="Σταματά το διάλειμμα και τον ρωτάει αμέσως">👉 Σκούντα τον</button>' : '');
   var cur = s.log.filter(function(x){return x.id===target;}).slice(-1)[0];
   $('agDecLbl').textContent = 'Τελευταία απόφαση';
@@ -1542,7 +1593,9 @@ $('agForget').addEventListener('click',function(){ try{ localStorage.removeItem(
 $('agModel').addEventListener('change',function(){ lsSet(AG.model,$('agModel').value); });
 $('agOn').addEventListener('change',function(){ lsSet(AG.on,$('agOn').checked?'1':'0'); agTick(); });
 $('agAsk').addEventListener('click',function(){ agAsk(true); });
-$('agStatus').addEventListener('click',function(e){ if(!e.target || e.target.id!=='agNudge') return; var s=agLoad(); s.pauseUntil=0; s.nudge=Date.now(); agSave(s); renderAgent(); agAsk(true); });
+$('agStatus').addEventListener('click',function(e){ var id = e.target && e.target.id;
+  if(id==='agSixOn' || id==='agSixOff'){ var s0=agLoad(); s0.sixUntil = id==='agSixOn' ? Date.now()+3600000 : 0; if(id==='agSixOn') s0.pauseUntil = 0; agSave(s0); renderAgent(); if(id==='agSixOn') agAsk(true); return; }
+  if(id!=='agNudge') return; var s=agLoad(); s.pauseUntil=0; s.nudge=Date.now(); agSave(s); renderAgent(); agAsk(true); });
 $('agReset').addEventListener('click',function(){ if(confirm('Νέο εικονικό ταμείο 100€; Το ημερολόγιο θα σβηστεί, τα μαθήματα μένουν.')){ var s=agLoad(); agSave({bank:100,start:100,log:[],notes:'',lessons:s.lessons||[],mood:'🙂 ήρεμος',cost:s.cost,since:Date.now(),pauseUntil:0}); renderAgent(); } });
 if(lsGet('kl_ah_open')==='1') ahOpen(true);
 
