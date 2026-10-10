@@ -319,6 +319,18 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     </div>
   </section>
 
+  <section class="card mt" data-k="gef">
+    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🌉 Κανόνας «Γέφυρα»</span><span id="gefMeta"></span></h2>
+    <div class="cbody">
+      <div class="muted" style="margin-bottom:10px">Κοιτάμε τις <b>2 τελευταίες κληρώσεις</b>. Αν έχουν <b>5 ή περισσότερους κοινούς αριθμούς</b>, παίζουμε στην επόμενη κλήρωση <b>όλες τις πεντάδες</b> που βγαίνουν από αυτούς (0,50€ η πεντάδα). Στο ιστορικό ενός χρόνου (105.257 κληρώσεις): 782 φορές 5/5 έναντι 670 αναμενόμενων (+17%), απόδοση 75,8%. Από εδώ και πέρα μετράει μόνο σε κληρώσεις <b id="gefStartLbl"></b> και μετά.</div>
+      <div class="chips" id="gefChips"></div>
+      <h3 class="muted" style="font-size:13px;margin:14px 0 6px">Για την επόμενη κλήρωση</h3>
+      <div id="gefNext"></div>
+      <h3 class="muted" style="font-size:13px;margin:14px 0 6px">Τελευταίες κληρώσεις που έπαιξε</h3>
+      <div class="scroll-x"><table class="ptab" id="gefTable"></table></div>
+    </div>
+  </section>
+
   <section class="card mt" data-k="k8">
     <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🎯 10 στήλες × 8 αριθμοί (όλοι οι 80)</span><span id="k8Meta"></span></h2>
     <div class="cbody">
@@ -466,7 +478,7 @@ async function loadHistory(){
   var gaps = 0; for(var j=1;j<histPool.length;j++) if(histPool[j-1].id-histPool[j].id>1) gaps += histPool[j-1].id-histPool[j].id-1;
   $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις από '+HIST_DAYS+' ημέρες + σήμερα'+
     (failed||gaps ? ' · ⚠️ λείπουν '+gaps+' κληρώσεις'+(failed?' ('+failed+' ημέρες απέτυχαν)':'') : ' · πλήρες, χωρίς κενά');
-  renderPos(); renderSim(); renderFwd(); renderK8(); agTick();
+  renderPos(); renderSim(); renderFwd(); renderGef(); renderK8(); agTick();
 }
 
 /* νέα κλήρωση: αν άλλαξε η ημέρα (μεσάνυχτα Ελλάδας), οι χθεσινές πάνε στο ιστορικό */
@@ -926,6 +938,37 @@ function renderFwd(){
   $('fwdNext').innerHTML = nextH;
 }
 
+/* ---------- Κανόνας «Γέφυρα»: κοινοί αριθμοί 2 τελευταίων κληρώσεων → όλες οι πεντάδες τους στην επόμενη ---------- */
+var GEF_START = 1341594;                 // 10/10/2026 23:40 — πρώτη κλήρωση της παρακολούθησης
+function gefPay(m, h){ var w=0; for(var j=3;j<=5;j++) w += comb(h,j)*comb(m-h,5-j)*(PAYS[5][j]||0); return w; } // όλες οι πεντάδες από m αριθμούς, h επιτυχίες
+function gefCommon(a, b){ return a.arr.filter(function(x){ return b.set.has(x); }).sort(function(x,y){return x-y;}); }
+function renderGef(){
+  var card = document.querySelector && document.querySelector('.card[data-k="gef"]');
+  if(card && card.classList.contains('collapsed')) return;
+  var all = today.concat(histPool).slice().sort(function(a,b){return a.id-b.id;});
+  var st = all.find(function(d){return d.id===GEF_START;});
+  $('gefStartLbl').textContent = st ? 'από '+st.d.split('-').reverse().join('/')+' '+hm(st.t) : 'από την κλήρωση #'+GEF_START;
+  var n=0, played=0, cost=0, won=0, f5=0, e5=0, f4=0, rows=[];
+  for(var i=2;i<all.length;i++){
+    var d = all[i]; if(d.id<GEF_START) continue;
+    if(all[i-1].id!==d.id-1 || all[i-2].id!==d.id-2) continue;
+    n++;
+    var c = gefCommon(all[i-2], all[i-1]), m = c.length; if(m<5) continue;
+    var h = c.filter(function(x){return d.set.has(x);}).length, nf = comb(m,5), w = gefPay(m,h);
+    played++; cost += nf*STAKE; won += w; f5 += h>=5 ? comb(h,5) : 0; f4 += comb(h,4)*comb(m-h,1)*(h>=4?1:0); e5 += nf/1550.6;
+    rows.push('<tr><td>'+hm(d.t)+'</td><td>'+c.join(' ')+'</td><td>'+nf+'</td><td>'+h+'/'+m+'</td><td>'+(w?'<b style="color:var(--hit)">'+eur(w)+'</b>':'0€')+' <span class="muted">/ '+eur(nf*STAKE)+'</span></td></tr>');
+  }
+  $('gefMeta').textContent = n ? played+'/'+n+' κληρώσεις' : 'ξεκινάει';
+  $('gefChips').innerHTML = n ? chip('Κόστος → Κέρδη', eur(cost)+' → '+eur(won)) + chip('Απόδοση', '<b style="color:'+(won>=cost?'var(--hit)':'var(--miss)')+'">'+(cost?(won/cost*100).toFixed(1)+'%':'—')+'</b>') +
+      chip('5/5', f5+' <span class="muted">(αναμ. '+e5.toFixed(1)+')</span>') + chip('4/5', f4) + chip('Ιστορικό χρόνου', '75,8%')
+    : '<span class="muted">Η παρακολούθηση ξεκινάει με την κλήρωση #'+GEF_START+'.</span>';
+  $('gefTable').innerHTML = rows.length ? '<tr><th>Κλήρωση</th><th>Κοινοί αριθμοί</th><th>Πεντάδες</th><th>Επιτυχίες</th><th>Κέρδος / κόστος</th></tr>'+rows.reverse().slice(0,30).join('') : '<tr><td class="muted">Δεν έχει παίξει ακόμα.</td></tr>';
+  var L = all.length, nx = L>=2 && all[L-1].id===all[L-2].id+1 ? gefCommon(all[L-2], all[L-1]) : null;
+  $('gefNext').innerHTML = !nx ? '<span class="muted">Περιμένει δεδομένα.</span>' : nx.length<5 ?
+      '<span class="muted">Οι 2 τελευταίες κληρώσεις έχουν '+nx.length+' κοινούς ('+(nx.join(' ')||'—')+') — δεν παίζει.</span>' :
+      '<div class="order">'+nx.map(function(x){return '<i class="sc">'+x+'</i>';}).join('')+'</div><div class="muted" style="font-size:12px;margin-top:4px">'+nx.length+' κοινοί → '+comb(nx.length,5)+(nx.length===5?' πεντάδα':' πεντάδες')+' × 0,50€ = <b>'+eur(comb(nx.length,5)*STAKE)+'</b></div>';
+}
+
 /* ---------- AI Agent (Claude μέσω του κλειδιού API του χρήστη) ---------- */
 var AG = { key:'kl_ag_key', model:'kl_ag_model', on:'kl_ag_on', state:'kl_ag_state' };
 var AG_PRICE = { 'claude-haiku-5-5':[0.10,0.50], 'claude-sonnet-5-5':[2,10] }; // $ ανά εκατ. tokens (είσοδος, έξοδος)
@@ -969,6 +1012,9 @@ function sideOf(d){
 var PAR_NAME = {odd:'Μονά', even:'Ζυγά', draw:'Ισοπαλία'};
 function agTicketWin(dec, d){ // πληρωμή ενός δελτίου σε μία κλήρωση
   var o = {h:0, b:0, w:0};
+  if(dec.sys && dec.n){   // σύστημα «Γέφυρα»: όλες οι πεντάδες από τους αριθμούς του
+    o.h = dec.n.filter(function(x){return d.set.has(x);}).length; o.w = Math.round(gefPay(dec.n.length, o.h)*100)/100; return o;
+  }
   if(dec.n && dec.n.length){
     o.h = dec.n.filter(function(x){return d.set.has(x);}).length;
     o.b = dec.sc && d.sc.length ? dec.n.filter(function(x){return d.sc.indexOf(x)>=0;}).length : 0;
@@ -1073,7 +1119,7 @@ function agPrompt(s, target){
   tk.forEach(function(x){ Object.keys(x.res||{}).forEach(function(id){ var o=x.res[id], c=(x.perDraw!=null?x.perDraw:x.stake*(x.sc?2:1)); nRun++; spent+=c; won+=o.w; if(o.w>0) wins++;
     var g=(x.k||0)+' αρ.'+(x.sc?' +2η':''); byK[g]=byK[g]||{n:0,c:0,w:0}; byK[g].n++; byK[g].c+=c; byK[g].w+=o.w; }); });
   var byIdH = {}; all.forEach(function(d){ byIdH[d.id]=d; });
-  var hind = s.log.filter(function(x){return x.play && x.done && x.k;}).slice(-8).map(function(x){
+  var hind = s.log.filter(function(x){return x.play && x.done && x.k && !x.sys;}).slice(-8).map(function(x){
     var hs = agHindsight(x, byIdH, 12); if(!hs) return null;
     return '#'+x.id+' ['+x.n.join(' ')+'] '+x.stake+'€'+(x.sc?' +2η':'')+': επόμενες '+hs.n+' → επιτυχίες '+hs.hits.join(',')+' · θα κόστιζε '+hs.cost+'€, θα έφερνε '+hs.won+'€'+(hs.best>=Math.max(3,x.k-1)?' · ⚠ '+hs.best+'/'+x.k+' στην +'+hs.bestAt:'');
   }).filter(Boolean).join('\n') || '(δεν υπάρχουν ακόμα)';
@@ -1212,6 +1258,7 @@ async function agCall(key, model, msgs){
   return {j:JSON.parse(txt.slice(a, b+1)), txt:txt, usage:data.usage||{}, think:think};
 }
 async function agAsk(force){
+  if(agLoad().gefOn){ agGef(force); return; }
   var key = lsGet(AG.key); if(!key){ $('agDec').innerHTML = '<span class="muted">Βάλε κλειδί API στις ρυθμίσεις.</span>'; return; }
   if(agBusy || !lastId) return;
   var s = agSettle(), target = lastId + 1;
@@ -1327,7 +1374,8 @@ function renderAgent(){
   var state = !$('agOn').checked ? '⏸ σε παύση' : (s.pauseUntil && target < s.pauseUntil) ? '☕ διάλειμμα έως τις '+agWhen(s.pauseUntil) : '🟢 ενεργός';
   $('agStatus').innerHTML = chip('Διάθεση', esc(s.mood)) + chip('Ταμείο', '<span style="color:'+(s.bank>=s.start?'var(--hit)':'var(--miss)')+'">'+eur(s.bank)+'</span>') +
     chip('Κόστος API σήμερα', '$'+(s.cost[day]||0).toFixed(4)) + chip('Κατάσταση', state) +
-    (agSixMode(s) ? chip('🎯 Μόνο '+agModeName(agModeK(s),1), 'έως '+hm(s.sixUntil))+'<button class="btn" id="agSixOff">✖ Τέλος '+(agModeK(s)===5?'πεντάδων':'εξάδων')+'</button>' : '<button class="btn" id="agSixOn" title="Για 1 ώρα: μόνο εξάδες, 0,50€, μία κλήρωση τη φορά">🎯 Μόνο εξάδες 1 ώρα</button><button class="btn" id="agFiveOn" title="Για 1 ώρα: μόνο πεντάδες, 0,50€, μία κλήρωση τη φορά">🎯 Μόνο πεντάδες 1 ώρα</button>') +
+    (s.gefOn ? chip('🌉 Μόνο Γέφυρα', 'ενεργό')+'<button class="btn" id="agGefOff">✖ Τέλος Γέφυρας</button>' : '<button class="btn" id="agGefOn" title="Ο πράκτορας παίζει μόνο τον κανόνα Γέφυρα, χωρίς AI">🌉 Μόνο Γέφυρα</button>') +
+    (s.gefOn ? '' : agSixMode(s) ? chip('🎯 Μόνο '+agModeName(agModeK(s),1), 'έως '+hm(s.sixUntil))+'<button class="btn" id="agSixOff">✖ Τέλος '+(agModeK(s)===5?'πεντάδων':'εξάδων')+'</button>' : '<button class="btn" id="agSixOn" title="Για 1 ώρα: μόνο εξάδες, 0,50€, μία κλήρωση τη φορά">🎯 Μόνο εξάδες 1 ώρα</button><button class="btn" id="agFiveOn" title="Για 1 ώρα: μόνο πεντάδες, 0,50€, μία κλήρωση τη φορά">🎯 Μόνο πεντάδες 1 ώρα</button>') +
     ((s.pauseUntil && target < s.pauseUntil) ? '<button class="btn" id="agNudge" title="Σταματά το διάλειμμα και τον ρωτάει αμέσως">👉 Σκούντα τον</button>' : '');
   var cur = s.log.filter(function(x){return x.id===target;}).slice(-1)[0];
   $('agDecLbl').textContent = 'Τελευταία απόφαση';
@@ -1422,15 +1470,37 @@ function renderAgentStatusOnly(){ var el = $('agSync'); if(el) el.textContent = 
 
 /* «Τι θα γινόταν αν…»: πώς θα πήγαιναν οι αριθμοί ενός τελειωμένου δελτίου στις επόμενες κληρώσεις */
 function agHindsight(x, byId, L){
-  if(!x.play || !x.done || !x.k) return null;
+  if(!x.play || !x.done || !x.k || x.sys) return null;
   var r = agRange(x), out = [], won = 0, best = 0, bestAt = 0;
   for(var id=r[1]+1; id<=r[1]+L; id++){ var d = byId[id]; if(!d) break; var o = agTicketWin({n:x.n,k:x.k,sc:x.sc,stake:x.stake}, d); out.push(o.h); won += o.w; if(o.h>best){ best=o.h; bestAt=id-r[1]; } }
   if(!out.length) return null;
   return {n:out.length, hits:out, won:Math.round(won*100)/100, cost:Math.round(out.length*x.stake*(x.sc?2:1)*100)/100, best:best, bestAt:bestAt};
 }
 
+function agGef(force){ // ο πράκτορας παίζει μόνο τον κανόνα «Γέφυρα» (χωρίς AI)
+  if(!lastId) return;
+  var s = agSettle(), target = lastId+1;
+  if(!force && s.log.some(function(x){return x.id===target;})) return;
+  var all = today.concat(histPool), a = all.find(function(d){return d.id===lastId;}), b = all.find(function(d){return d.id===lastId-1;});
+  if(!a || !b) return;
+  var c = gefCommon(b, a), m = c.length, dec = { id:target, t:Date.now(), play:false, mood:'🌉 Γέφυρα', model:'κανόνας', draws:1, start:0, bankBefore:s.bank, appr:'Γέφυρα', note:'', why:'' };
+  if(m<5) dec.thought = 'Γέφυρα: οι 2 τελευταίες κληρώσεις ('+hm(b.t)+', '+hm(a.t)+') έχουν μόνο '+m+' κοινούς αριθμούς'+(m?' ('+c.join(' ')+')':'')+' — δεν παίζω σε αυτή.';
+  else {
+    var nf = comb(m,5), cost = Math.round(nf*0.5*100)/100;
+    if(cost > s.bank) dec.thought = 'Γέφυρα: '+m+' κοινοί → '+nf+' πεντάδες = '+eur(cost)+', δεν φτάνει το ταμείο ('+eur(s.bank)+').';
+    else {
+      dec.play = true; dec.n = c; dec.k = m; dec.sys = 5; dec.stake = 0.5; dec.sc = false; dec.perDraw = cost; dec.cost = cost; dec.res = {}; dec.sig = null;
+      dec.thought = 'Γέφυρα: οι κληρώσεις των '+hm(b.t)+' και '+hm(a.t)+' έχουν κοινούς τους '+c.join(' ')+' ('+m+'). Παίζω '+(nf===1?'την πεντάδα':'όλες τις '+nf+' πεντάδες τους')+' × 0,50€ = '+eur(cost)+' για την επόμενη κλήρωση.';
+      s.bank = Math.round((s.bank-cost)*100)/100;
+    }
+  }
+  s.log = s.log.filter(function(x){return x.id!==target || x.play;});
+  s.log.push(dec); agSave(s); renderAgent();
+}
 function agTick(){ // σε κάθε νέα κλήρωση: κλείσιμο αποτελεσμάτων και νέα απόφαση
   renderAgent();
+  var s = agLoad();
+  if(s.gefOn){ if($('agOn').checked) agGef(false); return; }
   if($('agOn').checked && lsGet(AG.key)) agAsk(false);
 }
 function ahOpen(on){
@@ -1500,7 +1570,7 @@ function renderK8(){
   }).join('') || '<span class="muted">Η δοκιμή ξεκινάει με την κλήρωση #'+K8_START+'.</span>';
 }
 
-function renderAll(){ renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderK8(); agTick(); }
+function renderAll(){ renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderK8(); agTick(); }
 
 /* ---------- Countdown ---------- */
 function tick(){
@@ -1550,7 +1620,7 @@ $('posBody').addEventListener('click',function(e){ var r=e.target.closest('tr[da
 var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-k]'));
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); if(!on && c.dataset.k==='sim') renderSim(); if(!on && c.dataset.k==='fwd') renderFwd(); if(!on && c.dataset.k==='k8') renderK8(); }
+function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); if(!on && c.dataset.k==='sim') renderSim(); if(!on && c.dataset.k==='fwd') renderFwd(); if(!on && c.dataset.k==='gef') renderGef(); if(!on && c.dataset.k==='k8') renderK8(); }
 function updAllBtn(){
   var allClosed = cards.every(function(c){return c.classList.contains('collapsed');});
   $('btnAll').textContent = allClosed ? '▸ Άνοιγμα όλων' : '▾ Κλείσιμο όλων';
@@ -1597,6 +1667,7 @@ $('agModel').addEventListener('change',function(){ lsSet(AG.model,$('agModel').v
 $('agOn').addEventListener('change',function(){ lsSet(AG.on,$('agOn').checked?'1':'0'); agTick(); });
 $('agAsk').addEventListener('click',function(){ agAsk(true); });
 $('agStatus').addEventListener('click',function(e){ var id = e.target && e.target.id;
+  if(id==='agGefOn' || id==='agGefOff'){ var g=agLoad(); g.gefOn = id==='agGefOn'; if(g.gefOn){ g.sixUntil=0; g.pauseUntil=0; } agSave(g); renderAgent(); if(g.gefOn) agGef(false); return; }
   if(id==='agSixOn' || id==='agFiveOn' || id==='agSixOff'){ var s0=agLoad(), on = id!=='agSixOff'; s0.sixUntil = on ? Date.now()+3600000 : 0; if(on){ s0.modeK = id==='agFiveOn' ? 5 : 6; s0.pauseUntil = 0; } agSave(s0); renderAgent(); if(on) agAsk(true); return; }
   if(id!=='agNudge') return; var s=agLoad(); s.pauseUntil=0; s.nudge=Date.now(); agSave(s); renderAgent(); agAsk(true); });
 $('agReset').addEventListener('click',function(){ if(confirm('Νέο εικονικό ταμείο 100€; Το ημερολόγιο θα σβηστεί, τα μαθήματα μένουν.')){ var s=agLoad(); agSave({bank:100,start:100,log:[],notes:'',lessons:s.lessons||[],mood:'🙂 ήρεμος',cost:s.cost,since:Date.now(),pauseUntil:0}); renderAgent(); } });
