@@ -328,6 +328,11 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
       <div id="gefNext"></div>
       <h3 class="muted" style="font-size:13px;margin:14px 0 6px">Τελευταίες κληρώσεις που έπαιξε</h3>
       <div class="scroll-x"><table class="ptab" id="gefTable"></table></div>
+      <h3 style="font-size:15px;margin:18px 0 6px">🎯 Σήμα τετράδων (μία βολή τη μέρα, 7,50€)</h3>
+      <div class="muted" style="margin-bottom:8px">Όταν οι 2 τελευταίες κληρώσεις έχουν <b>ακριβώς 6 κοινούς αριθμούς</b>, παίζονται στην επόμενη κλήρωση και οι <b>15 τετράδες</b> τους × 0,50€ = 7,50€. Αν βγουν 4 από τους 6 → 69€, 5 από τους 6 → 270€, και οι 6 → 750€ (1 στις 31 σήματα πιάνει 4+ από τους 6). Παρακάτω: τι θα έκανε σε κάθε σήμα του ιστορικού που έχει η σελίδα, και αν το έπαιζες μόνο στο <b>πρώτο σήμα κάθε μέρας</b>.</div>
+      <div id="g4Now"></div>
+      <div class="chips" id="g4Chips"></div>
+      <div id="g4List"></div>
     </div>
   </section>
 
@@ -955,6 +960,47 @@ function renderFwd(){
 var GEF_START = 1341594;                 // 10/10/2026 23:40 — πρώτη κλήρωση της παρακολούθησης
 function gefPay(m, h){ var w=0; for(var j=3;j<=5;j++) w += comb(h,j)*comb(m-h,5-j)*(PAYS[5][j]||0); return w; } // όλες οι πεντάδες από m αριθμούς, h επιτυχίες
 function gefCommon(a, b){ return a.arr.filter(function(x){ return b.set.has(x); }).sort(function(x,y){return x-y;}); }
+function g4Fours(c){ var out=[]; for(var a=0;a<c.length;a++) for(var b=a+1;b<c.length;b++) for(var e=b+1;e<c.length;e++) for(var f=e+1;f<c.length;f++) out.push([c[a],c[b],c[e],c[f]]); return out; }
+function g4Grid(fours, d){
+  return '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px;margin-top:6px">'+fours.map(function(f){
+    var h = d ? f.filter(function(x){return d.set.has(x);}).length : -1, w = d ? (PAYS[4][h]||0) : 0;
+    return '<div style="border:1px solid var(--line);border-radius:8px;padding:4px 6px;font-size:13px;'+(h===4?'background:rgba(34,197,94,.18)':'')+'"><b>'+f.join(' ')+'</b>'+(d?' <span class="muted">'+h+'/4</span>'+(w?' <b style="color:var(--hit)">'+eur(w)+'</b>':''):'')+'</div>';
+  }).join('')+'</div>';
+}
+function renderG4(all){
+  var sigs = [];
+  for(var i=2;i<all.length;i++){
+    var d = all[i]; if(all[i-1].id!==d.id-1 || all[i-2].id!==d.id-2) continue;
+    var c = gefCommon(all[i-2], all[i-1]); if(c.length!==6) continue;
+    var fours = g4Fours(c), h = c.filter(function(x){return d.set.has(x);}).length, w = 0, n4 = 0;
+    fours.forEach(function(f){ var k = f.filter(function(x){return d.set.has(x);}).length; w += PAYS[4][k]||0; if(k===4) n4++; });
+    sigs.push({d:d, c:c, fours:fours, h:h, w:w, n4:n4, a:all[i-2], b:all[i-1]});
+  }
+  var firstOfDay = {}; sigs.forEach(function(s){ if(!firstOfDay[s.d.d]) { firstOfDay[s.d.d] = s; s.first = true; } });
+  var sum = function(arr){ return arr.reduce(function(o,s){ o.n++; o.c+=7.5; o.w+=s.w; o.h4+=s.n4?1:0; return o; }, {n:0,c:0,w:0,h4:0}); };
+  var A = sum(sigs), F = sum(sigs.filter(function(s){return s.first;}));
+  var days = Object.keys(firstOfDay).length;
+  $('g4Chips').innerHTML = sigs.length ?
+    chip('Όλα τα σήματα', A.n+' · '+eur(A.c)+' → '+eur(A.w)+' ('+(A.w/A.c*100).toFixed(0)+'%) · με 4/4: '+A.h4) +
+    chip('Μόνο το 1ο σήμα κάθε μέρας', F.n+' μέρες · '+eur(F.c)+' → '+eur(F.w)+' ('+(F.w/F.c*100).toFixed(0)+'%) · με 4/4: '+F.h4)
+    : '<span class="muted">Δεν υπάρχει ακόμα σήμα στο ιστορικό της σελίδας.</span>';
+  // σήμα για την επόμενη κλήρωση
+  var L = all.length, nx = L>=2 && all[L-1].id===all[L-2].id+1 ? gefCommon(all[L-2], all[L-1]) : null;
+  var todayKey = L ? all[L-1].d : '', playedToday = sigs.some(function(s){ return s.d.d===todayKey; });
+  if(nx && nx.length===6){
+    $('g4Now').innerHTML = '<div style="border:2px solid var(--hit);border-radius:12px;padding:10px;margin:8px 0">'+
+      '<div style="font-size:15px"><b>🎯 ΣΗΜΑ για την κλήρωση των '+hm(expectedTime())+'</b>'+(playedToday?' <span class="muted">(έχει ήδη υπάρξει σήμα σήμερα)</span>':' <span style="color:var(--hit)">— πρώτο σήμα της ημέρας</span>')+'</div>'+
+      '<div class="muted" style="margin:4px 0">Κοινοί των '+hm(all[L-2].t)+' και '+hm(all[L-1].t)+':</div><div class="order">'+nx.map(function(x){return '<i class="sc">'+x+'</i>';}).join('')+'</div>'+
+      '<div style="margin-top:6px">15 τετράδες × 0,50€ = <b>7,50€</b> · για <b>μία κλήρωση</b>:</div>'+g4Grid(g4Fours(nx), null)+'</div>';
+  } else {
+    $('g4Now').innerHTML = '<div class="muted" style="margin:8px 0">Τώρα δεν υπάρχει σήμα'+(nx?' — οι 2 τελευταίες έχουν '+nx.length+' κοινούς'+(nx.length?' ('+nx.join(' ')+')':''):'')+'. Σήμα = ακριβώς 6 κοινοί.'+(playedToday?' Το σημερινό πρώτο σήμα έχει ήδη περάσει (δες παρακάτω).':'')+'</div>';
+  }
+  $('g4List').innerHTML = sigs.slice(-25).reverse().map(function(s){
+    var res = s.h>=4 ? '<b style="color:var(--hit)">'+s.h+' από 6 → '+eur(s.w)+'</b>' : s.h+' από 6 → '+(s.w?eur(s.w):'0€');
+    return '<details style="border-bottom:1px solid var(--line);padding:6px 0"><summary style="cursor:pointer">'+(s.first?'⭐ ':'')+s.d.d.split('-').reverse().slice(0,2).join('/')+' '+hm(s.d.t)+' · κοινοί <b>'+s.c.join(' ')+'</b> · '+res+' <span class="muted">/ 7,50€</span></summary>'+
+      '<div class="muted" style="font-size:12px;margin-top:4px">Κοινοί των '+hm(s.a.t)+' και '+hm(s.b.t)+' · κλήρωση '+hm(s.d.t)+': '+s.d.arr.slice().sort(function(x,y){return x-y;}).join(' ')+'</div>'+g4Grid(s.fours, s.d)+'</details>';
+  }).join('') + (sigs.length ? '<div class="muted" style="font-size:12px;margin-top:6px">⭐ = πρώτο σήμα της ημέρας (η «μία βολή»). Πάτα σε ένα σήμα για τις 15 τετράδες και τι έπιασε η καθεμία.</div>' : '');
+}
 function renderGef(){
   var card = document.querySelector && document.querySelector('.card[data-k="gef"]');
   if(card && card.classList.contains('collapsed')) return;
@@ -971,6 +1017,7 @@ function renderGef(){
     played++; cost += nf*STAKE; won += w; f5 += h>=5 ? comb(h,5) : 0; f4 += comb(h,4)*comb(m-h,1)*(h>=4?1:0); e5 += nf/1550.6;
     rows.push('<tr><td>'+hm(d.t)+'</td><td>'+c.join(' ')+'</td><td>'+nf+'</td><td>'+h+'/'+m+'</td><td>'+(w?'<b style="color:var(--hit)">'+eur(w)+'</b>':'0€')+' <span class="muted">/ '+eur(nf*STAKE)+'</span></td></tr>');
   }
+  renderG4(all);
   $('gefMeta').textContent = n ? played+'/'+n+' κληρώσεις' : 'ξεκινάει';
   $('gefChips').innerHTML = n ? chip('Κόστος → Κέρδη', eur(cost)+' → '+eur(won)) + chip('Απόδοση', '<b style="color:'+(won>=cost?'var(--hit)':'var(--miss)')+'">'+(cost?(won/cost*100).toFixed(1)+'%':'—')+'</b>') +
       chip('5/5', f5+' <span class="muted">(αναμ. '+e5.toFixed(1)+')</span>') + chip('4/5', f4) + chip('Ιστορικό χρόνου', '75,8%')
