@@ -349,6 +349,17 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     </div>
   </section>
 
+  <section class="card mt" data-k="alc">
+    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🧪 Αλχημεία</span><span id="alcMeta"></span></h2>
+    <div class="cbody">
+      <div class="muted" style="margin-bottom:8px">Συνταγή με 6 στοιχεία: 🜃 Γη = η μέρα · 🜄 Νερό = ο μήνας · 🜂 Φωτιά = άθροισμα ψηφίων της ημερομηνίας · 🜁 Αέρας = η ώρα της κλήρωσης · ✨ Αιθέρας = ο 1ος αριθμός της προηγούμενης κλήρωσης · 🧂 Άλας = μέρα + μήνας. <b>Θερμόμετρο</b>: πόσες φορές βγήκε ο αριθμός από τις 00:00 σε σχέση με τον μέσο όρο. Αν είναι <b>ζεστός</b> (+10% και πάνω) «καίγεται» → μπαίνει ο <b>καθρέφτης</b> του (81−x)· αν καίγεται κι αυτός → ο πιο κρύος της ίδιας γραμμής του ταμπλό. <b>Πεντάδα</b> = τα 5 πρώτα στοιχεία, <b>εξάδα</b> = και τα 6. Στήλη 0,50€.</div>
+      <div id="alcNow"></div>
+      <div class="chips" id="alcChips"></div>
+      <h3 class="muted" style="font-size:13px;margin:14px 0 6px">Τελευταίες κληρώσεις</h3>
+      <div class="scroll-x"><table class="ptab" id="alcTable"></table></div>
+    </div>
+  </section>
+
   <section class="card mt" data-k="k8">
     <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🎯 10 στήλες × 8 αριθμοί (όλοι οι 80)</span><span id="k8Meta"></span></h2>
     <div class="cbody">
@@ -496,7 +507,7 @@ async function loadHistory(){
   var gaps = 0; for(var j=1;j<histPool.length;j++) if(histPool[j-1].id-histPool[j].id>1) gaps += histPool[j-1].id-histPool[j].id-1;
   $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις από '+HIST_DAYS+' ημέρες + σήμερα'+
     (failed||gaps ? ' · ⚠️ λείπουν '+gaps+' κληρώσεις'+(failed?' ('+failed+' ημέρες απέτυχαν)':'') : ' · πλήρες, χωρίς κενά');
-  renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderK8(); agTick();
+  renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderK8(); agTick();
 }
 
 /* νέα κλήρωση: αν άλλαξε η ημέρα (μεσάνυχτα Ελλάδας), οι χθεσινές πάνε στο ιστορικό */
@@ -1081,6 +1092,65 @@ function renderRally(){
   feed.sort(function(a,b){ return b.id-a.id || b.n-a.n; });
   $('rlFeed').innerHTML = feed.slice(0,40).map(function(f){ var d = byId[f.id];
     return '<div style="display:block;padding:5px 2px;border-bottom:1px solid var(--line);font-size:13px"><span class="muted">'+(d?hm(d.t):'#'+f.id)+'</span> — η <b>'+f.k+'</b> έφτασε τις <b style="color:'+(f.n>=5?'var(--hit)':'var(--text)')+'">'+f.n+'</b>'+(f.n>=5?' 🏆':'')+'</div>'; }).join('') || '<span class="muted">Καμία πεντάδα δεν έχει φτάσει ακόμα τις 4.</span>';
+}
+
+/* ---------- 🧪 Αλχημεία: συνταγή ημερομηνίας/ώρας με «θερμόμετρο» ημέρας ---------- */
+var ALC_START = 1341868;                 // 11/10/2026 22:35 — από εδώ μετράει «ζωντανά»
+function alcRecipe(cnt, n, prevFirst, tMs){
+  var dt = new Date(tMs), D = dt.getDate(), M = dt.getMonth()+1, Y = dt.getFullYear(), H = dt.getHours() || 24;
+  var digits = String(D)+String(M)+String(Y), ds = 0; for(var i=0;i<digits.length;i++) ds += +digits[i];
+  var E = n/4, temp = function(x){ return n<12 ? 'χλιαρός' : cnt[x]>=E*1.1 ? 'ζεστός' : cnt[x]<=E*0.9 ? 'κρύος' : 'χλιαρός'; };
+  var els = [['🜃 Γη','η μέρα',D],['🜄 Νερό','ο μήνας',M],['🜂 Φωτιά','άθροισμα ψηφίων '+D+'/'+M+'/'+Y,ds],['🜁 Αέρας','η ώρα',H],['✨ Αιθέρας','1ος της προηγούμενης κλήρωσης',prevFirst],['🧂 Άλας','μέρα + μήνας',D+M]];
+  var chosen = [], rows = [];
+  els.forEach(function(e){
+    var x = ((e[2]-1)%80+80)%80+1, y = x, why = x+' ('+(cnt[x]||0)+', '+temp(x)+')';
+    if(temp(x)==='ζεστός' || chosen.indexOf(x)>=0){
+      y = 81-x; why += ' → καθρέφτης '+y+' ('+(cnt[y]||0)+', '+temp(y)+')';
+      if(temp(y)==='ζεστός' || chosen.indexOf(y)>=0){
+        var base = Math.floor((x-1)/10)*10, best = null;
+        for(var z=base+1; z<=base+10; z++) if(chosen.indexOf(z)<0 && (best===null || (cnt[z]||0)<(cnt[best]||0))) best = z;
+        y = best; why += ' → πιο κρύος της γραμμής: '+y+' ('+(cnt[y]||0)+', '+temp(y)+')';
+      }
+    }
+    chosen.push(y); rows.push({el:e[0], src:e[1], why:why, y:y});
+  });
+  return {rows:rows, five:chosen.slice(0,5), six:chosen.slice()};
+}
+function renderAlc(){
+  var card = document.querySelector && document.querySelector('.card[data-k="alc"]');
+  if(card && card.classList.contains('collapsed')) return;
+  var all = today.concat(histPool).slice().sort(function(a,b){return a.id-b.id;});
+  if(all.length<2){ $('alcNow').innerHTML='<span class="muted">Περιμένει κληρώσεις.</span>'; return; }
+  var cnt = new Array(81).fill(0), n = 0, curDay = null, tot = {all:[0,0,0,0,0], live:[0,0,0,0,0]}, best5 = 0, best6 = 0, hist = [];
+  // [κληρώσεις, κόστος, κέρδος 5άδας, κέρδος 6άδας, 4+ σε 5άδα]
+  for(var i=1;i<all.length;i++){
+    var d = all[i], p = all[i-1];
+    if(d.d!==curDay){ curDay = d.d; cnt = new Array(81).fill(0); n = 0; }
+    if(p.id===d.id-1){
+      var rc = alcRecipe(cnt, n, p.arr[0], d.t);
+      var h5 = rc.five.filter(function(x){return d.set.has(x);}).length, h6 = rc.six.filter(function(x){return d.set.has(x);}).length;
+      var w5 = PAYS[5][h5]||0, w6 = PAYS[6][h6]||0;
+      [tot.all].concat(d.id>=ALC_START?[tot.live]:[]).forEach(function(a){ a[0]++; a[1]+=1; a[2]+=w5; a[3]+=w6; if(h5>=4) a[4]++; });
+      best5 = Math.max(best5,h5); best6 = Math.max(best6,h6);
+      hist.push({d:d, five:rc.five, six:rc.six, h5:h5, h6:h6, w:w5+w6});
+    }
+    d.arr.forEach(function(x){ cnt[x]++; }); n++;
+  }
+  // συνταγή για την επόμενη κλήρωση
+  var last = all[all.length-1], nt = last.t + 300000, ndate = dateOf(nt), c2 = new Array(81).fill(0), n2 = 0;
+  all.forEach(function(d){ if(d.d===ndate){ d.arr.forEach(function(x){ c2[x]++; }); n2++; } });
+  var rc = alcRecipe(c2, n2, last.arr[0], nt);
+  $('alcNow').innerHTML = '<div style="border:2px solid #8b5cf6;border-radius:12px;padding:10px;margin:6px 0">'+
+    '<div><b>Για την κλήρωση των '+hm(nt)+'</b> <span class="muted">(θερμόμετρο: '+n2+' κληρώσεις σήμερα, μέσος όρος '+(n2/4).toFixed(1)+')</span></div>'+
+    '<table class="ptab" style="margin-top:6px">'+rc.rows.map(function(r){ return '<tr><td style="white-space:nowrap">'+r.el+'<div class="muted" style="font-size:11px">'+r.src+'</div></td><td style="font-size:12.5px">'+r.why+'</td><td><b>'+r.y+'</b></td></tr>'; }).join('')+'</table>'+
+    '<div style="margin-top:8px">🧪 <b>Πεντάδα:</b></div><div class="order">'+rc.five.slice().sort(function(a,b){return a-b;}).map(function(x){return '<i class="sc">'+x+'</i>';}).join('')+'</div>'+
+    '<div style="margin-top:6px">🧪 <b>Εξάδα:</b></div><div class="order">'+rc.six.slice().sort(function(a,b){return a-b;}).map(function(x){return '<i class="sc">'+x+'</i>';}).join('')+'</div></div>';
+  var ch = function(lab,a){ return a[0] ? chip(lab, a[0]+' κληρ. · πεντάδα '+eur(a[0]*0.5)+' → '+eur(a[2])+' ('+(a[2]/(a[0]*0.5)*100).toFixed(0)+'%) · εξάδα '+eur(a[0]*0.5)+' → '+eur(a[3])+' ('+(a[3]/(a[0]*0.5)*100).toFixed(0)+'%)') : ''; };
+  $('alcChips').innerHTML = (tot.live[0] ? ch('Ζωντανά (από #'+ALC_START+')', tot.live) : chip('Ζωντανά','ξεκινάει με την #'+ALC_START)) + ch('Ιστορικό σελίδας', tot.all) + chip('Καλύτερο', best5+'/5 · '+best6+'/6');
+  $('alcMeta').textContent = tot.live[0] ? tot.live[0]+' κληρώσεις ζωντανά' : '';
+  $('alcTable').innerHTML = '<tr><th>Κλήρωση</th><th>Πεντάδα</th><th>Εξάδα</th><th>Κέρδος</th></tr>' + hist.slice(-20).reverse().map(function(r){
+    var f = function(arr){ return arr.slice().sort(function(a,b){return a-b;}).map(function(x){ return r.d.set.has(x)?'<b style="color:var(--hit)">'+x+'</b>':x; }).join(' '); };
+    return '<tr><td>'+hm(r.d.t)+'</td><td style="white-space:nowrap">'+f(r.five)+' <span class="muted">'+r.h5+'/5</span></td><td style="white-space:nowrap">'+f(r.six)+' <span class="muted">'+r.h6+'/6</span></td><td>'+(r.w?'<b style="color:var(--hit)">'+eur(r.w)+'</b>':'0€')+'</td></tr>'; }).join('');
 }
 
 /* ---------- AI Agent (Claude μέσω του κλειδιού API του χρήστη) ---------- */
@@ -1684,7 +1754,7 @@ function renderK8(){
   }).join('') || '<span class="muted">Η δοκιμή ξεκινάει με την κλήρωση #'+K8_START+'.</span>';
 }
 
-function renderAll(){ renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderK8(); agTick(); }
+function renderAll(){ renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderK8(); agTick(); }
 
 /* ---------- Countdown ---------- */
 function tick(){
@@ -1734,7 +1804,7 @@ $('posBody').addEventListener('click',function(e){ var r=e.target.closest('tr[da
 var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-k]'));
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); if(!on && c.dataset.k==='sim') renderSim(); if(!on && c.dataset.k==='fwd') renderFwd(); if(!on && c.dataset.k==='gef') renderGef(); if(!on && c.dataset.k==='rally') renderRally(); if(!on && c.dataset.k==='k8') renderK8(); }
+function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); if(!on && c.dataset.k==='sim') renderSim(); if(!on && c.dataset.k==='fwd') renderFwd(); if(!on && c.dataset.k==='gef') renderGef(); if(!on && c.dataset.k==='rally') renderRally(); if(!on && c.dataset.k==='alc') renderAlc(); if(!on && c.dataset.k==='k8') renderK8(); }
 function updAllBtn(){
   var allClosed = cards.every(function(c){return c.classList.contains('collapsed');});
   $('btnAll').textContent = allClosed ? '▸ Άνοιγμα όλων' : '▾ Κλείσιμο όλων';
