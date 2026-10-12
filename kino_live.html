@@ -339,7 +339,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   <section class="card mt" data-k="rally">
     <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🏁 Ράλι πεντάδων</span><span id="rlMeta"></span></h2>
     <div class="cbody">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><select id="rlWin"><option value="day">Σήμερα (από 00:00)</option><option value="24">Τελευταίες 24 ώρες</option></select>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><select id="rlWin"><option value="day">Σήμερα (από 00:00)</option><option value="24">Τελευταίες 24 ώρες</option></select><label class="muted" style="font-size:12px">🔴 Hot στις τελευταίες</label><select id="rlHot"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="50">50</option></select><span class="muted" style="font-size:12px">κληρώσεις <span id="rlHotInfo"></span></span>
         <span class="muted" style="font-size:12px">Μπαίνουν στο ράλι οι πεντάδες που βγήκαν ολόκληρες <b>3 φορές</b>· μετά βλέπουμε ποια φτάνει 4, 5, 6… Ρεκόρ μέρας στον τελευταίο χρόνο: 5 φορές (35% των ημερών), 6 (62%), 7 (3%), ποτέ 8.</span></div>
       <div class="chips" id="rlChips"></div>
       <h3 class="muted" style="font-size:13px;margin:12px 0 6px">Κατάταξη</h3>
@@ -1067,7 +1067,12 @@ function rlBuild(draws){ // draws: παλιό→νέο· επαυξητικά: �
 function renderRally(){
   var card = document.querySelector && document.querySelector('.card[data-k="rally"]');
   if(card && card.classList.contains('collapsed')) return;
-  var mode = $('rlWin').value, draws;
+  var mode = $('rlWin').value, draws, HX = +($('rlHot').value||10), HMIN = Math.ceil(HX*0.25*1.5);
+  var recent = today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;}).slice(0,HX), hc = new Array(81).fill(0);
+  recent.forEach(function(d){ d.arr.forEach(function(x){ hc[x]++; }); });
+  var hotSet = {}; for(var q=1;q<=80;q++) if(hc[q]>=HMIN) hotSet[q]=1;
+  var hotK = function(k){ return k.split(' ').map(function(x){ return hotSet[+x] ? '<span style="color:#ef4444" title="'+hc[+x]+' φορές στις '+HX+'">'+x+'</span>' : x; }).join(' '); };
+  $('rlHotInfo').textContent = '(hot = '+HMIN+'+ φορές · τώρα: '+(Object.keys(hotSet).map(Number).sort(function(a,b){return a-b;}).join(' ')||'κανένας')+')';
   if(mode==='day') draws = today.slice();
   else draws = today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;}).slice(0,288);
   draws.sort(function(a,b){return a.id-b.id;});
@@ -1088,11 +1093,11 @@ function renderRally(){
   var top = rows.slice(0,20);
   $('rlTable').innerHTML = top.length ? '<tr><th>#</th><th>Πεντάδα</th><th>Φορές</th><th>Πότε βγήκε</th></tr>'+top.map(function(r,i){
       var hot = r.at===lastId0;
-      return '<tr'+(hot?' style="background:rgba(139,92,246,.15)"':'')+'><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+r.k+'</b></td><td><b style="color:'+(r.n>=5?'var(--hit)':'var(--text)')+'">'+r.n+'</b>'+(hot?' 🔥':'')+'</td><td class="muted" style="font-size:12px">'+r.ids.map(function(id){return byId[id]?hm(byId[id].t):'#'+id;}).join(', ')+'</td></tr>';
+      return '<tr'+(hot?' style="background:rgba(139,92,246,.15)"':'')+'><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+hotK(r.k)+'</b></td><td><b style="color:'+(r.n>=5?'var(--hit)':'var(--text)')+'">'+r.n+'</b>'+(hot?' 🔥':'')+'</td><td class="muted" style="font-size:12px">'+r.ids.map(function(id){return byId[id]?hm(byId[id].t):'#'+id;}).join(', ')+'</td></tr>';
     }).join('') + (rows.length>20 ? '<tr><td colspan="4" class="muted">… και άλλες '+(rows.length-20)+' με 3+ φορές</td></tr>' : '') : '<tr><td class="muted">Καμία ακόμα.</td></tr>';
   feed.sort(function(a,b){ return b.id-a.id || b.n-a.n; });
   $('rlFeed').innerHTML = feed.slice(0,40).map(function(f){ var d = byId[f.id];
-    return '<div style="display:block;padding:5px 2px;border-bottom:1px solid var(--line);font-size:13px"><span class="muted">'+(d?hm(d.t):'#'+f.id)+'</span> — η <b>'+f.k+'</b> έφτασε τις <b style="color:'+(f.n>=5?'var(--hit)':'var(--text)')+'">'+f.n+'</b>'+(f.n>=5?' 🏆':'')+'</div>'; }).join('') || '<span class="muted">Καμία πεντάδα δεν έχει φτάσει ακόμα τις 4.</span>';
+    return '<div style="display:block;padding:5px 2px;border-bottom:1px solid var(--line);font-size:13px"><span class="muted">'+(d?hm(d.t):'#'+f.id)+'</span> — η <b>'+hotK(f.k)+'</b> έφτασε τις <b style="color:'+(f.n>=5?'var(--hit)':'var(--text)')+'">'+f.n+'</b>'+(f.n>=5?' 🏆':'')+'</div>'; }).join('') || '<span class="muted">Καμία πεντάδα δεν έχει φτάσει ακόμα τις 4.</span>';
 }
 
 /* ---------- 🧪 Αλχημεία: συνταγή ημερομηνίας/ώρας με «θερμόμετρο» ημέρας ---------- */
@@ -1887,6 +1892,8 @@ $('alcK').addEventListener('change', function(){ lsSet('kl_alc_k', this.value); 
 $('alcG').addEventListener('change', function(){ lsSet('kl_alc_g', this.value); renderAlc(); });
 [['alcS3','s3'],['alcIron','iron'],['alcOx','ox']].forEach(function(o){ $(o[0]).addEventListener('change', function(){ lsSet('kl_alc_'+o[1], this.checked?'1':'0'); renderAlc(); }); });
 $('rlWin').addEventListener('change', function(){ lsSet('kl_rl_win', this.value); renderRally(); });
+$('rlHot').addEventListener('change', function(){ lsSet('kl_rl_hot', this.value); renderRally(); });
+(function(){ $('rlHot').value = lsGet('kl_rl_hot') || '10'; })();
 (function(){ var v = lsGet('kl_rl_win'); if(v) $('rlWin').value = v; })();
 $('agReset').addEventListener('click',function(){ if(confirm('Νέο εικονικό ταμείο 100€; Το ημερολόγιο θα σβηστεί, τα μαθήματα μένουν.')){ var s=agLoad(); agSave({bank:100,start:100,log:[],notes:'',lessons:s.lessons||[],mood:'🙂 ήρεμος',cost:s.cost,since:Date.now(),pauseUntil:0}); renderAgent(); } });
 if(lsGet('kl_ah_open')==='1') ahOpen(true);
