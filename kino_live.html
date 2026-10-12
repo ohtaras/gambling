@@ -353,7 +353,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🧪 Αλχημεία</span><span id="alcMeta"></span></h2>
     <div class="cbody">
       <div class="muted" style="margin-bottom:8px">Συνταγή με 6 στοιχεία: 🜃 Γη = η μέρα · 🜄 Νερό = ο μήνας · 🜂 Φωτιά = άθροισμα ψηφίων της ημερομηνίας · 🜁 Αέρας = η ώρα της κλήρωσης · ✨ Αιθέρας = ο 1ος αριθμός της προηγούμενης κλήρωσης · 🧂 Άλας = μέρα + μήνας. <b>Θερμόμετρο</b>: πόσες φορές βγήκε ο αριθμός από τις 00:00 σε σχέση με τον μέσο όρο. Αν είναι <b>ζεστός</b> (+10% και πάνω) «καίγεται» → μπαίνει ο <b>καθρέφτης</b> του (81−x)· αν καίγεται κι αυτός → ο πιο κρύος της ίδιας γραμμής του ταμπλό. Η στήλη παίρνει τα πρώτα στοιχεία (τριάδα = Γη, Νερό, Φωτιά · … · εξάδα = και τα 6), 0,50€, και <b>κρατιέται για 5 κληρώσεις</b>· μετά αλλάζει.</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="muted">Στήλη:</label><select id="alcK"><option value="3">Τριάδα</option><option value="4">Τετράδα</option><option value="5">Πεντάδα</option><option value="6">Εξάδα</option></select><span class="muted" style="font-size:12px">· κύκλος 5 κληρώσεων (00:00–00:20, 00:25–00:45, …)</span></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="muted">Στήλη:</label><select id="alcK"><option value="3">Τριάδα</option><option value="4">Τετράδα</option><option value="5">Πεντάδα</option><option value="6">Εξάδα</option></select><label class="muted">🥇 Χρυσός από:</label><select id="alcG"><option value="0.5">0,50€</option><option value="1">1€</option><option value="2.5">2,50€</option><option value="3.5">3,50€</option><option value="5">5€</option><option value="10">10€</option></select><span class="muted" style="font-size:12px">· κύκλος 5 κληρώσεων (00:00–00:20, 00:25–00:45, …)</span></div>
       <div id="alcNow"></div>
       <div class="chips" id="alcChips"></div>
       <h3 class="muted" style="font-size:13px;margin:14px 0 6px">Τελευταίες κληρώσεις</h3>
@@ -1118,22 +1118,25 @@ function alcRecipe(cnt, n, prevFirst, tMs){
   return {rows:rows, five:chosen.slice(0,5), six:chosen.slice()};
 }
 var ALC_CYC = 5;   // κληρώσεις ανά κύκλο
+function alcG(){ var v = parseFloat(lsGet('kl_alc_g')); return isNaN(v) ? 3.5 : v; }
 function alcK(){ var v = +(lsGet('kl_alc_k')||5); return v>=3 && v<=6 ? v : 5; }
 function alcCycleStart(cnt, n, prevDraw, tMs, prevCyc){ // νέα συνταγή + μεταστοιχείωση: όποιος «έγινε χρυσός» (2+ φορές στον κύκλο) μένει
   var rc = alcRecipe(cnt, n, prevDraw.arr[0], tMs), nums = rc.six.slice(), gold = [false,false,false,false,false,false], notes = rc.rows.map(function(r){return r.why;});
   if(prevCyc){
-    for(var j=0;j<6;j++) if(prevCyc.app[j]>=2){
+    var G = alcG();
+    for(var j=0;j<6;j++) if(prevCyc.app[j]>=2 && prevCyc.money[j]>=G){
       var g = prevCyc.nums[j], k = nums.indexOf(g);
       if(k>=0 && k!==j){ nums[k] = nums[j]; notes[k] = notes[j]+' (ο '+g+' έμεινε ως 🥇 χρυσός σε άλλο στοιχείο)'; }
-      nums[j] = g; gold[j] = true; notes[j] = '🥇 χρυσός '+g+' — βγήκε '+prevCyc.app[j]+' φορές στον προηγούμενο κύκλο, μένει';
+      nums[j] = g; gold[j] = true; notes[j] = '🥇 χρυσός '+g+' — στον προηγούμενο κύκλο βγήκε '+prevCyc.app[j]+' φορές και έφερε '+eur(prevCyc.money[j])+', μένει';
     }
   }
-  return {nums:nums, gold:gold, rows:rc.rows, notes:notes, app:[0,0,0,0,0,0], start:tMs, draws:[]};
+  if(prevCyc) for(var s=0;s<6;s++) if(!gold[s] && prevCyc.app[s]>=2) notes[s] += ' · (ο '+prevCyc.nums[s]+' ήταν 🥈 ασήμι: '+prevCyc.app[s]+'× αλλά έφερε μόνο '+eur(prevCyc.money[s])+')';
+  return {nums:nums, gold:gold, rows:rc.rows, notes:notes, app:[0,0,0,0,0,0], money:[0,0,0,0,0,0], start:tMs, draws:[]};
 }
 function renderAlc(){
   var card = document.querySelector && document.querySelector('.card[data-k="alc"]');
   if(card && card.classList.contains('collapsed')) return;
-  var K = alcK(); if($('alcK').value!=String(K)) $('alcK').value = String(K);
+  var K = alcK(); if($('alcK').value!=String(K)) $('alcK').value = String(K); if($('alcG').value!=String(alcG())) $('alcG').value = String(alcG());
   var all = today.concat(histPool).slice().sort(function(a,b){return a.id-b.id;});
   if(all.length<2){ $('alcNow').innerHTML='<span class="muted">Περιμένει κληρώσεις.</span>'; return; }
   var cnt = new Array(81).fill(0), n = 0, curDay = null, cyc = null, prevCyc = null, tot = {all:[0,0,0], live:[0,0,0]}, best = 0, hist = [];
@@ -1142,7 +1145,7 @@ function renderAlc(){
     if(d.d!==curDay){ curDay = d.d; cnt = new Array(81).fill(0); n = 0; }
     if(n % ALC_CYC === 0 || !cyc){ prevCyc = cyc; cyc = alcCycleStart(cnt, n, p, d.t, prevCyc); }
     var col = cyc.nums.slice(0,K), h = col.filter(function(x){return d.set.has(x);}).length, w = PAYS[K][h]||0;
-    cyc.nums.forEach(function(x,j){ if(d.set.has(x)) cyc.app[j]++; });
+    cyc.nums.forEach(function(x,j){ if(d.set.has(x)){ cyc.app[j]++; if(j<K) cyc.money[j] += w; } });
     cyc.draws.push(d);
     [tot.all].concat(d.id>=ALC_START?[tot.live]:[]).forEach(function(a){ a[0]++; a[1]+=w; if(h>=K-1 && K>=4) a[2]++; });
     best = Math.max(best,h); hist.push({d:d, col:col, h:h, w:w, pos:cyc.draws.length});
@@ -1156,10 +1159,10 @@ function renderAlc(){
   $('alcNow').innerHTML = '<div style="border:2px solid #8b5cf6;border-radius:12px;padding:10px;margin:6px 0">'+
     '<div><b>Κύκλος '+hm(cs)+'–'+hm(ce)+'</b> · επόμενη κλήρωση '+hm(nt)+' = <b>'+pos+'/'+ALC_CYC+'</b>'+(newCyc?' <span style="color:#8b5cf6">— νέος κύκλος, νέα συνταγή</span>':' <span class="muted">— ίδια στήλη ως το τέλος του κύκλου</span>')+'</div>'+
     '<table class="ptab" style="margin-top:6px">'+show.nums.map(function(x,j){ var inCol = j<K;
-      return '<tr style="'+(inCol?'':'opacity:.45')+'"><td style="white-space:nowrap">'+names[j]+'<div class="muted" style="font-size:11px">'+show.rows[j].src+'</div></td><td style="font-size:12.5px">'+show.notes[j]+(newCyc?'':' · σε αυτόν τον κύκλο: '+show.app[j]+'×')+'</td><td><b>'+(show.gold[j]?'🥇':'')+x+'</b></td></tr>'; }).join('')+'</table>'+
+      return '<tr style="'+(inCol?'':'opacity:.45')+'"><td style="white-space:nowrap">'+names[j]+'<div class="muted" style="font-size:11px">'+show.rows[j].src+'</div></td><td style="font-size:12.5px">'+show.notes[j]+(newCyc?'':' · σε αυτόν τον κύκλο: '+show.app[j]+'×'+(j<K?', '+eur(show.money[j]):'')+(show.app[j]>=2 && j<K ? (show.money[j]>=alcG()?' 🥇':' 🥈') : ''))+'</td><td><b>'+(show.gold[j]?'🥇':'')+x+'</b></td></tr>'; }).join('')+'</table>'+
     '<div style="margin-top:8px">🧪 <b>Στήλη '+K+' αριθμών</b> για τις κληρώσεις '+hm(cs)+'–'+hm(ce)+':</div><div class="order">'+col.slice().sort(function(a,b){return a-b;}).map(function(x){return '<i class="sc">'+x+'</i>';}).join('')+'</div>'+
     (!newCyc ? '<div class="muted" style="font-size:12px;margin-top:4px">Ως τώρα στον κύκλο: '+cyc.draws.map(function(d){ var hh = col.filter(function(x){return d.set.has(x);}).length; return hm(d.t)+' '+hh+'/'+K; }).join(' · ')+'</div>' : '')+
-    '<div class="muted" style="font-size:12px;margin-top:6px">⚗️ Μεταστοιχείωση: στο τέλος κάθε κύκλου, όποιος αριθμός βγήκε 2+ φορές γίνεται 🥇 χρυσός και μένει στον επόμενο κύκλο· οι υπόλοιποι ξαναβγαίνουν από τη συνταγή.</div></div>';
+    '<div class="muted" style="font-size:12px;margin-top:6px">⚗️ Μεταστοιχείωση: στο τέλος κάθε κύκλου, ένας αριθμός της στήλης γίνεται 🥇 <b>χρυσός</b> και μένει στον επόμενο κύκλο μόνο αν βγήκε <b>2+ φορές</b> ΚΑΙ οι κληρώσεις που βγήκε έφεραν <b>τουλάχιστον '+eur(alcG())+'</b>. Αν βγήκε 2+ φορές αλλά δεν έφερε λεφτά, είναι 🥈 ασήμι και φεύγει. Οι υπόλοιποι ξαναβγαίνουν από τη συνταγή.</div></div>';
   var ch = function(lab,a){ return a[0] ? chip(lab, a[0]+' κληρ. · '+eur(a[0]*0.5)+' → '+eur(a[1])+' ('+(a[1]/(a[0]*0.5)*100).toFixed(0)+'%)'+(K>=4?' · '+(K-1)+'+/'+K+': '+a[2]:'')) : ''; };
   $('alcChips').innerHTML = (tot.live[0] ? ch('Ζωντανά (από #'+ALC_START+')', tot.live) : chip('Ζωντανά','ξεκινάει με την #'+ALC_START)) + ch('Ιστορικό σελίδας', tot.all) + chip('Καλύτερο', best+'/'+K);
   $('alcMeta').textContent = K+' αριθμοί'+(tot.live[0] ? ' · '+tot.live[0]+' κληρώσεις ζωντανά' : '');
@@ -1869,6 +1872,7 @@ $('agStatus').addEventListener('click',function(e){ var id = e.target && e.targe
   if(id==='agSixOn' || id==='agFiveOn' || id==='agSixOff'){ var s0=agLoad(), on = id!=='agSixOff'; s0.sixUntil = on ? Date.now()+3600000 : 0; if(on){ s0.modeK = id==='agFiveOn' ? 5 : 6; s0.pauseUntil = 0; } agSave(s0); renderAgent(); if(on) agAsk(true); return; }
   if(id!=='agNudge') return; var s=agLoad(); s.pauseUntil=0; s.nudge=Date.now(); agSave(s); renderAgent(); agAsk(true); });
 $('alcK').addEventListener('change', function(){ lsSet('kl_alc_k', this.value); renderAlc(); });
+$('alcG').addEventListener('change', function(){ lsSet('kl_alc_g', this.value); renderAlc(); });
 $('rlWin').addEventListener('change', function(){ lsSet('kl_rl_win', this.value); renderRally(); });
 (function(){ var v = lsGet('kl_rl_win'); if(v) $('rlWin').value = v; })();
 $('agReset').addEventListener('click',function(){ if(confirm('Νέο εικονικό ταμείο 100€; Το ημερολόγιο θα σβηστεί, τα μαθήματα μένουν.')){ var s=agLoad(); agSave({bank:100,start:100,log:[],notes:'',lessons:s.lessons||[],mood:'🙂 ήρεμος',cost:s.cost,since:Date.now(),pauseUntil:0}); renderAgent(); } });
