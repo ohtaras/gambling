@@ -352,8 +352,8 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   <section class="card mt" data-k="alc">
     <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🧪 Αλχημεία</span><span id="alcMeta"></span></h2>
     <div class="cbody">
-      <div class="muted" style="margin-bottom:8px">Συνταγή με 6 στοιχεία: 🜃 Γη = η μέρα · 🜄 Νερό = ο μήνας · 🜂 Φωτιά = άθροισμα ψηφίων της ημερομηνίας · 🜁 Αέρας = η ώρα της κλήρωσης · ✨ Αιθέρας = ο 1ος αριθμός της προηγούμενης κλήρωσης · 🧂 Άλας = μέρα + μήνας. <b>Θερμόμετρο</b>: πόσες φορές βγήκε ο αριθμός από τις 00:00 σε σχέση με τον μέσο όρο. Αν είναι <b>ζεστός</b> (+10% και πάνω) «καίγεται» → μπαίνει ο <b>καθρέφτης</b> του (81−x)· αν καίγεται κι αυτός → ο πιο κρύος της ίδιας γραμμής του ταμπλό. Η στήλη παίρνει τα πρώτα στοιχεία (τριάδα = Γη, Νερό, Φωτιά · … · εξάδα = και τα 6), 0,50€, και <b>κρατιέται για 5 κληρώσεις</b>· μετά αλλάζει.</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="muted">Στήλη:</label><select id="alcK"><option value="3">Τριάδα</option><option value="4">Τετράδα</option><option value="5">Πεντάδα</option><option value="6">Εξάδα</option></select><label class="muted">🥇 Χρυσός από:</label><select id="alcG"><option value="0.5">0,50€</option><option value="1">1€</option><option value="2.5">2,50€</option><option value="3.5">3,50€</option><option value="5">5€</option><option value="10">10€</option></select><span class="muted" style="font-size:12px">· κύκλος 5 κληρώσεων (00:00–00:20, 00:25–00:45, …)</span></div>
+      <div class="muted" style="margin-bottom:8px">Συνταγή με 6 στοιχεία: 🜃 Γη = η μέρα · 🜄 Νερό = ο μήνας · 🜂 Φωτιά = άθροισμα ψηφίων της ημερομηνίας · 🜁 Αέρας = η ώρα της κλήρωσης · ✨ Αιθέρας = ο 1ος αριθμός της προηγούμενης κλήρωσης · 🧂 Άλας = μέρα + μήνας. <b>Θερμόμετρο</b>: πόσες φορές βγήκε ο αριθμός από τις 00:00 σε σχέση με τον μέσο όρο. Αν είναι <b>ζεστός</b> (+10% και πάνω) «καίγεται» → μπαίνει ο <b>καθρέφτης</b> του (81−x)· αν καίγεται κι αυτός → ο πιο κρύος της ίδιας γραμμής του ταμπλό. Για μεγαλύτερες στήλες: ☿ Υδράργυρος = ο τελευταίος (20ός) αριθμός της προηγούμενης κλήρωσης · 🜍 Θείο = τα λεπτά της κλήρωσης · 🜔 Λίθος = η μέρα του χρόνου. Η στήλη παίρνει τα πρώτα στοιχεία (τριάδα = Γη, Νερό, Φωτιά · … · εννιάδα = και τα 9), 0,50€, και <b>κρατιέται για 5 κληρώσεις</b>· μετά αλλάζει.</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="muted">Στήλη:</label><select id="alcK"><option value="3">Τριάδα</option><option value="4">Τετράδα</option><option value="5">Πεντάδα</option><option value="6">Εξάδα</option><option value="7">Επτάδα</option><option value="8">Οκτάδα</option><option value="9">Εννιάδα</option></select><label class="muted">🥇 Χρυσός από:</label><select id="alcG"><option value="0.5">0,50€</option><option value="1">1€</option><option value="2.5">2,50€</option><option value="3.5">3,50€</option><option value="5">5€</option><option value="10">10€</option></select><span class="muted" style="font-size:12px">· κύκλος 5 κληρώσεων (00:00–00:20, 00:25–00:45, …)</span></div>
       <div id="alcNow"></div>
       <div class="chips" id="alcChips"></div>
       <h3 class="muted" style="font-size:13px;margin:14px 0 6px">Τελευταίες κληρώσεις</h3>
@@ -1097,11 +1097,12 @@ function renderRally(){
 
 /* ---------- 🧪 Αλχημεία: συνταγή ημερομηνίας/ώρας με «θερμόμετρο» ημέρας ---------- */
 var ALC_START = 1341868;                 // 11/10/2026 22:35 — από εδώ μετράει «ζωντανά»
-function alcRecipe(cnt, n, prevFirst, tMs){
+function alcRecipe(cnt, n, prevFirst, tMs, prevLast){
   var dt = new Date(tMs), D = dt.getDate(), M = dt.getMonth()+1, Y = dt.getFullYear(), H = dt.getHours() || 24;
   var digits = String(D)+String(M)+String(Y), ds = 0; for(var i=0;i<digits.length;i++) ds += +digits[i];
   var E = n/4, temp = function(x){ return n<12 ? 'χλιαρός' : cnt[x]>=E*1.1 ? 'ζεστός' : cnt[x]<=E*0.9 ? 'κρύος' : 'χλιαρός'; };
-  var els = [['🜃 Γη','η μέρα',D],['🜄 Νερό','ο μήνας',M],['🜂 Φωτιά','άθροισμα ψηφίων '+D+'/'+M+'/'+Y,ds],['🜁 Αέρας','η ώρα',H],['✨ Αιθέρας','1ος της προηγούμενης κλήρωσης',prevFirst],['🧂 Άλας','μέρα + μήνας',D+M]];
+  var MI = dt.getMinutes() || 60, DOY = Math.floor((Date.UTC(Y,M-1,D) - Date.UTC(Y,0,0)) / 864e5);
+  var els = [['🜃 Γη','η μέρα',D],['🜄 Νερό','ο μήνας',M],['🜂 Φωτιά','άθροισμα ψηφίων '+D+'/'+M+'/'+Y,ds],['🜁 Αέρας','η ώρα',H],['✨ Αιθέρας','1ος της προηγούμενης κλήρωσης',prevFirst],['🧂 Άλας','μέρα + μήνας',D+M],['☿ Υδράργυρος','τελευταίος (20ός) της προηγούμενης κλήρωσης',prevLast||1],['🜍 Θείο','τα λεπτά της κλήρωσης',MI],['🜔 Λίθος','η μέρα του χρόνου ('+DOY+'η)',DOY]];
   var chosen = [], rows = [];
   els.forEach(function(e){
     var x = ((e[2]-1)%80+80)%80+1, y = x, why = x+' ('+(cnt[x]||0)+', '+temp(x)+')';
@@ -1119,19 +1120,19 @@ function alcRecipe(cnt, n, prevFirst, tMs){
 }
 var ALC_CYC = 5;   // κληρώσεις ανά κύκλο
 function alcG(){ var v = parseFloat(lsGet('kl_alc_g')); return isNaN(v) ? 3.5 : v; }
-function alcK(){ var v = +(lsGet('kl_alc_k')||5); return v>=3 && v<=6 ? v : 5; }
+function alcK(){ var v = +(lsGet('kl_alc_k')||5); return v>=3 && v<=9 ? v : 5; }
 function alcCycleStart(cnt, n, prevDraw, tMs, prevCyc){ // νέα συνταγή + μεταστοιχείωση: όποιος «έγινε χρυσός» (2+ φορές στον κύκλο) μένει
-  var rc = alcRecipe(cnt, n, prevDraw.arr[0], tMs), nums = rc.six.slice(), gold = [false,false,false,false,false,false], notes = rc.rows.map(function(r){return r.why;});
+  var rc = alcRecipe(cnt, n, prevDraw.arr[0], tMs, prevDraw.arr[prevDraw.arr.length-1]), nums = rc.six.slice(), L = nums.length, gold = new Array(L).fill(false), notes = rc.rows.map(function(r){return r.why;});
   if(prevCyc){
     var G = alcG();
-    for(var j=0;j<6;j++) if(prevCyc.app[j]>=2 && prevCyc.money[j]>=G){
+    for(var j=0;j<L;j++) if(prevCyc.app[j]>=2 && prevCyc.money[j]>=G){
       var g = prevCyc.nums[j], k = nums.indexOf(g);
       if(k>=0 && k!==j){ nums[k] = nums[j]; notes[k] = notes[j]+' (ο '+g+' έμεινε ως 🥇 χρυσός σε άλλο στοιχείο)'; }
       nums[j] = g; gold[j] = true; notes[j] = '🥇 χρυσός '+g+' — στον προηγούμενο κύκλο βγήκε '+prevCyc.app[j]+' φορές και έφερε '+eur(prevCyc.money[j])+', μένει';
     }
   }
-  if(prevCyc) for(var s=0;s<6;s++) if(!gold[s] && prevCyc.app[s]>=2) notes[s] += ' · (ο '+prevCyc.nums[s]+' ήταν 🥈 ασήμι: '+prevCyc.app[s]+'× αλλά έφερε μόνο '+eur(prevCyc.money[s])+')';
-  return {nums:nums, gold:gold, rows:rc.rows, notes:notes, app:[0,0,0,0,0,0], money:[0,0,0,0,0,0], start:tMs, draws:[]};
+  if(prevCyc) for(var s=0;s<L;s++) if(!gold[s] && prevCyc.app[s]>=2) notes[s] += ' · (ο '+prevCyc.nums[s]+' ήταν 🥈 ασήμι: '+prevCyc.app[s]+'× αλλά έφερε μόνο '+eur(prevCyc.money[s])+')';
+  return {nums:nums, gold:gold, rows:rc.rows, notes:notes, app:new Array(L).fill(0), money:new Array(L).fill(0), start:tMs, draws:[]};
 }
 function renderAlc(){
   var card = document.querySelector && document.querySelector('.card[data-k="alc"]');
@@ -1155,7 +1156,7 @@ function renderAlc(){
   var last = all[all.length-1], nt = last.t + 300000, nDay = dateOf(nt), n2 = (nDay===curDay) ? n : 0, c2 = (nDay===curDay) ? cnt : new Array(81).fill(0);
   var newCyc = n2 % ALC_CYC === 0, show = newCyc ? alcCycleStart(c2, n2, last, nt, cyc) : cyc, pos = newCyc ? 1 : cyc.draws.length+1;
   var cs = show.start, ce = cs + (ALC_CYC-1)*300000, col = show.nums.slice(0,K);
-  var names = ['🜃 Γη','🜄 Νερό','🜂 Φωτιά','🜁 Αέρας','✨ Αιθέρας','🧂 Άλας'];
+  var names = show.rows.map(function(r){return r.el;});
   $('alcNow').innerHTML = '<div style="border:2px solid #8b5cf6;border-radius:12px;padding:10px;margin:6px 0">'+
     '<div><b>Κύκλος '+hm(cs)+'–'+hm(ce)+'</b> · επόμενη κλήρωση '+hm(nt)+' = <b>'+pos+'/'+ALC_CYC+'</b>'+(newCyc?' <span style="color:#8b5cf6">— νέος κύκλος, νέα συνταγή</span>':' <span class="muted">— ίδια στήλη ως το τέλος του κύκλου</span>')+'</div>'+
     '<table class="ptab" style="margin-top:6px">'+show.nums.map(function(x,j){ var inCol = j<K;
