@@ -1092,8 +1092,12 @@ function renderRally(){
   var recent = today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;}).slice(0,HX), hc = new Array(81).fill(0);
   recent.forEach(function(d){ d.arr.forEach(function(x){ hc[x]++; }); });
   var hotSet = {}; for(var q=1;q<=80;q++) if(hc[q]>=HMIN) hotSet[q]=1;
-  var hotK = function(k){ return k.split(' ').map(function(x){ return hotSet[+x] ? '<span style="color:#ef4444" title="'+hc[+x]+' φορές στις '+HX+'">'+x+'</span>' : x; }).join(' '); };
-  $('rlHotInfo').textContent = '(hot = '+HMIN+'+ φορές · τώρα: '+(Object.keys(hotSet).map(Number).sort(function(a,b){return a-b;}).join(' ')||'κανένας')+')';
+  var lastSet = recent.length ? recent[0].set : new Set();
+  var hotK = function(k){ return k.split(' ').map(function(x){ var n = +x, isHot = hotSet[n], isNow = lastSet.has(n);
+    if(!isHot && !isNow) return x;
+    var st = (isHot ? 'color:#ef4444;' : '') + (isNow ? 'background:#facc15;'+(isHot?'':'color:#1a1300;')+'border-radius:4px;padding:0 3px;' : '');
+    return '<span style="'+st+'" title="'+(isNow?'βγήκε στην τελευταία κλήρωση · ':'')+hc[n]+' φορές στις '+HX+'">'+x+'</span>'; }).join(' '); };
+  $('rlHotInfo').textContent = '(🟨 κίτρινο = βγήκε στην τελευταία κλήρωση'+(recent[0]?' των '+hm(recent[0].t):'')+' · hot = '+HMIN+'+ φορές · τώρα: '+(Object.keys(hotSet).map(Number).sort(function(a,b){return a-b;}).join(' ')||'κανένας')+')';
   if(mode==='day') draws = today.slice();
   else draws = today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;}).slice(0,288);
   draws.sort(function(a,b){return a.id-b.id;});
