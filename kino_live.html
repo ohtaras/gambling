@@ -368,7 +368,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   <section class="card mt" data-k="rally">
     <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🏁 Ράλι <span id="rlTitle" style="color:var(--text);font-size:15px">πεντάδων</span></span><span id="rlMeta"></span></h2>
     <div class="cbody">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><select id="rlK"><option value="3">Τριάδες</option><option value="4">Τετράδες</option><option value="5" selected>Πεντάδες</option><option value="6">Εξάδες</option><option value="7">Επτάδες</option></select><select id="rlN" title="Φίλτρο: πόσες φορές έχει βγει"><option value="0">Όλες (κατάταξη)</option><option value="2">ακριβώς 2 φορές</option><option value="3">ακριβώς 3 φορές</option><option value="4">ακριβώς 4 φορές</option><option value="5">ακριβώς 5 φορές</option><option value="6">ακριβώς 6 φορές</option><option value="7">ακριβώς 7 φορές</option><option value="8">ακριβώς 8 φορές</option><option value="9">ακριβώς 9 φορές</option><option value="10">ακριβώς 10 φορές</option></select><select id="rlSort" title="Ταξινόμηση"><option value="rank">Ταξινόμηση: κατάταξη</option><option value="new">Πιο πρόσφατες</option><option value="old">Πιο παλιές (ώρα χωρίς να βγει)</option><option value="gap">Μέγιστη καθυστέρηση</option></select><select id="rlWin"><option value="day">Σήμερα (από 00:00)</option><option value="24">Τελευταίες 24 ώρες</option></select><label class="muted" style="font-size:12px">🔴 Hot στις τελευταίες</label><select id="rlHot"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="50">50</option></select><span class="muted" style="font-size:12px">κληρώσεις <span id="rlHotInfo"></span></span><span class="muted" style="font-size:12px">· ➕ = στα δελτία μου για</span><select id="rlDraws"><option>1</option><option>3</option><option selected>5</option><option>10</option><option>20</option><option>50</option></select><span class="muted" style="font-size:12px">κληρώσεις</span>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><select id="rlK"><option value="3">Τριάδες</option><option value="4">Τετράδες</option><option value="5" selected>Πεντάδες</option><option value="6">Εξάδες</option><option value="7">Επτάδες</option></select><select id="rlN" title="Φίλτρο: πόσες φορές έχει βγει"><option value="0">Όλες (κατάταξη)</option><option value="2">ακριβώς 2 φορές</option><option value="3">ακριβώς 3 φορές</option><option value="4">ακριβώς 4 φορές</option><option value="5">ακριβώς 5 φορές</option><option value="6">ακριβώς 6 φορές</option><option value="7">ακριβώς 7 φορές</option><option value="8">ακριβώς 8 φορές</option><option value="9">ακριβώς 9 φορές</option><option value="10">ακριβώς 10 φορές</option></select><select id="rlSort" title="Ταξινόμηση"><option value="rank">Ταξινόμηση: κατάταξη</option><option value="new">Πιο πρόσφατες</option><option value="old">Πιο παλιές (ώρα χωρίς να βγει)</option><option value="gap">Μέγιστη καθυστέρηση</option><option value="rule">🎯 Συνταγή: όλα εκτός ενός στην τελευταία (hot+κρύα)</option></select><select id="rlWin"><option value="day">Σήμερα (από 00:00)</option><option value="24">Τελευταίες 24 ώρες</option></select><label class="muted" style="font-size:12px">🔴 Hot στις τελευταίες</label><select id="rlHot"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="50">50</option></select><span class="muted" style="font-size:12px">κληρώσεις <span id="rlHotInfo"></span></span><span class="muted" style="font-size:12px">· ➕ = στα δελτία μου για</span><select id="rlDraws"><option>1</option><option>3</option><option selected>5</option><option>10</option><option>20</option><option>50</option></select><span class="muted" style="font-size:12px">κληρώσεις</span>
         <span class="muted" style="font-size:12px" id="rlInfo"></span></div>
       <div class="chips" id="rlChips"></div>
       <h3 class="muted" style="font-size:13px;margin:12px 0 6px">Κατάταξη</h3>
@@ -1128,13 +1128,14 @@ function renderRally(){
   var mode = $('rlWin').value, draws, HX = +($('rlHot').value||10), HMIN = Math.ceil(HX*0.25*1.5);
   var recent = today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;}).slice(0,HX), hc = new Array(81).fill(0);
   recent.forEach(function(d){ d.arr.forEach(function(x){ hc[x]++; }); });
-  var hotSet = {}; for(var q=1;q<=80;q++) if(hc[q]>=HMIN) hotSet[q]=1;
+  var hotSet = {}, coldSet = {}, CMAX = Math.floor(HX*0.25*0.5); for(var q=1;q<=80;q++){ if(hc[q]>=HMIN) hotSet[q]=1; else if(hc[q]<=CMAX) coldSet[q]=1; }
   var lastSet = recent.length ? recent[0].set : new Set();
   var hotK = function(k){ return k.split(' ').map(function(x){ var n = +x, isHot = hotSet[n], isNow = lastSet.has(n);
-    if(!isHot && !isNow) return x;
-    var st = (isHot ? 'color:#ef4444;' : '') + (isNow ? 'background:#facc15;'+(isHot?'':'color:#1a1300;')+'border-radius:4px;padding:0 3px;' : '');
-    return '<span style="'+st+'" title="'+(isNow?'βγήκε στην τελευταία κλήρωση · ':'')+hc[n]+' φορές στις '+HX+'">'+x+'</span>'; }).join(' '); };
-  $('rlHotInfo').textContent = '(🟨 κίτρινο = βγήκε στην τελευταία κλήρωση'+(recent[0]?' των '+hm(recent[0].t):'')+' · hot = '+HMIN+'+ φορές · τώρα: '+(Object.keys(hotSet).map(Number).sort(function(a,b){return a-b;}).join(' ')||'κανένας')+')';
+    var isCold = coldSet[n];
+    if(!isHot && !isNow && !isCold) return x;
+    var st = (isHot ? 'color:#ef4444;' : isCold ? 'color:#2563eb;' : '') + (isNow ? 'background:#facc15;'+(isHot?'':'color:#1a1300;')+'border-radius:4px;padding:0 3px;' : '');
+    return '<span style="'+st+'" title="'+(isNow?'βγήκε στην τελευταία κλήρωση · ':'')+(isCold?'κρύο · ':'')+hc[n]+' φορές στις '+HX+'">'+x+'</span>'; }).join(' '); };
+  $('rlHotInfo').textContent = '(🟨 κίτρινο = βγήκε στην τελευταία κλήρωση · 🔵 μπλε = κρύο, ≤'+CMAX+' φορές'+(recent[0]?' των '+hm(recent[0].t):'')+' · hot = '+HMIN+'+ φορές · τώρα: '+(Object.keys(hotSet).map(Number).sort(function(a,b){return a-b;}).join(' ')||'κανένας')+')';
   if(mode==='day') draws = today.slice();
   else draws = today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;}).slice(0,288);
   draws.sort(function(a,b){return a.id-b.id;});
@@ -1156,6 +1157,13 @@ function renderRally(){
   var SO = $('rlSort').value;
   if(SO==='new') rows.sort(function(a,b){ return b.at-a.at || b.n-a.n; });
   else if(SO==='old') rows.sort(function(a,b){ return a.at-b.at || b.n-a.n; });
+  else if(SO==='rule'){
+    rows = rows.filter(function(r){ var ns = r.k.split(' ').map(Number), inP = ns.filter(function(n){ return lastSet.has(n); }), h = 0, c = 0;
+      if(inP.length!==ns.length-1) return false;
+      inP.forEach(function(n){ if(hotSet[n]) h++; else if(coldSet[n]) c++; });
+      r.rule = (h>=1 && c>=1 && h+c===inP.length) ? 2 : (h>=1 && c>=1) ? 1 : 0; return r.rule>0; });
+    rows.sort(function(a,b){ return b.rule-a.rule || b.n-a.n || b.at-a.at; });
+  }
   else if(SO==='gap') rows.sort(function(a,b){ return b.gap-a.gap || b.at-a.at; });
   else if(FN) rows.sort(function(a,b){ return b.at-a.at; }); else rows.sort(function(a,b){ return b.n-a.n || a.at-b.at; });
   var mx = 0; for(var t in tally) if(+t>mx) mx = +t;
