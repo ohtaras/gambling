@@ -217,6 +217,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     <div class="cbody">
       <div class="muted" style="font-size:12px;margin-bottom:6px">Εικονικά δελτία (0,50€ ανά κλήρωση) από το ταμπλό ή από το Ράλι. Ξεκινούν από την επόμενη κλήρωση και αξιολογούνται μόνα τους. Μένουν σε αυτόν τον browser.</div>
       <div class="chips" id="myChips"></div>
+      <div style="text-align:right;margin:4px 0"><button class="btn" id="myClearAll" style="padding:2px 10px">🗑 Καθαρισμός όλων</button></div>
       <div id="myList"></div>
     </div>
   </section>
@@ -368,7 +369,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   <section class="card mt" data-k="rally">
     <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🏁 Ράλι <span id="rlTitle" style="color:var(--text);font-size:15px">πεντάδων</span></span><span id="rlMeta"></span></h2>
     <div class="cbody">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><select id="rlK"><option value="3">Τριάδες</option><option value="4">Τετράδες</option><option value="5" selected>Πεντάδες</option><option value="6">Εξάδες</option><option value="7">Επτάδες</option><option value="8">Οκτάδες</option><option value="9">Εννιάδες</option><option value="10">Δεκάδες</option><option value="11">Εντεκάδες</option><option value="12">Δωδεκάδες</option></select><select id="rlN" title="Φίλτρο: πόσες φορές έχει βγει"><option value="0">Όλες (κατάταξη)</option><option value="2">ακριβώς 2 φορές</option><option value="3">ακριβώς 3 φορές</option><option value="4">ακριβώς 4 φορές</option><option value="5">ακριβώς 5 φορές</option><option value="6">ακριβώς 6 φορές</option><option value="7">ακριβώς 7 φορές</option><option value="8">ακριβώς 8 φορές</option><option value="9">ακριβώς 9 φορές</option><option value="10">ακριβώς 10 φορές</option></select><select id="rlSort" title="Ταξινόμηση"><option value="rank">Ταξινόμηση: κατάταξη</option><option value="new">Πιο πρόσφατες</option><option value="old">Πιο παλιές (ώρα χωρίς να βγει)</option><option value="gap">Μέγιστη καθυστέρηση</option><option value="rule">🎯 Συνταγή: λείπει 1 · τα άλλα = 1 ζεστό + κρύα</option></select><select id="rlWin"><option value="day">Σήμερα (από 00:00)</option><option value="24">Τελευταίες 24 ώρες</option></select><label class="muted" style="font-size:12px">🔴 Hot στις τελευταίες</label><select id="rlHot"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="50">50</option></select><span class="muted" style="font-size:12px">κληρώσεις <span id="rlHotInfo"></span></span><span class="muted" style="font-size:12px">· ➕ = στα δελτία μου για</span><select id="rlDraws"><option>1</option><option>3</option><option selected>5</option><option>10</option><option>20</option><option>50</option></select><span class="muted" style="font-size:12px">κληρώσεις</span>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><select id="rlK"><option value="3">Τριάδες</option><option value="4">Τετράδες</option><option value="5" selected>Πεντάδες</option><option value="6">Εξάδες</option><option value="7">Επτάδες</option><option value="8">Οκτάδες</option><option value="9">Εννιάδες</option><option value="10">Δεκάδες</option><option value="11">Εντεκάδες</option><option value="12">Δωδεκάδες</option></select><select id="rlN" title="Φίλτρο: πόσες φορές έχει βγει"><option value="0">Όλες (κατάταξη)</option><option value="2">ακριβώς 2 φορές</option><option value="3">ακριβώς 3 φορές</option><option value="4">ακριβώς 4 φορές</option><option value="5">ακριβώς 5 φορές</option><option value="6">ακριβώς 6 φορές</option><option value="7">ακριβώς 7 φορές</option><option value="8">ακριβώς 8 φορές</option><option value="9">ακριβώς 9 φορές</option><option value="10">ακριβώς 10 φορές</option></select><select id="rlSort" title="Ταξινόμηση"><option value="rank">Ταξινόμηση: κατάταξη</option><option value="new">Πιο πρόσφατες</option><option value="old">Πιο παλιές (ώρα χωρίς να βγει)</option><option value="gap">Μέγιστη καθυστέρηση</option><option value="rule">🎯 Συνταγή: λείπει 1 · τα άλλα = 1 ζεστό + κρύα</option></select><select id="rlWin"><option value="day">Σήμερα (από 00:00)</option><option value="24">Τελευταίες 24 ώρες</option></select><label class="muted" style="font-size:12px">🔴 Hot στις τελευταίες</label><select id="rlHot"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="50">50</option></select><span class="muted" style="font-size:12px">κληρώσεις <span id="rlHotInfo"></span></span>
         <span class="muted" style="font-size:12px" id="rlInfo"></span></div>
       <div class="chips" id="rlChips"></div>
       <h3 class="muted" style="font-size:13px;margin:12px 0 6px">Κατάταξη</h3>
@@ -1098,7 +1099,8 @@ function renderGef(){
 
 /* ---------- Ράλι πεντάδων: ποια πεντάδα βγαίνει ολόκληρη τις περισσότερες φορές ---------- */
 var rlCache = {key:'', ids:[], M:null};
-var RL_E = {3:8, 4:4, 5:3, 6:3, 7:3, 8:2, 9:2, 10:2, 11:2, 12:2};   // από πόσες εμφανίσεις μπαίνει στο ράλι
+var RL_E = {3:2, 4:2, 5:2, 6:2, 7:2, 8:2, 9:2, 10:2, 11:2, 12:2};   // μετράει από 2 φορές και πάνω
+var RL_EP = {3:8, 4:4, 5:3, 6:3, 7:3, 8:2, 9:2, 10:2, 11:2, 12:2};  // για την ⭐ επιλογή (πίνακες back-test)   // από πόσες εμφανίσεις μπαίνει στο ράλι
 var RL_NAME = {3:['τριάδα','τριάδες'],4:['τετράδα','τετράδες'],5:['πεντάδα','πεντάδες'],6:['εξάδα','εξάδες'],7:['επτάδα','επτάδες'],8:['οκτάδα','οκτάδες'],9:['εννιάδα','εννιάδες'],10:['δεκάδα','δεκάδες'],11:['εντεκάδα','εντεκάδες'],12:['δωδεκάδα','δωδεκάδες']};
 var RL_REC = {3:'Ρεκόρ μέρας στον τελευταίο χρόνο: συνήθως 14–18 φορές, ποτέ πάνω από 20.', 5:'Ρεκόρ μέρας στον τελευταίο χρόνο: 5 φορές (35% των ημερών), 6 (62%), 7 (3%), ποτέ 8.'};
 function rlBuild(draws, K){ // draws: παλιό→νέο· επαυξητικά: για κάθε νέα κλήρωση, τομές με όλες τις προηγούμενες
@@ -1131,7 +1133,7 @@ var RL_LIFT = {
 function rlScore(r, K, lastId0, lastSet, h10){
   var T = RL_LIFT[Math.min(K,5)] , ns = r.k.split(' ').map(Number), np = 0, h = 0, c = 0;
   ns.forEach(function(n){ if(lastSet.has(n)) np++; if(h10[n]>=4) h++; else if(h10[n]<=1) c++; });
-  var df = K-np, dly = lastId0-r.at, db = dly<1?0:dly<5?1:dly<20?2:dly<60?3:4, no = Math.min(r.n-RL_E[K],3);
+  var df = K-np, dly = lastId0-r.at, db = dly<1?0:dly<5?1:dly<20?2:dly<60?3:4, no = Math.min(r.n-RL_EP[K],3);
   var why = [], f = function(v,txt){ if(v>1.012) why.push(txt); return v; };
   var sc = f(T.def[Math.min(df,T.def.length-1)]||1, df===0?'βγήκε ολόκληρη τώρα':(df===1?'λείπει 1 νούμερο':'λείπουν '+df)+' από την τελευταία')
          * f(T.dl[db]||1, 'καθυστέρηση '+dly) * f(T.hot[Math.min(h,3)]||1, h+' ζεστά') * f(T.cold[Math.min(c,3)]||1, c+' κρύα') * f(T.n[no]||1, r.n+' φορές');
@@ -1163,7 +1165,7 @@ function renderRally(){
   var FN = +($('rlN').value||0);
   var cand = [];
   M.forEach(function(ids, k){
-    if(ids.length>=E){ var ii = ids.slice().sort(function(a,b){return a-b;}); cand.push({k:k, n:ii.length, at:ii[ii.length-1]}); }
+    if(ids.length>=RL_EP[K]){ var ii = ids.slice().sort(function(a,b){return a-b;}); cand.push({k:k, n:ii.length, at:ii[ii.length-1]}); }
     if(ids.length<E && ids.length!==FN) return;
     ids.sort(function(a,b){return a-b;});
     var n = ids.length; if(n>=E) tally[n] = (tally[n]||0)+1;
@@ -1297,6 +1299,11 @@ function renderAlc(){
 var myPick = [];
 function myLoad(){ try{ return JSON.parse(lsGet('kl_my_tix')||'[]'); }catch(e){ return []; } }
 function mySave(a){ lsSet('kl_my_tix', JSON.stringify(a)); }
+function askDraws(){
+  var def = lsGet('kl_my_draws') || '5', v = prompt('Για πόσες κληρώσεις να μπει το δελτίο;', def);
+  if(v===null) return 0; v = parseInt(v,10); if(!(v>=1 && v<=500)){ alert('Βάλε αριθμό από 1 έως 500.'); return 0; }
+  lsSet('kl_my_draws', String(v)); return v;
+}
 function myAdd(nums, draws, src){
   if(!lastId){ alert('Περιμένει να φορτώσουν οι κληρώσεις.'); return; }
   var a = myLoad(); a.unshift({id:Date.now(), n:nums.slice().sort(function(x,y){return x-y;}), start:lastId+1, draws:draws, src:src});
@@ -2044,9 +2051,10 @@ $('board').addEventListener('click', function(e){ var c = e.target.closest && e.
   if(i>=0) myPick.splice(i,1); else { if(myPick.length>=12){ alert('Έως 12 αριθμοί.'); return; } myPick.push(n); }
   renderBoard(); renderPick(); });
 $('pickClear').addEventListener('click', function(){ myPick = []; renderBoard(); renderPick(); });
+$('myClearAll').addEventListener('click', function(){ var a = myLoad(); if(!a.length) return; if(!confirm('Διαγραφή ΟΛΩΝ των δελτίων ('+a.length+');')) return; mySave([]); renderMy(); });
 $('pickAdd').addEventListener('click', function(){ if(!myPick.length) return; myAdd(myPick, +$('pickDraws').value, 'από το ταμπλό'); myPick = []; renderBoard(); renderPick(); });
-$('rlPick').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; myAdd(b.dataset.five.split(' ').map(Number), +$('rlDraws').value, '⭐ Επιλογή προγράμματος ('+RL_NAME[b.dataset.five.split(' ').length][0]+')'); b.textContent = '✓'; });
-$('rlTable').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; myAdd(b.dataset.five.split(' ').map(Number), +$('rlDraws').value, '🏁 από το Ράλι '+RL_NAME[b.dataset.five.split(' ').length][1]); b.textContent = '✓'; });
+$('rlPick').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; var nd = askDraws(); if(!nd) return; myAdd(b.dataset.five.split(' ').map(Number), nd, '⭐ Επιλογή προγράμματος ('+RL_NAME[b.dataset.five.split(' ').length][0]+')'); b.textContent = '✓'; });
+$('rlTable').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; var nd = askDraws(); if(!nd) return; myAdd(b.dataset.five.split(' ').map(Number), nd, '🏁 από το Ράλι '+RL_NAME[b.dataset.five.split(' ').length][1]); b.textContent = '✓'; });
 $('myList').addEventListener('click', function(e){
   var r = e.target.closest && e.target.closest('[data-rep]');
   if(r){ var x = myLoad().filter(function(t){ return String(t.id)===r.dataset.rep; })[0]; if(!x) return;
