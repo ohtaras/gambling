@@ -368,7 +368,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   <section class="card mt" data-k="rally">
     <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🏁 Ράλι <span id="rlTitle" style="color:var(--text);font-size:15px">πεντάδων</span></span><span id="rlMeta"></span></h2>
     <div class="cbody">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><select id="rlK"><option value="3">Τριάδες</option><option value="4">Τετράδες</option><option value="5" selected>Πεντάδες</option><option value="6">Εξάδες</option><option value="7">Επτάδες</option></select><select id="rlWin"><option value="day">Σήμερα (από 00:00)</option><option value="24">Τελευταίες 24 ώρες</option></select><label class="muted" style="font-size:12px">🔴 Hot στις τελευταίες</label><select id="rlHot"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="50">50</option></select><span class="muted" style="font-size:12px">κληρώσεις <span id="rlHotInfo"></span></span><span class="muted" style="font-size:12px">· ➕ = στα δελτία μου για</span><select id="rlDraws"><option>1</option><option>3</option><option selected>5</option><option>10</option><option>20</option><option>50</option></select><span class="muted" style="font-size:12px">κληρώσεις</span>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><select id="rlK"><option value="3">Τριάδες</option><option value="4">Τετράδες</option><option value="5" selected>Πεντάδες</option><option value="6">Εξάδες</option><option value="7">Επτάδες</option></select><select id="rlN" title="Φίλτρο: πόσες φορές έχει βγει"><option value="0">Όλες (κατάταξη)</option><option value="2">ακριβώς 2 φορές</option><option value="3">ακριβώς 3 φορές</option><option value="4">ακριβώς 4 φορές</option><option value="5">ακριβώς 5 φορές</option><option value="6">ακριβώς 6 φορές</option><option value="7">ακριβώς 7 φορές</option><option value="8">ακριβώς 8 φορές</option><option value="9">ακριβώς 9 φορές</option><option value="10">ακριβώς 10 φορές</option></select><select id="rlWin"><option value="day">Σήμερα (από 00:00)</option><option value="24">Τελευταίες 24 ώρες</option></select><label class="muted" style="font-size:12px">🔴 Hot στις τελευταίες</label><select id="rlHot"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="50">50</option></select><span class="muted" style="font-size:12px">κληρώσεις <span id="rlHotInfo"></span></span><span class="muted" style="font-size:12px">· ➕ = στα δελτία μου για</span><select id="rlDraws"><option>1</option><option>3</option><option selected>5</option><option>10</option><option>20</option><option>50</option></select><span class="muted" style="font-size:12px">κληρώσεις</span>
         <span class="muted" style="font-size:12px" id="rlInfo"></span></div>
       <div class="chips" id="rlChips"></div>
       <h3 class="muted" style="font-size:13px;margin:12px 0 6px">Κατάταξη</h3>
@@ -1144,22 +1144,24 @@ function renderRally(){
   $('rlInfo').innerHTML = 'Μπαίνουν στο ράλι οι '+NM[1]+' που βγήκαν ολόκληρες <b>'+E+' φορές</b>· μετά βλέπουμε ποια φτάνει '+(E+1)+', '+(E+2)+'… '+(RL_REC[K]||'');
   var M = rlBuild(draws, K), byId = {}; draws.forEach(function(d){ byId[d.id]=d; });
   var lastId0 = draws[draws.length-1].id, rows = [], tally = {}, feed = [];
+  var FN = +($('rlN').value||0);
   M.forEach(function(ids, k){
-    if(ids.length<E) return;
+    if(ids.length<E && ids.length!==FN) return;
     ids.sort(function(a,b){return a-b;});
-    var n = ids.length; tally[n] = (tally[n]||0)+1;
-    rows.push({k:k, ids:ids, n:n, at:ids[n-1]});
+    var n = ids.length; if(n>=E) tally[n] = (tally[n]||0)+1;
+    if(!FN || n===FN) rows.push({k:k, ids:ids, n:n, at:ids[n-1]});
+    if(n<E) return;
     for(var q=E;q<n;q++) feed.push({k:k, n:q+1, id:ids[q]});
   });
-  rows.sort(function(a,b){ return b.n-a.n || a.at-b.at; });
-  var mx = rows.length ? rows[0].n : 0;
+  if(FN) rows.sort(function(a,b){ return b.at-a.at; }); else rows.sort(function(a,b){ return b.n-a.n || a.at-b.at; });
+  var mx = 0; for(var t in tally) if(+t>mx) mx = +t;
   $('rlMeta').textContent = draws.length+' κληρώσεις · πρωτοπόρος '+(mx?mx+' φορές':'—');
   $('rlChips').innerHTML = Object.keys(tally).sort(function(a,b){return b-a;}).map(function(n){ return chip(n+' φορές', tally[n]+' '+(tally[n]===1?NM[0]:NM[1])); }).join('') || '<span class="muted">Καμία '+NM[0]+' δεν έχει φτάσει ακόμα τις '+E+' φορές.</span>';
   var top = rows.slice(0,20);
   $('rlTable').innerHTML = top.length ? '<tr><th>#</th><th>'+NM[0].charAt(0).toUpperCase()+NM[0].slice(1)+'</th><th>Φορές</th><th>Πότε βγήκε</th><th></th></tr>'+top.map(function(r,i){
       var hot = r.at===lastId0;
       return '<tr'+(hot?' style="background:rgba(139,92,246,.15)"':'')+'><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+hotK(r.k)+'</b></td><td><b style="color:'+(r.n>=E+2?'var(--hit)':'var(--text)')+'">'+r.n+'</b>'+(hot?' 🔥':'')+'</td><td class="muted" style="font-size:12px">'+r.ids.map(function(id){return byId[id]?hm(byId[id].t):'#'+id;}).join(', ')+'</td><td><button class="btn" data-five="'+r.k+'" title="Αξιολόγηση στα δελτία μου" style="padding:2px 8px">➕</button></td></tr>';
-    }).join('') + (rows.length>20 ? '<tr><td colspan="4" class="muted">… και άλλες '+(rows.length-20)+' με '+E+'+ φορές</td></tr>' : '') : '<tr><td class="muted">Καμία ακόμα.</td></tr>';
+    }).join('') + (rows.length>20 ? '<tr><td colspan="4" class="muted">… και άλλες '+(rows.length-20)+' με '+(FN?'ακριβώς '+FN:E+'+')+' φορές'+(FN?' (πρώτα οι πιο πρόσφατες)':'')+'</td></tr>' : '') : '<tr><td class="muted">'+(FN?'Καμία '+NM[0]+' με ακριβώς '+FN+' φορές.':'Καμία ακόμα.')+'</td></tr>';
   feed.sort(function(a,b){ return b.id-a.id || b.n-a.n; });
   $('rlFeed').innerHTML = feed.slice(0,40).map(function(f){ var d = byId[f.id];
     return '<div style="display:block;padding:5px 2px;border-bottom:1px solid var(--line);font-size:13px"><span class="muted">'+(d?hm(d.t):'#'+f.id)+'</span> — η <b>'+hotK(f.k)+'</b> έφτασε τις <b style="color:'+(f.n>=E+2?'var(--hit)':'var(--text)')+'">'+f.n+'</b>'+(f.n>=E+2?' 🏆':'')+'</div>'; }).join('') || '<span class="muted">Καμία '+NM[0]+' δεν έχει φτάσει ακόμα τις '+(E+1)+'.</span>';
@@ -2007,6 +2009,8 @@ $('rlTable').addEventListener('click', function(e){ var b = e.target.closest && 
 $('myList').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-del]'); if(!b) return; if(!confirm('Διαγραφή δελτίου;')) return; mySave(myLoad().filter(function(x){ return String(x.id)!==b.dataset.del; })); renderMy(); });
 renderPick();
 $('rlHot').addEventListener('change', function(){ lsSet('kl_rl_hot', this.value); renderRally(); });
+$('rlN').addEventListener('change', function(){ lsSet('kl_rl_n', this.value); renderRally(); });
+(function(){ var v = lsGet('kl_rl_n'); if(v) $('rlN').value = v; })();
 $('rlK').addEventListener('change', function(){ lsSet('kl_rl_k', this.value); renderRally(); });
 (function(){ var v = lsGet('kl_rl_k'); if(v) $('rlK').value = v; })();
 (function(){ $('rlHot').value = lsGet('kl_rl_hot') || '10'; })();
