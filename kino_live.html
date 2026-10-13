@@ -46,6 +46,16 @@ h1{font-size:22px;margin:0;display:flex;align-items:center;gap:8px}
 .b{cursor:pointer}
 .b.pick{box-shadow:0 0 0 3px #f59e0b inset;outline:2px solid #f59e0b}
 .tix{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0}
+#ttBar{position:fixed;left:50%;transform:translateX(-50%);bottom:8px;z-index:60;display:flex;gap:3px;align-items:center;flex-wrap:wrap;justify-content:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px 8px;box-shadow:0 6px 24px rgba(0,0,0,.35);max-width:calc(100vw - 20px)}
+#ttBar button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:4px 6px;font-size:12px;cursor:pointer;white-space:nowrap}
+#ttBar #ttLbl{font-size:12.5px;padding:0 6px;white-space:nowrap;font-weight:600}
+#ttBar #ttLive{background:#16a34a;color:#fff;border-color:#16a34a;font-weight:700}
+body.tt #ttBar{border:2px solid #f59e0b}
+body.tt #ttBar #ttLive{background:#dc2626;border-color:#dc2626;animation:ttp 1.4s infinite}
+@keyframes ttp{50%{opacity:.6}}
+body.tt .wrap{outline:3px dashed rgba(245,158,11,.5);outline-offset:4px}
+body{padding-bottom:90px}
 .order i.sc{background:#8b5cf6;color:#fff}
 .order .sep{font-style:normal;color:var(--muted);font-size:12px;align-self:center;padding:0 4px}
 .row .n i.sc{background:#8b5cf6;color:#fff}
@@ -170,6 +180,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   <div class="ah-sec ah-hist" data-ak="active"><h3>Ενεργά δελτία</h3><div class="list" id="agActive" style="max-height:none"></div></div>
   <div class="ah-sec ah-hist" data-ak="log" data-def="closed"><h3>Ημερολόγιο κληρώσεων</h3><div class="list" id="agLog" style="max-height:none"></div></div>
 </aside>
+<div id="ttBar"><div style="display:flex;gap:6px;align-items:center;justify-content:center;width:100%"><span id="ttLbl">🟢 LIVE</span><button id="ttLive" title="Επιστροφή στο τώρα">LIVE</button></div><button data-tt="-288" title="Μία μέρα πίσω">⏮ μέρα</button><button data-tt="-10" title="10 κληρώσεις πίσω">⏪ 10</button><button data-tt="-1" title="Μία κλήρωση πίσω">◀ 1</button><button data-tt="1" title="Μία κλήρωση μπροστά">1 ▶</button><button data-tt="10" title="10 κληρώσεις μπροστά">10 ⏩</button><button data-tt="288" title="Μία μέρα μπροστά">μέρα ⏭</button></div>
 <div class="wrap">
   <header>
     <h1><span class="dot" id="liveDot"></span> ΚΙΝΟ Live</h1>
@@ -492,9 +503,34 @@ async function fetchDay(ds){
   return {mine:mine.sort(byId), other:other.sort(byId)};
 }
 function addHist(arr){
-  var have = {}; histPool.forEach(function(d){have[d.id]=1;});
-  today.forEach(function(d){have[d.id]=1;});
-  arr.forEach(function(d){ if(!have[d.id]){ have[d.id]=1; histPool.push(d); } });
+  var H = TT ? TT.hist : histPool, T = TT ? TT.today : today;
+  var have = {}; H.forEach(function(d){have[d.id]=1;});
+  T.forEach(function(d){have[d.id]=1;});
+  arr.forEach(function(d){ if(!have[d.id]){ have[d.id]=1; H.push(d); } });
+}
+/* ---------- ⏳ Ταξίδι στον χρόνο: όλη η σελίδα σαν να ήταν εκείνη η στιγμή ---------- */
+var TT = null;   // όταν ≠ null: τα πραγματικά (live) δεδομένα, ενώ today/histPool/lastId δείχνουν το παρελθόν
+function ttAll(){ var src = TT || {today:today, hist:histPool}; return src.today.concat(src.hist).slice().sort(function(a,b){return a.id-b.id;}); }
+function ttGo(targetId){
+  var all = ttAll(); if(!all.length) return;
+  var realLast = TT ? TT.lastId : lastId;
+  if(targetId >= realLast){ ttLive(); return; }
+  var first = all[0].id; if(targetId < first) targetId = first;
+  var cur = null; for(var i=all.length-1;i>=0;i--){ if(all[i].id<=targetId){ cur = all[i]; break; } }
+  if(!cur) return;
+  if(!TT) TT = {today:today, hist:histPool, lastId:lastId, lastT:lastT};
+  var day = cur.d;
+  today = all.filter(function(d){ return d.d===day && d.id<=cur.id; }).sort(function(a,b){return b.id-a.id;});
+  histPool = all.filter(function(d){ return d.d!==day && d.id<cur.id; }).sort(function(a,b){return b.id-a.id;});
+  lastId = cur.id; lastT = cur.t; viewId = null;
+  document.body.classList.add('tt');
+  $('ttLbl').textContent = '⏳ '+cur.d.split('-').reverse().slice(0,2).join('/')+' '+hm(cur.t)+' · #'+cur.id;
+  renderAll(); setStatus('⏳ Ταξίδι στον χρόνο: η σελίδα δείχνει τα πάντα όπως ήταν μετά την κλήρωση των '+hm(cur.t)+' ('+cur.d.split('-').reverse().join('/')+'). Πάτα LIVE για το τώρα.');
+}
+function ttLive(){
+  if(TT){ today = TT.today; histPool = TT.hist; lastId = TT.lastId; lastT = TT.lastT; TT = null; }
+  viewId = null; document.body.classList.remove('tt'); $('ttLbl').textContent = '🟢 LIVE';
+  renderAll(); setStatus('🟢 LIVE'); try{ tryRefresh(); }catch(e){}
 }
 
 async function loadToday(){
@@ -590,6 +626,7 @@ function scheduleRefresh(){
 }
 async function tryRefresh(){
   clearTimeout(refreshTimer);
+  if(TT){ refreshTimer = setTimeout(tryRefresh, 15000); return; }   // σε ταξίδι στον χρόνο δεν ενημερώνουμε· το LIVE τα συμπληρώνει
   var gotNew = false;
   try{
     gotNew = await pollLast(false);
@@ -1782,6 +1819,7 @@ function agGef(force){ // ο πράκτορας παίζει μόνο τον κ�
   s.log.push(dec); agSave(s); renderAgent();
 }
 function agTick(){ // σε κάθε νέα κλήρωση: κλείσιμο αποτελεσμάτων και νέα απόφαση
+  if(TT) return;   // ο πράκτορας δεν παίζει στο παρελθόν
   renderAgent();
   var s = agLoad();
   if(s.gefOn){ if($('agOn').checked) agGef(false); return; }
@@ -1872,6 +1910,8 @@ $('list').addEventListener('click',function(e){
   renderBoard(); renderList();
   if(window.innerWidth<820) $('board').scrollIntoView({behavior:'smooth',block:'center'});
 });
+$('ttBar').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-tt]'); if(!b) return; ttGo(lastId + (+b.dataset.tt)); });
+$('ttLive').addEventListener('click', function(){ ttLive(); });
 $('btnLive').addEventListener('click',function(){ viewId=null; renderBoard(); renderList(); });
 $('win').addEventListener('change',renderStats);
 $('pwin').addEventListener('change',renderPos);
