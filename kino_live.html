@@ -372,7 +372,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
         <span class="muted" style="font-size:12px" id="rlInfo"></span></div>
       <div class="chips" id="rlChips"></div>
       <h3 class="muted" style="font-size:13px;margin:12px 0 6px">Κατάταξη</h3>
-      <div class="scroll-x"><table class="ptab" id="rlTable"></table></div>
+      <div id="rlPick" style="margin:8px 0"></div><div class="scroll-x"><table class="ptab" id="rlTable"></table></div>
       <h3 class="muted" style="font-size:13px;margin:14px 0 6px" id="rlFeedTitle">Τελευταίες προσπεράσεις</h3>
       <div class="list" id="rlFeed" style="max-height:260px"></div>
     </div>
@@ -1122,6 +1122,21 @@ function rlBuild(draws, K){ // draws: παλιό→νέο· επαυξητικά
   }
   return M;
 }
+/* ⭐ Επιλογή προγράμματος: βαθμολογία από back-test 90 ημερών (πόσο συχνά ξαναβγήκε κάθε «προφίλ» σε σχέση με το κανονικό) */
+var RL_LIFT = {
+  3:{def:[1.023,1.025,1.006,0.997], dl:[1.023,0.991,1.005,1.006,1.019], hot:[0.999,1.008,1.013,1.016], cold:[1.009,1.002,1.002,1.003], n:[1.003,1.007,1.021,1.009]},
+  4:{def:[1.003,1.027,1.025,1.0,0.997], dl:[1.003,0.99,1.009,0.999,1.016], hot:[1.004,1.003,1.011,1.011], cold:[1.012,1.002,0.999,1.008], n:[1.005,1.01,0.998,1.068]},
+  5:{def:[0.974,1.073,1.035,1.026,0.995,1.005], dl:[0.974,0.97,1.016,0.997,1.025], hot:[1.017,1.006,1.006,1.012], cold:[1.012,1.005,1.011,1.015], n:[1.009,1.018,1,1]}
+};
+function rlScore(r, K, lastId0, lastSet, h10){
+  var T = RL_LIFT[Math.min(K,5)] , ns = r.k.split(' ').map(Number), np = 0, h = 0, c = 0;
+  ns.forEach(function(n){ if(lastSet.has(n)) np++; if(h10[n]>=4) h++; else if(h10[n]<=1) c++; });
+  var df = K-np, dly = lastId0-r.at, db = dly<1?0:dly<5?1:dly<20?2:dly<60?3:4, no = Math.min(r.n-RL_E[K],3);
+  var why = [], f = function(v,txt){ if(v>1.012) why.push(txt); return v; };
+  var sc = f(T.def[Math.min(df,T.def.length-1)]||1, df===0?'βγήκε ολόκληρη τώρα':(df===1?'λείπει 1 νούμερο':'λείπουν '+df)+' από την τελευταία')
+         * f(T.dl[db]||1, 'καθυστέρηση '+dly) * f(T.hot[Math.min(h,3)]||1, h+' ζεστά') * f(T.cold[Math.min(c,3)]||1, c+' κρύα') * f(T.n[no]||1, r.n+' φορές');
+  return {sc:sc, why:why};
+}
 function renderRally(){
   var card = document.querySelector && document.querySelector('.card[data-k="rally"]');
   if(card && card.classList.contains('collapsed')) return;
@@ -1146,7 +1161,9 @@ function renderRally(){
   var M = rlBuild(draws, K), byId = {}; draws.forEach(function(d){ byId[d.id]=d; });
   var lastId0 = draws[draws.length-1].id, rows = [], tally = {}, feed = [];
   var FN = +($('rlN').value||0);
+  var cand = [];
   M.forEach(function(ids, k){
+    if(ids.length>=E){ var ii = ids.slice().sort(function(a,b){return a-b;}); cand.push({k:k, n:ii.length, at:ii[ii.length-1]}); }
     if(ids.length<E && ids.length!==FN) return;
     ids.sort(function(a,b){return a-b;});
     var n = ids.length; if(n>=E) tally[n] = (tally[n]||0)+1;
@@ -1154,6 +1171,9 @@ function renderRally(){
     if(n<E) return;
     for(var q=E;q<n;q++) feed.push({k:k, n:q+1, id:ids[q]});
   });
+  var h10 = new Array(81).fill(0); today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;}).slice(0,10).forEach(function(d){ d.arr.forEach(function(x){ h10[x]++; }); });
+  var best = null; cand.forEach(function(r){ var q = rlScore(r, K, lastId0, lastSet, h10); r.sc = q.sc; r.why = q.why; if(!best || r.sc>best.sc || (r.sc===best.sc && r.at>best.at)) best = r; });
+  $('rlPick').innerHTML = best ? '<div style="border:2px solid #f59e0b;border-radius:10px;padding:8px 10px;background:rgba(245,158,11,.08)"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>⭐ Επιλογή προγράμματος:</b> <b style="font-size:17px">'+hotK(best.k)+'</b> <button class="btn" data-five="'+best.k+'" style="padding:2px 8px">➕</button></div><div class="muted" style="font-size:12px;margin-top:4px">'+best.n+' φορές · βαθμός '+best.sc.toFixed(3)+(best.why.length?' · γιατί: '+best.why.join(', '):'')+'<br>Βαθμολογία από back-test 90 ημερών: ποια «προφίλ» '+NM[1]+' του Ράλι ξαναβγήκαν συχνότερα. Το καλύτερο προφίλ πήγε έως ~5% πάνω από το κανονικό — μικρή διαφορά, όχι εγγύηση'+(K>5?' (για '+NM[1]+' χρησιμοποιεί τον πίνακα των πεντάδων)':'')+'.</div></div>' : '';
   var SO = $('rlSort').value;
   if(SO==='new') rows.sort(function(a,b){ return b.at-a.at || b.n-a.n; });
   else if(SO==='old') rows.sort(function(a,b){ return a.at-b.at || b.n-a.n; });
@@ -2017,6 +2037,7 @@ $('board').addEventListener('click', function(e){ var c = e.target.closest && e.
   renderBoard(); renderPick(); });
 $('pickClear').addEventListener('click', function(){ myPick = []; renderBoard(); renderPick(); });
 $('pickAdd').addEventListener('click', function(){ if(!myPick.length) return; myAdd(myPick, +$('pickDraws').value, 'από το ταμπλό'); myPick = []; renderBoard(); renderPick(); });
+$('rlPick').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; myAdd(b.dataset.five.split(' ').map(Number), +$('rlDraws').value, '⭐ Επιλογή προγράμματος ('+RL_NAME[b.dataset.five.split(' ').length][0]+')'); b.textContent = '✓'; });
 $('rlTable').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; myAdd(b.dataset.five.split(' ').map(Number), +$('rlDraws').value, '🏁 από το Ράλι '+RL_NAME[b.dataset.five.split(' ').length][1]); b.textContent = '✓'; });
 $('myList').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-del]'); if(!b) return; if(!confirm('Διαγραφή δελτίου;')) return; mySave(myLoad().filter(function(x){ return String(x.id)!==b.dataset.del; })); renderMy(); });
 renderPick();
