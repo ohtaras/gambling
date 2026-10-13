@@ -1959,7 +1959,18 @@ $('list').addEventListener('click',function(e){
   renderBoard(); renderList();
   if(window.innerWidth<820) $('board').scrollIntoView({behavior:'smooth',block:'center'});
 });
-$('ttBar').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-tt]'); if(!b) return; ttGo(lastId + (+b.dataset.tt)); });
+$('ttBar').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-tt]'); if(!b) return;
+  var st = +b.dataset.tt;
+  if(Math.abs(st)===288){ // μέρα: πάει στην 1η κλήρωση (00:00) της προηγούμενης / επόμενης μέρας
+    var all = ttAll(); if(!all.length) return;
+    var cur = all.filter(function(d){ return d.id<=lastId; }).pop() || all[0], days = [];
+    all.forEach(function(d){ if(days[days.length-1]!==d.d) days.push(d.d); });
+    var i = days.indexOf(cur.d), td = st<0 ? days[Math.max(0,i-1)] : days[i+1];
+    if(!td){ ttLive(); return; }
+    var first = all.filter(function(d){ return d.d===td; })[0];
+    ttGo(first.id); return;
+  }
+  ttGo(lastId + st); });
 $('ttLive').addEventListener('click', function(){ ttLive(); });
 $('btnLive').addEventListener('click',function(){ viewId=null; renderBoard(); renderList(); });
 $('win').addEventListener('change',renderStats);
