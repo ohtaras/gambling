@@ -1182,9 +1182,9 @@ function renderRally(){
   var hotK = function(k){ return k.split(' ').map(function(x){ var n = +x, isHot = hotSet[n], isNow = lastSet.has(n);
     var isCold = coldSet[n];
     if(!isHot && !isNow && !isCold) return x;
-    var st = (isHot ? 'color:#ef4444;' : isCold ? 'color:#2563eb;' : '') + (isNow ? 'background:#facc15;'+(isHot?'':'color:#1a1300;')+'border-radius:4px;padding:0 3px;' : '');
+    var st = (isHot ? 'color:#ef4444;' : isCold ? 'color:#2563eb;' : '') + (isNow ? 'background:#facc15;'+(isHot||isCold?'':'color:#1a1300;')+'border-radius:4px;padding:0 3px;' : '');
     return '<span style="'+st+'" title="'+(isNow?'βγήκε στην τελευταία κλήρωση · ':'')+(isCold?'κρύο · ':'')+hc[n]+' φορές στις '+HX+'">'+x+'</span>'; }).join(' '); };
-  $('rlHotInfo').textContent = '(🟨 κίτρινο = βγήκε στην τελευταία κλήρωση · 🔵 μπλε = κρύο, ≤'+CMAX+' φορές'+(recent[0]?' των '+hm(recent[0].t):'')+' · hot = '+HMIN+'+ φορές · τώρα: '+(Object.keys(hotSet).map(Number).sort(function(a,b){return a-b;}).join(' ')||'κανένας')+')';
+  $('rlHotInfo').textContent = '(🟨 κίτρινο φόντο = βγήκε στην τελευταία κλήρωση · γράμματα: 🔴 κόκκινα = ζεστό · 🔵 μπλε = κρύο, ≤'+CMAX+' φορές · ⚪ άσπρα/μαύρα = χλιαρό, ούτε ζεστό ούτε κρύο'+(recent[0]?' των '+hm(recent[0].t):'')+' · hot = '+HMIN+'+ φορές · τώρα: '+(Object.keys(hotSet).map(Number).sort(function(a,b){return a-b;}).join(' ')||'κανένας')+')';
   if(mode==='day') draws = today.slice();
   else draws = today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;}).slice(0,288);
   draws.sort(function(a,b){return a.id-b.id;});
