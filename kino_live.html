@@ -374,7 +374,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
       <details id="rlOddsBox" style="margin:6px 0"><summary class="muted" style="cursor:pointer;font-size:13px">📊 Πιθανότητα για το απόλυτο σε κάθε στήλη (1 στις πόσες)</summary><div class="scroll-x"><table class="ptab" id="rlOdds"></table></div></details>
       <div class="chips" id="rlChips"></div>
       <h3 class="muted" style="font-size:13px;margin:12px 0 6px">Κατάταξη</h3>
-      <div id="rlPick" style="margin:8px 0"></div><div class="scroll-x"><table class="ptab" id="rlTable"></table></div>
+      <div id="rlRep" style="margin:8px 0"></div><div id="rlPick" style="margin:8px 0"></div><div class="scroll-x"><table class="ptab" id="rlTable"></table></div>
       <h3 class="muted" style="font-size:13px;margin:14px 0 6px" id="rlFeedTitle">Τελευταίες προσπεράσεις</h3>
       <div class="list" id="rlFeed" style="max-height:260px"></div>
     </div>
@@ -1148,6 +1148,29 @@ function renderOdds(K){
   }
   $('rlOdds').innerHTML = h;
 }
+function renderRep(reps, tally, pcH, K, NM, byId, lastId0, hotK){
+  var box = $('rlRep'); if(!box) return;
+  var d0 = byId[lastId0];
+  if(!reps.length){ box.innerHTML = '<div class="muted" style="font-size:13px;border:1px dashed var(--line);border-radius:10px;padding:8px 10px">🔁 Στην τελευταία κλήρωση'+(d0?' ('+hm(d0.t)+')':'')+' δεν επαναλήφθηκε καμία '+NM[0]+'.</div>'; return; }
+  var gt = function(H, x){ var c = 0; for(var q in H) if(+q>x) c += H[q]; return c; };
+  var upTo = {}; reps.forEach(function(r){ upTo[r.n] = (upTo[r.n]||0)+1; });
+  reps.forEach(function(r){
+    r.ids.sort(function(a,b){return a-b;}); var N = r.n;
+    r.rankNow = 1 + gt(tally, N); r.rankBefore = 1 + gt(pcH, N-1);
+    r.passed = Math.max(0, (pcH[N-1]||0) - (upTo[N]||0));   // είχαν N−1 όπως αυτή και δεν ήρθαν
+    r.tied = Math.max(0, (tally[N]||0) - (upTo[N]||0));     // είχαν ήδη N και την έφτασε
+    r.prev = r.ids[N-2]; r.gap = lastId0 - r.prev;
+  });
+  reps.sort(function(a,b){ return b.n-a.n || a.rankNow-b.rankNow; });
+  var cnt = {}; reps.forEach(function(r){ cnt[r.n] = (cnt[r.n]||0)+1; });
+  var head = '<b>🔁 Επαναλήφθηκαν στην τελευταία κλήρωση'+(d0?' ('+hm(d0.t)+')':'')+': '+reps.length+' '+(reps.length===1?NM[0]:NM[1])+'</b><div class="muted" style="font-size:12px;margin:2px 0 6px">'+Object.keys(cnt).sort(function(a,b){return b-a;}).map(function(n){ return cnt[n]+' έφτασαν '+n+'η φορά'; }).join(' · ')+'</div>';
+  var body = reps.slice(0,15).map(function(r){
+    var lead = r.rankNow===1 ? (gt(tally,r.n-1)-gt(tally,r.n)===1 ? ' 🥇 μόνη πρωτοπόρος' : ' 🥇 στην κορυφή') : '';
+    return '<div style="padding:6px 0;border-top:1px solid var(--line);font-size:13px"><div style="display:flex;justify-content:space-between;gap:6px;align-items:center;flex-wrap:wrap"><b style="font-size:15px">'+hotK(r.k)+'</b><span><b style="color:var(--hit)">'+r.n+'η φορά</b>'+lead+' <button class="btn" data-five="'+r.k+'" style="padding:1px 7px">➕</button></span></div>'+
+      '<div class="muted" style="font-size:12px">θέση <b>#'+r.rankNow+'</b> (από #'+r.rankBefore+') · προσπέρασε <b>'+r.passed.toLocaleString('el-GR')+'</b>'+(r.tied?' · ισοφάρισε '+r.tied.toLocaleString('el-GR'):'')+' · προηγ. φορά '+(byId[r.prev]?hm(byId[r.prev].t):'#'+r.prev)+' (πριν '+r.gap+' κληρ.)<br>όλες: '+r.ids.map(function(id){ return byId[id]?hm(byId[id].t):'#'+id; }).join(', ')+'</div></div>';
+  }).join('') + (reps.length>15 ? '<div class="muted" style="font-size:12px;padding-top:4px">… και άλλες '+(reps.length-15)+'</div>' : '');
+  box.innerHTML = '<div style="border:2px solid #22c55e;border-radius:10px;padding:8px 10px;background:rgba(34,197,94,.07)">'+head+body+'</div>';
+}
 function renderRally(){
   var card = document.querySelector && document.querySelector('.card[data-k="rally"]');
   if(card && card.classList.contains('collapsed')) return;
@@ -1172,8 +1195,11 @@ function renderRally(){
   var M = rlBuild(draws, K), byId = {}; draws.forEach(function(d){ byId[d.id]=d; });
   var lastId0 = draws[draws.length-1].id, rows = [], tally = {}, feed = [];
   var FN = +($('rlN').value||0);
-  var cand = [];
+  var cand = [], pcH = {}, reps = [];
   M.forEach(function(ids, k){
+    var nn = ids.length, inLast = ids.indexOf(lastId0)>=0, pc = nn-(inLast?1:0);
+    if(pc>=1) pcH[pc] = (pcH[pc]||0)+1;
+    if(inLast && nn>=2) reps.push({k:k, ids:ids, n:nn});
     if(ids.length>=RL_EP[K]){ var ii = ids.slice().sort(function(a,b){return a-b;}); cand.push({k:k, n:ii.length, at:ii[ii.length-1]}); }
     if(ids.length<E && ids.length!==FN) return;
     ids.sort(function(a,b){return a-b;});
@@ -1182,6 +1208,7 @@ function renderRally(){
     if(n<E) return;
     for(var q=E;q<n;q++) feed.push({k:k, n:q+1, id:ids[q]});
   });
+  renderRep(reps, tally, pcH, K, NM, byId, lastId0, hotK);
   var h10 = new Array(81).fill(0); today.concat(histPool).slice().sort(function(a,b){return b.id-a.id;}).slice(0,10).forEach(function(d){ d.arr.forEach(function(x){ h10[x]++; }); });
   var best = null; cand.forEach(function(r){ var q = rlScore(r, K, lastId0, lastSet, h10); r.sc = q.sc; r.why = q.why; if(!best || r.sc>best.sc || (r.sc===best.sc && r.at>best.at)) best = r; });
   $('rlPick').innerHTML = best ? '<div style="border:2px solid #f59e0b;border-radius:10px;padding:8px 10px;background:rgba(245,158,11,.08)"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>⭐ Επιλογή προγράμματος:</b> <b style="font-size:17px">'+hotK(best.k)+'</b> <button class="btn" data-five="'+best.k+'" style="padding:2px 8px">➕</button></div><div class="muted" style="font-size:12px;margin-top:4px">'+best.n+' φορές · βαθμός '+best.sc.toFixed(3)+(best.why.length?' · γιατί: '+best.why.join(', '):'')+'<br>Βαθμολογία από back-test 90 ημερών: ποια «προφίλ» '+NM[1]+' του Ράλι ξαναβγήκαν συχνότερα. Το καλύτερο προφίλ πήγε έως ~5% πάνω από το κανονικό — μικρή διαφορά, όχι εγγύηση'+(K>5?' (για '+NM[1]+' χρησιμοποιεί τον πίνακα των πεντάδων)':'')+'.</div></div>' : '';
@@ -2073,6 +2100,7 @@ $('board').addEventListener('click', function(e){ var c = e.target.closest && e.
 $('pickClear').addEventListener('click', function(){ myPick = []; renderBoard(); renderPick(); });
 $('myClearAll').addEventListener('click', function(){ var a = myLoad(); if(!a.length) return; if(!confirm('Διαγραφή ΟΛΩΝ των δελτίων ('+a.length+');')) return; mySave([]); renderMy(); });
 $('pickAdd').addEventListener('click', function(){ if(!myPick.length) return; myAdd(myPick, +$('pickDraws').value, 'από το ταμπλό'); myPick = []; renderBoard(); renderPick(); });
+$('rlRep').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; var nd = askDraws(); if(!nd) return; myAdd(b.dataset.five.split(' ').map(Number), nd, '🔁 επανάληψη στο Ράλι ('+RL_NAME[b.dataset.five.split(' ').length][0]+')'); b.textContent = '✓'; });
 $('rlPick').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; var nd = askDraws(); if(!nd) return; myAdd(b.dataset.five.split(' ').map(Number), nd, '⭐ Επιλογή προγράμματος ('+RL_NAME[b.dataset.five.split(' ').length][0]+')'); b.textContent = '✓'; });
 $('rlTable').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; var nd = askDraws(); if(!nd) return; myAdd(b.dataset.five.split(' ').map(Number), nd, '🏁 από το Ράλι '+RL_NAME[b.dataset.five.split(' ').length][1]); b.textContent = '✓'; });
 $('myList').addEventListener('click', function(e){
