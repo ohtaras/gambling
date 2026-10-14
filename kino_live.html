@@ -196,7 +196,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   <div class="ah-sec ah-hist" data-ak="log" data-def="closed"><h3>Ημερολόγιο κληρώσεων</h3><div class="list" id="agLog" style="max-height:none"></div></div>
 </aside>
 <div id="taskbar"></div>
-<div id="ttBar"><div style="display:flex;gap:6px;align-items:center;justify-content:center;width:100%"><span id="ttLbl">🟢 LIVE</span><button id="ttLive" title="Επιστροφή στο τώρα">LIVE</button></div><button data-tt="-288" title="Μία μέρα πίσω">⏮ μέρα</button><button data-tt="-10" title="10 κληρώσεις πίσω">⏪ 10</button><button data-tt="-1" title="Μία κλήρωση πίσω">◀ 1</button><button data-tt="1" title="Μία κλήρωση μπροστά">1 ▶</button><button data-tt="10" title="10 κληρώσεις μπροστά">10 ⏩</button><button data-tt="288" title="Μία μέρα μπροστά">μέρα ⏭</button></div>
+<div id="ttBar"><div style="display:flex;gap:6px;align-items:center;justify-content:center;width:100%"><span id="ttLbl">🟢 LIVE</span><button id="ttLive" title="Επιστροφή στο τώρα">LIVE</button><button id="ttLock" title="Κλείδωσε αυτή την κλήρωση ως πρώτη της «μέρας»">🔒 Αρχή εδώ</button></div><button data-tt="-288" title="Μία μέρα πίσω">⏮ μέρα</button><button data-tt="-10" title="10 κληρώσεις πίσω">⏪ 10</button><button data-tt="-1" title="Μία κλήρωση πίσω">◀ 1</button><button data-tt="1" title="Μία κλήρωση μπροστά">1 ▶</button><button data-tt="10" title="10 κληρώσεις μπροστά">10 ⏩</button><button data-tt="288" title="Μία μέρα μπροστά">μέρα ⏭</button></div>
 <div class="wrap">
   <header>
     <h1><span class="dot" id="liveDot"></span> ΚΙΝΟ Live</h1>
@@ -2147,8 +2147,9 @@ function applyAnchor(){
   anchorWas = !!ANCHOR;
   var b = $('anchorBar'); if(b){ b.style.display = useA ? 'flex' : 'none'; if(useA) $('anchorTxt').textContent = '🔒 Η «μέρα» ξεκινά από την κλήρωση των '+anchorLbl()+' (#'+ANCHOR+') · '+today.length+' κληρώσεις'; }
 }
+function updTtLock(){ var b = $('ttLock'); if(!b) return; var on = ANCHOR && ANCHOR===lastId; b.textContent = ANCHOR ? (on ? '🔓 Ξεκλείδωμα' : '🔒 Αρχή εδώ') : '🔒 Αρχή εδώ'; b.style.background = ANCHOR ? '#f59e0b' : ''; b.style.color = ANCHOR ? '#1a1300' : ''; b.title = ANCHOR ? 'Κλειδωμένη αρχή: '+anchorLbl()+' — πάτα για '+(on?'ξεκλείδωμα':'μετακίνηση εδώ') : 'Κλείδωσε αυτή την κλήρωση ως πρώτη της «μέρας»'; }
 function setAnchor(id){ ANCHOR = id||0; lsSet('kl_anchor', String(ANCHOR)); if(ANCHOR) anchorWas = true; viewId = null; renderAll(); }
-function renderAll(){ applyAnchor(); renderMan(); renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); agTick(); }
+function renderAll(){ applyAnchor(); updTtLock(); renderMan(); renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); agTick(); }
 
 /* ---------- Countdown ---------- */
 function tick(){
@@ -2161,6 +2162,7 @@ function tick(){
 
 /* ---------- Events ---------- */
 $('anchorOff').addEventListener('click', function(){ setAnchor(0); });
+$('ttLock').addEventListener('click', function(){ setAnchor(ANCHOR && ANCHOR===lastId ? 0 : lastId); });
 $('list').addEventListener('click',function(e){
   var lk = e.target.closest && e.target.closest('[data-lock]');
   if(lk){ e.stopPropagation(); var id = +lk.dataset.lock; setAnchor(id===ANCHOR ? 0 : id); return; }
