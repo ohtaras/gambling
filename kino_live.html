@@ -204,6 +204,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     <div class="cd"><small>Επόμενη κλήρωση <span id="cdNext">—</span></small><b id="cdVal">--:--</b></div></div>
   </header>
   <div class="status" id="status">Φόρτωση…</div>
+  <div id="anchorBar" style="display:none;margin:6px 0;padding:6px 10px;border:2px solid #f59e0b;border-radius:10px;background:rgba(245,158,11,.1);font-size:13px;display:none;align-items:center;gap:8px;flex-wrap:wrap"><span id="anchorTxt"></span> <button class="btn" id="anchorOff" style="padding:2px 10px">🔓 Ξεκλείδωμα</button></div>
 
   <div class="grid2">
     <section class="card" data-k="board">
@@ -759,12 +760,12 @@ function renderBoard(){
 function chip(k,v){ return '<span class="chip">'+k+': <b>'+v+'</b></span>'; }
 
 function renderList(){
-  $('todayCount').textContent = today.length+' κληρώσεις';
+  $('todayCount').textContent = today.length+' κληρώσεις'+(ANCHOR?' · 🔒 από '+anchorLbl():'');
   var sel = viewId || (today[0]&&today[0].id);
   $('list').innerHTML = today.map(function(d){
     var nums = d.arr.slice().sort(function(a,b){return a-b;}).map(function(n){return '<i'+(n===d.b?' class="bonus"':'')+'>'+n+'</i>';}).join('') +
       d.sc.map(function(n){return '<i class="sc">'+n+'</i>';}).join('');
-    return '<div class="row'+(d.id===sel?' sel':'')+'" data-id="'+d.id+'"><div class="t">'+hm(d.t)+'<small>#'+d.id+'</small></div><div class="n">'+nums+'</div></div>';
+    return '<div class="row'+(d.id===sel?' sel':'')+'" data-id="'+d.id+'"'+(d.id===ANCHOR?' style="border-left:3px solid #f59e0b"':'')+'><div class="t">'+hm(d.t)+'<small>#'+d.id+'</small><button data-lock="'+d.id+'" title="Κλείδωσε αυτή την κλήρωση ως αρχή της «μέρας»" style="display:block;margin-top:2px;background:none;border:none;cursor:pointer;font-size:14px;padding:0;opacity:'+(d.id===ANCHOR?'1':'.45')+'">'+(d.id===ANCHOR?'🔒':'🔓')+'</button></div><div class="n">'+nums+'</div></div>';
   }).join('') || '<div class="muted">Καμία κλήρωση ακόμα σήμερα.</div>';
 }
 
@@ -2111,7 +2112,21 @@ function renderK8(){
   }).join('') || '<span class="muted">Η δοκιμή ξεκινάει με την κλήρωση #'+K8_START+'.</span>';
 }
 
-function renderAll(){ renderMan(); renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); agTick(); }
+/* ---------- 🔒 Κλείδωμα: μια οποιαδήποτε κλήρωση γίνεται η «πρώτη της μέρας» ---------- */
+var ANCHOR = +(lsGet('kl_anchor')||0) || 0, anchorWas = !!ANCHOR;
+function anchorLbl(){ var d = today.concat(histPool).filter(function(x){ return x.id===ANCHOR; })[0]; return d ? hm(d.t)+' '+d.d.split('-').reverse().slice(0,2).join('/') : '#'+ANCHOR; }
+function applyAnchor(){
+  if(!ANCHOR && !anchorWas) return;
+  var pool = today.concat(histPool); if(!pool.length) return;
+  pool.sort(function(a,b){ return b.id-a.id; });
+  var useA = ANCHOR && pool.some(function(d){ return d.id===ANCHOR; }) && pool[0].id>=ANCHOR;
+  if(useA){ today = pool.filter(function(d){ return d.id>=ANCHOR; }); histPool = pool.filter(function(d){ return d.id<ANCHOR; }); }
+  else { var d0 = pool[0].d; today = pool.filter(function(d){ return d.d===d0; }); histPool = pool.filter(function(d){ return d.d!==d0; }); }
+  anchorWas = !!ANCHOR;
+  var b = $('anchorBar'); if(b){ b.style.display = useA ? 'flex' : 'none'; if(useA) $('anchorTxt').textContent = '🔒 Η «μέρα» ξεκινά από την κλήρωση των '+anchorLbl()+' (#'+ANCHOR+') · '+today.length+' κληρώσεις'; }
+}
+function setAnchor(id){ ANCHOR = id||0; lsSet('kl_anchor', String(ANCHOR)); if(ANCHOR) anchorWas = true; viewId = null; renderAll(); }
+function renderAll(){ applyAnchor(); renderMan(); renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); agTick(); }
 
 /* ---------- Countdown ---------- */
 function tick(){
@@ -2123,7 +2138,10 @@ function tick(){
 }
 
 /* ---------- Events ---------- */
+$('anchorOff').addEventListener('click', function(){ setAnchor(0); });
 $('list').addEventListener('click',function(e){
+  var lk = e.target.closest && e.target.closest('[data-lock]');
+  if(lk){ e.stopPropagation(); var id = +lk.dataset.lock; setAnchor(id===ANCHOR ? 0 : id); return; }
   var r = e.target.closest('.row'); if(!r) return;
   var id=+r.dataset.id; viewId = (today[0]&&id===today[0].id)?null:id;
   renderBoard(); renderList();
