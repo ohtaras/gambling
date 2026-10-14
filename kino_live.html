@@ -371,7 +371,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     <div class="cbody">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><select id="rlK"><option value="3">Τριάδες</option><option value="4">Τετράδες</option><option value="5" selected>Πεντάδες</option><option value="6">Εξάδες</option><option value="7">Επτάδες</option><option value="8">Οκτάδες</option><option value="9">Εννιάδες</option><option value="10">Δεκάδες</option><option value="11">Εντεκάδες</option><option value="12">Δωδεκάδες</option></select><select id="rlN" title="Φίλτρο: πόσες φορές έχει βγει"><option value="0">Όλες (κατάταξη)</option><option value="2">ακριβώς 2 φορές</option><option value="3">ακριβώς 3 φορές</option><option value="4">ακριβώς 4 φορές</option><option value="5">ακριβώς 5 φορές</option><option value="6">ακριβώς 6 φορές</option><option value="7">ακριβώς 7 φορές</option><option value="8">ακριβώς 8 φορές</option><option value="9">ακριβώς 9 φορές</option><option value="10">ακριβώς 10 φορές</option></select><select id="rlSort" title="Ταξινόμηση"><option value="rank">Ταξινόμηση: κατάταξη</option><option value="new">Πιο πρόσφατες</option><option value="old">Πιο παλιές (ώρα χωρίς να βγει)</option><option value="gap">Μέγιστη καθυστέρηση</option><option value="rule">🎯 Συνταγή: λείπει 1 · τα άλλα = 1 ζεστό + κρύα</option></select><select id="rlWin"><option value="day">Σήμερα (από 00:00)</option><option value="24">Τελευταίες 24 ώρες</option></select><label class="muted" style="font-size:12px">🔴 Hot στις τελευταίες</label><select id="rlHot"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="50">50</option></select><span class="muted" style="font-size:12px">κληρώσεις <span id="rlHotInfo"></span></span>
         <span class="muted" style="font-size:12px" id="rlInfo"></span></div>
-      <details id="rlOddsBox" style="margin:6px 0"><summary class="muted" style="cursor:pointer;font-size:13px">📊 Πιθανότητες όλων των στηλών (1 στις πόσες)</summary><div class="scroll-x"><table class="ptab" id="rlOdds"></table></div></details>
+      <details id="rlOddsBox" style="margin:6px 0"><summary class="muted" style="cursor:pointer;font-size:13px">📊 Πιθανότητα για το απόλυτο σε κάθε στήλη (1 στις πόσες)</summary><div class="scroll-x"><table class="ptab" id="rlOdds"></table></div></details>
       <div class="chips" id="rlChips"></div>
       <h3 class="muted" style="font-size:13px;margin:12px 0 6px">Κατάταξη</h3>
       <div id="rlPick" style="margin:8px 0"></div><div class="scroll-x"><table class="ptab" id="rlTable"></table></div>
@@ -1141,10 +1141,10 @@ function rlScore(r, K, lastId0, lastSet, h10){
   return {sc:sc, why:why};
 }
 function renderOdds(K){
-  var f = function(x){ return Math.round(x).toLocaleString('el-GR'); }, h = '<tr><th>Στήλη</th><th>Ολόκληρη σε 1 κλήρωση</th><th>Αν την παίζεις όλη τη μέρα (288 κληρ.)</th><th>Κάποιο κέρδος</th><th>Μέγ. κέρδος (0,50€)</th></tr>';
+  var f = function(x){ return Math.round(x).toLocaleString('el-GR'); }, h = '<tr><th>Στήλη</th><th>Το απόλυτο (όλα σωστά) σε 1 κλήρωση</th><th>Αν την παίζεις όλη τη μέρα (288 κληρ.)</th><th>Πληρώνει (0,50€)</th></tr>';
   for(var n=1;n<=12;n++){
     var P = probs(n), full = P[n], day = 1-Math.pow(1-full,288), any = 0; for(var k in PAYS[n]) any += P[k];
-    h += '<tr'+(n===K?' style="background:rgba(245,158,11,.15);font-weight:700"':'')+'><td>'+n+(n===1?' αριθμός':' αριθμοί')+'</td><td>1 στις '+f(1/full)+'</td><td>'+(day>0.5?(day*100).toFixed(0)+'%':'1 στις '+f(1/day))+'</td><td>1 στις '+(1/any).toFixed(1).replace('.',',')+'</td><td>'+eur(PAYS[n][n])+'</td></tr>';
+    h += '<tr'+(n===K?' style="background:rgba(245,158,11,.15);font-weight:700"':'')+'><td>'+n+(n===1?' αριθμός':' αριθμοί')+'</td><td>1 στις '+f(1/full)+'</td><td>'+(day>0.5?(day*100).toFixed(0)+'%':'1 στις '+f(1/day))+'</td><td>'+eur(PAYS[n][n])+'</td></tr>';
   }
   $('rlOdds').innerHTML = h;
 }
