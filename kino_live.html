@@ -696,7 +696,7 @@ function renderBoard(){
     var n=+c.dataset.n;
     if(heat){ var t = Math.max(-1, Math.min(1, heat[n]/2)), a = (0.15+Math.abs(t)*0.8).toFixed(2);
       c.style.background = t>=0 ? 'rgba(239,68,68,'+a+')' : 'rgba(37,99,235,'+a+')'; c.style.color = '#fff';
-      c.style.boxShadow = d.set.has(n) ? 'inset 0 0 0 3px #facc15' : ''; c.title = n+': θερμοκρασία '+(heat[n]>=0?'+':'')+heat[n].toFixed(1);
+      c.style.boxShadow = ''; c.title = n+': θερμοκρασία '+(heat[n]>=0?'+':'')+heat[n].toFixed(1);
       c.className = 'b'+((typeof myPick!=='undefined' && myPick && myPick.indexOf(n)>=0)?' pick':''); return; }
     c.style.background = ''; c.style.color = ''; c.style.boxShadow = ''; c.title = '';
     c.className='b'+(d&&d.set.has(n)?(n===d.b?' bonus':' on'):(d&&d.sc.indexOf(n)>=0?' sc':''))+((typeof myPick!=='undefined' && myPick && myPick.indexOf(n)>=0)?' pick':'');
