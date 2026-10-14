@@ -55,7 +55,22 @@ body.tt #ttBar{border:2px solid #f59e0b}
 body.tt #ttBar #ttLive{background:#dc2626;border-color:#dc2626;animation:ttp 1.4s infinite}
 @keyframes ttp{50%{opacity:.6}}
 body.tt .wrap{outline:3px dashed rgba(245,158,11,.5);outline-offset:4px}
-body{padding-bottom:90px}
+body{padding-bottom:150px}
+#taskbar{position:fixed;left:0;right:0;bottom:0;z-index:70;display:flex;gap:4px;align-items:stretch;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  background:var(--panel);border-top:1px solid var(--line);padding:5px 6px calc(5px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px rgba(0,0,0,.3)}
+#taskbar::-webkit-scrollbar{display:none}
+#taskbar button{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:54px;padding:3px 6px;border-radius:10px;
+  border:1px solid transparent;background:transparent;color:var(--muted);font-size:10.5px;cursor:pointer;white-space:nowrap;position:relative}
+#taskbar button .ic{font-size:19px;line-height:1.1;filter:grayscale(1);opacity:.55}
+#taskbar button.on{color:var(--text);background:var(--panel2);border-color:var(--line)}
+#taskbar button.on .ic{filter:none;opacity:1}
+#taskbar button.on::after{content:'';position:absolute;bottom:1px;left:30%;right:30%;height:3px;border-radius:2px;background:#22c55e}
+#taskbar .sep{width:1px;background:var(--line);margin:4px 2px;flex:0 0 1px}
+.card.win-off{display:none!important}
+body.tt-off #ttBar{display:none}
+.card.flash{animation:flash 1s ease}
+@keyframes flash{0%{box-shadow:0 0 0 3px #22c55e}100%{box-shadow:none}}
+#ttBar{bottom:64px!important}
 .order i.sc{background:#8b5cf6;color:#fff}
 .order .sep{font-style:normal;color:var(--muted);font-size:12px;align-self:center;padding:0 4px}
 .row .n i.sc{background:#8b5cf6;color:#fff}
@@ -180,6 +195,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   <div class="ah-sec ah-hist" data-ak="active"><h3>Ενεργά δελτία</h3><div class="list" id="agActive" style="max-height:none"></div></div>
   <div class="ah-sec ah-hist" data-ak="log" data-def="closed"><h3>Ημερολόγιο κληρώσεων</h3><div class="list" id="agLog" style="max-height:none"></div></div>
 </aside>
+<div id="taskbar"></div>
 <div id="ttBar"><div style="display:flex;gap:6px;align-items:center;justify-content:center;width:100%"><span id="ttLbl">🟢 LIVE</span><button id="ttLive" title="Επιστροφή στο τώρα">LIVE</button></div><button data-tt="-288" title="Μία μέρα πίσω">⏮ μέρα</button><button data-tt="-10" title="10 κληρώσεις πίσω">⏪ 10</button><button data-tt="-1" title="Μία κλήρωση πίσω">◀ 1</button><button data-tt="1" title="Μία κλήρωση μπροστά">1 ▶</button><button data-tt="10" title="10 κληρώσεις μπροστά">10 ⏩</button><button data-tt="288" title="Μία μέρα μπροστά">μέρα ⏭</button></div>
 <div class="wrap">
   <header>
@@ -1370,7 +1386,7 @@ function myAdd(nums, draws, src){
   if(!lastId){ alert('Περιμένει να φορτώσουν οι κληρώσεις.'); return; }
   var a = myLoad(); a.unshift({id:Date.now(), n:nums.slice().sort(function(x,y){return x-y;}), start:lastId+1, draws:draws, src:src});
   mySave(a); renderMy();
-  var c = document.querySelector('.card[data-k="my"]'); if(c){ c.classList.remove('collapsed'); c.scrollIntoView({behavior:'smooth', block:'start'}); }
+  var c = document.querySelector('.card[data-k="my"]'); if(c){ if(c.classList.contains('win-off')) setWin(c, true, false); c.classList.remove('collapsed'); c.scrollIntoView({behavior:'smooth', block:'start'}); }
 }
 function renderPick(){
   $('pickNums').innerHTML = myPick.length ? myPick.slice().sort(function(a,b){return a-b;}).map(function(x){return '<i style="background:#f59e0b;color:#1a1300">'+x+'</i>';}).join('')+'<span class="muted" style="font-size:12px;align-self:center;margin-left:6px">'+myPick.length+' αριθμοί</span>' : '<span class="muted" style="font-size:12px">—</span>';
@@ -2082,6 +2098,31 @@ cards.forEach(function(c){
     setCollapsed(c, !c.classList.contains('collapsed')); updAllBtn();
   });
 });
+/* ---------- Γραμμή εργασιών: κάθε κάρτα ανοιγοκλείνει σαν παράθυρο ---------- */
+var TB = {board:['🎱','Κλήρωση'], today:['📋','Σήμερα'], my:['🎫','Δελτία'], rally:['🏁','Ράλι'], stats:['📊','Στατιστ.'], pos:['🔢','Θέσεις'], sim:['🎲','Προσομ.'], fwd:['🧪','Κανόνες'], gef:['🌉','Γέφυρα'], alc:['⚗️','Αλχημεία'], k8:['🎯','10×8']};
+function winOpen(c){ return !c.classList.contains('win-off'); }
+function setWin(c, on, scroll){
+  c.classList.toggle('win-off', !on); lsSet('kl_win_'+c.dataset.k, on?'1':'0');
+  if(on){ setCollapsed(c, false); if(scroll){ c.scrollIntoView({behavior:'smooth', block:'start'}); c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash'); } }
+  else c.classList.add('collapsed');   // κρυφό = δεν υπολογίζεται
+  renderTaskbar();
+}
+function renderTaskbar(){
+  var h = '<button data-tb="start" title="Όλα / κανένα"><span class="ic" style="filter:none;opacity:1">🪟</span>Όλα</button><span class="sep"></span>';
+  cards.forEach(function(c){ var t = TB[c.dataset.k]||['▫️',c.dataset.k]; h += '<button data-tb="'+c.dataset.k+'" class="'+(winOpen(c)?'on':'')+'"><span class="ic">'+t[0]+'</span>'+t[1]+'</button>'; });
+  h += '<span class="sep"></span><button data-tb="tt" class="'+(document.body.classList.contains('tt-off')?'':'on')+'"><span class="ic">⏳</span>Χρόνος</button>';
+  $('taskbar').innerHTML = h;
+}
+cards.forEach(function(c){ if(lsGet('kl_win_'+c.dataset.k)==='0'){ c.classList.add('win-off'); c.classList.add('collapsed'); } });
+if(lsGet('kl_tt_off')==='1') document.body.classList.add('tt-off');
+$('taskbar').addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('[data-tb]'); if(!b) return; var k = b.dataset.tb;
+  if(k==='start'){ var anyOpen = cards.some(winOpen); cards.forEach(function(c){ setWin(c, !anyOpen, false); }); if(!anyOpen) window.scrollTo({top:0,behavior:'smooth'}); return; }
+  if(k==='tt'){ var off = !document.body.classList.contains('tt-off'); document.body.classList.toggle('tt-off', off); lsSet('kl_tt_off', off?'1':'0'); renderTaskbar(); return; }
+  var c = cards.filter(function(x){ return x.dataset.k===k; })[0]; if(!c) return;
+  setWin(c, !winOpen(c), true);
+});
+renderTaskbar();
 $('btnAll').addEventListener('click',function(){
   var close = !cards.every(function(c){return c.classList.contains('collapsed');});
   cards.forEach(function(c){ setCollapsed(c, close); }); updAllBtn();
