@@ -608,11 +608,15 @@ async function loadHistory(){
   $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις από '+HIST_DAYS+' ημέρες + σήμερα'+
     (failed||gaps ? ' · ⚠️ λείπουν '+gaps+' κληρώσεις'+(failed?' ('+failed+' ημέρες απέτυχαν)':'') : ' · πλήρες, χωρίς κενά');
   renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); agTick();
+  repairGaps(true);
 }
 
 /* νέα κλήρωση: αν άλλαξε η ημέρα (μεσάνυχτα Ελλάδας), οι χθεσινές πάνε στο ιστορικό */
 function pushDraw(nd){
-  if(today.length && nd.d > today[0].d){ addHist(today); histPool.sort(function(a,b){return b.id-a.id;}); today = []; viewId = null; }
+  if(today.length && nd.d > today[0].d){   // αλλαγή μέρας: οι χθεσινές πάνε στο ιστορικό (πριν χάνονταν!)
+    var have = {}; histPool.forEach(function(d){ have[d.id]=1; });
+    today.forEach(function(d){ if(!have[d.id]) histPool.push(d); });
+    histPool.sort(function(a,b){return b.id-a.id;}); today = []; viewId = null; }
   if(!today.length || nd.d === today[0].d){
     if(!today.some(function(x){return x.id===nd.id;})) today.unshift(nd);
     today.sort(function(a,b){return b.id-a.id;});
@@ -692,8 +696,26 @@ async function tryRefresh(){
   else { setStatus('Δεν βρέθηκε νέα κλήρωση — ίσως διάλειμμα. Επανέλεγχος σε 1 λεπτό.'); refreshTimer=setTimeout(function(){retries=0;tryRefresh();},60000); }
 }
 
+/* Επισκευή κενών: αν λείπουν κληρώσεις (π.χ. το κινητό «κοιμήθηκε»), τις ξαναφέρνει από το API */
+var gapBusy = false, gapLast = 0;
+async function repairGaps(force){
+  if(gapBusy || TT || !lastId) return; if(!force && Date.now()-gapLast < 120000) return;
+  var pool = today.concat(histPool), have = {}; pool.forEach(function(d){ have[d.id]=1; });
+  var minId = pool.reduce(function(m,d){ return Math.min(m,d.id); }, lastId), lo = Math.max(minId, lastId - 600), miss = []; for(var id=lo; id<lastId; id++) if(!have[id]) miss.push(id);
+  if(!miss.length) return;
+  gapBusy = true; gapLast = Date.now();
+  try{
+    var days = {}; miss.forEach(function(id){ days[utcDay(lastT - (lastId-id)*300000)] = 1; days[utcDay(lastT - (lastId-id)*300000 - 3600000)] = 1; });
+    var got = [];
+    for(var ds in days){ try{ got = got.concat(await fetchApiDay(ds)); }catch(e){} }
+    var need = {}; miss.forEach(function(id){ need[id]=1; });
+    var add = got.filter(function(d){ return need[d.id]; }), cur = today[0] ? today[0].d : null;
+    add.forEach(function(d){ need[d.id]=0; if(cur && d.d===cur) today.push(d); else histPool.push(d); });
+    if(add.length){ today.sort(function(a,b){return b.id-a.id;}); histPool.sort(function(a,b){return b.id-a.id;}); renderAll(); setStatus('🔧 Συμπληρώθηκαν '+add.length+' κληρώσεις που έλειπαν'); }
+  } finally { gapBusy = false; }
+}
 function onNewDraw(){
-  renderAll();
+  renderAll(); repairGaps(false);
   tick();
 }
 
