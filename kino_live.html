@@ -193,6 +193,8 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     <section class="card" data-k="board">
       <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span><span id="boardTitle">Τελευταία κλήρωση</span></span><span id="boardMeta"></span></h2>
       <div class="cbody">
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><button class="btn" id="wxBtn" style="padding:3px 10px">🌡️ Χάρτης καιρού</button><span id="wxCtl" style="display:none;font-size:12px" class="muted">τελευταίες <select id="wxWin"><option>10</option><option selected>20</option><option>50</option><option>100</option></select> κληρ. · <select id="wxMode"><option value="area">περιοχές</option><option value="num">ανά αριθμό</option></select></span></div>
+      <div id="wxLeg" style="display:none;margin-bottom:6px;font-size:12px"><div style="height:8px;border-radius:4px;background:linear-gradient(90deg,#2563eb,rgba(128,128,128,.25),#ef4444)"></div><div style="display:flex;justify-content:space-between" class="muted"><span>❄️ κρύο</span><span>κανονικό</span><span>🔥 ζεστό</span></div><div class="muted" id="wxInfo" style="margin-top:2px"></div></div>
       <div class="board" id="board"></div>
       <div class="order" id="order"></div>
       <div class="chips" id="chips"></div>
@@ -671,8 +673,32 @@ function renderBoard(){
   if(!board.children.length){
     var h=''; for(var n=1;n<=80;n++) h+='<div class="b" data-n="'+n+'">'+n+'</div>'; board.innerHTML=h;
   }
+  var wxOn = lsGet('kl_wx')==='1', heat = null;
+  $('wxCtl').style.display = wxOn ? '' : 'none'; $('wxLeg').style.display = wxOn ? '' : 'none';
+  $('wxBtn').style.outline = wxOn ? '2px solid #f59e0b' : '';
+  if(wxOn && d){
+    var W = +$('wxWin').value, mode = $('wxMode').value;
+    var src = today.concat(histPool).filter(function(x){ return x.id<=d.id; }).sort(function(a,b){return b.id-a.id;}).slice(0,W);
+    var cnt = new Array(81).fill(0); src.forEach(function(x){ x.arr.forEach(function(q){ cnt[q]++; }); });
+    var E = src.length/4, sd = Math.sqrt(Math.max(E*0.75,0.01)), z = new Array(81).fill(0);
+    for(var q=1;q<=80;q++) z[q] = (cnt[q]-E)/sd;
+    heat = new Array(81).fill(0);
+    for(var q=1;q<=80;q++){
+      if(mode==='num'){ heat[q] = z[q]; continue; }
+      var r = Math.floor((q-1)/10), c0 = (q-1)%10, sw = 0, sv = 0;
+      for(var dr=-1;dr<=1;dr++) for(var dc=-1;dc<=1;dc++){ var rr=r+dr, cc=c0+dc; if(rr<0||rr>7||cc<0||cc>9) continue; var w = (dr===0&&dc===0)?1:(dr===0||dc===0)?0.5:0.25; sw+=w; sv+=w*z[rr*10+cc+1]; }
+      heat[q] = sv/sw*1.6;
+    }
+    var hots = [], colds = []; for(var q=1;q<=80;q++){ if(cnt[q]>=E*1.5&&src.length>=10) hots.push(q); if(cnt[q]<=E*0.4) colds.push(q); }
+    $('wxInfo').textContent = src.length+' κληρώσεις μέχρι '+hm(d.t)+' · μέσος όρος '+E.toFixed(1)+' φορές/αριθμό · πολύ ζεστά: '+(hots.join(' ')||'—')+' · πολύ κρύα: '+(colds.join(' ')||'—')+(mode==='area'?' · (το χρώμα κάθε κουτιού = ο ίδιος + οι γείτονές του)':'');
+  }
   Array.prototype.forEach.call(board.children,function(c){
     var n=+c.dataset.n;
+    if(heat){ var t = Math.max(-1, Math.min(1, heat[n]/2)), a = (0.15+Math.abs(t)*0.8).toFixed(2);
+      c.style.background = t>=0 ? 'rgba(239,68,68,'+a+')' : 'rgba(37,99,235,'+a+')'; c.style.color = '#fff';
+      c.style.boxShadow = d.set.has(n) ? 'inset 0 0 0 3px #facc15' : ''; c.title = n+': θερμοκρασία '+(heat[n]>=0?'+':'')+heat[n].toFixed(1);
+      c.className = 'b'+((typeof myPick!=='undefined' && myPick && myPick.indexOf(n)>=0)?' pick':''); return; }
+    c.style.background = ''; c.style.color = ''; c.style.boxShadow = ''; c.title = '';
     c.className='b'+(d&&d.set.has(n)?(n===d.b?' bonus':' on'):(d&&d.sc.indexOf(n)>=0?' sc':''))+((typeof myPick!=='undefined' && myPick && myPick.indexOf(n)>=0)?' pick':'');
   });
   $('btnLive').style.display = viewId ? '' : 'none';
@@ -2008,6 +2034,10 @@ $('ttBar').addEventListener('click', function(e){ var b = e.target.closest && e.
   }
   ttGo(lastId + st); });
 $('ttLive').addEventListener('click', function(){ ttLive(); });
+$('wxBtn').addEventListener('click', function(){ lsSet('kl_wx', lsGet('kl_wx')==='1'?'0':'1'); renderBoard(); });
+$('wxWin').addEventListener('change', function(){ lsSet('kl_wx_win', this.value); renderBoard(); });
+$('wxMode').addEventListener('change', function(){ lsSet('kl_wx_mode', this.value); renderBoard(); });
+(function(){ var v = lsGet('kl_wx_win'); if(v) $('wxWin').value = v; v = lsGet('kl_wx_mode'); if(v) $('wxMode').value = v; })();
 $('btnLive').addEventListener('click',function(){ viewId=null; renderBoard(); renderList(); });
 $('win').addEventListener('change',renderStats);
 $('pwin').addEventListener('change',renderPos);
