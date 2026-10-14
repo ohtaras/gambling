@@ -1233,7 +1233,7 @@ function renderRally(){
   else if(FN) rows.sort(function(a,b){ return b.at-a.at; }); else rows.sort(function(a,b){ return b.n-a.n || a.at-b.at; });
   var mx = 0; for(var t in tally) if(+t>mx) mx = +t;
   $('rlMeta').textContent = draws.length+' κληρώσεις · πρωτοπόρος '+(mx?mx+' φορές':'—');
-  $('rlChips').innerHTML = Object.keys(tally).sort(function(a,b){return b-a;}).map(function(n){ return chip(n+' φορές', tally[n]+' '+(tally[n]===1?NM[0]:NM[1])); }).join('') || '<span class="muted">Καμία '+NM[0]+' δεν έχει φτάσει ακόμα τις '+E+' φορές.</span>';
+  $('rlChips').innerHTML = Object.keys(tally).sort(function(a,b){return b-a;}).map(function(n){ return '<span class="chip" data-rln="'+n+'" style="cursor:pointer'+(+n===FN?';outline:2px solid #22c55e':'')+'" title="Δείξε ποιες είναι">'+n+' φορές: <b>'+tally[n]+' '+(tally[n]===1?NM[0]:NM[1])+'</b> 👁</span>'; }).join('') || '<span class="muted">Καμία '+NM[0]+' δεν έχει φτάσει ακόμα τις '+E+' φορές.</span>';
   var top = rows.slice(0,20);
   $('rlTable').innerHTML = top.length ? '<tr><th>#</th><th>'+NM[0].charAt(0).toUpperCase()+NM[0].slice(1)+'</th><th>Φορές</th><th>Πότε βγήκε</th><th></th></tr>'+top.map(function(r,i){
       var hot = r.at===lastId0;
@@ -2100,6 +2100,10 @@ $('board').addEventListener('click', function(e){ var c = e.target.closest && e.
 $('pickClear').addEventListener('click', function(){ myPick = []; renderBoard(); renderPick(); });
 $('myClearAll').addEventListener('click', function(){ var a = myLoad(); if(!a.length) return; if(!confirm('Διαγραφή ΟΛΩΝ των δελτίων ('+a.length+');')) return; mySave([]); renderMy(); });
 $('pickAdd').addEventListener('click', function(){ if(!myPick.length) return; myAdd(myPick, +$('pickDraws').value, 'από το ταμπλό'); myPick = []; renderBoard(); renderPick(); });
+$('rlChips').addEventListener('click', function(e){ var c = e.target.closest && e.target.closest('[data-rln]'); if(!c) return;
+  var n = c.dataset.rln, sel = $('rlN'), cur = sel.value;
+  if(cur===n){ sel.value = '0'; } else { if(!sel.querySelector('option[value="'+n+'"]')){ var o = document.createElement('option'); o.value = n; o.textContent = 'ακριβώς '+n+' φορές'; sel.appendChild(o); } sel.value = n; }
+  lsSet('kl_rl_n', sel.value); renderRally(); if(sel.value!=='0') $('rlTable').scrollIntoView({behavior:'smooth', block:'start'}); });
 $('rlRep').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; var nd = askDraws(); if(!nd) return; myAdd(b.dataset.five.split(' ').map(Number), nd, '🔁 επανάληψη στο Ράλι ('+RL_NAME[b.dataset.five.split(' ').length][0]+')'); b.textContent = '✓'; });
 $('rlPick').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; var nd = askDraws(); if(!nd) return; myAdd(b.dataset.five.split(' ').map(Number), nd, '⭐ Επιλογή προγράμματος ('+RL_NAME[b.dataset.five.split(' ').length][0]+')'); b.textContent = '✓'; });
 $('rlTable').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; var nd = askDraws(); if(!nd) return; myAdd(b.dataset.five.split(' ').map(Number), nd, '🏁 από το Ράλι '+RL_NAME[b.dataset.five.split(' ').length][1]); b.textContent = '✓'; });
