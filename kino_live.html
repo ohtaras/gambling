@@ -423,6 +423,22 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     </div>
   </section>
 
+  <section class="card mt" data-k="late">
+    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>⏰ Καθυστερημένες στήλες</span><span id="lateMeta"></span></h2>
+    <div class="cbody">
+      <div class="muted" style="font-size:12.5px;margin-bottom:6px">Παίρνει τους κοινούς αριθμούς των 3 τελευταίων κληρώσεων και φτιάχνει από αυτούς στήλες που <b>δεν έχουν βγει ολόκληρες</b> για περισσότερες κληρώσεις από την πιθανότητά τους (π.χ. πεντάδα: πάνω από 1.551 κληρώσεις).</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+        <select id="lateSrc"><option value="2">Κοινοί σε 2 από τις 3</option><option value="3">Κοινοί και στις 3</option></select>
+        <select id="lateK"><option value="3">Τριάδες</option><option value="4">Τετράδες</option><option value="5" selected>Πεντάδες</option><option value="6">Εξάδες</option><option value="7">Επτάδες</option></select>
+        <select id="lateMul"><option value="1">πάνω από 1× την πιθανότητα</option><option value="1.5">πάνω από 1,5×</option><option value="2">πάνω από 2×</option><option value="3">πάνω από 3×</option></select>
+      </div>
+      <div id="lateBase" style="margin-bottom:6px"></div>
+      <div class="chips" id="lateChips"></div>
+      <div class="scroll-x"><table class="ptab" id="lateTable"></table></div>
+      <div class="muted" style="font-size:11.5px;margin-top:6px">Σημ.: κάθε κλήρωση είναι ανεξάρτητη — η καθυστέρηση δεν ανεβάζει την πιθανότητα· η λίστα είναι εργαλείο επιλογής.</div>
+    </div>
+  </section>
+
   <section class="card mt" data-k="alc">
     <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🧪 Αλχημεία</span><span id="alcMeta"></span></h2>
     <div class="cbody">
@@ -607,7 +623,7 @@ async function loadHistory(){
   var gaps = 0; for(var j=1;j<histPool.length;j++) if(histPool[j-1].id-histPool[j].id>1) gaps += histPool[j-1].id-histPool[j].id-1;
   $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις από '+HIST_DAYS+' ημέρες + σήμερα'+
     (failed||gaps ? ' · ⚠️ λείπουν '+gaps+' κληρώσεις'+(failed?' ('+failed+' ημέρες απέτυχαν)':'') : ' · πλήρες, χωρίς κενά');
-  renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); agTick();
+  renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); renderLate(); agTick();
   repairGaps(true);
 }
 
@@ -1327,6 +1343,43 @@ function renderMan(){
       var now = r.at===lastId0;
       return '<tr'+(now?' style="background:rgba(139,92,246,.15)"':'')+'><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+r.k.split(' ').map(function(x){return col(+x);}).join(' ')+'</b></td><td><b>'+r.n+'</b>'+(now?' 🔥':'')+'</td><td class="muted" style="font-size:12px">'+r.ids.map(function(id){ return byId[id]?hm(byId[id].t):'#'+id; }).join(', ')+'<br><span style="font-size:11px">⏱ τώρα '+(lastId0-r.at)+' κληρ. · μέγ. κενό '+r.gap+'</span></td><td><button class="btn" data-five="'+r.k+'" style="padding:2px 8px">➕</button></td></tr>';
     }).join('') + (rows.length>30?'<tr><td colspan="4" class="muted">… και άλλοι '+(rows.length-30)+'</td></tr>':'') : '<tr><td class="muted">Κανένας συνδυασμός '+K+' από τους αριθμούς σου με '+MIN+'+ φορές σε αυτό το διάστημα.</td></tr>';
+}
+/* ---------- ⏰ Καθυστερημένες: συνδυασμοί από τους κοινούς των 3 τελευταίων που «χρωστάνε» ---------- */
+function renderLate(){
+  var card = document.querySelector && document.querySelector('.card[data-k="late"]');
+  if(!card || card.classList.contains('collapsed')) return;
+  var all = today.concat(histPool).slice().sort(function(a,b){ return b.id-a.id; });   // νεότερη πρώτη
+  if(all.length<3){ $('lateTable').innerHTML='<tr><td class="muted">Περιμένει κληρώσεις.</td></tr>'; return; }
+  var SRC = +$('lateSrc').value, K = +$('lateK').value, MUL = +$('lateMul').value;
+  var cnt = new Array(81).fill(0); all.slice(0,3).forEach(function(d){ d.arr.forEach(function(x){ cnt[x]++; }); });
+  var base = []; for(var n=1;n<=80;n++) if(cnt[n]>=SRC) base.push(n);
+  var E = comb(80,K)/comb(20,K), LIM = E*MUL, L = all.length, lastId0 = all[0].id;
+  var HX = +($('rlHot').value||10), HMIN = Math.ceil(HX*0.25*1.5), CMAX = Math.floor(HX*0.25*0.5), hc = new Array(81).fill(0);
+  all.slice(0,HX).forEach(function(d){ d.arr.forEach(function(x){ hc[x]++; }); });
+  var col = function(n){ var st = hc[n]>=HMIN?'color:#ef4444;':hc[n]<=CMAX?'color:#2563eb;':''; return st?'<span style="'+st+'">'+n+'</span>':String(n); };
+  $('lateBase').innerHTML = '<span class="muted" style="font-size:12.5px">Κοινοί ('+base.length+'): </span><b>'+(base.map(function(n){ return (cnt[n]===3?'<u>':'')+col(n)+(cnt[n]===3?'</u>':''); }).join(' ')||'—')+'</b>'+(SRC===2?' <span class="muted" style="font-size:11.5px">(υπογραμμισμένοι = και στις 3)</span>':'');
+  $('lateMeta').textContent = base.length+' κοινοί · ιστορικό '+L.toLocaleString('el-GR')+' κληρ.';
+  var nb = base.length;
+  if(nb<K){ $('lateChips').innerHTML=''; $('lateTable').innerHTML='<tr><td class="muted">Λιγότεροι από '+K+' κοινοί αριθμοί — διάλεξε «2 από τις 3» ή μικρότερη στήλη.</td></tr>'; return; }
+  if(nb>30){ $('lateTable').innerHTML='<tr><td class="muted">Πάρα πολλοί κοινοί αριθμοί.</td></tr>'; return; }
+  var total = comb(nb,K); if(total>20000){ $('lateTable').innerHTML='<tr><td class="muted">Πάρα πολλοί συνδυασμοί ('+Math.round(total)+').</td></tr>'; return; }
+  // μάσκα κάθε κλήρωσης πάνω στους κοινούς
+  var idx = {}; base.forEach(function(n,i){ idx[n]=i; });
+  var masks = new Array(L); for(var j=0;j<L;j++){ var m = 0; all[j].arr.forEach(function(x){ if(idx[x]!==undefined) m |= (1<<idx[x]); }); masks[j] = m; }
+  var combos = [], c = []; for(var z=0;z<K;z++) c.push(z);
+  while(true){ var cm = 0; c.forEach(function(q){ cm |= (1<<q); }); combos.push({cm:cm, nums:c.map(function(q){ return base[q]; }), last:-1, times:0});
+    var p = K-1; while(p>=0 && c[p]===nb-K+p) p--; if(p<0) break; c[p]++; for(var q=p+1;q<K;q++) c[q] = c[q-1]+1; }
+  combos.forEach(function(o){ for(var j=0;j<L;j++){ if((masks[j]&o.cm)===o.cm){ if(o.last<0) o.last = j; o.times++; } } });
+  var res = combos.map(function(o){ o.delay = o.last<0 ? L : o.last; o.never = o.last<0; return o; }).filter(function(o){ return o.delay > LIM; });
+  res.sort(function(a,b){ return b.delay-a.delay || a.times-b.times; });
+  var notEnough = L < LIM;
+  $('lateChips').innerHTML = chip(K+'άδες από κοινούς', Math.round(total).toLocaleString('el-GR')) + chip('Ξεπέρασαν τις '+Math.round(LIM).toLocaleString('el-GR'), res.length) + chip('1 στις', Math.round(E).toLocaleString('el-GR')) +
+    (notEnough ? '<div style="width:100%;font-size:12px;color:#f59e0b">⚠️ Το ιστορικό ('+L.toLocaleString('el-GR')+' κληρώσεις) είναι μικρότερο από '+Math.round(LIM).toLocaleString('el-GR')+' — δεν μπορεί να κριθεί.</div>' : '');
+  $('lateTable').innerHTML = notEnough ? '' : res.length ? '<tr><th>#</th><th>Στήλη</th><th>Χωρίς να βγει</th><th>Φορές στο ιστορικό</th><th></th></tr>' + res.slice(0,40).map(function(o,i){
+      var dl = o.never ? '> '+L.toLocaleString('el-GR') : o.delay.toLocaleString('el-GR'), ratio = (o.delay/E).toFixed(1).replace('.',',');
+      return '<tr><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+o.nums.map(col).join(' ')+'</b></td><td><b>'+dl+'</b> κληρ.<br><span class="muted" style="font-size:11px">'+ratio+'× το 1 στις '+Math.round(E).toLocaleString('el-GR')+(o.never?' · ποτέ στο ιστορικό':' · τελευταία '+hm(all[o.last].t)+' '+all[o.last].d.split('-').reverse().slice(0,2).join('/'))+'</span></td><td class="muted">'+o.times+'</td><td><button class="btn" data-five="'+o.nums.join(' ')+'" style="padding:2px 8px">➕</button></td></tr>'; }).join('') +
+      (res.length>40?'<tr><td colspan="4" class="muted">… και άλλες '+(res.length-40)+'</td></tr>':'')
+    : '<tr><td class="muted">Καμία '+K+'άδα από τους κοινούς δεν έχει ξεπεράσει τις '+Math.round(LIM).toLocaleString('el-GR')+' κληρώσεις.</td></tr>';
 }
 function renderRally(){
   var card = document.querySelector && document.querySelector('.card[data-k="rally"]');
@@ -2149,7 +2202,7 @@ function applyAnchor(){
 }
 function updTtLock(){ var b = $('ttLock'); if(!b) return; var g = $('ttGoLock'); if(g){ g.style.display = ANCHOR && ANCHOR!==lastId ? '' : 'none'; g.title = ANCHOR ? 'Πήγαινε στην κλειδωμένη αρχή ('+anchorLbl()+')' : ''; } var on = ANCHOR && ANCHOR===lastId; b.textContent = ANCHOR ? (on ? '🔓 Ξεκλείδωμα' : '🔒 Αρχή εδώ') : '🔒 Αρχή εδώ'; b.style.background = ANCHOR ? '#f59e0b' : ''; b.style.color = ANCHOR ? '#1a1300' : ''; b.title = ANCHOR ? 'Κλειδωμένη αρχή: '+anchorLbl()+' — πάτα για '+(on?'ξεκλείδωμα':'μετακίνηση εδώ') : 'Κλείδωσε αυτή την κλήρωση ως πρώτη της «μέρας»'; }
 function setAnchor(id){ ANCHOR = id||0; lsSet('kl_anchor', String(ANCHOR)); if(ANCHOR) anchorWas = true; viewId = null; renderAll(); }
-function renderAll(){ applyAnchor(); updTtLock(); renderMan(); renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); agTick(); }
+function renderAll(){ applyAnchor(); updTtLock(); renderMan(); renderLate(); renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); agTick(); }
 
 /* ---------- Countdown ---------- */
 function tick(){
@@ -2185,6 +2238,8 @@ $('ttBar').addEventListener('click', function(e){ var b = e.target.closest && e.
   }
   ttGo(lastId + st); });
 $('ttLive').addEventListener('click', function(){ ttLive(); });
+['lateSrc','lateK','lateMul'].forEach(function(id){ var v = lsGet('kl_'+id); if(v) $(id).value = v; $(id).addEventListener('change', function(){ lsSet('kl_'+id, this.value); renderLate(); }); });
+$('lateTable').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; var nd = askDraws(); if(!nd) return; myAdd(b.dataset.five.split(' ').map(Number), nd, '⏰ Καθυστερημένη'); b.textContent = '✓'; });
 $('manGrid').addEventListener('click', function(e){ var c = e.target.closest && e.target.closest('[data-mn]'); if(!c) return; var n = +c.dataset.mn, i = manPick.indexOf(n); if(i>=0) manPick.splice(i,1); else manPick.push(n); manSave(); renderMan(); });
 function manTemp(hot){ var HX = +($('rlHot').value||10), HMIN = Math.ceil(HX*0.25*1.5), CMAX = Math.floor(HX*0.25*0.5), hc = new Array(81).fill(0);
   today.concat(histPool).sort(function(a,b){return b.id-a.id;}).slice(0,HX).forEach(function(d){ d.arr.forEach(function(x){ hc[x]++; }); });
@@ -2232,7 +2287,7 @@ $('posBody').addEventListener('click',function(e){ var r=e.target.closest('tr[da
 var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-k]'));
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); if(!on && c.dataset.k==='sim') renderSim(); if(!on && c.dataset.k==='fwd') renderFwd(); if(!on && c.dataset.k==='gef') renderGef(); if(!on && c.dataset.k==='rally') renderRally(); if(!on && c.dataset.k==='alc') renderAlc(); if(!on && c.dataset.k==='k8') renderK8(); if(!on && c.dataset.k==='man') renderMan(); }
+function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); if(!on && c.dataset.k==='sim') renderSim(); if(!on && c.dataset.k==='fwd') renderFwd(); if(!on && c.dataset.k==='gef') renderGef(); if(!on && c.dataset.k==='rally') renderRally(); if(!on && c.dataset.k==='alc') renderAlc(); if(!on && c.dataset.k==='k8') renderK8(); if(!on && c.dataset.k==='man') renderMan(); if(!on && c.dataset.k==='late') renderLate(); }
 function updAllBtn(){
   var allClosed = cards.every(function(c){return c.classList.contains('collapsed');});
   $('btnAll').textContent = allClosed ? '▸ Άνοιγμα όλων' : '▾ Κλείσιμο όλων';
@@ -2245,7 +2300,7 @@ cards.forEach(function(c){
   });
 });
 /* ---------- Γραμμή εργασιών: κάθε κάρτα ανοιγοκλείνει σαν παράθυρο ---------- */
-var TB = {board:['🎱','Κλήρωση'], today:['📋','Σήμερα'], my:['🎫','Δελτία'], rally:['🏁','Ράλι'], stats:['📊','Στατιστ.'], pos:['🔢','Θέσεις'], sim:['🎲','Προσομ.'], fwd:['🧪','Κανόνες'], gef:['🌉','Γέφυρα'], alc:['⚗️','Αλχημεία'], k8:['🎯','10×8'], man:['🕹️','Χειροκ.']};
+var TB = {board:['🎱','Κλήρωση'], today:['📋','Σήμερα'], my:['🎫','Δελτία'], rally:['🏁','Ράλι'], stats:['📊','Στατιστ.'], pos:['🔢','Θέσεις'], sim:['🎲','Προσομ.'], fwd:['🧪','Κανόνες'], gef:['🌉','Γέφυρα'], alc:['⚗️','Αλχημεία'], k8:['🎯','10×8'], man:['🕹️','Χειροκ.'], late:['⏰','Καθυστ.']};
 function winOpen(c){ return !c.classList.contains('win-off'); }
 function setWin(c, on, scroll){
   c.classList.toggle('win-off', !on); lsSet('kl_win_'+c.dataset.k, on?'1':'0');
