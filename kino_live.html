@@ -431,6 +431,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
         <select id="lateSrc"><option value="2">Κοινοί σε 2 από τις 3</option><option value="3">Κοινοί και στις 3</option></select>
         <select id="lateK"><option value="3">Τριάδες</option><option value="4">Τετράδες</option><option value="5" selected>Πεντάδες</option><option value="6">Εξάδες</option><option value="7">Επτάδες</option></select>
         <select id="lateMul"><option value="1">πάνω από 1× την πιθανότητα</option><option value="1.5">πάνω από 1,5×</option><option value="2">πάνω από 2×</option><option value="3">πάνω από 3×</option></select>
+        <select id="lateSort"><option value="delay">Κατάταξη: καθυστέρηση</option><option value="hot">🔥 Περισσότεροι ζεστοί</option><option value="cold">❄️ Περισσότεροι κρύοι</option></select>
       </div>
       <div id="lateBase" style="margin-bottom:6px"></div>
       <div class="chips" id="lateChips"></div>
@@ -1371,13 +1372,17 @@ function renderLate(){
     var p = K-1; while(p>=0 && c[p]===nb-K+p) p--; if(p<0) break; c[p]++; for(var q=p+1;q<K;q++) c[q] = c[q-1]+1; }
   combos.forEach(function(o){ for(var j=0;j<L;j++){ if((masks[j]&o.cm)===o.cm){ if(o.last<0) o.last = j; o.times++; } } });
   var res = combos.map(function(o){ o.delay = o.last<0 ? L : o.last; o.never = o.last<0; return o; }).filter(function(o){ return o.delay > LIM; });
-  res.sort(function(a,b){ return b.delay-a.delay || a.times-b.times; });
+  res.forEach(function(o){ o.h = o.nums.filter(function(n){ return hc[n]>=HMIN; }).length; o.c = o.nums.filter(function(n){ return hc[n]<=CMAX; }).length; o.heat = o.nums.reduce(function(a,n){ return a+hc[n]; },0); });
+  var SO = $('lateSort').value;
+  if(SO==='hot') res.sort(function(a,b){ return b.h-a.h || b.heat-a.heat || b.delay-a.delay; });
+  else if(SO==='cold') res.sort(function(a,b){ return b.c-a.c || a.heat-b.heat || b.delay-a.delay; });
+  else res.sort(function(a,b){ return b.delay-a.delay || a.times-b.times; });
   var notEnough = L < LIM;
   $('lateChips').innerHTML = chip(K+'άδες από κοινούς', Math.round(total).toLocaleString('el-GR')) + chip('Ξεπέρασαν τις '+Math.round(LIM).toLocaleString('el-GR'), res.length) + chip('1 στις', Math.round(E).toLocaleString('el-GR')) +
     (notEnough ? '<div style="width:100%;font-size:12px;color:#f59e0b">⚠️ Το ιστορικό ('+L.toLocaleString('el-GR')+' κληρώσεις) είναι μικρότερο από '+Math.round(LIM).toLocaleString('el-GR')+' — δεν μπορεί να κριθεί.</div>' : '');
-  $('lateTable').innerHTML = notEnough ? '' : res.length ? '<tr><th>#</th><th>Στήλη</th><th>Χωρίς να βγει</th><th>Φορές στο ιστορικό</th><th></th></tr>' + res.slice(0,40).map(function(o,i){
+  $('lateTable').innerHTML = notEnough ? '' : res.length ? '<tr><th>#</th><th>Στήλη</th><th>Χωρίς να βγει</th><th>🔥/❄️</th><th></th></tr>' + res.slice(0,40).map(function(o,i){
       var dl = o.never ? '> '+L.toLocaleString('el-GR') : o.delay.toLocaleString('el-GR'), ratio = (o.delay/E).toFixed(1).replace('.',',');
-      return '<tr><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+o.nums.map(col).join(' ')+'</b></td><td><b>'+dl+'</b> κληρ.<br><span class="muted" style="font-size:11px">'+ratio+'× το 1 στις '+Math.round(E).toLocaleString('el-GR')+(o.never?' · ποτέ στο ιστορικό':' · τελευταία '+hm(all[o.last].t)+' '+all[o.last].d.split('-').reverse().slice(0,2).join('/'))+'</span></td><td class="muted">'+o.times+'</td><td><button class="btn" data-five="'+o.nums.join(' ')+'" style="padding:2px 8px">➕</button></td></tr>'; }).join('') +
+      return '<tr><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+o.nums.map(col).join(' ')+'</b></td><td><b>'+dl+'</b> κληρ.<br><span class="muted" style="font-size:11px">'+ratio+'× το 1 στις '+Math.round(E).toLocaleString('el-GR')+(o.never?' · ποτέ στο ιστορικό':' · τελευταία '+hm(all[o.last].t)+' '+all[o.last].d.split('-').reverse().slice(0,2).join('/'))+' · '+o.times+'× στο ιστορικό</span></td><td style="white-space:nowrap"><span style="color:#ef4444">🔥'+o.h+'</span> <span style="color:#2563eb">❄️'+o.c+'</span></td><td><button class="btn" data-five="'+o.nums.join(' ')+'" style="padding:2px 8px">➕</button></td></tr>'; }).join('') +
       (res.length>40?'<tr><td colspan="4" class="muted">… και άλλες '+(res.length-40)+'</td></tr>':'')
     : '<tr><td class="muted">Καμία '+K+'άδα από τους κοινούς δεν έχει ξεπεράσει τις '+Math.round(LIM).toLocaleString('el-GR')+' κληρώσεις.</td></tr>';
 }
@@ -2238,7 +2243,7 @@ $('ttBar').addEventListener('click', function(e){ var b = e.target.closest && e.
   }
   ttGo(lastId + st); });
 $('ttLive').addEventListener('click', function(){ ttLive(); });
-['lateSrc','lateK','lateMul'].forEach(function(id){ var v = lsGet('kl_'+id); if(v) $(id).value = v; $(id).addEventListener('change', function(){ lsSet('kl_'+id, this.value); renderLate(); }); });
+['lateSrc','lateK','lateMul','lateSort'].forEach(function(id){ var v = lsGet('kl_'+id); if(v) $(id).value = v; $(id).addEventListener('change', function(){ lsSet('kl_'+id, this.value); renderLate(); }); });
 $('lateTable').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; var nd = askDraws(); if(!nd) return; myAdd(b.dataset.five.split(' ').map(Number), nd, '⏰ Καθυστερημένη'); b.textContent = '✓'; });
 $('manGrid').addEventListener('click', function(e){ var c = e.target.closest && e.target.closest('[data-mn]'); if(!c) return; var n = +c.dataset.mn, i = manPick.indexOf(n); if(i>=0) manPick.splice(i,1); else manPick.push(n); manSave(); renderMan(); });
 function manTemp(hot){ var HX = +($('rlHot').value||10), HMIN = Math.ceil(HX*0.25*1.5), CMAX = Math.floor(HX*0.25*0.5), hc = new Array(81).fill(0);
