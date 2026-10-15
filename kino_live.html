@@ -429,11 +429,15 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     <div class="cbody">
       <div class="muted" style="font-size:12.5px;margin-bottom:6px">Παίρνει τους κοινούς αριθμούς των 3 τελευταίων κληρώσεων και φτιάχνει από αυτούς στήλες που <b>δεν έχουν βγει ολόκληρες</b> για περισσότερες κληρώσεις από την πιθανότητά τους (π.χ. πεντάδα: πάνω από 1.551 κληρώσεις).</div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
-        <select id="lateSrc"><option value="2">Κοινοί σε 2 από τις 3</option><option value="3">Κοινοί και στις 3</option><option value="80">🔢 Όλοι οι 80 αριθμοί</option></select>
+        <select id="lateSrc"><option value="2">Κοινοί σε 2 από τις 3</option><option value="3">Κοινοί και στις 3</option><option value="80">🔢 Όλοι οι 80 αριθμοί</option><option value="1">✋ Χειροκίνητα (διαλέγω εγώ)</option></select>
         <select id="lateK"><option value="2">Δυάδες</option><option value="3">Τριάδες</option><option value="4">Τετράδες</option><option value="5" selected>Πεντάδες</option><option value="6">Εξάδες</option><option value="7">Επτάδες</option></select>
         <select id="lateMul"><option value="1">πάνω από 1× την πιθανότητα</option><option value="1.5">πάνω από 1,5×</option><option value="2">πάνω από 2×</option><option value="3">πάνω από 3×</option></select>
         <select id="lateWin" title="Πόσες κληρώσεις μετράνε για ζεστό/κρύο"><option value="10">🌡️ ζεστό/κρύο: τελ. 10</option><option value="20">🌡️ τελ. 20</option><option value="50" selected>🌡️ τελ. 50</option><option value="100">🌡️ τελ. 100</option><option value="288">🌡️ τελ. 288 (μέρα)</option></select>
         <select id="lateSort"><option value="delay">Κατάταξη: καθυστέρηση</option><option value="hot">🔥 Περισσότεροι ζεστοί</option><option value="cold">❄️ Περισσότεροι κρύοι</option><option value="wlo">⚖️ Βάρος: λιγότερες από τις αναμενόμενες</option><option value="whi">⚖️ Βάρος: περισσότερες από τις αναμενόμενες</option></select>
+      </div>
+      <div id="latePickBox" style="display:none;border:1px dashed var(--line);border-radius:10px;padding:8px;margin:4px 0 8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:5px;font-size:12.5px"><b>✋ Οι αριθμοί μου</b><span id="latePickInfo" class="muted"></span><button class="btn" id="latePickClear" style="padding:1px 8px">✖ Καθάρισμα</button></div>
+        <div id="latePickGrid" style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px;max-width:360px"></div>
       </div>
       <div id="lateMini" style="margin:4px 0 8px"></div>
       <div id="lateBase" style="margin-bottom:6px"></div>
@@ -1381,6 +1385,7 @@ async function loadArchive(){
   }catch(e){ console.warn('archive', e); }
 }
 /* ⏰ Καθυστερημένες από ΟΛΟΥΣ τους 80: πίνακας «τελευταία εμφάνιση» για κάθε συνδυασμό (δυάδες–τετράδες) */
+var latePick = (function(){ try{ return JSON.parse(lsGet('kl_late_pick')||'[]'); }catch(e){ return []; } })();
 var L80_CAP = {2:300000, 3:80000, 4:12000}, L80_CACHE = {key:'', last:null, times:null, span:0};
 function lateAll80(o){
   var K = o.K, all = o.all, aN = o.aN;
@@ -1432,7 +1437,12 @@ function renderLate(){
   if(all.length<3){ $('lateTable').innerHTML='<tr><td class="muted">Περιμένει κληρώσεις.</td></tr>'; return; }
   var SRC = +$('lateSrc').value, K = +$('lateK').value, MUL = +$('lateMul').value;
   var cnt = new Array(81).fill(0); all.slice(0,3).forEach(function(d){ d.arr.forEach(function(x){ cnt[x]++; }); });
-  var base = []; for(var n=1;n<=80;n++) if(cnt[n]>=SRC) base.push(n);
+  var base = []; if(SRC===1) base = latePick.slice().sort(function(a,b){return a-b;}); else for(var n=1;n<=80;n++) if(cnt[n]>=SRC) base.push(n);
+  $('latePickBox').style.display = SRC===1 ? '' : 'none';
+  if(SRC===1){ var lg = $('latePickGrid'); if(!lg.children.length){ var hh = ''; for(var q0=1;q0<=80;q0++) hh += '<div data-lp="'+q0+'" style="text-align:center;padding:4px 0;border-radius:6px;border:1px solid var(--line);font-size:12px;cursor:pointer;user-select:none">'+q0+'</div>'; lg.innerHTML = hh; }
+    Array.prototype.forEach.call(lg.children, function(c){ var on = latePick.indexOf(+c.dataset.lp)>=0; c.style.background = on?'#f59e0b':''; c.style.color = on?'#1a1300':''; c.style.fontWeight = on?'700':''; });
+    var tc = comb(base.length, K);
+    $('latePickInfo').innerHTML = base.length+' αριθμοί · '+Math.round(tc).toLocaleString('el-GR')+' '+K+'άδες '+(base.length>30||tc>20000?'<b style="color:#ef4444">— πάνω από το όριο (έως 30 αριθμοί και 20.000 στήλες)</b>':'<span style="color:#22c55e">✓ εντός ορίου</span>'); }
   var poolMin = all[all.length-1].id, aN = 0;
   if(ARCH){ for(var ai=ARCH.n-1; ai>=0; ai--){ if(ARCH.id[ai]<poolMin){ aN = ai+1; break; } } }   // αρχείο: μόνο ό,τι είναι παλιότερο από τις φορτωμένες
   var E = comb(80,K)/comb(20,K), LIM = E*MUL, L = all.length + aN, lastId0 = all[0].id;
@@ -1440,7 +1450,7 @@ function renderLate(){
   var HX = +$('lateWin').value, Eh = HX/4, sdh = Math.sqrt(HX*0.25*0.75), HMIN = Math.ceil(Eh+sdh-1e-9), CMAX = Math.floor(Eh-sdh+1e-9), hc = new Array(81).fill(0);   // ζεστό ≥ μέσος+1σ, κρύο ≤ μέσος−1σ
   all.slice(0,HX).forEach(function(d){ d.arr.forEach(function(x){ hc[x]++; }); });
   var col = function(n){ var st = hc[n]>=HMIN?'color:#ef4444;':hc[n]<=CMAX?'color:#2563eb;':''; return st?'<span style="'+st+'">'+n+'</span>':String(n); };
-  $('lateBase').innerHTML = '<div class="muted" style="font-size:11.5px">🌡️ Στις τελευταίες '+HX+': μέσος όρος '+Eh.toFixed(1).replace('.',',')+' φορές · <span style="color:#ef4444">ζεστό ≥ '+HMIN+'</span> · <span style="color:#2563eb">κρύο ≤ '+CMAX+'</span></div><span class="muted" style="font-size:12.5px">Κοινοί ('+base.length+'): </span><b>'+(base.map(function(n){ return (cnt[n]===3?'<u>':'')+col(n)+(cnt[n]===3?'</u>':''); }).join(' ')||'—')+'</b>'+(SRC===2?' <span class="muted" style="font-size:11.5px">(υπογραμμισμένοι = και στις 3)</span>':'');
+  $('lateBase').innerHTML = '<div class="muted" style="font-size:11.5px">🌡️ Στις τελευταίες '+HX+': μέσος όρος '+Eh.toFixed(1).replace('.',',')+' φορές · <span style="color:#ef4444">ζεστό ≥ '+HMIN+'</span> · <span style="color:#2563eb">κρύο ≤ '+CMAX+'</span></div><span class="muted" style="font-size:12.5px">'+(SRC===1?'Οι αριθμοί μου':'Κοινοί')+' ('+base.length+'): </span><b>'+(base.map(function(n){ return (SRC!==1&&cnt[n]===3?'<u>':'')+col(n)+(SRC!==1&&cnt[n]===3?'</u>':''); }).join(' ')||'—')+'</b>'+(SRC===2?' <span class="muted" style="font-size:11.5px">(υπογραμμισμένοι = και στις 3)</span>':'');
   // μικρός πίνακας: LIVE → η τελευταία κλήρωση · στο παρελθόν → η ΕΠΟΜΕΝΗ (το «μέλλον» από εκεί που είσαι)
   var nextD = null; if(TT){ var allR = ttAll(); for(var ni=0; ni<allR.length; ni++){ if(allR[ni].id>lastId0){ nextD = allR[ni]; break; } } }
   var showD = TT ? nextD : all[0], baseSet = {}; base.forEach(function(n){ baseSet[n]=1; });
@@ -1455,9 +1465,9 @@ function renderLate(){
   $('lateMeta').textContent = base.length+' κοινοί · ιστορικό '+L.toLocaleString('el-GR')+' κληρ.'+(ARCH?'':' (φορτώνει αρχείο…)');
   var nb = base.length;
   if(SRC===80){ lateAll80({all:all, aN:aN, L:L, K:K, E:E, LIM:LIM, hc:hc, HMIN:HMIN, CMAX:CMAX, col:col, tOf:tOf, nextD:nextD, HX:HX}); return; }
-  if(nb<K){ $('lateChips').innerHTML=''; $('lateTable').innerHTML='<tr><td class="muted">Λιγότεροι από '+K+' κοινοί αριθμοί — διάλεξε «2 από τις 3» ή μικρότερη στήλη.</td></tr>'; return; }
-  if(nb>30){ $('lateTable').innerHTML='<tr><td class="muted">Πάρα πολλοί κοινοί αριθμοί.</td></tr>'; return; }
-  var total = comb(nb,K); if(total>20000){ $('lateTable').innerHTML='<tr><td class="muted">Πάρα πολλοί συνδυασμοί ('+Math.round(total)+').</td></tr>'; return; }
+  if(nb<K){ $('lateChips').innerHTML=''; $('lateTable').innerHTML='<tr><td class="muted">'+(SRC===1?'Διάλεξε τουλάχιστον '+K+' αριθμούς στο πανελάκι.':'Λιγότεροι από '+K+' κοινοί αριθμοί — διάλεξε «2 από τις 3» ή μικρότερη στήλη.')+'</td></tr>'; return; }
+  if(nb>30){ $('lateChips').innerHTML=''; $('lateTable').innerHTML='<tr><td class="muted">Πάρα πολλοί αριθμοί ('+nb+') — έως 30.</td></tr>'; return; }
+  var total = comb(nb,K); if(total>20000){ $('lateChips').innerHTML=''; $('lateTable').innerHTML='<tr><td class="muted">Πάρα πολλοί συνδυασμοί ('+Math.round(total).toLocaleString('el-GR')+') — έως 20.000. Βγάλε μερικούς αριθμούς ή διάλεξε μικρότερη στήλη.</td></tr>'; return; }
   // μάσκα κάθε κλήρωσης πάνω στους κοινούς
   var idx = {}; base.forEach(function(n,i){ idx[n]=i; });
   var masks = new Int32Array(L), pos = new Int8Array(81).fill(-1); base.forEach(function(n,i){ pos[n]=i; });
@@ -1479,7 +1489,7 @@ function renderLate(){
   else if(SO==='whi') res.sort(function(a,b){ return b.w-a.w || b.delay-a.delay; });
   else res.sort(function(a,b){ return b.delay-a.delay || a.times-b.times; });
   var notEnough = L < LIM;
-  $('lateChips').innerHTML = chip(K+'άδες από κοινούς', Math.round(total).toLocaleString('el-GR')) + chip('Ξεπέρασαν τις '+Math.round(LIM).toLocaleString('el-GR'), res.length) + chip('1 στις', Math.round(E).toLocaleString('el-GR')) + chip('Κάθε '+K+'άδα «έπρεπε» να βγει', expN.toFixed(1).replace('.',',')+' φορές σε '+L.toLocaleString('el-GR')) +
+  $('lateChips').innerHTML = chip(K+'άδες από '+(SRC===1?'τους αριθμούς σου':'κοινούς'), Math.round(total).toLocaleString('el-GR')) + chip('Ξεπέρασαν τις '+Math.round(LIM).toLocaleString('el-GR'), res.length) + chip('1 στις', Math.round(E).toLocaleString('el-GR')) + chip('Κάθε '+K+'άδα «έπρεπε» να βγει', expN.toFixed(1).replace('.',',')+' φορές σε '+L.toLocaleString('el-GR')) +
     (notEnough ? '<div style="width:100%;font-size:12px;color:#f59e0b">⚠️ Το ιστορικό ('+L.toLocaleString('el-GR')+' κληρώσεις) είναι μικρότερο από '+Math.round(LIM).toLocaleString('el-GR')+' — δεν μπορεί να κριθεί.</div>' : '');
   $('lateTable').innerHTML = notEnough ? '' : res.length ? '<tr><th>#</th><th>Στήλη</th><th>Χωρίς να βγει</th><th>🔥/❄️</th><th></th></tr>' + res.slice(0,40).map(function(o,i){
       var dl = o.never ? '> '+L.toLocaleString('el-GR') : o.delay.toLocaleString('el-GR'), ratio = (o.delay/E).toFixed(1).replace('.',',');
@@ -2352,6 +2362,8 @@ $('ttLive').addEventListener('click', function(){ ttLive(); });
   $('g4From').innerHTML = o.replace(/<option value="24">[^<]*<\/option>/,''); $('g4To').innerHTML = o.replace(/<option value="0">[^<]*<\/option>/,'');
   $('g4From').value = lsGet('kl_g4_from') || '0'; $('g4To').value = lsGet('kl_g4_to') || '9';
   ['g4From','g4To'].forEach(function(id){ $(id).addEventListener('change', function(){ lsSet(id==='g4From'?'kl_g4_from':'kl_g4_to', this.value); renderGef(); }); }); })();
+$('latePickGrid').addEventListener('click', function(e){ var c = e.target.closest && e.target.closest('[data-lp]'); if(!c) return; var n = +c.dataset.lp, i = latePick.indexOf(n); if(i>=0) latePick.splice(i,1); else latePick.push(n); lsSet('kl_late_pick', JSON.stringify(latePick)); renderLate(); });
+$('latePickClear').addEventListener('click', function(){ latePick = []; lsSet('kl_late_pick','[]'); renderLate(); });
 $('lateTable').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; var nd = askDraws(); if(!nd) return; myAdd(b.dataset.five.split(' ').map(Number), nd, '⏰ Καθυστερημένη'); b.textContent = '✓'; });
 $('manGrid').addEventListener('click', function(e){ var c = e.target.closest && e.target.closest('[data-mn]'); if(!c) return; var n = +c.dataset.mn, i = manPick.indexOf(n); if(i>=0) manPick.splice(i,1); else manPick.push(n); manSave(); renderMan(); });
 function manTemp(hot){ var HX = +($('rlHot').value||10), HMIN = Math.ceil(HX*0.25*1.5), CMAX = Math.floor(HX*0.25*0.5), hc = new Array(81).fill(0);
