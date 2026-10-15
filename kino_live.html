@@ -1352,7 +1352,9 @@ var ARCH = null;
 async function loadArchive(){
   try{
     var idx = await (await fetch('data/kino/index.json?_='+Date.now(), {cache:'no-store'})).json();
-    var bufs = [], files = idx.files||[], R = idx.rec||31;
+    var allF = idx.files||[], wantAll = lsGet('kl_arch_all')==='1', cut = new Date(); cut.setMonth(cut.getMonth()-24);
+    var cutS = cut.toISOString().slice(0,7), files = wantAll ? allF : allF.filter(function(f){ return f.f.slice(0,7) >= cutS; });
+    var bufs = [], R = idx.rec||31, totalAll = idx.total||0;
     for(var i=0;i<files.length;i+=4){
       var ch = files.slice(i,i+4).map(function(f){ return fetch('data/kino/'+f.f+'?v='+f.max).then(function(r){ if(!r.ok) throw new Error(r.status); return r.arrayBuffer(); }); });
       (await Promise.all(ch)).forEach(function(b){ bufs.push(b); });
@@ -1365,7 +1367,8 @@ async function loadArchive(){
         A.id[k] = id; A.t[k] = dv.getUint32(o+4,true)*1000; A.nums.set(u8.subarray(o+8,o+28), k*20); k++; } });
     A.n = k; ARCH = A;
     var pool = today.length+histPool.length;
-    $('histInfo').textContent = '📦 Αρχείο: '+k.toLocaleString('el-GR')+' κληρώσεις ('+dateOf(A.t[0]).split('-').reverse().join('/')+' → '+dateOf(A.t[k-1]).split('-').reverse().join('/')+') + '+pool.toLocaleString('el-GR')+' φορτωμένες';
+    $('histInfo').innerHTML = '📦 Αρχείο: '+k.toLocaleString('el-GR')+' κληρώσεις ('+dateOf(A.t[0]).split('-').reverse().join('/')+' → '+dateOf(A.t[k-1]).split('-').reverse().join('/')+') + '+pool.toLocaleString('el-GR')+' φορτωμένες'+
+      (files.length<allF.length ? ' · <button class="btn" id="archAll" style="padding:1px 8px">📦 Όλο το αρχείο ('+totalAll.toLocaleString('el-GR')+' από '+allF[0].f.slice(0,4)+')</button>' : (wantAll && allF.length>24 ? ' · <button class="btn" id="archLess" style="padding:1px 8px">μόνο 2 χρόνια</button>' : ''));
     renderLate();
   }catch(e){ console.warn('archive', e); }
 }
@@ -1410,7 +1413,9 @@ function renderLate(){
   var combos = [], c = []; for(var z=0;z<K;z++) c.push(z);
   while(true){ var cm = 0; c.forEach(function(q){ cm |= (1<<q); }); combos.push({cm:cm, nums:c.map(function(q){ return base[q]; }), last:-1, times:0});
     var p = K-1; while(p>=0 && c[p]===nb-K+p) p--; if(p<0) break; c[p]++; for(var q=p+1;q<K;q++) c[q] = c[q-1]+1; }
-  combos.forEach(function(o){ for(var j=0;j<L;j++){ if((masks[j]&o.cm)===o.cm){ if(o.last<0) o.last = j; o.times++; } } });
+  var pc = function(x){ x = x - ((x>>>1)&0x55555555); x = (x&0x33333333) + ((x>>>2)&0x33333333); return (((x + (x>>>4)) & 0x0F0F0F0F) * 0x01010101) >>> 24; };
+  var cj = [], cm2 = []; for(var j=0;j<L;j++){ if(pc(masks[j])>=K){ cj.push(j); cm2.push(masks[j]); } }   // μόνο κληρώσεις με ≥K κοινούς
+  combos.forEach(function(o){ for(var q=0;q<cj.length;q++){ if((cm2[q]&o.cm)===o.cm){ if(o.last<0) o.last = cj[q]; o.times++; } } });
   var expN = L/E;   // πόσες φορές «έπρεπε» να βγει σε όλο το ιστορικό
   var res = combos.map(function(o){ o.delay = o.last<0 ? L : o.last; o.never = o.last<0; o.w = o.times/expN; return o; }).filter(function(o){ return o.delay > LIM; });
   res.forEach(function(o){ o.h = o.nums.filter(function(n){ return hc[n]>=HMIN; }).length; o.c = o.nums.filter(function(n){ return hc[n]<=CMAX; }).length; o.heat = o.nums.reduce(function(a,n){ return a+hc[n]; },0); });
@@ -2262,6 +2267,9 @@ function tick(){
 }
 
 /* ---------- Events ---------- */
+document.addEventListener('click', function(e){ var t = e.target;
+  if(t && t.id==='archAll'){ lsSet('kl_arch_all','1'); t.disabled = true; t.textContent = 'φόρτωση…'; loadArchive(); }
+  else if(t && t.id==='archLess'){ lsSet('kl_arch_all','0'); loadArchive(); } });
 $('anchorOff').addEventListener('click', function(){ setAnchor(0); });
 $('ttGoLock').addEventListener('click', function(){ if(ANCHOR) ttGo(ANCHOR); });
 $('ttLock').addEventListener('click', function(){ setAnchor(ANCHOR && ANCHOR===lastId ? 0 : lastId); });
