@@ -429,7 +429,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     <div class="cbody">
       <div class="muted" style="font-size:12.5px;margin-bottom:6px">Παίρνει τους κοινούς αριθμούς των 3 τελευταίων κληρώσεων και φτιάχνει από αυτούς στήλες που <b>δεν έχουν βγει ολόκληρες</b> για περισσότερες κληρώσεις από την πιθανότητά τους (π.χ. πεντάδα: πάνω από 1.551 κληρώσεις).</div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
-        <select id="lateSrc"><option value="2">Κοινοί σε 2 από τις 3</option><option value="3">Κοινοί και στις 3</option></select>
+        <select id="lateSrc"><option value="2">Κοινοί σε 2 από τις 3</option><option value="3">Κοινοί και στις 3</option><option value="80">🔢 Όλοι οι 80 αριθμοί</option></select>
         <select id="lateK"><option value="2">Δυάδες</option><option value="3">Τριάδες</option><option value="4">Τετράδες</option><option value="5" selected>Πεντάδες</option><option value="6">Εξάδες</option><option value="7">Επτάδες</option></select>
         <select id="lateMul"><option value="1">πάνω από 1× την πιθανότητα</option><option value="1.5">πάνω από 1,5×</option><option value="2">πάνω από 2×</option><option value="3">πάνω από 3×</option></select>
         <select id="lateWin" title="Πόσες κληρώσεις μετράνε για ζεστό/κρύο"><option value="10">🌡️ ζεστό/κρύο: τελ. 10</option><option value="20">🌡️ τελ. 20</option><option value="50" selected>🌡️ τελ. 50</option><option value="100">🌡️ τελ. 100</option><option value="288">🌡️ τελ. 288 (μέρα)</option></select>
@@ -1380,6 +1380,50 @@ async function loadArchive(){
     renderLate();
   }catch(e){ console.warn('archive', e); }
 }
+/* ⏰ Καθυστερημένες από ΟΛΟΥΣ τους 80: πίνακας «τελευταία εμφάνιση» για κάθε συνδυασμό (δυάδες–τετράδες) */
+var L80_CAP = {2:300000, 3:80000, 4:12000}, L80_CACHE = {key:'', last:null, times:null, span:0};
+function lateAll80(o){
+  var K = o.K, all = o.all, aN = o.aN;
+  $('lateBase').innerHTML = '<div class="muted" style="font-size:11.5px">🌡️ Στις τελευταίες '+o.HX+': <span style="color:#ef4444">ζεστό ≥ '+o.HMIN+'</span> · <span style="color:#2563eb">κρύο ≤ '+o.CMAX+'</span></div><b>🔢 Όλοι οι 80 αριθμοί</b>';
+  if(K>4){ $('lateChips').innerHTML = chip('Όλες οι '+K+'άδες των 80', Math.round(comb(80,K)).toLocaleString('el-GR')); $('lateTable').innerHTML = '<tr><td class="muted">Με όλους τους 80 γίνεται για δυάδες, τριάδες και τετράδες. Οι '+K+'άδες είναι '+Math.round(comb(80,K)).toLocaleString('el-GR')+' — πάρα πολλές για το κινητό. Για '+K+'άδες διάλεξε «κοινοί» ή τον 🕹️ Χειροκίνητο έλεγχο.</td></tr>'; return; }
+  var CT = []; for(var n=0;n<=80;n++){ CT.push([]); for(var k=0;k<=K;k++) CT[n].push(Math.round(comb(n,k))); }
+  var TOT = CT[80][K], idx = [], c = []; for(var z=0;z<K;z++) c.push(z);
+  while(true){ idx.push(c.slice()); var p = K-1; while(p>=0 && c[p]===20-K+p) p--; if(p<0) break; c[p]++; for(var q=p+1;q<K;q++) c[q] = c[q-1]+1; }
+  var span = Math.min(o.L, L80_CAP[K]), ck = K+'_'+span+'_'+(all[0]?all[0].id:0), last, times;
+  if(L80_CACHE.key===ck){ last = L80_CACHE.last; times = L80_CACHE.times; }
+  else if(!o.go){ $('lateChips').innerHTML = ''; $('lateTable').innerHTML = '<tr><td class="muted">⏳ Υπολογίζω όλες τις '+TOT.toLocaleString('el-GR')+' '+K+'άδες σε '+span.toLocaleString('el-GR')+' κληρώσεις… (λίγα δευτερόλεπτα)</td></tr>'; o.go = 1; setTimeout(function(){ lateAll80(o); }, 40); return; }
+  else {
+    last = new Int32Array(TOT); times = new Uint32Array(TOT); var sv = new Int32Array(20), flat = new Int32Array(idx.length*K), cw = [];
+    for(var t0=0;t0<idx.length;t0++) for(var u0=0;u0<K;u0++) flat[t0*K+u0] = idx[t0][u0];
+    for(var u1=0;u1<=K;u1++){ var col = new Int32Array(81); for(var n1=0;n1<=80;n1++) col[n1] = CT[n1][u1]||0; cw.push(col); }
+    for(var j=0;j<span;j++){
+      if(j<all.length){ var ar = all[j].arr; for(var q=0;q<20;q++) sv[q] = ar[q]-1; }
+      else { var off = (aN-1-(j-all.length))*20; for(var q2=0;q2<20;q2++) sv[q2] = ARCH.nums[off+q2]-1; }
+      for(var a1=1;a1<20;a1++){ var v = sv[a1], b1 = a1-1; while(b1>=0 && sv[b1]>v){ sv[b1+1] = sv[b1]; b1--; } sv[b1+1] = v; }
+      for(var t=0, fo=0; t<idx.length; t++){ var r = 0; for(var u=0;u<K;u++,fo++) r += cw[u+1][sv[flat[fo]]]; if(!last[r]) last[r] = j+1; times[r]++; }
+    }
+    L80_CACHE = {key:ck, last:last, times:times, span:span};
+  }
+  var unrank = function(r){ var out = []; for(var k=K;k>=1;k--){ var n = k-1; while(n+1<=80 && CT[n+1][k]<=r) n++; out.push(n+1); r -= CT[n][k]; } return out.reverse(); };
+  var over = []; for(var r=0;r<TOT;r++){ var dl = last[r] ? last[r]-1 : span; if(dl>o.LIM) over.push(r); }
+  over.sort(function(a,b){ var da = last[a]?last[a]-1:span, db = last[b]?last[b]-1:span; return db-da; });
+  var expN = span/o.E, SO = $('lateSort').value;
+  var rows = over.slice(0,2000).map(function(r){ var nums = unrank(r), dl = last[r]?last[r]-1:span;
+    return {nums:nums, delay:dl, never:!last[r], times:times[r], w:times[r]/expN, h:nums.filter(function(n){return o.hc[n]>=o.HMIN;}).length, c:nums.filter(function(n){return o.hc[n]<=o.CMAX;}).length, heat:nums.reduce(function(a,n){return a+o.hc[n];},0)}; });
+  if(SO==='hot') rows.sort(function(a,b){ return b.h-a.h || b.heat-a.heat || b.delay-a.delay; });
+  else if(SO==='cold') rows.sort(function(a,b){ return b.c-a.c || a.heat-b.heat || b.delay-a.delay; });
+  else if(SO==='wlo') rows.sort(function(a,b){ return a.w-b.w || b.delay-a.delay; });
+  else if(SO==='whi') rows.sort(function(a,b){ return b.w-a.w || b.delay-a.delay; });
+  $('lateChips').innerHTML = chip('Όλες οι '+K+'άδες των 80', TOT.toLocaleString('el-GR')) + chip('Ξεπέρασαν τις '+Math.round(o.LIM).toLocaleString('el-GR'), over.length.toLocaleString('el-GR')) + chip('1 στις', Math.round(o.E).toLocaleString('el-GR')) +
+    chip('Κάθε '+K+'άδα «έπρεπε» να βγει', expN.toFixed(1).replace('.',',')+' φορές σε '+span.toLocaleString('el-GR')) + (span<o.L ? '<div style="width:100%;font-size:11.5px" class="muted">Για ταχύτητα στο κινητό μετράει τις τελευταίες '+span.toLocaleString('el-GR')+' κληρώσεις.</div>' : '');
+  $('lateTable').innerHTML = rows.length ? '<tr><th>#</th><th>Στήλη</th><th>Χωρίς να βγει</th><th>🔥/❄️</th><th></th></tr>' + rows.slice(0,40).map(function(x,i){
+      var dl = x.never ? '> '+span.toLocaleString('el-GR') : x.delay.toLocaleString('el-GR');
+      return '<tr><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+x.nums.map(o.col).join(' ')+'</b></td><td><b>'+dl+'</b> κληρ.<br><span class="muted" style="font-size:11px">'+(x.delay/o.E).toFixed(1).replace('.',',')+'× το 1 στις '+Math.round(o.E).toLocaleString('el-GR')+(x.never?'':' · τελευταία '+hm(o.tOf(x.delay))+' '+dateOf(o.tOf(x.delay)).split('-').reverse().join('/'))+'<br>⚖️ αναμενόταν '+expN.toFixed(1).replace('.',',')+' · βγήκε '+x.times+' → βάρος <b style="color:'+(x.w<0.8?'#2563eb':x.w>1.2?'#ef4444':'inherit')+'">'+x.w.toFixed(2).replace('.',',')+'</b></span>'+
+        (TT&&o.nextD?(function(){ var hh = x.nums.filter(function(n){ return o.nextD.set.has(n); }).length; return '<br><b style="color:'+(hh===K?'#22c55e':'inherit')+'">🔮 στην επόμενη: '+hh+'/'+K+(hh===K?' 🎉':'')+'</b>'; })():'')+
+        '</td><td style="white-space:nowrap"><span style="color:#ef4444">🔥'+x.h+'</span> <span style="color:#2563eb">❄️'+x.c+'</span></td><td><button class="btn" data-five="'+x.nums.join(' ')+'" style="padding:2px 8px">➕</button></td></tr>'; }).join('') +
+      (over.length>40?'<tr><td colspan="4" class="muted">… και άλλες '+(over.length-40).toLocaleString('el-GR')+'</td></tr>':'')
+    : '<tr><td class="muted">Καμία '+K+'άδα δεν έχει ξεπεράσει τις '+Math.round(o.LIM).toLocaleString('el-GR')+' κληρώσεις.</td></tr>';
+}
 /* ---------- ⏰ Καθυστερημένες: συνδυασμοί από τους κοινούς των 3 τελευταίων που «χρωστάνε» ---------- */
 function renderLate(){
   var card = document.querySelector && document.querySelector('.card[data-k="late"]');
@@ -1410,6 +1454,7 @@ function renderLate(){
   $('lateMini').innerHTML = mh;
   $('lateMeta').textContent = base.length+' κοινοί · ιστορικό '+L.toLocaleString('el-GR')+' κληρ.'+(ARCH?'':' (φορτώνει αρχείο…)');
   var nb = base.length;
+  if(SRC===80){ lateAll80({all:all, aN:aN, L:L, K:K, E:E, LIM:LIM, hc:hc, HMIN:HMIN, CMAX:CMAX, col:col, tOf:tOf, nextD:nextD, HX:HX}); return; }
   if(nb<K){ $('lateChips').innerHTML=''; $('lateTable').innerHTML='<tr><td class="muted">Λιγότεροι από '+K+' κοινοί αριθμοί — διάλεξε «2 από τις 3» ή μικρότερη στήλη.</td></tr>'; return; }
   if(nb>30){ $('lateTable').innerHTML='<tr><td class="muted">Πάρα πολλοί κοινοί αριθμοί.</td></tr>'; return; }
   var total = comb(nb,K); if(total>20000){ $('lateTable').innerHTML='<tr><td class="muted">Πάρα πολλοί συνδυασμοί ('+Math.round(total)+').</td></tr>'; return; }
