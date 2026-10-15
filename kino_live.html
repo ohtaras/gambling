@@ -1389,11 +1389,13 @@ function renderLate(){
   // μικρός πίνακας: LIVE → η τελευταία κλήρωση · στο παρελθόν → η ΕΠΟΜΕΝΗ (το «μέλλον» από εκεί που είσαι)
   var nextD = null; if(TT){ var allR = ttAll(); for(var ni=0; ni<allR.length; ni++){ if(allR[ni].id>lastId0){ nextD = allR[ni]; break; } } }
   var showD = TT ? nextD : all[0], baseSet = {}; base.forEach(function(n){ baseSet[n]=1; });
-  var mh = '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:12.5px;margin-bottom:3px"><b>'+(TT ? (showD ? '🔮 Επόμενη κλήρωση '+hm(showD.t)+' · #'+showD.id : '🔮 Δεν υπάρχει ακόμα επόμενη κλήρωση') : '🟢 Τελευταία κλήρωση '+hm(all[0].t)+' · #'+all[0].id)+'</b>'+(showD?'<span class="muted">'+base.filter(function(n){ return showD.set.has(n); }).length+'/'+base.length+' κοινοί μέσα</span>':'')+'</div>';
+  var mh = '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:12.5px;margin-bottom:3px"><b>'+(TT ? (showD ? '🔮 Επόμενη κλήρωση '+hm(showD.t)+' · #'+showD.id : '🔮 Δεν υπάρχει ακόμα επόμενη κλήρωση') : '🟢 Τελευταία κλήρωση '+hm(all[0].t)+' · #'+all[0].id)+'</b>'+(showD?'<span class="muted">'+base.filter(function(n){ return showD.set.has(n); }).length+'/'+base.length+' κοινοί μέσα'+((showD.sc||[]).length?' · 2η ευκαιρία: '+showD.sc.join(', '):'')+'</span>':'')+'</div>';
   if(showD){ mh += '<div style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:360px">';
-    for(var mn=1; mn<=80; mn++){ var on = showD.set.has(mn), b2 = baseSet[mn];
-      mh += '<div style="text-align:center;font-size:11px;line-height:20px;border-radius:5px;'+(on?'background:'+(b2?'#22c55e':'var(--drawn)')+';color:#fff;font-weight:700;':'background:var(--panel2);color:var(--muted);')+(b2?'box-shadow:inset 0 0 0 2px #f59e0b;':'')+'">'+mn+'</div>'; }
-    mh += '</div><div class="muted" style="font-size:11px;margin-top:2px">πορτοκαλί περίγραμμα = κοινός αριθμός · πράσινο = κοινός που βγήκε</div>'; }
+    var scS = {}; (showD.sc||[]).forEach(function(n){ scS[n]=1; });
+    for(var mn=1; mn<=80; mn++){ var on = showD.set.has(mn), sc2 = scS[mn], b2 = baseSet[mn];
+      var bg = on ? 'radial-gradient(circle at 35% 30%,#fff7c2,#facc15 55%,#d4a20b)' : sc2 ? 'radial-gradient(circle at 35% 30%,#d1fae5,#22c55e 55%,#15803d)' : 'var(--panel2)';
+      mh += '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;border-radius:50%;background:'+bg+';'+(on?'color:#1a1300;font-weight:800;':sc2?'color:#fff;font-weight:800;':'color:var(--muted);')+(b2?'box-shadow:0 0 0 2px #ef4444;':'')+'">'+mn+'</div>'; }
+    mh += '</div><div class="muted" style="font-size:11px;margin-top:3px">🟡 κλήρωση · 🟢 2η ευκαιρία · <span style="color:#ef4444">◯</span> κοινός αριθμός</div>'; }
   $('lateMini').innerHTML = mh;
   $('lateMeta').textContent = base.length+' κοινοί · ιστορικό '+L.toLocaleString('el-GR')+' κληρ.'+(ARCH?'':' (φορτώνει αρχείο…)');
   var nb = base.length;
