@@ -431,6 +431,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
         <select id="lateSrc"><option value="2">Κοινοί σε 2 από τις 3</option><option value="3">Κοινοί και στις 3</option></select>
         <select id="lateK"><option value="3">Τριάδες</option><option value="4">Τετράδες</option><option value="5" selected>Πεντάδες</option><option value="6">Εξάδες</option><option value="7">Επτάδες</option></select>
         <select id="lateMul"><option value="1">πάνω από 1× την πιθανότητα</option><option value="1.5">πάνω από 1,5×</option><option value="2">πάνω από 2×</option><option value="3">πάνω από 3×</option></select>
+        <select id="lateWin" title="Πόσες κληρώσεις μετράνε για ζεστό/κρύο"><option value="10">🌡️ ζεστό/κρύο: τελ. 10</option><option value="20">🌡️ τελ. 20</option><option value="50" selected>🌡️ τελ. 50</option><option value="100">🌡️ τελ. 100</option><option value="288">🌡️ τελ. 288 (μέρα)</option></select>
         <select id="lateSort"><option value="delay">Κατάταξη: καθυστέρηση</option><option value="hot">🔥 Περισσότεροι ζεστοί</option><option value="cold">❄️ Περισσότεροι κρύοι</option><option value="wlo">⚖️ Βάρος: λιγότερες από τις αναμενόμενες</option><option value="whi">⚖️ Βάρος: περισσότερες από τις αναμενόμενες</option></select>
       </div>
       <div id="lateBase" style="margin-bottom:6px"></div>
@@ -1380,10 +1381,10 @@ function renderLate(){
   if(ARCH){ for(var ai=ARCH.n-1; ai>=0; ai--){ if(ARCH.id[ai]<poolMin){ aN = ai+1; break; } } }   // αρχείο: μόνο ό,τι είναι παλιότερο από τις φορτωμένες
   var E = comb(80,K)/comb(20,K), LIM = E*MUL, L = all.length + aN, lastId0 = all[0].id;
   var tOf = function(j){ return j<all.length ? all[j].t : ARCH.t[aN-1-(j-all.length)]; };
-  var HX = +($('rlHot').value||10), HMIN = Math.ceil(HX*0.25*1.5), CMAX = Math.floor(HX*0.25*0.5), hc = new Array(81).fill(0);
+  var HX = +$('lateWin').value, Eh = HX/4, sdh = Math.sqrt(HX*0.25*0.75), HMIN = Math.ceil(Eh+sdh-1e-9), CMAX = Math.floor(Eh-sdh+1e-9), hc = new Array(81).fill(0);   // ζεστό ≥ μέσος+1σ, κρύο ≤ μέσος−1σ
   all.slice(0,HX).forEach(function(d){ d.arr.forEach(function(x){ hc[x]++; }); });
   var col = function(n){ var st = hc[n]>=HMIN?'color:#ef4444;':hc[n]<=CMAX?'color:#2563eb;':''; return st?'<span style="'+st+'">'+n+'</span>':String(n); };
-  $('lateBase').innerHTML = '<span class="muted" style="font-size:12.5px">Κοινοί ('+base.length+'): </span><b>'+(base.map(function(n){ return (cnt[n]===3?'<u>':'')+col(n)+(cnt[n]===3?'</u>':''); }).join(' ')||'—')+'</b>'+(SRC===2?' <span class="muted" style="font-size:11.5px">(υπογραμμισμένοι = και στις 3)</span>':'');
+  $('lateBase').innerHTML = '<div class="muted" style="font-size:11.5px">🌡️ Στις τελευταίες '+HX+': μέσος όρος '+Eh.toFixed(1).replace('.',',')+' φορές · <span style="color:#ef4444">ζεστό ≥ '+HMIN+'</span> · <span style="color:#2563eb">κρύο ≤ '+CMAX+'</span></div><span class="muted" style="font-size:12.5px">Κοινοί ('+base.length+'): </span><b>'+(base.map(function(n){ return (cnt[n]===3?'<u>':'')+col(n)+(cnt[n]===3?'</u>':''); }).join(' ')||'—')+'</b>'+(SRC===2?' <span class="muted" style="font-size:11.5px">(υπογραμμισμένοι = και στις 3)</span>':'');
   $('lateMeta').textContent = base.length+' κοινοί · ιστορικό '+L.toLocaleString('el-GR')+' κληρ.'+(ARCH?'':' (φορτώνει αρχείο…)');
   var nb = base.length;
   if(nb<K){ $('lateChips').innerHTML=''; $('lateTable').innerHTML='<tr><td class="muted">Λιγότεροι από '+K+' κοινοί αριθμοί — διάλεξε «2 από τις 3» ή μικρότερη στήλη.</td></tr>'; return; }
@@ -2273,7 +2274,7 @@ $('ttBar').addEventListener('click', function(e){ var b = e.target.closest && e.
   }
   ttGo(lastId + st); });
 $('ttLive').addEventListener('click', function(){ ttLive(); });
-['lateSrc','lateK','lateMul','lateSort'].forEach(function(id){ var v = lsGet('kl_'+id); if(v) $(id).value = v; $(id).addEventListener('change', function(){ lsSet('kl_'+id, this.value); renderLate(); }); });
+['lateSrc','lateK','lateMul','lateSort','lateWin'].forEach(function(id){ var v = lsGet('kl_'+id); if(v) $(id).value = v; $(id).addEventListener('change', function(){ lsSet('kl_'+id, this.value); renderLate(); }); });
 $('lateTable').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; var nd = askDraws(); if(!nd) return; myAdd(b.dataset.five.split(' ').map(Number), nd, '⏰ Καθυστερημένη'); b.textContent = '✓'; });
 $('manGrid').addEventListener('click', function(e){ var c = e.target.closest && e.target.closest('[data-mn]'); if(!c) return; var n = +c.dataset.mn, i = manPick.indexOf(n); if(i>=0) manPick.splice(i,1); else manPick.push(n); manSave(); renderMan(); });
 function manTemp(hot){ var HX = +($('rlHot').value||10), HMIN = Math.ceil(HX*0.25*1.5), CMAX = Math.floor(HX*0.25*0.5), hc = new Array(81).fill(0);
