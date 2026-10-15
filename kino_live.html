@@ -1394,8 +1394,8 @@ function renderLate(){
     var scS = {}; (showD.sc||[]).forEach(function(n){ scS[n]=1; });
     for(var mn=1; mn<=80; mn++){ var on = showD.set.has(mn), sc2 = scS[mn], b2 = baseSet[mn];
       var bg = on ? 'radial-gradient(circle at 35% 30%,#fff7c2,#facc15 55%,#d4a20b)' : sc2 ? 'radial-gradient(circle at 35% 30%,#d1fae5,#22c55e 55%,#15803d)' : 'var(--panel2)';
-      mh += '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;border-radius:50%;background:'+bg+';'+(on?'color:#1a1300;font-weight:800;':sc2?'color:#fff;font-weight:800;':'color:var(--muted);')+(b2?'box-shadow:0 0 0 2px #ef4444;':'')+'">'+mn+'</div>'; }
-    mh += '</div><div class="muted" style="font-size:11px;margin-top:3px">🟡 κλήρωση · 🟢 2η ευκαιρία · <span style="color:#ef4444">◯</span> κοινός αριθμός</div>'; }
+      mh += '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;border-radius:50%;background:'+bg+';'+(on?'color:#1a1300;font-weight:800;':sc2?'color:#fff;font-weight:800;':'color:var(--muted);')+'">'+(b2?'<span style="text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:2px">'+mn+'</span>':mn)+'</div>'; }
+    mh += '</div><div class="muted" style="font-size:11px;margin-top:3px">🟡 κλήρωση · 🟢 2η ευκαιρία · <u>υπογράμμιση</u> = κοινός αριθμός</div>'; }
   $('lateMini').innerHTML = mh;
   $('lateMeta').textContent = base.length+' κοινοί · ιστορικό '+L.toLocaleString('el-GR')+' κληρ.'+(ARCH?'':' (φορτώνει αρχείο…)');
   var nb = base.length;
