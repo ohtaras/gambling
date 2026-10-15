@@ -434,6 +434,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
         <select id="lateWin" title="Πόσες κληρώσεις μετράνε για ζεστό/κρύο"><option value="10">🌡️ ζεστό/κρύο: τελ. 10</option><option value="20">🌡️ τελ. 20</option><option value="50" selected>🌡️ τελ. 50</option><option value="100">🌡️ τελ. 100</option><option value="288">🌡️ τελ. 288 (μέρα)</option></select>
         <select id="lateSort"><option value="delay">Κατάταξη: καθυστέρηση</option><option value="hot">🔥 Περισσότεροι ζεστοί</option><option value="cold">❄️ Περισσότεροι κρύοι</option><option value="wlo">⚖️ Βάρος: λιγότερες από τις αναμενόμενες</option><option value="whi">⚖️ Βάρος: περισσότερες από τις αναμενόμενες</option></select>
       </div>
+      <div id="lateMini" style="margin:4px 0 8px"></div>
       <div id="lateBase" style="margin-bottom:6px"></div>
       <div class="chips" id="lateChips"></div>
       <div class="scroll-x"><table class="ptab" id="lateTable"></table></div>
@@ -1385,6 +1386,15 @@ function renderLate(){
   all.slice(0,HX).forEach(function(d){ d.arr.forEach(function(x){ hc[x]++; }); });
   var col = function(n){ var st = hc[n]>=HMIN?'color:#ef4444;':hc[n]<=CMAX?'color:#2563eb;':''; return st?'<span style="'+st+'">'+n+'</span>':String(n); };
   $('lateBase').innerHTML = '<div class="muted" style="font-size:11.5px">🌡️ Στις τελευταίες '+HX+': μέσος όρος '+Eh.toFixed(1).replace('.',',')+' φορές · <span style="color:#ef4444">ζεστό ≥ '+HMIN+'</span> · <span style="color:#2563eb">κρύο ≤ '+CMAX+'</span></div><span class="muted" style="font-size:12.5px">Κοινοί ('+base.length+'): </span><b>'+(base.map(function(n){ return (cnt[n]===3?'<u>':'')+col(n)+(cnt[n]===3?'</u>':''); }).join(' ')||'—')+'</b>'+(SRC===2?' <span class="muted" style="font-size:11.5px">(υπογραμμισμένοι = και στις 3)</span>':'');
+  // μικρός πίνακας: LIVE → η τελευταία κλήρωση · στο παρελθόν → η ΕΠΟΜΕΝΗ (το «μέλλον» από εκεί που είσαι)
+  var nextD = null; if(TT){ var allR = ttAll(); for(var ni=0; ni<allR.length; ni++){ if(allR[ni].id>lastId0){ nextD = allR[ni]; break; } } }
+  var showD = TT ? nextD : all[0], baseSet = {}; base.forEach(function(n){ baseSet[n]=1; });
+  var mh = '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:12.5px;margin-bottom:3px"><b>'+(TT ? (showD ? '🔮 Επόμενη κλήρωση '+hm(showD.t)+' · #'+showD.id : '🔮 Δεν υπάρχει ακόμα επόμενη κλήρωση') : '🟢 Τελευταία κλήρωση '+hm(all[0].t)+' · #'+all[0].id)+'</b>'+(showD?'<span class="muted">'+base.filter(function(n){ return showD.set.has(n); }).length+'/'+base.length+' κοινοί μέσα</span>':'')+'</div>';
+  if(showD){ mh += '<div style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:360px">';
+    for(var mn=1; mn<=80; mn++){ var on = showD.set.has(mn), b2 = baseSet[mn];
+      mh += '<div style="text-align:center;font-size:11px;line-height:20px;border-radius:5px;'+(on?'background:'+(b2?'#22c55e':'var(--drawn)')+';color:#fff;font-weight:700;':'background:var(--panel2);color:var(--muted);')+(b2?'box-shadow:inset 0 0 0 2px #f59e0b;':'')+'">'+mn+'</div>'; }
+    mh += '</div><div class="muted" style="font-size:11px;margin-top:2px">πορτοκαλί περίγραμμα = κοινός αριθμός · πράσινο = κοινός που βγήκε</div>'; }
+  $('lateMini').innerHTML = mh;
   $('lateMeta').textContent = base.length+' κοινοί · ιστορικό '+L.toLocaleString('el-GR')+' κληρ.'+(ARCH?'':' (φορτώνει αρχείο…)');
   var nb = base.length;
   if(nb<K){ $('lateChips').innerHTML=''; $('lateTable').innerHTML='<tr><td class="muted">Λιγότεροι από '+K+' κοινοί αριθμοί — διάλεξε «2 από τις 3» ή μικρότερη στήλη.</td></tr>'; return; }
@@ -1413,7 +1423,7 @@ function renderLate(){
     (notEnough ? '<div style="width:100%;font-size:12px;color:#f59e0b">⚠️ Το ιστορικό ('+L.toLocaleString('el-GR')+' κληρώσεις) είναι μικρότερο από '+Math.round(LIM).toLocaleString('el-GR')+' — δεν μπορεί να κριθεί.</div>' : '');
   $('lateTable').innerHTML = notEnough ? '' : res.length ? '<tr><th>#</th><th>Στήλη</th><th>Χωρίς να βγει</th><th>🔥/❄️</th><th></th></tr>' + res.slice(0,40).map(function(o,i){
       var dl = o.never ? '> '+L.toLocaleString('el-GR') : o.delay.toLocaleString('el-GR'), ratio = (o.delay/E).toFixed(1).replace('.',',');
-      return '<tr><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+o.nums.map(col).join(' ')+'</b></td><td><b>'+dl+'</b> κληρ.<br><span class="muted" style="font-size:11px">'+ratio+'× το 1 στις '+Math.round(E).toLocaleString('el-GR')+(o.never?' · ποτέ στο ιστορικό':' · τελευταία '+hm(tOf(o.last))+' '+dateOf(tOf(o.last)).split('-').reverse().join('/'))+'<br>⚖️ αναμενόταν '+expN.toFixed(1).replace('.',',')+' · βγήκε '+o.times+' → βάρος <b style="color:'+(o.w<0.8?'#2563eb':o.w>1.2?'#ef4444':'inherit')+'">'+o.w.toFixed(2).replace('.',',')+'</b></span></td><td style="white-space:nowrap"><span style="color:#ef4444">🔥'+o.h+'</span> <span style="color:#2563eb">❄️'+o.c+'</span></td><td><button class="btn" data-five="'+o.nums.join(' ')+'" style="padding:2px 8px">➕</button></td></tr>'; }).join('') +
+      return '<tr><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+o.nums.map(col).join(' ')+'</b></td><td><b>'+dl+'</b> κληρ.<br><span class="muted" style="font-size:11px">'+ratio+'× το 1 στις '+Math.round(E).toLocaleString('el-GR')+(o.never?' · ποτέ στο ιστορικό':' · τελευταία '+hm(tOf(o.last))+' '+dateOf(tOf(o.last)).split('-').reverse().join('/'))+'<br>⚖️ αναμενόταν '+expN.toFixed(1).replace('.',',')+' · βγήκε '+o.times+' → βάρος <b style="color:'+(o.w<0.8?'#2563eb':o.w>1.2?'#ef4444':'inherit')+'">'+o.w.toFixed(2).replace('.',',')+'</b></span>'+(TT&&nextD?(function(){ var hh = o.nums.filter(function(n){ return nextD.set.has(n); }).length; return '<br><b style="color:'+(hh===o.nums.length?'#22c55e':'inherit')+'">🔮 στην επόμενη: '+hh+'/'+o.nums.length+(hh===o.nums.length?' 🎉':'')+'</b>'; })():'')+'</td><td style="white-space:nowrap"><span style="color:#ef4444">🔥'+o.h+'</span> <span style="color:#2563eb">❄️'+o.c+'</span></td><td><button class="btn" data-five="'+o.nums.join(' ')+'" style="padding:2px 8px">➕</button></td></tr>'; }).join('') +
       (res.length>40?'<tr><td colspan="4" class="muted">… και άλλες '+(res.length-40)+'</td></tr>':'')
     : '<tr><td class="muted">Καμία '+K+'άδα από τους κοινούς δεν έχει ξεπεράσει τις '+Math.round(LIM).toLocaleString('el-GR')+' κληρώσεις.</td></tr>';
 }
