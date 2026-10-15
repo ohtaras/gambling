@@ -1,0 +1,29 @@
+name: ΚΙΝΟ αρχείο
+on:
+  schedule:
+    - cron: '7,37 * * * *'     # κάθε 30'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: kino-archive
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Ενημέρωση αρχείου από το API του ΟΠΑΠ
+        run: python3 tools/archive.py update
+      - name: Commit
+        run: |
+          git config user.name "kino-archive-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/kino
+          if git diff --cached --quiet; then echo "τίποτα νέο"; exit 0; fi
+          git commit -m "Αρχείο ΚΙΝΟ: ενημέρωση $(date -u +%Y-%m-%dT%H:%MZ)"
+          git pull --rebase -q origin main
+          git push -q origin HEAD:main

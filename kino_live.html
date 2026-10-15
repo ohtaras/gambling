@@ -431,7 +431,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
         <select id="lateSrc"><option value="2">Κοινοί σε 2 από τις 3</option><option value="3">Κοινοί και στις 3</option></select>
         <select id="lateK"><option value="3">Τριάδες</option><option value="4">Τετράδες</option><option value="5" selected>Πεντάδες</option><option value="6">Εξάδες</option><option value="7">Επτάδες</option></select>
         <select id="lateMul"><option value="1">πάνω από 1× την πιθανότητα</option><option value="1.5">πάνω από 1,5×</option><option value="2">πάνω από 2×</option><option value="3">πάνω από 3×</option></select>
-        <select id="lateSort"><option value="delay">Κατάταξη: καθυστέρηση</option><option value="hot">🔥 Περισσότεροι ζεστοί</option><option value="cold">❄️ Περισσότεροι κρύοι</option></select>
+        <select id="lateSort"><option value="delay">Κατάταξη: καθυστέρηση</option><option value="hot">🔥 Περισσότεροι ζεστοί</option><option value="cold">❄️ Περισσότεροι κρύοι</option><option value="wlo">⚖️ Βάρος: λιγότερες από τις αναμενόμενες</option><option value="whi">⚖️ Βάρος: περισσότερες από τις αναμενόμενες</option></select>
       </div>
       <div id="lateBase" style="margin-bottom:6px"></div>
       <div class="chips" id="lateChips"></div>
@@ -625,7 +625,7 @@ async function loadHistory(){
   $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις από '+HIST_DAYS+' ημέρες + σήμερα'+
     (failed||gaps ? ' · ⚠️ λείπουν '+gaps+' κληρώσεις'+(failed?' ('+failed+' ημέρες απέτυχαν)':'') : ' · πλήρες, χωρίς κενά');
   renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); renderLate(); agTick();
-  repairGaps(true);
+  repairGaps(true); loadArchive();
 }
 
 /* νέα κλήρωση: αν άλλαξε η ημέρα (μεσάνυχτα Ελλάδας), οι χθεσινές πάνε στο ιστορικό */
@@ -1345,6 +1345,28 @@ function renderMan(){
       return '<tr'+(now?' style="background:rgba(139,92,246,.15)"':'')+'><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+r.k.split(' ').map(function(x){return col(+x);}).join(' ')+'</b></td><td><b>'+r.n+'</b>'+(now?' 🔥':'')+'</td><td class="muted" style="font-size:12px">'+r.ids.map(function(id){ return byId[id]?hm(byId[id].t):'#'+id; }).join(', ')+'<br><span style="font-size:11px">⏱ τώρα '+(lastId0-r.at)+' κληρ. · μέγ. κενό '+r.gap+'</span></td><td><button class="btn" data-five="'+r.k+'" style="padding:2px 8px">➕</button></td></tr>';
     }).join('') + (rows.length>30?'<tr><td colspan="4" class="muted">… και άλλοι '+(rows.length-30)+'</td></tr>':'') : '<tr><td class="muted">Κανένας συνδυασμός '+K+' από τους αριθμούς σου με '+MIN+'+ φορές σε αυτό το διάστημα.</td></tr>';
 }
+/* ---------- 📦 Αρχείο κληρώσεων (GitHub: data/kino/*.bin, 31 bytes/κλήρωση) ---------- */
+var ARCH = null;
+async function loadArchive(){
+  try{
+    var idx = await (await fetch('data/kino/index.json?_='+Date.now(), {cache:'no-store'})).json();
+    var bufs = [], files = idx.files||[], R = idx.rec||31;
+    for(var i=0;i<files.length;i+=4){
+      var ch = files.slice(i,i+4).map(function(f){ return fetch('data/kino/'+f.f+'?v='+f.max).then(function(r){ if(!r.ok) throw new Error(r.status); return r.arrayBuffer(); }); });
+      (await Promise.all(ch)).forEach(function(b){ bufs.push(b); });
+      $('histInfo').textContent = '📦 Αρχείο: φόρτωση '+Math.min(i+4,files.length)+'/'+files.length+' μηνών…';
+    }
+    var n = 0; bufs.forEach(function(b){ n += Math.floor(b.byteLength/R); });
+    var A = {n:n, id:new Int32Array(n), t:new Float64Array(n), nums:new Uint8Array(n*20)}, k = 0, prev = -1;
+    bufs.forEach(function(b){ var dv = new DataView(b), u8 = new Uint8Array(b), m = Math.floor(b.byteLength/R);
+      for(var r=0;r<m;r++){ var o = r*R, id = dv.getUint32(o,true); if(id<=prev) continue; prev = id;
+        A.id[k] = id; A.t[k] = dv.getUint32(o+4,true)*1000; A.nums.set(u8.subarray(o+8,o+28), k*20); k++; } });
+    A.n = k; ARCH = A;
+    var pool = today.length+histPool.length;
+    $('histInfo').textContent = '📦 Αρχείο: '+k.toLocaleString('el-GR')+' κληρώσεις ('+dateOf(A.t[0]).split('-').reverse().join('/')+' → '+dateOf(A.t[k-1]).split('-').reverse().join('/')+') + '+pool.toLocaleString('el-GR')+' φορτωμένες';
+    renderLate();
+  }catch(e){ console.warn('archive', e); }
+}
 /* ---------- ⏰ Καθυστερημένες: συνδυασμοί από τους κοινούς των 3 τελευταίων που «χρωστάνε» ---------- */
 function renderLate(){
   var card = document.querySelector && document.querySelector('.card[data-k="late"]');
@@ -1354,35 +1376,43 @@ function renderLate(){
   var SRC = +$('lateSrc').value, K = +$('lateK').value, MUL = +$('lateMul').value;
   var cnt = new Array(81).fill(0); all.slice(0,3).forEach(function(d){ d.arr.forEach(function(x){ cnt[x]++; }); });
   var base = []; for(var n=1;n<=80;n++) if(cnt[n]>=SRC) base.push(n);
-  var E = comb(80,K)/comb(20,K), LIM = E*MUL, L = all.length, lastId0 = all[0].id;
+  var poolMin = all[all.length-1].id, aN = 0;
+  if(ARCH){ for(var ai=ARCH.n-1; ai>=0; ai--){ if(ARCH.id[ai]<poolMin){ aN = ai+1; break; } } }   // αρχείο: μόνο ό,τι είναι παλιότερο από τις φορτωμένες
+  var E = comb(80,K)/comb(20,K), LIM = E*MUL, L = all.length + aN, lastId0 = all[0].id;
+  var tOf = function(j){ return j<all.length ? all[j].t : ARCH.t[aN-1-(j-all.length)]; };
   var HX = +($('rlHot').value||10), HMIN = Math.ceil(HX*0.25*1.5), CMAX = Math.floor(HX*0.25*0.5), hc = new Array(81).fill(0);
   all.slice(0,HX).forEach(function(d){ d.arr.forEach(function(x){ hc[x]++; }); });
   var col = function(n){ var st = hc[n]>=HMIN?'color:#ef4444;':hc[n]<=CMAX?'color:#2563eb;':''; return st?'<span style="'+st+'">'+n+'</span>':String(n); };
   $('lateBase').innerHTML = '<span class="muted" style="font-size:12.5px">Κοινοί ('+base.length+'): </span><b>'+(base.map(function(n){ return (cnt[n]===3?'<u>':'')+col(n)+(cnt[n]===3?'</u>':''); }).join(' ')||'—')+'</b>'+(SRC===2?' <span class="muted" style="font-size:11.5px">(υπογραμμισμένοι = και στις 3)</span>':'');
-  $('lateMeta').textContent = base.length+' κοινοί · ιστορικό '+L.toLocaleString('el-GR')+' κληρ.';
+  $('lateMeta').textContent = base.length+' κοινοί · ιστορικό '+L.toLocaleString('el-GR')+' κληρ.'+(ARCH?'':' (φορτώνει αρχείο…)');
   var nb = base.length;
   if(nb<K){ $('lateChips').innerHTML=''; $('lateTable').innerHTML='<tr><td class="muted">Λιγότεροι από '+K+' κοινοί αριθμοί — διάλεξε «2 από τις 3» ή μικρότερη στήλη.</td></tr>'; return; }
   if(nb>30){ $('lateTable').innerHTML='<tr><td class="muted">Πάρα πολλοί κοινοί αριθμοί.</td></tr>'; return; }
   var total = comb(nb,K); if(total>20000){ $('lateTable').innerHTML='<tr><td class="muted">Πάρα πολλοί συνδυασμοί ('+Math.round(total)+').</td></tr>'; return; }
   // μάσκα κάθε κλήρωσης πάνω στους κοινούς
   var idx = {}; base.forEach(function(n,i){ idx[n]=i; });
-  var masks = new Array(L); for(var j=0;j<L;j++){ var m = 0; all[j].arr.forEach(function(x){ if(idx[x]!==undefined) m |= (1<<idx[x]); }); masks[j] = m; }
+  var masks = new Int32Array(L), pos = new Int8Array(81).fill(-1); base.forEach(function(n,i){ pos[n]=i; });
+  for(var j=0;j<all.length;j++){ var m = 0, ar = all[j].arr; for(var q=0;q<20;q++){ var ix = pos[ar[q]]; if(ix>=0) m |= (1<<ix); } masks[j] = m; }
+  for(var j2=0;j2<aN;j2++){ var m2 = 0, off = (aN-1-j2)*20; for(var q2=0;q2<20;q2++){ var ix2 = pos[ARCH.nums[off+q2]]; if(ix2>=0) m2 |= (1<<ix2); } masks[all.length+j2] = m2; }
   var combos = [], c = []; for(var z=0;z<K;z++) c.push(z);
   while(true){ var cm = 0; c.forEach(function(q){ cm |= (1<<q); }); combos.push({cm:cm, nums:c.map(function(q){ return base[q]; }), last:-1, times:0});
     var p = K-1; while(p>=0 && c[p]===nb-K+p) p--; if(p<0) break; c[p]++; for(var q=p+1;q<K;q++) c[q] = c[q-1]+1; }
   combos.forEach(function(o){ for(var j=0;j<L;j++){ if((masks[j]&o.cm)===o.cm){ if(o.last<0) o.last = j; o.times++; } } });
-  var res = combos.map(function(o){ o.delay = o.last<0 ? L : o.last; o.never = o.last<0; return o; }).filter(function(o){ return o.delay > LIM; });
+  var expN = L/E;   // πόσες φορές «έπρεπε» να βγει σε όλο το ιστορικό
+  var res = combos.map(function(o){ o.delay = o.last<0 ? L : o.last; o.never = o.last<0; o.w = o.times/expN; return o; }).filter(function(o){ return o.delay > LIM; });
   res.forEach(function(o){ o.h = o.nums.filter(function(n){ return hc[n]>=HMIN; }).length; o.c = o.nums.filter(function(n){ return hc[n]<=CMAX; }).length; o.heat = o.nums.reduce(function(a,n){ return a+hc[n]; },0); });
   var SO = $('lateSort').value;
   if(SO==='hot') res.sort(function(a,b){ return b.h-a.h || b.heat-a.heat || b.delay-a.delay; });
   else if(SO==='cold') res.sort(function(a,b){ return b.c-a.c || a.heat-b.heat || b.delay-a.delay; });
+  else if(SO==='wlo') res.sort(function(a,b){ return a.w-b.w || b.delay-a.delay; });
+  else if(SO==='whi') res.sort(function(a,b){ return b.w-a.w || b.delay-a.delay; });
   else res.sort(function(a,b){ return b.delay-a.delay || a.times-b.times; });
   var notEnough = L < LIM;
-  $('lateChips').innerHTML = chip(K+'άδες από κοινούς', Math.round(total).toLocaleString('el-GR')) + chip('Ξεπέρασαν τις '+Math.round(LIM).toLocaleString('el-GR'), res.length) + chip('1 στις', Math.round(E).toLocaleString('el-GR')) +
+  $('lateChips').innerHTML = chip(K+'άδες από κοινούς', Math.round(total).toLocaleString('el-GR')) + chip('Ξεπέρασαν τις '+Math.round(LIM).toLocaleString('el-GR'), res.length) + chip('1 στις', Math.round(E).toLocaleString('el-GR')) + chip('Κάθε '+K+'άδα «έπρεπε» να βγει', expN.toFixed(1).replace('.',',')+' φορές σε '+L.toLocaleString('el-GR')) +
     (notEnough ? '<div style="width:100%;font-size:12px;color:#f59e0b">⚠️ Το ιστορικό ('+L.toLocaleString('el-GR')+' κληρώσεις) είναι μικρότερο από '+Math.round(LIM).toLocaleString('el-GR')+' — δεν μπορεί να κριθεί.</div>' : '');
   $('lateTable').innerHTML = notEnough ? '' : res.length ? '<tr><th>#</th><th>Στήλη</th><th>Χωρίς να βγει</th><th>🔥/❄️</th><th></th></tr>' + res.slice(0,40).map(function(o,i){
       var dl = o.never ? '> '+L.toLocaleString('el-GR') : o.delay.toLocaleString('el-GR'), ratio = (o.delay/E).toFixed(1).replace('.',',');
-      return '<tr><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+o.nums.map(col).join(' ')+'</b></td><td><b>'+dl+'</b> κληρ.<br><span class="muted" style="font-size:11px">'+ratio+'× το 1 στις '+Math.round(E).toLocaleString('el-GR')+(o.never?' · ποτέ στο ιστορικό':' · τελευταία '+hm(all[o.last].t)+' '+all[o.last].d.split('-').reverse().slice(0,2).join('/'))+' · '+o.times+'× στο ιστορικό</span></td><td style="white-space:nowrap"><span style="color:#ef4444">🔥'+o.h+'</span> <span style="color:#2563eb">❄️'+o.c+'</span></td><td><button class="btn" data-five="'+o.nums.join(' ')+'" style="padding:2px 8px">➕</button></td></tr>'; }).join('') +
+      return '<tr><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+o.nums.map(col).join(' ')+'</b></td><td><b>'+dl+'</b> κληρ.<br><span class="muted" style="font-size:11px">'+ratio+'× το 1 στις '+Math.round(E).toLocaleString('el-GR')+(o.never?' · ποτέ στο ιστορικό':' · τελευταία '+hm(tOf(o.last))+' '+dateOf(tOf(o.last)).split('-').reverse().join('/'))+'<br>⚖️ αναμενόταν '+expN.toFixed(1).replace('.',',')+' · βγήκε '+o.times+' → βάρος <b style="color:'+(o.w<0.8?'#2563eb':o.w>1.2?'#ef4444':'inherit')+'">'+o.w.toFixed(2).replace('.',',')+'</b></span></td><td style="white-space:nowrap"><span style="color:#ef4444">🔥'+o.h+'</span> <span style="color:#2563eb">❄️'+o.c+'</span></td><td><button class="btn" data-five="'+o.nums.join(' ')+'" style="padding:2px 8px">➕</button></td></tr>'; }).join('') +
       (res.length>40?'<tr><td colspan="4" class="muted">… και άλλες '+(res.length-40)+'</td></tr>':'')
     : '<tr><td class="muted">Καμία '+K+'άδα από τους κοινούς δεν έχει ξεπεράσει τις '+Math.round(LIM).toLocaleString('el-GR')+' κληρώσεις.</td></tr>';
 }
