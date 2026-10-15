@@ -377,8 +377,9 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
       <div id="gefNext"></div>
       <h3 class="muted" style="font-size:13px;margin:14px 0 6px">Τελευταίες κληρώσεις που έπαιξε</h3>
       <div class="scroll-x"><table class="ptab" id="gefTable"></table></div>
-      <h3 style="font-size:15px;margin:18px 0 6px">🎯 Σήμα τετράδων (μία βολή τη μέρα, 7,50€)</h3>
+      <h3 style="font-size:15px;margin:18px 0 6px">🎯 Σήμα τετράδων (7,50€ ανά σήμα)</h3>
       <div class="muted" style="margin-bottom:8px">Όταν οι 2 τελευταίες κληρώσεις έχουν <b>ακριβώς 6 κοινούς αριθμούς</b>, παίζονται στην επόμενη κλήρωση και οι <b>15 τετράδες</b> τους × 0,50€ = 7,50€. Αν βγουν 4 από τους 6 → 69€, 5 από τους 6 → 270€, και οι 6 → 750€ (1 στις 31 σήματα πιάνει 4+ από τους 6). Παρακάτω: τι θα έκανε σε κάθε σήμα του ιστορικού που έχει η σελίδα, και αν το έπαιζες μόνο στο <b>πρώτο σήμα κάθε μέρας</b>.</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:4px 0 6px;font-size:13px"><b>⏰ Παίζω όλα τα σήματα από</b> <select id="g4From"></select> <b>έως</b> <select id="g4To"></select></div>
       <div id="g4Now"></div>
       <div class="chips" id="g4Chips"></div>
       <div id="g4List"></div>
@@ -1153,11 +1154,16 @@ function renderG4(all){
     fours.forEach(function(f){ var k = f.filter(function(x){return d.set.has(x);}).length; w += PAYS[4][k]||0; if(k===4) n4++; });
     sigs.push({d:d, c:c, fours:fours, h:h, w:w, n4:n4, a:all[i-2], b:all[i-1]});
   }
+  var hFrom = +($('g4From').value||0), hTo = +($('g4To').value||9);
+  var inWin = function(t){ var mm = minsOf(t), a = hFrom*60, b = hTo*60; return a<=b ? (mm>=a && mm<b) : (mm>=a || mm<b); };
+  sigs.forEach(function(s){ s.win = inWin(s.d.t); });
   var firstOfDay = {}; sigs.forEach(function(s){ if(!firstOfDay[s.d.d]) { firstOfDay[s.d.d] = s; s.first = true; } });
   var sum = function(arr){ return arr.reduce(function(o,s){ o.n++; o.c+=7.5; o.w+=s.w; o.h4+=s.n4?1:0; return o; }, {n:0,c:0,w:0,h4:0}); };
-  var A = sum(sigs), F = sum(sigs.filter(function(s){return s.first;}));
+  var A = sum(sigs), F = sum(sigs.filter(function(s){return s.first;})), Wn = sigs.filter(function(s){return s.win;}), Wd = {}; Wn.forEach(function(s){ Wd[s.d.d]=1; }); var W = sum(Wn);
+  var lblW = pad(hFrom)+':00–'+pad(hTo)+':00';
   var days = Object.keys(firstOfDay).length;
   $('g4Chips').innerHTML = sigs.length ?
+    '<span class="chip" style="outline:2px solid var(--hit)">⏰ Όλα τα σήματα '+lblW+': <b>'+W.n+' σήματα σε '+Object.keys(Wd).length+' μέρες · '+eur(W.c)+' → '+eur(W.w)+(W.c?' ('+(W.w/W.c*100).toFixed(0)+'%)':'')+' · με 4/4: '+W.h4+'</b></span>' +
     chip('Όλα τα σήματα', A.n+' · '+eur(A.c)+' → '+eur(A.w)+' ('+(A.w/A.c*100).toFixed(0)+'%) · με 4/4: '+A.h4) +
     chip('Μόνο το 1ο σήμα κάθε μέρας', F.n+' μέρες · '+eur(F.c)+' → '+eur(F.w)+' ('+(F.w/F.c*100).toFixed(0)+'%) · με 4/4: '+F.h4)
     : '<span class="muted">Δεν υπάρχει ακόμα σήμα στο ιστορικό της σελίδας.</span>';
@@ -1165,8 +1171,9 @@ function renderG4(all){
   var L = all.length, nx = L>=2 && all[L-1].id===all[L-2].id+1 ? gefCommon(all[L-2], all[L-1]) : null;
   var todayKey = L ? all[L-1].d : '', playedToday = sigs.some(function(s){ return s.d.d===todayKey; });
   if(nx && nx.length===6){
+    var nowIn = inWin(expectedTime());
     $('g4Now').innerHTML = '<div style="border:2px solid var(--hit);border-radius:12px;padding:10px;margin:8px 0">'+
-      '<div style="font-size:15px"><b>🎯 ΣΗΜΑ για την κλήρωση των '+hm(expectedTime())+'</b>'+(playedToday?' <span class="muted">(έχει ήδη υπάρξει σήμα σήμερα)</span>':' <span style="color:var(--hit)">— πρώτο σήμα της ημέρας</span>')+'</div>'+
+      '<div style="font-size:15px"><b>🎯 ΣΗΜΑ για την κλήρωση των '+hm(expectedTime())+'</b>'+(nowIn?' <span style="color:var(--hit)">— ⏰ μέσα στο ωράριό σου ('+lblW+'), παίζεται</span>':' <span class="muted">— εκτός ωραρίου ('+lblW+')</span>')+'</div>'+
       '<div class="muted" style="margin:4px 0">Κοινοί των '+hm(all[L-2].t)+' και '+hm(all[L-1].t)+':</div><div class="order">'+nx.map(function(x){return '<i class="sc">'+x+'</i>';}).join('')+'</div>'+
       '<div style="margin-top:6px">15 τετράδες × 0,50€ = <b>7,50€</b> · για <b>μία κλήρωση</b>:</div>'+g4Grid(g4Fours(nx), null)+'</div>';
   } else {
@@ -1174,9 +1181,9 @@ function renderG4(all){
   }
   $('g4List').innerHTML = sigs.slice(-25).reverse().map(function(s){
     var res = s.h>=4 ? '<b style="color:var(--hit)">'+s.h+' από 6 → '+eur(s.w)+'</b>' : s.h+' από 6 → '+(s.w?eur(s.w):'0€');
-    return '<details style="border-bottom:1px solid var(--line);padding:6px 0"><summary style="cursor:pointer">'+(s.first?'⭐ ':'')+s.d.d.split('-').reverse().slice(0,2).join('/')+' '+hm(s.d.t)+' · κοινοί <b>'+s.c.join(' ')+'</b> · '+res+' <span class="muted">/ 7,50€</span></summary>'+
+    return '<details style="border-bottom:1px solid var(--line);padding:6px 0'+(s.win?';background:rgba(34,197,94,.07)':'')+'"><summary style="cursor:pointer">'+(s.win?'⏰ ':'')+(s.first?'⭐ ':'')+s.d.d.split('-').reverse().slice(0,2).join('/')+' '+hm(s.d.t)+' · κοινοί <b>'+s.c.join(' ')+'</b> · '+res+' <span class="muted">/ 7,50€</span></summary>'+
       '<div class="muted" style="font-size:12px;margin-top:4px">Κοινοί των '+hm(s.a.t)+' και '+hm(s.b.t)+' · κλήρωση '+hm(s.d.t)+': '+s.d.arr.slice().sort(function(x,y){return x-y;}).join(' ')+'</div>'+g4Grid(s.fours, s.d)+'</details>';
-  }).join('') + (sigs.length ? '<div class="muted" style="font-size:12px;margin-top:6px">⭐ = πρώτο σήμα της ημέρας (η «μία βολή»). Πάτα σε ένα σήμα για τις 15 τετράδες και τι έπιασε η καθεμία.</div>' : '');
+  }).join('') + (sigs.length ? '<div class="muted" style="font-size:12px;margin-top:6px">⏰ = μέσα στο ωράριο που διάλεξες · ⭐ = πρώτο σήμα της ημέρας. Πάτα σε ένα σήμα για τις 15 τετράδες και τι έπιασε η καθεμία.</div>' : '');
 }
 function renderGef(){
   var card = document.querySelector && document.querySelector('.card[data-k="gef"]');
@@ -2295,6 +2302,10 @@ $('ttBar').addEventListener('click', function(e){ var b = e.target.closest && e.
   ttGo(lastId + st); });
 $('ttLive').addEventListener('click', function(){ ttLive(); });
 ['lateSrc','lateK','lateMul','lateSort','lateWin'].forEach(function(id){ var v = lsGet('kl_'+id); if(v) $(id).value = v; $(id).addEventListener('change', function(){ lsSet('kl_'+id, this.value); renderLate(); }); });
+(function(){ var o = ''; for(var h=0;h<=24;h++) o += '<option value="'+h+'">'+pad(h%24)+':00'+(h===24?' (μεσάνυχτα)':'')+'</option>';
+  $('g4From').innerHTML = o.replace(/<option value="24">[^<]*<\/option>/,''); $('g4To').innerHTML = o.replace(/<option value="0">[^<]*<\/option>/,'');
+  $('g4From').value = lsGet('kl_g4_from') || '0'; $('g4To').value = lsGet('kl_g4_to') || '9';
+  ['g4From','g4To'].forEach(function(id){ $(id).addEventListener('change', function(){ lsSet(id==='g4From'?'kl_g4_from':'kl_g4_to', this.value); renderGef(); }); }); })();
 $('lateTable').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; var nd = askDraws(); if(!nd) return; myAdd(b.dataset.five.split(' ').map(Number), nd, '⏰ Καθυστερημένη'); b.textContent = '✓'; });
 $('manGrid').addEventListener('click', function(e){ var c = e.target.closest && e.target.closest('[data-mn]'); if(!c) return; var n = +c.dataset.mn, i = manPick.indexOf(n); if(i>=0) manPick.splice(i,1); else manPick.push(n); manSave(); renderMan(); });
 function manTemp(hot){ var HX = +($('rlHot').value||10), HMIN = Math.ceil(HX*0.25*1.5), CMAX = Math.floor(HX*0.25*0.5), hc = new Array(81).fill(0);
