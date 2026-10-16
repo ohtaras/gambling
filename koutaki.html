@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>📦 Κουτάκι ΚΙΝΟ</title>
+<meta property="og:title" content="📦 Κουτάκι ΚΙΝΟ">
+<meta property="og:description" content="Κουνάμε το κουτάκι με τις μπίλιες της τελευταίας κλήρωσης!">
+<meta property="og:image" content="https://ohtaras.github.io/gambling/img/logo.jpg">
+<link rel="icon" href="https://ohtaras.github.io/gambling/img/icon.png"><link rel="apple-touch-icon" href="https://ohtaras.github.io/gambling/img/icon.png">
+<style>
+:root{--bg:#0b1220;--card:#111a2e;--text:#e5e7eb;--muted:#94a3b8;--gold:#d4a84b}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:14px 12px 30px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+header img{width:52px;height:52px;border-radius:12px;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+header h1{margin:0;font-size:22px}
+header small{display:block;color:var(--muted);font-size:12px;font-weight:400}
+.card{background:var(--card);border:1px solid #1f2a44;border-radius:16px;padding:14px}
+.muted{color:var(--muted)}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin:4px 0 12px}
+.btn{background:linear-gradient(#f5c84b,#d4a017);color:#111;border:0;border-radius:12px;padding:10px 22px;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 #8a6408}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #8a6408}
+.btn:disabled{opacity:.55}
+.btn2{background:#1e293b;color:var(--text);border:1px solid #334155;border-radius:10px;padding:7px 14px;font-size:14px;cursor:pointer}
+select{background:#1e293b;color:var(--text);border:1px solid #334155;border-radius:8px;padding:6px 8px;font-size:15px}
+#boxHd{font-weight:800;text-align:center;margin:4px 0 10px;font-size:16px}
+#boxTxt{font-size:12.5px;margin:10px 0;text-align:center;min-height:16px}
+#boxRes{text-align:center}
+.nums{font-size:22px;font-weight:900;letter-spacing:1px;margin:6px 0 10px;color:#fde68a}
+footer{text-align:center;font-size:11px;margin-top:14px}
+.bxGuy svg{filter:drop-shadow(0 0 1.5px rgba(255,255,255,.55))}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><img src="https://ohtaras.github.io/gambling/img/logo.jpg" alt="" onerror="this.style.display='none'"><h1>📦 Κουτάκι ΚΙΝΟ<small id="lastInfo">Φορτώνω την τελευταία κλήρωση…</small></h1></header>
+  <div class="card">
+    <div class="ctrl">
+      <button class="btn" id="boxGo" disabled>📦 Κούνα το!</button>
+      <label class="muted" style="font-size:14px">Πόσους: <select id="boxN"><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option selected>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>18</option><option>20</option></select></label>
+    </div>
+    <div id="boxHd"></div>
+    <div id="boxWrap" style="display:flex;align-items:center;justify-content:center"><div class="bxGuy" id="bxGuyL"></div><div id="boxBox" style="position:relative;flex:1;min-width:0;max-width:480px;aspect-ratio:10/8;background:#1e293b;border:3px solid #a16207;border-radius:10px;overflow:hidden"></div><div class="bxGuy bxR" id="bxGuyR"></div></div>
+    <div id="boxTxt" class="muted"></div>
+    <div id="boxRes"></div>
+  </div>
+  <footer class="muted">Οι μπίλιες της τελευταίας κλήρωσης ΚΙΝΟ μένουν ή πάνε ένα κουτάκι ⬅ ➡ ⬆ ⬇. Για πλάκα — κάθε κλήρωση είναι τυχαία. Παίξτε υπεύθυνα, 18+.</footer>
+</div>
+<script>
+(function(){
+function $(id){ return document.getElementById(id); }
+function pad(n){ return (n<10?'0':'')+n; }
+function hm(t){ var d = new Date(t); return pad(d.getHours())+':'+pad(d.getMinutes()); }
+function dmy(t){ var d = new Date(t); return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear(); }
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+(function(){ var css = document.createElement('style'); css.textContent = '@keyframes bxShake{0%{transform:translate(0,0) rotate(0)}10%{transform:translate(-14px,3px) rotate(-3deg)}20%{transform:translate(14px,-3px) rotate(3deg)}30%{transform:translate(-12px,-4px) rotate(-2deg)}40%{transform:translate(12px,4px) rotate(2deg)}50%{transform:translate(-9px,2px) rotate(-1.5deg)}60%{transform:translate(9px,-2px) rotate(1.5deg)}70%{transform:translate(-6px,3px) rotate(-1deg)}80%{transform:translate(6px,-3px) rotate(1deg)}90%{transform:translate(-3px,0) rotate(0)}100%{transform:translate(0,0) rotate(0)}}.bxGuy{width:21%;max-width:170px;flex:none;position:relative;z-index:2;margin-right:-1.6%}.bxGuy.bxR{margin-right:0;margin-left:-1.6%}.bxGuy svg{display:block;width:100%;height:auto;overflow:visible}.bxb{position:absolute;width:9%;height:10%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(10px,3vw,15px);color:#111;background:radial-gradient(circle at 35% 30%,#fff7b0,#facc15 55%,#ca8a04);box-shadow:0 2px 4px rgba(0,0,0,.4);transition:left .7s cubic-bezier(.3,1.4,.5,1),top .7s cubic-bezier(.3,1.4,.5,1),opacity .5s,background .4s}.bxb.nw{background:radial-gradient(circle at 35% 30%,#d9ffd9,#22c55e 55%,#15803d)}'; document.head.appendChild(css); })();
+var BXK='#111', BXSK='#f2c29b', BXSKS='#d99a72';
+  function bxHand(x,y){ var K=BXK, sk=BXSK, skS=BXSKS; // χέρι που πιάνει την άκρη του κουτιού: παλάμη, 4 δάχτυλα τυλιγμένα, αντίχειρας από πάνω
+    return '<g>'+
+      '<path d="M'+(x-7)+' '+(y-5)+' Q'+(x-1)+' '+(y-8)+' '+(x+5)+' '+(y-6)+' L'+(x+9)+' '+(y-5)+' Q'+(x+12)+' '+(y-3)+' '+(x+9)+' '+(y-1)+
+        ' Q'+(x+12)+' '+(y+1)+' '+(x+9)+' '+(y+3)+' Q'+(x+12)+' '+(y+5)+' '+(x+8)+' '+(y+6.5)+' Q'+(x+10)+' '+(y+9)+' '+(x+6)+' '+(y+9)+
+        ' L'+(x-1)+' '+(y+8)+' Q'+(x-7)+' '+(y+6)+' '+(x-7)+' '+(y-5)+' Z" fill="'+BXSK+'" stroke="'+BXK+'" stroke-width="1.8" stroke-linejoin="round"/>'+
+      '<path d="M'+(x+4)+' '+(y-1)+' L'+(x+8.5)+' '+(y-1)+' M'+(x+4)+' '+(y+3)+' L'+(x+8.5)+' '+(y+3)+' M'+(x+4)+' '+(y+6.5)+' L'+(x+7.5)+' '+(y+6.5)+'" stroke="'+BXSKS+'" stroke-width="1.2" stroke-linecap="round"/>'+
+      '<path d="M'+(x-3)+' '+(y-6)+' Q'+(x+2)+' '+(y-12)+' '+(x+8)+' '+(y-10)+'" fill="none" stroke="'+BXK+'" stroke-width="5.2" stroke-linecap="round"/>'+
+      '<path d="M'+(x-3)+' '+(y-6)+' Q'+(x+2)+' '+(y-12)+' '+(x+8)+' '+(y-10)+'" fill="none" stroke="'+BXSK+'" stroke-width="2.8" stroke-linecap="round"/>'+
+    '</g>'; }
+  function bxLimb(d, sleeve, w){ var K=BXK; return '<path d="'+d+'" fill="none" stroke="'+BXK+'" stroke-width="'+(w+3.6)+'" stroke-linecap="round" stroke-linejoin="round"/><path d="'+d+'" fill="none" stroke="'+sleeve+'" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round"/>'; }
+function bxArmB(sl, ox, oy){ return bxLimb('M30 108 Q46 118 '+(62+ox*.45)+' '+(120+oy*.5)+' Q'+(84+ox*.8)+' '+(120+oy)+' '+(99+ox)+' '+(116+oy), sl, 9)+bxHand(103+ox,116+oy); }
+function bxArmF(sl, ox, oy){ return bxLimb('M72 106 Q80 128 '+(82+ox*.45)+' '+(142+oy*.5)+' Q'+(92+ox*.8)+' '+(146+oy)+' '+(99+ox)+' '+(146+oy), sl, 10)+bxHand(103+ox,146+oy); }
+function bxSetArms(el, ox, oy){ if(!el) return; var sl = el.dataset.sl; var b = el.querySelector('.aB'), f = el.querySelector('.aF'); if(b) b.innerHTML = bxArmB(sl,ox,oy); if(f) f.innerHTML = bxArmF(sl,ox,oy); }
+function bxGuySvg(who){
+  var K='#111', sk='#f2c29b', skS='#d99a72';
+  var legs = function(jean){ return '<path d="M34 150 L31 198 L46 198 L49 152 Z M53 152 L56 198 L71 198 L68 150 Z" fill="'+jean+'" stroke="'+K+'" stroke-width="2.2" stroke-linejoin="round"/>'+
+    '<path d="M27 198 Q27 190 39 191 L48 193 L48 202 L27 202 Z M54 193 L64 191 Q77 190 77 198 L77 202 L54 202 Z" fill="#222" stroke="'+K+'" stroke-width="2"/>'; };
+  var torso = function(c, extra){ return '<path d="M22 112 Q24 98 50 96 Q76 98 78 112 L76 156 Q50 162 24 156 Z" fill="'+c+'" stroke="'+K+'" stroke-width="2.4" stroke-linejoin="round"/>'+(extra||''); };
+  var h = '';
+  if(who==='hood'){
+    h += legs('#3b5b8c') + '<g class="aB"></g>' + torso('#1c1c1f','<path d="M44 104 L42 128 M56 104 L58 128" stroke="#eee" stroke-width="1.8" stroke-linecap="round"/><circle cx="42" cy="129" r="1.8" fill="#eee"/><circle cx="58" cy="129" r="1.8" fill="#eee"/><path d="M30 140 Q50 146 70 140" stroke="#333" stroke-width="2" fill="none"/>');
+    h += '<g class="aF"></g>';
+    // κουκούλα
+    h += '<path d="M50 4 Q94 6 95 56 Q96 98 70 106 L30 106 Q4 98 5 56 Q6 6 50 4 Z" fill="#232326" stroke="'+K+'" stroke-width="2.6"/>';
+    h += '<ellipse cx="50" cy="60" rx="31" ry="38" fill="#141416"/>';
+    // πρόσωπο
+    h += '<path d="M24 52 Q24 24 50 22 Q76 24 76 52 L76 70 Q76 98 50 100 Q24 98 24 70 Z" fill="'+sk+'" stroke="'+K+'" stroke-width="2.2"/>';
+    // μπούκλες
+    var cur = [[30,30],[37,24],[45,21],[53,20],[61,22],[68,26],[73,33],[27,38],[74,41]];
+    cur.forEach(function(c){ h += '<circle cx="'+c[0]+'" cy="'+c[1]+'" r="5.8" fill="#7a5638" stroke="'+K+'" stroke-width="1.6"/><path d="M'+(c[0]-2)+' '+c[1]+' a2 2 0 1 1 3 1.5" fill="none" stroke="#4a3220" stroke-width="1.2"/>'; });
+    // ρυτίδες μετώπου
+    h += '<path d="M40 36 Q50 34 60 36 M42 40 Q50 38.5 58 40" stroke="'+skS+'" stroke-width="1.3" fill="none"/>';
+    // γένια (γκρι)
+    h += '<path d="M25 64 Q26 84 36 94 Q44 104 50 104 Q56 104 64 94 Q74 84 75 64 Q70 76 62 76 Q56 72 50 73 Q44 72 38 76 Q30 76 25 64 Z" fill="#c9c9c9" stroke="'+K+'" stroke-width="2"/>';
+    h += '<path d="M38 78 Q50 72 62 78 Q56 82 50 80 Q44 82 38 78 Z" fill="#b3b3b3" stroke="'+K+'" stroke-width="1.6"/>';
+    h += '<path d="M45 86 Q50 88 55 86" stroke="#7a3b2e" stroke-width="2" fill="none" stroke-linecap="round"/>';
+    h += '<path d="M33 90 l2 3 M40 96 l1 3 M60 96 l-1 3 M67 90 l-2 3 M50 99 l0 3" stroke="#8e8e8e" stroke-width="1.2"/>';
+    // μύτη
+    h += '<path d="M50 52 Q47 64 45 68 Q50 72 55 68" fill="none" stroke="'+skS+'" stroke-width="1.8" stroke-linecap="round"/>';
+    // aviators
+    h += '<path d="M26 48 Q37 45 46 48 Q47 60 39 63 Q28 64 26 54 Z M54 48 Q63 45 74 48 Q74 60 63 63 Q53 62 54 48 Z" fill="#1d1d22" stroke="#9aa3ad" stroke-width="2"/>';
+    h += '<path d="M46 49 Q50 47 54 49" stroke="#9aa3ad" stroke-width="2" fill="none"/><path d="M24 48 L20 50 M76 48 L80 50" stroke="#9aa3ad" stroke-width="1.8"/>';
+    h += '<path d="M30 50 Q34 49 37 50 M58 50 Q62 49 65 50" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>';
+    // airpods
+    h += '<rect x="20.5" y="58" width="4" height="9" rx="2" fill="#fff" stroke="'+K+'" stroke-width="1.2"/><rect x="75.5" y="58" width="4" height="9" rx="2" fill="#fff" stroke="'+K+'" stroke-width="1.2"/>';
+  } else {
+    h += legs('#2f4a73') + '<g class="aB"></g>' + torso('#2b313c','<path d="M40 97 L50 110 L60 97" fill="none" stroke="'+K+'" stroke-width="2"/>');
+    h += '<g class="aF"></g>';
+    // λαιμός
+    h += '<rect x="42" y="88" width="16" height="14" fill="'+skS+'" stroke="'+K+'" stroke-width="1.8"/>';
+    // αυτιά
+    h += '<ellipse cx="20" cy="56" rx="6" ry="9" fill="'+sk+'" stroke="'+K+'" stroke-width="2"/><ellipse cx="80" cy="56" rx="6" ry="9" fill="'+sk+'" stroke="'+K+'" stroke-width="2"/>';
+    // πρόσωπο
+    h += '<path d="M21 46 Q21 12 50 10 Q79 12 79 46 L79 62 Q79 94 50 96 Q21 94 21 62 Z" fill="'+sk+'" stroke="'+K+'" stroke-width="2.2"/>';
+    // μαλλιά κοντά
+    h += '<path d="M20 44 Q16 14 44 7 Q70 2 80 22 Q84 32 80 44 Q78 30 70 26 Q56 22 46 25 Q30 28 24 34 Z" fill="#3a2a1f" stroke="'+K+'" stroke-width="2"/>';
+    h += '<path d="M34 14 l3 6 M46 9 l2 7 M58 9 l1 7 M69 14 l-1 7" stroke="#5a4232" stroke-width="1.5"/>';
+    // φρύδια
+    h += '<path d="M28 41 Q36 36 45 40 M55 40 Q64 36 72 41" stroke="#2a1d15" stroke-width="4" fill="none" stroke-linecap="round"/>';
+    // μάτια (κοιτάνε προς το κουτί)
+    h += '<ellipse cx="37" cy="49" rx="6" ry="4" fill="#fff" stroke="'+K+'" stroke-width="1.5"/><ellipse cx="63" cy="49" rx="6" ry="4" fill="#fff" stroke="'+K+'" stroke-width="1.5"/>';
+    h += '<circle cx="39.5" cy="49" r="2.6" fill="#3b2416"/><circle cx="65.5" cy="49" r="2.6" fill="#3b2416"/><circle cx="40.3" cy="48.2" r=".8" fill="#fff"/><circle cx="66.3" cy="48.2" r=".8" fill="#fff"/>';
+    h += '<path d="M31 53.5 Q37 56 43 53.5 M57 53.5 Q63 56 69 53.5" stroke="'+skS+'" stroke-width="1.2" fill="none"/>';
+    // μύτη
+    h += '<path d="M50 50 Q48 62 45 66 Q50 70 56 66" fill="none" stroke="'+skS+'" stroke-width="2" stroke-linecap="round"/>';
+    // γένια σκούρα
+    h += '<path d="M22 60 Q22 84 34 92 Q42 98 50 98 Q58 98 66 92 Q78 84 78 60 Q74 72 66 73 Q58 69 50 70 Q42 69 34 73 Q26 72 22 60 Z" fill="#33251c" stroke="'+K+'" stroke-width="2"/>';
+    h += '<path d="M37 74 Q50 67 63 74 Q57 77 50 76 Q43 77 37 74 Z" fill="#2a1d15" stroke="'+K+'" stroke-width="1.5"/>';
+    h += '<path d="M42 81 Q50 86 58 81" stroke="#fff" stroke-width="2.4" fill="#a24a3a" stroke-linecap="round"/>';
+  }
+  return h;
+}
+function bxGuy(who, flip){ return '<svg viewBox="-4 0 120 210"><g class="guy"><g'+(flip?' transform="translate(112,0) scale(-1,1)"':'')+'>'+bxGuySvg(who)+'</g></g></svg>'; }
+(function(){ try{ $('bxGuyL').innerHTML = bxGuy('hood', false); $('bxGuyR').innerHTML = bxGuy('beard', true);
+  $('bxGuyL').dataset.sl = '#1c1c1f'; $('bxGuyR').dataset.sl = '#2b313c'; bxSetArms($('bxGuyL'),0,0); bxSetArms($('bxGuyR'),0,0); }catch(e){} })();
+// Κούνημα: το κουτί πάει δεξιά-αριστερά-πάνω-κάτω, ο ένας σπρώχνει κι ο άλλος τραβάει, μετά σταματάνε
+function bxShakeAnim(done){
+  var box = $('boxBox'), L = $('bxGuyL'), R = $('bxGuyR'), A = Math.max(5, box.clientWidth/36);
+  var seq = [[0,0],[-1,0],[1,0],[-1,0],[0,-1],[0,1],[0,-1],[1,0],[-1,0],[0,1],[0,-1],[.7,0],[-.6,0],[0,.4],[0,0]];
+  for(var q=1;q<seq.length-1;q++){ seq[q] = [seq[q][0]*(0.7+Math.random()*0.5), seq[q][1]*(0.7+Math.random()*0.5)]; }
+  var seg = 85, T = seg*(seq.length-1), t0 = null;
+  function px2u(el){ var w = el.getBoundingClientRect().width || 80; return 120/w; }
+  var uL = px2u(L), uR = px2u(R);
+  function step(ts){ if(t0===null) t0 = ts; var t = Math.min(ts-t0, T), k = Math.min(Math.floor(t/seg), seq.length-2), f = (t - k*seg)/seg; f = f<.5 ? 2*f*f : 1-Math.pow(-2*f+2,2)/2;
+    var dx = (seq[k][0] + (seq[k+1][0]-seq[k][0])*f)*A, dy = (seq[k][1] + (seq[k+1][1]-seq[k][1])*f)*A;
+    box.style.transform = 'translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px)';
+    bxSetArms(L, dx*uL, dy*uL);      // αριστερός: δεξιά = σπρώχνει
+    bxSetArms(R, -dx*uR, dy*uR);     // δεξιός (καθρέφτης): δεξιά = τραβάει
+    if(t < T) requestAnimationFrame(step); else { box.style.transform = ''; bxSetArms(L,0,0); bxSetArms(R,0,0); if(done) done(); } }
+  requestAnimationFrame(step);
+}
+
+var API = 'https://api.opap.gr/draws/v3.0/1100/last-result-and-active';
+var last = null, busy = false, shownId = null, out = [];
+function boxPos(n){ var r = Math.floor((n-1)/10), c = (n-1)%10; return {l:(c*10+0.5)+'%', t:(r*12.5+1.25)+'%'}; }
+function grid(){ var h = ''; for(var n=1;n<=80;n++){ var r = Math.floor((n-1)/10), c = (n-1)%10; h += '<div style="position:absolute;left:'+(c*10)+'%;top:'+(r*12.5)+'%;width:10%;height:12.5%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#64748b;border:1px solid #334155;box-sizing:border-box">'+n+'</div>'; } return h; }
+function start(){ var box = $('boxBox'); box.innerHTML = grid(); var balls = {};
+  last.arr.forEach(function(n){ var b = document.createElement('div'); b.className = 'bxb'; var p = boxPos(n); b.style.left = p.l; b.style.top = p.t; b.textContent = n; box.appendChild(b); balls[n] = b; });
+  $('boxHd').textContent = '🟡 Τελευταία κλήρωση #'+last.id+' · '+dmy(last.t)+' '+hm(last.t);
+  return balls; }
+async function load(){
+  try{
+    var r = await fetch(API+'?_='+Date.now(), {cache:'no-store'}); if(!r.ok) throw new Error(r.status);
+    var j = await r.json(), c = j.last || j; var w = c.winningNumbers || {};
+    var d = {id:c.drawId, t:c.drawTime, arr:(w.list||[]).slice()};
+    if(!d.arr.length) throw new Error('empty');
+    last = d; $('boxGo').disabled = false;
+    $('lastInfo').textContent = 'Τελευταία κλήρωση #'+d.id+' · '+hm(d.t);
+    if(!busy && shownId!==d.id){ shownId = d.id; out = []; start(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
+  }catch(e){ if(!last){ $('lastInfo').textContent = 'Δεν φόρτωσε η κλήρωση — ξαναδοκιμάζω…'; $('boxBox').innerHTML = grid(); } }
+}
+$('boxN').value = lsGet('kbx_n') || '12'; $('boxN').addEventListener('change', function(){ lsSet('kbx_n', this.value); });
+$('boxGo').addEventListener('click', function(){ if(busy || !last) return;
+  var v = +$('boxN').value || 12, src = last.arr.slice();
+  for(var i=src.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = src[i]; src[i] = src[j]; src[j] = t; }
+  var used = {}, moves = [], st = {stay:0, l:0, r:0, u:0, d:0}, MV = [['stay',0,0],['l',0,-1],['r',0,1],['u',-1,0],['d',1,0]];
+  for(var q=0; q<src.length && moves.length<v; q++){ var from = src[q], row = Math.floor((from-1)/10), col = (from-1)%10;
+    var mv = MV.slice(); for(var a=mv.length-1;a>0;a--){ var b = Math.floor(Math.random()*(a+1)), tt = mv[a]; mv[a] = mv[b]; mv[b] = tt; }
+    for(var m=0;m<mv.length;m++){ var r2 = row+mv[m][1], c2 = col+mv[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; used[to] = 1; moves.push([from,to]); st[mv[m][0]]++; break; } }
+  busy = true; $('boxGo').disabled = true; shownId = last.id; $('boxRes').innerHTML = ''; $('boxTxt').textContent = 'Οι 20 μπίλιες της τελευταίας κλήρωσης…';
+  var balls = start();
+  setTimeout(function(){ $('boxHd').textContent = '📦 Κουνάμε το κουτάκι…'; bxShakeAnim(); }, 1500);
+  setTimeout(function(){
+    moves.forEach(function(mm){ var b = balls[mm[0]]; if(!b) return; delete balls[mm[0]]; var p = boxPos(mm[1]); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; if(mm[0]!==mm[1]) b.classList.add('nw'); });
+    Object.keys(balls).forEach(function(k){ balls[k].style.opacity = '0'; });
+    out = moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
+    $('boxHd').textContent = '🎲 Οι '+out.length+' αριθμοί σου (από #'+last.id+')';
+    $('boxTxt').textContent = st.stay+' έμειναν · '+st.l+'⬅ · '+st.r+'➡ · '+st.u+'⬆ · '+st.d+'⬇  ·  🟡 έμεινε · 🟢 μετακινήθηκε';
+    $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'');
+    busy = false; $('boxGo').disabled = false;
+  }, 2750);
+});
+$('boxRes').addEventListener('click', function(e){ var txt = '📦 Κουτάκι ΚΙΝΟ (από #'+(last?last.id:'')+'): '+out.join(' ');
+  if(e.target.id==='cp'){ (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function(){ e.target.textContent = '✓ Αντιγράφηκε'; }, function(){ prompt('Αντέγραψε:', txt); }); }
+  if(e.target.id==='sh'){ navigator.share({text: txt + '\n' + location.href}).catch(function(){}); }
+});
+$('boxBox').innerHTML = grid();
+load(); setInterval(function(){ if(!document.hidden) load(); }, 30000);
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
+})();
+</script>
+</body>
+</html>
