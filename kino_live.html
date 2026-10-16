@@ -408,7 +408,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0">
         <span id="manSel" style="font-weight:700"></span>
         <button class="btn" id="manClear" style="padding:2px 10px">✖ Καθάρισμα</button>
-        <button class="btn" id="manRand" style="padding:2px 10px" title="Τυχαία επιλογή αριθμών">🎲 Τυχαίοι</button><select id="manRandN" title="Πόσοι τυχαίοι"><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>18</option><option>20</option><option>25</option><option>30</option></select>
+        <button class="btn" id="manRand" style="padding:2px 10px" title="Κουνάω το κουτί: οι αριθμοί της τελευταίας κλήρωσης μετακινούνται λίγο (πάνω/κάτω/δεξιά/αριστερά) ή μένουν στη θέση τους">🎲 Τυχαίοι</button><select id="manRandN" title="Πόσοι τυχαίοι"><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>18</option><option>20</option><option>25</option><option>30</option></select><span id="manRandInfo" class="muted" style="font-size:11px;margin-left:6px"></span>
         <button class="btn" id="manFromLast" style="padding:2px 10px" title="Βάλε τα 20 της τελευταίας κλήρωσης">⬇ Από τελευταία</button>
         <button class="btn" id="manHot" style="padding:2px 10px" title="Βάλε όλους τους ζεστούς (με το παράθυρο «Hot» του Ράλι)">🔥 Οι ζεστοί</button>
         <button class="btn" id="manCold" style="padding:2px 10px" title="Βάλε όλους τους κρύους">❄️ Οι κρύοι</button>
@@ -2411,9 +2411,22 @@ function manTemp(hot){ var HX = +($('rlHot').value||10), HMIN = Math.ceil(HX*0.2
 $('manHot').addEventListener('click', function(){ manPick = manTemp(true); manSave(); renderMan(); });
 $('manCold').addEventListener('click', function(){ manPick = manTemp(false); manSave(); renderMan(); });
 (function(){ $('manRandN').value = lsGet('kl_man_rand') || '12'; $('manRandN').addEventListener('change', function(){ lsSet('kl_man_rand', this.value); }); })();
-$('manRand').addEventListener('click', function(){ var v = +$('manRandN').value || 12; var pool = []; for(var n=1;n<=80;n++) pool.push(n);
-  for(var i=79;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
-  manPick = pool.slice(0,v).sort(function(a,b){return a-b;}); manSave(); renderMan(); });
+$('manRand').addEventListener('click', function(){ var v = +$('manRandN').value || 12;
+  // «Κουνάω το κουτάκι»: κάθε αριθμός της τελευταίας κλήρωσης μένει ή πάει ένα κουτάκι πάνω/κάτω/δεξιά/αριστερά στο ταμπλό 8×10
+  var last = today.concat(histPool).sort(function(a,b){return b.id-a.id;})[0], src = last ? last.arr.slice() : [];
+  if(!src.length){ for(var n0=1;n0<=80;n0++) src.push(n0); }
+  for(var i=src.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = src[i]; src[i] = src[j]; src[j] = t; }
+  var used = {}, out = [], st = {stay:0, l:0, r:0, u:0, d:0}, MV = [['stay',0,0],['l',0,-1],['r',0,1],['u',-1,0],['d',1,0]];
+  var cur = src.slice(), guard = 0;
+  while(out.length < v && guard++ < 2000){
+    var from = cur[guard % cur.length], row = Math.floor((from-1)/10), col = (from-1)%10;
+    var mv = MV.slice(); for(var a=mv.length-1;a>0;a--){ var b = Math.floor(Math.random()*(a+1)), tt = mv[a]; mv[a] = mv[b]; mv[b] = tt; }
+    for(var m=0;m<mv.length;m++){ var r2 = row+mv[m][1], c2 = col+mv[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue;
+      var to = r2*10+c2+1; if(used[to]) continue; used[to] = 1; out.push(to); st[mv[m][0]]++; cur[guard % cur.length] = to; break; }
+  }
+  manPick = out.sort(function(a,b){return a-b;});
+  $('manRandInfo').textContent = last ? '📦 κούνημα της #'+last.id+': '+st.stay+' έμειναν · '+st.l+'⬅ · '+st.r+'➡ · '+st.u+'⬆ · '+st.d+'⬇' : '';
+  manSave(); renderMan(); });
 $('manClear').addEventListener('click', function(){ manPick = []; manSave(); renderMan(); });
 $('manFromLast').addEventListener('click', function(){ var d = today.concat(histPool).sort(function(a,b){return b.id-a.id;})[0]; if(!d) return; manPick = d.arr.slice(); manSave(); renderMan(); });
 (function(){ var v = lsGet('kl_manNumSort'); if(v) $('manNumSort').value = v; $('manNumSort').addEventListener('change', function(){ lsSet('kl_manNumSort', this.value); renderMan(); }); })();
