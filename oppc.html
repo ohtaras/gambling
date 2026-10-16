@@ -148,7 +148,7 @@ function bxGuySvg(who){
 }
 var BX_HEAD = {hood:'https://ohtaras.github.io/gambling/img/head_spyros.png', beard:'https://ohtaras.github.io/gambling/img/head_iraklis.png'};
 function bxGuy(who, flip){ var cx = flip ? 62 : 50; return '<svg viewBox="-4 0 120 210"><g class="guy"><g'+(flip?' transform="translate(112,0) scale(-1,1)"':'')+'>'+bxGuySvg(who)+'</g><image href="'+BX_HEAD[who]+'" x="'+(cx-35)+'" y="-3" width="70" height="95" preserveAspectRatio="xMidYMax meet"/></g></svg>'; }
-(function(){ try{ $('bxGuyL').innerHTML = bxGuy('hood', false)+'<div class="bxNm">Σπύρος</div>'; $('bxGuyR').innerHTML = bxGuy('beard', true)+'<div class="bxNm">Ηρακλής</div>';
+(function(){ try{ $('bxGuyL').innerHTML = bxGuy('hood', false); $('bxGuyR').innerHTML = bxGuy('beard', true);
   $('bxGuyL').dataset.sl = '#17171a'; $('bxGuyR').dataset.sl = '#232c3d'; bxSetArms($('bxGuyL'),0,0); bxSetArms($('bxGuyR'),0,0); }catch(e){} })();
 // Κούνημα: το κουτί πάει δεξιά-αριστερά-πάνω-κάτω, ο ένας σπρώχνει κι ο άλλος τραβάει, μετά σταματάνε
 function bxSay(el, txt){ if(!el) return; var b = el.querySelector('.bub'); if(!b){ b = document.createElement('div'); b.className = 'bub'; el.appendChild(b); }
