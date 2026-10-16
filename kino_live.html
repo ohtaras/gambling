@@ -1388,10 +1388,14 @@ function renderMan(){
       : '<tr><td class="muted">'+(total>cap?'Διάλεξε λιγότερους αριθμούς ή μικρότερο μέγεθος.':'Όλοι οι συνδυασμοί έχουν βγει τουλάχιστον μία φορά σε αυτό το διάστημα.')+'</td></tr>';
     return;
   }
-  var top = rows.slice(0,30);
-  $('manTable').innerHTML = top.length ? '<tr><th>#</th><th>Συνδυασμός</th><th>Φορές</th><th>Πότε βγήκε</th><th></th></tr>'+top.map(function(r,i){
+  var top = rows.slice(0,30), nxD = null;
+  if(TT){ var allR2 = ttAll(); for(var ni2=0; ni2<allR2.length; ni2++){ if(allR2[ni2].id>lastId0){ nxD = allR2[ni2]; break; } } }
+  $('manTable').innerHTML = top.length ? '<tr><th>#</th><th>Συνδυασμός</th><th>Φορές</th><th>Βγήκε ολόκληρη στις</th><th></th></tr>'+top.map(function(r,i){
       var now = r.at===lastId0;
-      return '<tr'+(now?' style="background:rgba(139,92,246,.15)"':'')+'><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+r.k.split(' ').map(function(x){return col(+x);}).join(' ')+'</b></td><td><b>'+r.n+'</b>'+(now?' 🔥':'')+'</td><td class="muted" style="font-size:12px">'+r.ids.map(function(id){ return byId[id]?hm(byId[id].t):'#'+id; }).join(', ')+'<br><span style="font-size:11px">⏱ τώρα '+(lastId0-r.at)+' κληρ. · μέγ. κενό '+r.gap+'</span></td><td><button class="btn" data-five="'+r.k+'" style="padding:2px 8px">➕</button></td></tr>';
+      return '<tr'+(now?' style="background:rgba(139,92,246,.15)"':'')+'><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+r.k.split(' ').map(function(x){return col(+x);}).join(' ')+'</b></td><td><b>'+r.n+'</b>'+(now?' 🔥':'')+'</td><td style="font-size:12px"><b>'+r.ids.map(function(id){ return byId[id]?hm(byId[id].t):'#'+id; }).join(', ')+'</b>'+
+        '<br><span class="muted" style="font-size:11px">'+(lastId0===r.at ? 'μόλις βγήκε, στην τελευταία κλήρωση' : 'από τότε πέρασαν '+(lastId0-r.at)+' κληρώσεις')+(r.n>1?' · μεγαλύτερο διάστημα ανάμεσα στις εμφανίσεις: '+r.gap+' κληρ.':'')+'</span>'+
+        (TT ? (nxD ? (function(){ var KK = r.k.split(' ').length, hh = r.k.split(' ').filter(function(x){ return nxD.set.has(+x); }).length; return '<br><b style="color:'+(hh===KK?'#22c55e':'inherit')+'">🔮 στην επόμενη ('+hm(nxD.t)+'): '+hh+'/'+KK+(hh===KK?' 🎉 ολόκληρη!':'')+'</b>'; })() : '<br><span class="muted">🔮 δεν υπάρχει ακόμα επόμενη κλήρωση</span>') : '')+
+        '</td><td><button class="btn" data-five="'+r.k+'" style="padding:2px 8px">➕</button></td></tr>';
     }).join('') + (rows.length>30?'<tr><td colspan="4" class="muted">… και άλλοι '+(rows.length-30)+'</td></tr>':'') : '<tr><td class="muted">Κανένας συνδυασμός '+K+' από τους αριθμούς σου με '+MIN+'+ φορές σε αυτό το διάστημα.</td></tr>';
 }
 /* ---------- 📦 Αρχείο κληρώσεων (GitHub: data/kino/*.bin, 31 bytes/κλήρωση) ---------- */
