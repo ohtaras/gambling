@@ -419,6 +419,22 @@ var BX_HIT = ["Μπαμ! Το {n} μέσα! 🎯","Το {n}! Τζάμι! 💥","
 var BX_HIT_R = ["Τυχερός είσαι, όχι σημαδευτής!","Ε καλά, κι εγώ θα το έβαζα!","Μη φουσκώνεις, ένα είναι!","Έτσι μπράβο, κι άλλο!","Καλό, αλλά θα σε περάσω!"];
 var BX_MISS = ["Αστόχησα! Ήθελα το {t}, μπήκε το {n}!","Το {n};! Εγώ σημάδευα το {t}! 😩","Μου γλίστρησε! Το {t} ήθελα!","Το {n}… δίπλα στο {t}, μετράει;"];
 var BX_MISS_R = ["Στραβάδι! 🙈","Με τέτοιο σημάδι ούτε στο πανηγύρι!","Βάλε γυαλιά!","Χαχα, πάλι δίπλα!","Άσε, θα ρίξω εγώ!","Δεν μετράει, πλήρωσε!"];
+function fireworks(ms){ JACK_UNTIL = Date.now() + ms + 3500;
+  var c = document.createElement('canvas'); c.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;z-index:70;pointer-events:none'; document.body.appendChild(c);
+  var x = c.getContext('2d'), W, H, dpr = Math.min(2, window.devicePixelRatio||1), parts = [], t0 = performance.now(), lastBurst = 0;
+  function size(){ W = c.width = innerWidth*dpr; H = c.height = innerHeight*dpr; } size();
+  var COL = ['#facc15','#ef4444','#22c55e','#3b82f6','#fde68a','#ffffff','#f472b6','#27e2cc'];
+  function burst(){ var cx = W*(0.15+Math.random()*0.7), cy = H*(0.12+Math.random()*0.4), col = COL[Math.floor(Math.random()*COL.length)], n = 70;
+    for(var i=0;i<n;i++){ var a = Math.PI*2*i/n, v = (2.2+Math.random()*2.6)*dpr; parts.push({x:cx, y:cy, vx:Math.cos(a)*v, vy:Math.sin(a)*v, life:1, c:Math.random()<.25?'#fff':col, r:(1.6+Math.random()*1.6)*dpr, k:'f'}); } }
+  function confetti(){ for(var i=0;i<6;i++) parts.push({x:Math.random()*W, y:-10, vx:(Math.random()-.5)*1.5*dpr, vy:(1.5+Math.random()*2)*dpr, life:1, c:COL[Math.floor(Math.random()*COL.length)], r:(3+Math.random()*3)*dpr, k:'c', rot:Math.random()*6}); }
+  function step(now){ var el = now - t0; if(el < ms && now - lastBurst > 380){ lastBurst = now; burst(); if(Math.random()<.5) burst(); } if(el < ms) confetti();
+    x.clearRect(0,0,W,H);
+    parts = parts.filter(function(p){ p.x += p.vx; p.y += p.vy; if(p.k==='f'){ p.vy += 0.04*dpr; p.vx *= .985; p.vy *= .985; p.life -= 0.012; } else { p.rot += .1; p.life -= 0.004; } return p.life > 0 && p.y < H + 20; });
+    parts.forEach(function(p){ x.globalAlpha = Math.max(0, p.life); x.fillStyle = p.c; if(p.k==='f'){ x.beginPath(); x.arc(p.x, p.y, p.r, 0, 6.283); x.fill(); } else { x.save(); x.translate(p.x,p.y); x.rotate(p.rot); x.fillRect(-p.r, -p.r/2, p.r*2, p.r); x.restore(); } });
+    if(el < ms + 3500) requestAnimationFrame(step); else c.remove(); }
+  requestAnimationFrame(step);
+  try{ if(navigator.vibrate) navigator.vibrate([120,80,120,80,240]); }catch(e){}
+}
 function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
 function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $('bxGuyL'), R = $('bxGuyR'), was = WAIT;
   WAIT = false; clearTimeout(waitTO);
@@ -462,7 +478,12 @@ function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $
   var END = D0 + list.length*STEP + 900;
   setTimeout(function(){ L.classList.remove('alive'); R.classList.remove('alive'); list.forEach(function(n){ var b = balls[n]; if(b) b.style.transition = ''; }); predMark(); predEval();
     if(P){ var K = PN.length, h = hits.length, extra = schits.length ? ' (+'+schits.length+' στη 2η)' : '', a, r;
-      if(h === 0){ a = 'Τίποτα! Ούτε ένα! 😅'; r = 'Ούτε στον τοίχο δεν θα πετύχαινες!'; }
+      if(h === K){ JACK = true; a = 'ΤΟ ΑΠΟΛΥΤΟ!!! '+K+' στα '+K+'! 🎆'; r = 'ΚΛΕΙΝΕ ΤΟ ΜΑΓΑΖΙ! ΠΑΜΕ ΜΑΛΔΙΒΕΣ! 🏝️';
+        fireworks(9000); L.classList.add('alive'); R.classList.add('alive');
+        setTimeout(function(){ bxSay(L, 'Ρε, ρε, ρε! Δεν το πιστεύω! 😱'); setTimeout(function(){ bxSay(R, 'Κερνάω όλη την Πάτρα! 🍾'); }, 1100); }, 4200);
+        setTimeout(function(){ bxSay(L, 'Πού είναι το δελτίο;; ΠΟΥ ΕΙΝΑΙ;; 😂'); setTimeout(function(){ bxSay(R, 'Στην τσέπη σου, ήρεμα! 🤣'); }, 1100); }, 8000);
+        setTimeout(function(){ L.classList.remove('alive'); R.classList.remove('alive'); }, 11500); setTimeout(function(){ bxSay(L,''); bxSay(R,''); if(!busy) stageOff(true); }, 12800); }
+      else if(h === 0){ a = 'Τίποτα! Ούτε ένα! 😅'; r = 'Ούτε στον τοίχο δεν θα πετύχαινες!'; }
       else if(h >= Math.max(5, Math.ceil(K*0.6))){ a = 'ΤΕΡΑΣΤΙΟ! '+h+' στα '+K+'! 🎉'+extra; r = 'Κλείνε το μαγαζί, πάμε Μαλδίβες!'; }
       else if(score.L !== score.R){ var win = score.L > score.R ? 'L' : 'R';
         a = h+' στα '+K+extra+' — '+(win==='L' ? 'εγώ έβαλα '+score.L+', εσύ '+score.R+'!' : 'εσύ '+score.R+', εγώ '+score.L+'…');
@@ -474,7 +495,8 @@ function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $
         bxSay(L, '🎫 Και το δελτίο μας: '+h2+' στα '+TK2.n.length+'!'); setTimeout(function(){ bxSay(R, w2 ? 'Κέρδος '+eur(w2)+'! Δεν πάει άσχημα! 💶' : 'Τίποτα κι εκεί… κράτα το για την επόμενη!'); }, 1100); }, 3600); }
     }
   }, END);
-  setTimeout(function(){ bxSay(L,''); bxSay(R,''); if(!busy) stageOff(); }, END + (P ? (TK2 ? 8800 : 5600) : 1700));
+  setTimeout(function(){ if(JACK_UNTIL > Date.now()) return; bxSay(L,''); bxSay(R,''); if(!busy) stageOff(); }, END + (P ? (TK2 ? 8800 : 5600) : 1700));
+  setTimeout(function(){ if(JACK){ JACK = false; } }, END + 100);
 }
 
 
@@ -491,13 +513,13 @@ $('aboutLink').addEventListener('click', function(e){ e.preventDefault(); menuOp
 $('mSc').addEventListener('click', function(){ setMode(useSC() ? '' : 'sc'); modeChanged(); });
 $('mKb').addEventListener('click', function(){ setMode(useKB() ? '' : 'kb'); modeChanged(); });
 /* ---------- 🎬 Σκηνή: στο κινητό, όσο κουνάνε, όλα σβήνουν και ο Σπύρος, ο Ηρακλής και το κουτί έρχονται μπροστά ---------- */
-var STAGE = false;
+var STAGE = false, JACK = false, JACK_UNTIL = 0;
 function stageOn(){
   var w = $('boxWrap'); w.style.transform = ''; var r = w.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight;
   var sc = Math.min(vw*0.98/r.width, (vh*0.86)/(r.height+40)); if(sc < 1) sc = 1; if(sc > 1.8) sc = 1.8;
   var tx = (vw - r.width*sc)/2 - r.left, ty = (vh - r.height*sc)/2 + 20 - r.top;
   STAGE = true; document.body.classList.add('stage'); requestAnimationFrame(function(){ w.style.transform = 'translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+sc.toFixed(3)+')'; }); }
-function stageOff(){ if(!STAGE) return; STAGE = false; $('boxWrap').style.transform = ''; document.body.classList.remove('stage'); }
+function stageOff(force){ if(!STAGE) return; if(JACK_UNTIL > Date.now() && !force){ setTimeout(stageOff, JACK_UNTIL - Date.now() + 50); return; } STAGE = false; $('boxWrap').style.transform = ''; document.body.classList.remove('stage'); }
 $('stageBg').addEventListener('click', function(){ if(!busy) stageOff(); });
 window.addEventListener('orientationchange', function(){ if(STAGE){ setTimeout(function(){ var on = busy; stageOff(); if(on) stageOn(); }, 300); } });
 // πάτημα πάνω στον Σπύρο ή τον Ηρακλή = «Κούνα το!»
