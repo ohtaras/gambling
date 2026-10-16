@@ -408,6 +408,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0">
         <span id="manSel" style="font-weight:700"></span>
         <button class="btn" id="manClear" style="padding:2px 10px">✖ Καθάρισμα</button>
+        <button class="btn" id="manRand" style="padding:2px 10px" title="Τυχαία επιλογή αριθμών">🎲 Τυχαίοι</button>
         <button class="btn" id="manFromLast" style="padding:2px 10px" title="Βάλε τα 20 της τελευταίας κλήρωσης">⬇ Από τελευταία</button>
         <button class="btn" id="manHot" style="padding:2px 10px" title="Βάλε όλους τους ζεστούς (με το παράθυρο «Hot» του Ράλι)">🔥 Οι ζεστοί</button>
         <button class="btn" id="manCold" style="padding:2px 10px" title="Βάλε όλους τους κρύους">❄️ Οι κρύοι</button>
@@ -2405,6 +2406,10 @@ function manTemp(hot){ var HX = +($('rlHot').value||10), HMIN = Math.ceil(HX*0.2
   var r = []; for(var n=1;n<=80;n++) if(hot ? hc[n]>=HMIN : hc[n]<=CMAX) r.push(n); return r; }
 $('manHot').addEventListener('click', function(){ manPick = manTemp(true); manSave(); renderMan(); });
 $('manCold').addEventListener('click', function(){ manPick = manTemp(false); manSave(); renderMan(); });
+$('manRand').addEventListener('click', function(){ var def = lsGet('kl_man_rand') || '12', v = prompt('Πόσους τυχαίους αριθμούς (1–80);', def); if(v===null) return; v = parseInt(v,10); if(!(v>=1 && v<=80)){ alert('Βάλε αριθμό από 1 έως 80.'); return; }
+  lsSet('kl_man_rand', String(v)); var pool = []; for(var n=1;n<=80;n++) pool.push(n);
+  for(var i=79;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+  manPick = pool.slice(0,v).sort(function(a,b){return a-b;}); manSave(); renderMan(); });
 $('manClear').addEventListener('click', function(){ manPick = []; manSave(); renderMan(); });
 $('manFromLast').addEventListener('click', function(){ var d = today.concat(histPool).sort(function(a,b){return b.id-a.id;})[0]; if(!d) return; manPick = d.arr.slice(); manSave(); renderMan(); });
 (function(){ var v = lsGet('kl_manNumSort'); if(v) $('manNumSort').value = v; $('manNumSort').addEventListener('change', function(){ lsSet('kl_manNumSort', this.value); renderMan(); }); })();
