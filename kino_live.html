@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ΚΙΝΟ Live</title>
-<link rel="icon" href="img/icon.png"><link rel="apple-touch-icon" href="img/icon.png">
+<link rel="icon" href="img/oppc.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="img/oppc.png">
 <meta name="theme-color" content="#0f1420">
 <style>
 :root{
@@ -19,6 +19,12 @@
     --text:#141a29; --muted:#5d6984; --ball:#e9edf5; --ballTxt:#6b7690;
   }
 }
+.shop{display:flex;flex-direction:column;align-items:center;gap:2px;background:linear-gradient(90deg,#1a2442,#232f52);border:1px solid #2c3a63;border-radius:12px;padding:8px 10px;margin:0 0 10px;text-align:center}
+.shop b:first-child{font-size:16px;color:#fde68a;letter-spacing:.3px}.shop span{font-size:13px;color:#cbd5e1}.shop span b{color:#fff}
+.aw img{width:20px;height:20px;vertical-align:-5px;margin:0 2px 0 3px}
+.rg{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 8px;font-size:10.5px;line-height:1.45;font-weight:700;letter-spacing:.2px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;margin-top:14px;text-align:center}.rg a{color:inherit;text-decoration:none}.rg .eeep{display:block;width:100%}.rg .eeep img{height:64px;width:auto;border-radius:6px;display:block;margin:0 auto 4px}
+.disc{margin:12px 2px 0;font-size:11.5px;color:var(--muted)}.disc summary{cursor:pointer;font-weight:700;color:var(--text)}.disc p{margin:7px 0 0;line-height:1.5}.disc a{color:#3b82f6}
+.credit{text-align:right;font-size:11px;color:var(--muted);margin:10px 2px 0;letter-spacing:.3px}.credit b{font-weight:700}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text);
   font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
@@ -200,10 +206,11 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
 <div id="ttBar"><div style="display:flex;gap:6px;align-items:center;justify-content:center;width:100%"><span id="ttLbl">🟢 LIVE</span><button id="ttLive" title="Επιστροφή στο τώρα">LIVE</button><button id="ttGoLock" title="Πήγαινε στην κλειδωμένη αρχή" style="display:none">⤒ 🔒</button><button id="ttLock" title="Κλείδωσε αυτή την κλήρωση ως πρώτη της «μέρας»">🔒 Αρχή εδώ</button></div><button data-tt="-288" title="Μία μέρα πίσω">⏮ μέρα</button><button data-tt="-10" title="10 κληρώσεις πίσω">⏪ 10</button><button data-tt="-1" title="Μία κλήρωση πίσω">◀ 1</button><button data-tt="1" title="Μία κλήρωση μπροστά">1 ▶</button><button data-tt="10" title="10 κληρώσεις μπροστά">10 ⏩</button><button data-tt="288" title="Μία μέρα μπροστά">μέρα ⏭</button></div>
 <div class="wrap">
   <header>
-    <h1 style="display:flex;align-items:center;gap:8px"><img src="img/logo.jpg" alt="Σπύρος Οχταράς" style="width:48px;height:48px;object-fit:cover;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.35)"><span class="dot" id="liveDot"></span> ΚΙΝΟ Live</h1>
+    <h1 style="display:flex;align-items:center;gap:8px"><img src="img/oppc.svg" alt="OPPC · Πρακτορείο Allwyn" style="width:52px;height:52px;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.35)"><span class="dot" id="liveDot"></span> ΚΙΝΟ Live</h1>
     <div class="hbtns"><button class="btn" id="btnAll">▾ Όλα</button>
     <div class="cd"><small>Επόμενη κλήρωση <span id="cdNext">—</span></small><b id="cdVal">--:--</b></div></div>
   </header>
+  <div class="shop"><b>Οχταράς &amp; Πετρόπουλος</b><span class="aw">Αγίας Τριάδος 43, Πάτρα · Πρακτορείο <img src="img/allwyn.png" alt="Allwyn"> <b>Allwyn</b></span></div>
   <div class="status" id="status">Φόρτωση…</div>
   <div id="anchorBar" style="display:none;margin:6px 0;padding:6px 10px;border:2px solid #f59e0b;border-radius:10px;background:rgba(245,158,11,.1);font-size:13px;display:none;align-items:center;gap:8px;flex-wrap:wrap"><span id="anchorTxt"></span> <button class="btn" id="anchorOff" style="padding:2px 10px">🔓 Ξεκλείδωμα</button></div>
 
@@ -490,7 +497,19 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     </div>
   </section>
 
-  <div class="note">Δεδομένα: API ΟΠΑΠ (παιχνίδι 1100). Οι κληρώσεις είναι τυχαίες — τα στατιστικά δεν προβλέπουν το αποτέλεσμα. Παίξε υπεύθυνα, 18+.</div>
+  <div class="note">Δεδομένα: API ΟΠΑΠ (παιχνίδι 1100). Οι κληρώσεις είναι τυχαίες — τα στατιστικά δεν προβλέπουν το αποτέλεσμα.</div>
+  <footer class="rg"><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" class="eeep"><img src="img/eeep.png" alt="ΕΕΕΠ — Επιτροπή Εποπτείας και Ελέγχου Παιγνίων"></a><span><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener">18+ ΕΠΙΓΕΙΟ, 21+ ΨΗΦΙΑΚΟ | ΑΡΜΟΔΙΟΣ ΡΥΘΜΙΣΤΗΣ ΕΕΕΠ | ΚΙΝΔΥΝΟΣ ΕΘΙΣΜΟΥ &amp; ΑΠΩΛΕΙΑΣ ΠΕΡΙΟΥΣΙΑΣ | ΕΟΠΑΕ – ΓΡΑΜΜΗ ΣΥΜΒΟΥΛΕΥΤΙΚΗΣ:</a> <a href="tel:1114" style="white-space:nowrap">1114</a> <a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" style="white-space:nowrap">| ΠΑΙΞΕ ΥΠΕΥΘΥΝΑ</a></span></footer>
+  <details class="disc"><summary>⚠️ Αποποίηση ευθύνης &amp; όροι χρήσης</summary>
+    <p><b>1. Χαρακτήρας της σελίδας.</b> Η σελίδα «ΚΙΝΟ Live» είναι εργαλείο <b>ψυχαγωγίας</b>. Δεν είναι επίσημη εφαρμογή της Allwyn/ΟΠΑΠ και δεν αποτελεί σύστημα πρόβλεψης, συμβουλή ή προτροπή για συμμετοχή σε τυχερά παίγνια.</p>
+    <p><b>2. Τυχαιότητα.</b> Οι κληρώσεις ΚΙΝΟ είναι τυχαίες και ανεξάρτητες μεταξύ τους. Κάθε αριθμός και κάθε συνδυασμός έχει την ίδια πιθανότητα σε κάθε κλήρωση. Τα στατιστικά, οι κανόνες, οι «προβλέψεις», το «κούνημα» και κάθε ανάλυση της σελίδας δεν αυξάνουν την πιθανότητα κέρδους.</p>
+    <p><b>3. Ακρίβεια δεδομένων.</b> Τα αποτελέσματα εμφανίζονται από δημόσια διαθέσιμα δεδομένα, χωρίς εγγύηση πληρότητας ή ακρίβειας, και μπορεί να καθυστερούν ή να περιέχουν σφάλματα. <b>Ισχύουν μόνο τα επίσημα αποτελέσματα της Allwyn/ΟΠΑΠ.</b> Τα ποσά κερδών που εμφανίζονται είναι ενδεικτικά.</p>
+    <p><b>4. Εικονικά δελτία.</b> Τα «δελτία» της σελίδας είναι εικονικά, για παρακολούθηση. Η σελίδα δεν δέχεται στοιχήματα, δεν εκδίδει δελτία και δεν διαχειρίζεται χρήματα. Συμμετοχή γίνεται μόνο σε αδειοδοτημένο πρακτορείο ή κανάλι.</p>
+    <p><b>5. Ευθύνη.</b> Ο δημιουργός δεν φέρει καμία ευθύνη για αποφάσεις παιχνιδιού, για απώλειες ή για ζημία από τη χρήση της σελίδας ή από σφάλματα στα δεδομένα.</p>
+    <p><b>6. Ηλικία &amp; υπεύθυνο παιχνίδι.</b> Η συμμετοχή σε τυχερά παίγνια επιτρέπεται μόνο σε ενήλικες: <b>18+ επίγειο, 21+ ψηφιακό</b>. Η συχνή συμμετοχή μπορεί να εκθέσει σε <b>κίνδυνο εθισμού και απώλειας περιουσίας</b>. Αν το παιχνίδι παύει να είναι διασκέδαση, ζητήστε βοήθεια: <b>ΕΟΠΑΕ – Γραμμή Συμβουλευτικής <a href="tel:1114">1114</a></b>. Αρμόδιος ρυθμιστής: <a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener">ΕΕΕΠ</a>.</p>
+    <p><b>7. Σήματα.</b> Τα ονόματα και λογότυπα «Allwyn», «ΟΠΑΠ», «ΚΙΝΟ» και «ΕΕΕΠ» ανήκουν στους δικαιούχους τους και χρησιμοποιούνται μόνο για αναγνώριση.</p>
+    <p><b>8. Προσωπικά δεδομένα.</b> Η σελίδα δεν ζητά και δεν συλλέγει προσωπικά στοιχεία. Οι ρυθμίσεις και τα εικονικά δελτία αποθηκεύονται τοπικά στη συσκευή σας. Αν ενεργοποιήσετε συγχρονισμό ή λειτουργίες με δικό σας κλειδί, τα αντίστοιχα δεδομένα στέλνονται μόνο στην υπηρεσία που εσείς ορίζετε.</p>
+  </details>
+  <div class="credit">Created by <b>Σπύρος Οχτάρας</b> · © 2026</div>
 </div>
 
 <script>
