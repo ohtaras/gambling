@@ -30,6 +30,16 @@ select{background:#1e293b;color:var(--text);border:1px solid #334155;border-radi
 #boxRes{text-align:center}
 .nums{font-size:22px;font-weight:900;letter-spacing:1px;margin:6px 0 10px;color:#fde68a}
 footer{text-align:center;font-size:11px;margin-top:14px}
+header h1{font-size:clamp(17px,4.8vw,22px);min-width:0}header h1 small{font-size:11px}
+#menuBtn{margin-left:auto;align-self:flex-start;background:#1e293b;color:#fff;border:1px solid #334155;border-radius:12px;width:44px;height:44px;font-size:22px;line-height:1;cursor:pointer;flex:none}
+#menuBg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60;opacity:0;pointer-events:none;transition:opacity .25s}
+#menu{position:fixed;top:0;right:0;bottom:0;width:min(88vw,380px);background:#0f172a;border-left:1px solid #23304d;z-index:61;transform:translateX(105%);transition:transform .3s cubic-bezier(.3,1,.4,1);overflow-y:auto;padding:12px 14px 30px;box-shadow:-8px 0 24px rgba(0,0,0,.5)}
+body.menu #menu{transform:none}body.menu #menuBg{opacity:1;pointer-events:auto}body.menu{overflow:hidden}
+#menu .mhd{display:flex;justify-content:space-between;align-items:center;font-size:17px;margin-bottom:6px}#menu .mhd button{background:none;border:0;color:#fff;font-size:22px;cursor:pointer}
+#menu h3{font-size:15px;margin:16px 0 8px;color:#fde68a;border-bottom:1px solid #23304d;padding-bottom:5px}
+#menu p{font-size:13.5px;line-height:1.5;margin:6px 0}#menu section#mDisc p{font-size:12px;color:#94a3b8}#menu a{color:#93c5fd}
+.mrow{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #1f2a44;font-size:13.5px}.mrow .muted{font-size:11.5px;margin-top:2px}.mrow button{flex:none}
+.disc a{color:#93c5fd;text-decoration:none}
 .tapHint{width:100%;text-align:center;font-size:15px;font-weight:700;color:#fde68a;padding:4px 6px;animation:tapPulse 1.8s ease-in-out infinite}.tapHint b{color:#fff}@keyframes tapPulse{0%,100%{opacity:1}50%{opacity:.55}}
 .bxGuy:hover svg{filter:drop-shadow(0 0 6px rgba(253,230,138,.7))}
 .rgtop{color:#cbd5e1;text-align:right;font-size:10px;line-height:1.35;font-weight:700;letter-spacing:.15px;opacity:.85;margin:0 0 6px;position:relative;z-index:52}.rgtop a{color:inherit;text-decoration:none;white-space:normal}.rgtop a[href^="tel"]{white-space:nowrap}
@@ -65,15 +75,41 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
 .bxGuy svg{filter:drop-shadow(0 0 1.5px rgba(255,255,255,.55))}
 </style>
 </head>
-<body><div id="stageBg"></div>
+<body><div id="stageBg"></div><div id="menuBg"></div>
+<aside id="menu" aria-hidden="true">
+  <div class="mhd"><b>☰ Μενού</b><button id="menuX" aria-label="Κλείσιμο">✕</button></div>
+  <section id="mSet"><h3>⚙️ Ρυθμίσεις</h3>
+    <div class="mrow" id="mShakeRow" style="display:none"><div><b>📳 Κούνημα κινητού</b><div class="muted">Κούνα δυνατά το κινητό για να κουνήσουν ο Σπύρος και ο Ηρακλής το κουτί.</div></div><button class="btn2" id="shakeOn" >📳 Κούνα το κινητό</button></div>
+    <div class="mrow"><div><b>🟢 2η ευκαιρία στα δελτία</b><div class="muted">Αξιολόγηση των δελτίων και της πρόβλεψης μαζί με τη 2η ευκαιρία (1€/κλήρωση).</div></div><button class="btn2" id="mSc">ΟΧΙ</button></div>
+    <div class="mrow"><div><b>💬 Ατάκες στο κούνημα</b><div class="muted">Τα συννεφάκια με τις ατάκες του Σπύρου και του Ηρακλή.</div></div><button class="btn2" id="mTalk">ΝΑΙ</button></div>
+  </section>
+  <section id="mAbout"><h3>ℹ️ Ποιοι είμαστε</h3>
+    <p><b>Οχταράς &amp; Πετρόπουλος ΙΚΕ</b> — πρακτορείο <b>Allwyn</b> στην Πάτρα, στην <b>Αγίας Τριάδος 43</b>.</p>
+    <p>Είμαστε ο Σπύρος και ο Ηρακλής — οι δύο που κουνάνε το κουτί! Στο πρακτορείο μας θα βρείτε όλα τα παιχνίδια της Allwyn, καφέ, κουβέντα και καλή παρέα, με ανοιχτές πόρτες 15 ώρες την ημέρα, 7 μέρες την εβδομάδα.</p>
+    <p>Το «Τράβα ρε» το φτιάξαμε για πλάκα, για τους φίλους και τους πελάτες μας: να κουνάμε το κουτί, να γελάμε με τις ατάκες και να παρακολουθούμε τις κληρώσεις — πάντα με μέτρο.</p>
+    <p class="muted">Περάστε να μας γνωρίσετε από κοντά! 👋</p>
+  </section>
+  <section id="mDisc"><h3>⚠️ Αποποίηση ευθύνης &amp; όροι χρήσης</h3>
+    <p><b>1. Χαρακτήρας της σελίδας.</b> Το «Τράβα ρε» είναι εργαλείο <b>ψυχαγωγίας</b>. Δεν είναι επίσημη εφαρμογή της Allwyn/ΟΠΑΠ και δεν αποτελεί σύστημα πρόβλεψης, συμβουλή ή προτροπή για συμμετοχή σε τυχερά παίγνια.</p>
+    <p><b>2. Τυχαιότητα.</b> Οι κληρώσεις ΚΙΝΟ είναι τυχαίες και ανεξάρτητες μεταξύ τους. Κάθε αριθμός και κάθε συνδυασμός έχει την ίδια πιθανότητα σε κάθε κλήρωση. Το «κούνημα», οι «προβλέψεις» και κάθε στατιστικό στοιχείο δεν αυξάνουν την πιθανότητα κέρδους.</p>
+    <p><b>3. Ακρίβεια δεδομένων.</b> Τα αποτελέσματα εμφανίζονται από δημόσια διαθέσιμα δεδομένα, χωρίς εγγύηση πληρότητας ή ακρίβειας, και μπορεί να καθυστερούν ή να περιέχουν σφάλματα. <b>Ισχύουν μόνο τα επίσημα αποτελέσματα της Allwyn/ΟΠΑΠ.</b> Τα ποσά κερδών που εμφανίζονται είναι ενδεικτικά.</p>
+    <p><b>4. Εικονικά δελτία.</b> Τα «δελτία» της σελίδας είναι εικονικά, για παρακολούθηση. Η σελίδα δεν δέχεται στοιχήματα, δεν εκδίδει δελτία και δεν διαχειρίζεται χρήματα. Συμμετοχή γίνεται μόνο σε αδειοδοτημένο πρακτορείο ή κανάλι.</p>
+    <p><b>5. Ευθύνη.</b> Ο δημιουργός δεν φέρει καμία ευθύνη για αποφάσεις παιχνιδιού, για απώλειες ή για ζημία από τη χρήση της σελίδας ή από σφάλματα στα δεδομένα.</p>
+    <p><b>6. Ηλικία &amp; υπεύθυνο παιχνίδι.</b> Η συμμετοχή σε τυχερά παίγνια επιτρέπεται μόνο σε ενήλικες: <b>18+ επίγειο, 21+ ψηφιακό</b>. Η συχνή συμμετοχή μπορεί να εκθέσει σε <b>κίνδυνο εθισμού και απώλειας περιουσίας</b>. Αν το παιχνίδι παύει να είναι διασκέδαση, ζητήστε βοήθεια: <b>ΕΟΠΑΕ – Γραμμή Συμβουλευτικής <a href="tel:1114">1114</a></b>. Αρμόδιος ρυθμιστής: <a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener">ΕΕΕΠ</a>.</p>
+    <p><b>7. Σήματα.</b> Τα ονόματα και λογότυπα «Allwyn», «ΟΠΑΠ», «ΚΙΝΟ» και «ΕΕΕΠ» ανήκουν στους δικαιούχους τους και χρησιμοποιούνται μόνο για αναγνώριση.</p>
+    <p><b>8. Προσωπικά δεδομένα.</b> Η σελίδα δεν ζητά και δεν συλλέγει προσωπικά στοιχεία. Οι ρυθμίσεις και τα εικονικά δελτία αποθηκεύονται μόνο τοπικά στη συσκευή σας και διαγράφονται αν καθαρίσετε τα δεδομένα του browser.</p>
+  </section>
+  <div class="credit" style="text-align:center">Created by <b>Σπύρος Οχτάρας</b> · © 2026</div>
+</aside>
+
 <div class="wrap">
   <div class="rgtop"><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener">18+ ΕΠΙΓΕΙΟ, 21+ ΨΗΦΙΑΚΟ | ΑΡΜΟΔΙΟΣ ΡΥΘΜΙΣΤΗΣ ΕΕΕΠ | ΚΙΝΔΥΝΟΣ ΕΘΙΣΜΟΥ &amp; ΑΠΩΛΕΙΑΣ ΠΕΡΙΟΥΣΙΑΣ | ΕΟΠΑΕ – ΓΡΑΜΜΗ ΣΥΜΒΟΥΛΕΥΤΙΚΗΣ:</a> <a href="tel:1114">1114</a> <a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener">| ΠΑΙΞΕ ΥΠΕΥΘΥΝΑ</a></div>
-  <header><img src="https://ohtaras.github.io/gambling/img/oppc_wide.svg?v=w1" alt="" onerror="this.style.display='none'"><h1>Τράβα ρε 😜<small id="lastInfo">Φορτώνω την τελευταία κλήρωση…</small></h1></header>
+  <header><img src="https://ohtaras.github.io/gambling/img/oppc_wide.svg?v=w1" alt="" onerror="this.style.display='none'"><h1>Τράβα ρε 😜<small id="lastInfo">Φορτώνω την τελευταία κλήρωση…</small></h1><button id="menuBtn" aria-label="Μενού">☰</button></header>
   <div class="shop"><b>Οχταράς &amp; Πετρόπουλος</b><span class="aw">Αγίας Τριάδος 43, Πάτρα · Πρακτορείο <img src="https://ohtaras.github.io/gambling/img/allwyn.png" alt="Allwyn"> <b>Allwyn</b></span></div>
   <div class="card">
     <div class="cdw"><span class="muted">⏱️ Επόμενη κλήρωση <span id="cdId"></span></span><b id="cdT">--:--</b></div>
     <div class="ctrl">
-      <button class="btn" id="boxGo" disabled style="display:none">📦 Κούνα το!</button><div class="tapHint">👆 Πάτα πάνω στον <b>Σπύρο</b> ή στον <b>Ηρακλή</b> για να κουνήσουν το κουτί!</div><button class="btn2" id="shakeOn" style="display:none">📳 Κούνα το κινητό</button><button class="btn2" id="boxPred" disabled title="Δείξε ξανά τους αριθμούς του τελευταίου κουνήματος">🔮 Δείτε την τελευταία πρόβλεψη</button>
+      <button class="btn" id="boxGo" disabled style="display:none">📦 Κούνα το!</button><div class="tapHint">👆 Πάτα πάνω στον <b>Σπύρο</b> ή στον <b>Ηρακλή</b> για να κουνήσουν το κουτί!</div><button class="btn2" id="boxPred" disabled title="Δείξε ξανά τους αριθμούς του τελευταίου κουνήματος">🔮 Δείτε την τελευταία πρόβλεψη</button>
       <label class="muted" style="font-size:14px">Πόσους: <select id="boxN"><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option selected>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>18</option><option>20</option></select></label>
     </div>
     <div class="nav" id="navBar"><button data-nv="-10">⏪ 10</button><button data-nv="-1">◀</button><button data-nv="live" id="navLive" class="lv">🟢 LIVE</button><button data-nv="1">▶</button><button data-nv="10">10 ⏩</button></div>
@@ -85,16 +121,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   </div>
   <div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-weight:800;font-size:16px">🎫 Τα δελτία μου <span id="tkCnt" class="muted" style="font-weight:400;font-size:13px"></span></div><label class="sw"><span style="font-size:13px">🟢 2η ευκαιρία</span><input type="checkbox" id="scSw"><span class="tr"></span><b id="scLbl" style="font-size:13px;min-width:28px">ΟΧΙ</b></label></div><div id="tkList"></div></div>
   <footer class="rg"><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" class="eeep"><img src="https://ohtaras.github.io/gambling/img/eeep.png" alt="ΕΕΕΠ — Επιτροπή Εποπτείας και Ελέγχου Παιγνίων"></a><span><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener">18+ ΕΠΙΓΕΙΟ, 21+ ΨΗΦΙΑΚΟ | ΑΡΜΟΔΙΟΣ ΡΥΘΜΙΣΤΗΣ ΕΕΕΠ | ΚΙΝΔΥΝΟΣ ΕΘΙΣΜΟΥ &amp; ΑΠΩΛΕΙΑΣ ΠΕΡΙΟΥΣΙΑΣ | ΕΟΠΑΕ – ΓΡΑΜΜΗ ΣΥΜΒΟΥΛΕΥΤΙΚΗΣ:</a> <a href="tel:1114" style="white-space:nowrap">1114</a> <a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" style="white-space:nowrap">| ΠΑΙΞΕ ΥΠΕΥΘΥΝΑ</a></span></footer>
-  <details class="disc"><summary>⚠️ Αποποίηση ευθύνης &amp; όροι χρήσης</summary>
-    <p><b>1. Χαρακτήρας της σελίδας.</b> Το «Τράβα ρε» είναι εργαλείο <b>ψυχαγωγίας</b>. Δεν είναι επίσημη εφαρμογή της Allwyn/ΟΠΑΠ και δεν αποτελεί σύστημα πρόβλεψης, συμβουλή ή προτροπή για συμμετοχή σε τυχερά παίγνια.</p>
-    <p><b>2. Τυχαιότητα.</b> Οι κληρώσεις ΚΙΝΟ είναι τυχαίες και ανεξάρτητες μεταξύ τους. Κάθε αριθμός και κάθε συνδυασμός έχει την ίδια πιθανότητα σε κάθε κλήρωση. Το «κούνημα», οι «προβλέψεις» και κάθε στατιστικό στοιχείο δεν αυξάνουν την πιθανότητα κέρδους.</p>
-    <p><b>3. Ακρίβεια δεδομένων.</b> Τα αποτελέσματα εμφανίζονται από δημόσια διαθέσιμα δεδομένα, χωρίς εγγύηση πληρότητας ή ακρίβειας, και μπορεί να καθυστερούν ή να περιέχουν σφάλματα. <b>Ισχύουν μόνο τα επίσημα αποτελέσματα της Allwyn/ΟΠΑΠ.</b> Τα ποσά κερδών που εμφανίζονται είναι ενδεικτικά.</p>
-    <p><b>4. Εικονικά δελτία.</b> Τα «δελτία» της σελίδας είναι εικονικά, για παρακολούθηση. Η σελίδα δεν δέχεται στοιχήματα, δεν εκδίδει δελτία και δεν διαχειρίζεται χρήματα. Συμμετοχή γίνεται μόνο σε αδειοδοτημένο πρακτορείο ή κανάλι.</p>
-    <p><b>5. Ευθύνη.</b> Ο δημιουργός δεν φέρει καμία ευθύνη για αποφάσεις παιχνιδιού, για απώλειες ή για ζημία από τη χρήση της σελίδας ή από σφάλματα στα δεδομένα.</p>
-    <p><b>6. Ηλικία &amp; υπεύθυνο παιχνίδι.</b> Η συμμετοχή σε τυχερά παίγνια επιτρέπεται μόνο σε ενήλικες: <b>18+ επίγειο, 21+ ψηφιακό</b>. Η συχνή συμμετοχή μπορεί να εκθέσει σε <b>κίνδυνο εθισμού και απώλειας περιουσίας</b>. Αν το παιχνίδι παύει να είναι διασκέδαση, ζητήστε βοήθεια: <b>ΕΟΠΑΕ – Γραμμή Συμβουλευτικής <a href="tel:1114">1114</a></b>. Αρμόδιος ρυθμιστής: <a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener">ΕΕΕΠ</a>.</p>
-    <p><b>7. Σήματα.</b> Τα ονόματα και λογότυπα «Allwyn», «ΟΠΑΠ», «ΚΙΝΟ» και «ΕΕΕΠ» ανήκουν στους δικαιούχους τους και χρησιμοποιούνται μόνο για αναγνώριση.</p>
-    <p><b>8. Προσωπικά δεδομένα.</b> Η σελίδα δεν ζητά και δεν συλλέγει προσωπικά στοιχεία. Οι ρυθμίσεις και τα εικονικά δελτία αποθηκεύονται μόνο τοπικά στη συσκευή σας και διαγράφονται αν καθαρίσετε τα δεδομένα του browser.</p>
-  </details>
+  <div class="disc"><a href="#" id="discLink">⚠️ Αποποίηση ευθύνης &amp; όροι χρήσης</a> · <a href="#" id="aboutLink">ℹ️ Ποιοι είμαστε</a></div>
   <div class="credit">Created by <b>Σπύρος Οχτάρας</b> · © 2026</div>
 </div>
 <script>
@@ -159,7 +186,7 @@ function bxGuy(who, flip){ var cx = flip ? 62 : 50; return '<svg viewBox="-4 0 1
 (function(){ try{ $('bxGuyL').innerHTML = bxGuy('hood', false); $('bxGuyR').innerHTML = bxGuy('beard', true);
   $('bxGuyL').dataset.sl = '#17171a'; $('bxGuyR').dataset.sl = '#232c3d'; bxSetArms($('bxGuyL'),0,0); bxSetArms($('bxGuyR'),0,0); }catch(e){} })();
 // Κούνημα: το κουτί πάει δεξιά-αριστερά-πάνω-κάτω, ο ένας σπρώχνει κι ο άλλος τραβάει, μετά σταματάνε
-function bxSay(el, txt){ if(!el) return; var b = el.querySelector('.bub'); if(!b){ b = document.createElement('div'); b.className = 'bub'; el.appendChild(b); }
+function bxSay(el, txt){ if(!el) return; if(txt && lsGet('trv_talk')==='0') return; var b = el.querySelector('.bub'); if(!b){ b = document.createElement('div'); b.className = 'bub'; el.appendChild(b); }
   if(txt){ b.textContent = txt; b.classList.remove('on'); void b.offsetWidth; b.classList.add('on'); } else b.classList.remove('on'); }
 var BX_TALK = [["Σπρώξε Ηρακλή! 💪", "Σήκωσέ το Σπύρο! 🙌"], ["Τράβα ρε Ηρακλή! 😜", "Τραβάω, αλλά η τύχη κάνει πίσω!"], ["Αυτή τη φορά το νιώθω!", "Το ίδιο είπες και χθες… 35 φορές!"], ["Μου έλειψε ένα για 12άρι!", "Σου έλειψαν και τα άλλα έντεκα!"], ["Παραλίγο να το πιάσω!", "Το «παραλίγο» δεν πληρώνει!"], ["Έπιασα 5 στα 12!", "Το 0 στα 12 πληρώνει περισσότερα! 😂"], ["Παίζω τα γενέθλια της πεθεράς!", "Γι' αυτό δεν βγαίνουν ποτέ!"], ["Κάνε σταυρό πριν το κουνήσεις!", "Έκανα, μου βγήκε Χ2! ⚽"], ["Αν πιάσω, κερνάω όλο το μαγαζί!", "Το είπες δυνατά, σε άκουσαν όλοι! 👂"], ["Σήμερα είναι η μέρα μου!", "Το λες κάθε μέρα από το 2018!"], ["Η τύχη είναι γυναίκα…", "…γι' αυτό δεν μας σηκώνει το τηλέφωνο! 📵"], ["Βάλε κι ένα Bonus για σιγουριά!", "Σιγουριά στο ΚΙΝΟ; Καλό αστείο!"], ["Κάθε 5 λεπτά νέα ελπίδα!", "Και κάθε 5 λεπτά νέα απογοήτευση!"], ["Το 80 δεν έχει βγει 20 κληρώσεις!", "Θα βγει μόλις το ξεπαίξεις!"], ["Ξεπαίζω το 7 και βγαίνει!", "Παίξ' το ξανά, να σιγουρευτούμε ότι δεν θα βγει! 😏"], ["Έχω αλάνθαστο σύστημα!", "Πες μου πόσα έβγαλε… α, τίποτα!"], ["Μόνο ένα δελτάκι, για το καλό!", "Το «ένα» σου έχει γίνει δεκάδα!"], ["Με το τζάκποτ πάμε Μαλδίβες!", "Με τα δικά μας, Καλόγρια! 🏖️"], ["Αν κερδίσουμε, Μύκονο!", "Αν χάσουμε, Ακτή Δυμαίων!"], ["Η γυναίκα μου νομίζει ότι δουλεύω!", "Δουλεύεις, κουνάς κουτιά! 📦"], ["Κλείσε τα μάτια και κούνα!", "Τα κλείνω κάθε φορά που βλέπω τα αποτελέσματα!"], ["Μυρίζομαι 10άρι!", "Σουβλάκια μυρίζεις, από δίπλα! 🥙"], ["Μου κλείνει το μάτι το 7!", "Και το 77 σε φλερτάρει, αλλά δεν έρχεται!"], ["Θα το κουνήσω με το αριστερό, για γούρι!", "Με το δεξί έχασες, δοκίμασε και με τα πόδια!"], ["Σήμερα έχω φίλινγκ!", "Το φίλινγκ σου έχει κάνει περισσότερη ζημιά από το χαλάζι!"], ["Πόσα θες να κερδίσεις;", "Όσα έχω χάσει, συν τα ρέστα!"], ["Πάμε για το μεγάλο!", "Πρώτα πιάσε το μικρό, μετά βλέπουμε!"], ["Αν βγει, ανοίγω δεύτερο πρακτορείο!", "Κι εγώ θα είμαι ο καλύτερός σου πελάτης!"], ["Τα νούμερά μου είναι ζεστά!", "Έχουν πάρει πυρετό από την αναμονή! 🤒"], ["Ποντάρω στα κρύα!", "Κρύα είναι και τα αποτελέσματα! 🥶"], ["Η στατιστική λέει ότι έρχεται!", "Η στατιστική λέει κι ότι είμαστε ψηλοί!"], ["Ηρακλή, εσύ έκανες 12 άθλους!", "Ο 13ος είναι να πιάσω 12άρι!"], ["Ο αρχαίος Ηρακλής δεν έπαιζε ΚΙΝΟ!", "Γι' αυτό τα κατάφερε με τους άθλους!"], ["Βάλε μια ευχή!", "Να βγουν τουλάχιστον όσα παίξαμε!"], ["Αν δεν είχα κακή τύχη…", "…δεν θα είχες καθόλου τύχη!"], ["Χθες έπιασα 4άρι!", "Και το λες σε όλη την Πάτρα από το πρωί!"], ["Παίζω το ίδιο δελτίο 3 χρόνια!", "Αν το αλλάξεις, θα βγει την επόμενη!"], ["Το ένιωσα στο κόκαλο!", "Αρθριτικά είναι, όχι τύχη! 🦴"], ["Έτσι κουνάνε οι επαγγελματίες!", "Επαγγελματίες χαμένοι! 😅"], ["Μη μιλάς, θα το γρουσουζέψεις!", "… 🤐"], ["Αν βγει 12άρι, θα κλάψω!", "Αν δεν βγει, πάλι θα κλάψεις!"], ["Ησυχία, ακούω τις μπίλιες!", "Λένε «άλλη φορά, φίλε»!"], ["Το 8 είναι το τυχερό μου!", "Γι' αυτό σε λένε Οχτάρα!"], ["Ηρακλή, βγάλε ένα οχτάρι!", "Εσύ είσαι ο Οχτάρας! 😂"], ["Τα γένια μου άσπρισαν περιμένοντας!", "Τα δικά μου μαύρισαν από τη στεναχώρια!"], ["Μην κοιτάς το ρολόι!", "Σε 5 λεπτά νέα κλήρωση, νέα όνειρα! ⏱️"], ["Γιατί ιδρώνεις;", "Κουβαλάω τις ελπίδες όλου του μαγαζιού!"], ["Πάρε ανάσα!", "Ανάσα παίρνω όταν βγει το πρώτο μου νούμερο!"], ["Ηρακλή, δεξιά!", "Το ΑΛΛΟ δεξιά!"], ["Έχω καλό προαίσθημα!", "Το ίδιο είχες και για τον Τζόκερ!"], ["Θέλω ένα κομπολόι για γούρι!", "Κι ένα σκόρδο για τη γρουσουζιά! 🧄"], ["Κούνα σαν φραπέ!", "Μέτριο με γάλα, κι ένα 5άρι παρακαλώ!"], ["Αν πιάσουμε, πού πάμε;", "Πρώτα για σουβλάκια, μετά βλέπουμε!"], ["Η 2η ευκαιρία είναι για μένα!", "Εσύ θέλεις και 3η και 4η!"], ["Θα το πιάσω και θα σταματήσω!", "Αυτό το λένε όλοι οι φιλόσοφοι του πάγκου!"], ["Το πρόγραμμα λέει να παίξω το 23!", "Το πρόγραμμα λέει και «παίξε υπεύθυνα»! 😉"], ["Βάζω όλα τα λεφτά μου!", "Ε όχι, βάλε ένα δίευρο και χαμογέλα!"], ["Ζυγίζει σαν τζάκποτ το κουτί!", "Αν ζύγιζε σαν τζάκποτ, θα το κουβαλούσα σπίτι!"], ["Το νιώθεις;", "Νιώθω μόνο πόνο στη μέση!"], ["Αν βγει το 1, θα έρθει και το 80!", "Αυτό λέγεται ελπίδα από άκρη σε άκρη!"], ["Ψηλά τα χέρια!", "Σαν να έπιασα 10άρι! 🙌"], ["Γιατί δεν παίζεις ποτέ το 13;", "Είναι οι φορές που έχασα σήμερα!"], ["Αν πιάσουμε, το λέμε στη μάνα;", "Πρώτα στην τράπεζα, μετά στη μάνα!"], ["Το σφράγισες το δελτίο;", "Το σφράγισα με φιλί! 💋"], ["Ο πελάτης έχει πάντα δίκιο!", "…και ποτέ 12άρι!"], ["Τώρα βγαίνουν τα νούμερα!", "Κάνω πως δεν κοιτάω! 🙈"], ["Ξέρω ότι θα βγει το 42!", "Το ξέρεις εδώ και 42 κληρώσεις!"], ["Πιο δυνατό κούνημα δεν έχει!", "Τόσο δυνατό, που μου έφυγε κι η ελπίδα!"], ["Ένα, δυο… ΤΡΑΒΑ!", "Τρία, τέσσερα… ΣΠΡΩΞΕ!"], ["Πιάσε κι από τη δική σου μεριά, Ηρακλή!", "Πιάνω! Εσύ κρατάς μόνο τις ελπίδες!"], ["Ηρακλή, ξύπνα!", "Ξύπνιος είμαι, ονειρεύομαι 12άρι!"], ["Ηρακλή, πάνω-κάτω!", "Σαν τον λογαριασμό μου! 📉📈"], ["Πιο ψηλά δεν πάει!", "Σήκωσέ το Σπύρο, να το δουν κι οι πελάτες!"], ["Τι λένε τα ζώδια σήμερα;", "Ο Κριός λέει «μην παίξεις το 12»!"], ["Αυτό το κούνημα έχει μέλλον!", "Το μέλλον είναι η επόμενη κλήρωση!"], ["Αν βγουν όλα, σε φιλάω!", "Τώρα εύχομαι να μη βγουν! 😆"], ["Κούνα με πίστη!", "Με πίστη και με διπλό εσπρέσο! ☕"], ["Είμαστε ομάδα!", "Ομάδα που χάνει μαζί, μένει μαζί!"]];
 function bxTalkPick(){ var n = BX_TALK.length, bag = null; try{ bag = JSON.parse(localStorage.getItem('bx_talk_bag')||'null'); }catch(e){}
@@ -341,6 +368,17 @@ function cdTick(){ var nt = NEXT ? NEXT.t : (last ? last.t + 300000 : 0); if(!nt
   if(ms > 0){ var m = Math.floor(ms/60000), sx = Math.floor(ms/1000)%60; $('cdT').textContent = (m<10?'0':'')+m+':'+(sx<10?'0':'')+sx; w.classList.remove('now'); }
   else { $('cdT').textContent = 'τώρα! 🎱'; w.classList.add('now'); if(Date.now() - cdPoll > 5000){ cdPoll = Date.now(); load(); } } }
 setInterval(cdTick, 1000);
+/* ---------- ☰ Μενού ---------- */
+function menuOpen(sec){ document.body.classList.add('menu'); $('menu').setAttribute('aria-hidden','false'); menuSync(); if(sec){ var el = $(sec); if(el) setTimeout(function(){ el.scrollIntoView({behavior:'smooth', block:'start'}); }, 320); } else $('menu').scrollTop = 0; }
+function menuClose(){ document.body.classList.remove('menu'); $('menu').setAttribute('aria-hidden','true'); }
+function menuSync(){ var sc = useSC(); $('mSc').textContent = sc ? 'ΝΑΙ' : 'ΟΧΙ'; $('mSc').style.borderColor = sc ? '#22c55e' : ''; var tk = lsGet('trv_talk')!=='0'; $('mTalk').textContent = tk ? 'ΝΑΙ' : 'ΟΧΙ'; $('mTalk').style.borderColor = tk ? '#22c55e' : ''; }
+$('menuBtn').addEventListener('click', function(){ menuOpen(); });
+$('menuX').addEventListener('click', menuClose); $('menuBg').addEventListener('click', menuClose);
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') menuClose(); });
+$('discLink').addEventListener('click', function(e){ e.preventDefault(); menuOpen('mDisc'); });
+$('aboutLink').addEventListener('click', function(e){ e.preventDefault(); menuOpen('mAbout'); });
+$('mSc').addEventListener('click', function(){ lsSet('trv_sc', useSC() ? '0' : '1'); $('scSw').checked = useSC(); tkRender(); predEval(); menuSync(); });
+$('mTalk').addEventListener('click', function(){ lsSet('trv_talk', lsGet('trv_talk')==='0' ? '1' : '0'); menuSync(); });
 /* ---------- 🎬 Σκηνή: στο κινητό, όσο κουνάνε, όλα σβήνουν και ο Σπύρος, ο Ηρακλής και το κουτί έρχονται μπροστά ---------- */
 var STAGE = false;
 function stageOn(){
@@ -362,11 +400,11 @@ window.addEventListener('orientationchange', function(){ if(STAGE){ setTimeout(f
     if(prev){ var d = Math.abs(cur.x-prev.x) + Math.abs(cur.y-prev.y) + Math.abs(cur.z-prev.z);
       if(d > 32 && Date.now() - lastShake > 2500){ lastShake = Date.now(); if(!busy && cur && $('boxGo') && !$('boxGo').disabled){ if(navigator.vibrate) try{ navigator.vibrate(60); }catch(err){} $('boxGo').click(); } } }
     prev = cur; }
-  function enable(){ if(on) return; on = true; window.addEventListener('devicemotion', onMotion); btn.textContent = '📳 Κούνημα κινητού: ΝΑΙ'; btn.style.borderColor = '#22c55e'; }
-  btn.style.display = '';
+  function enable(){ if(on) return; on = true; window.addEventListener('devicemotion', onMotion); btn.textContent = 'ΝΑΙ'; btn.style.borderColor = '#22c55e'; }
+  btn.style.display = ''; $('mShakeRow').style.display = '';
   if(typeof DeviceMotionEvent.requestPermission === 'function'){   // iPhone: χρειάζεται άδεια με πάτημα
-    btn.textContent = '📳 Ενεργοποίηση: κούνα το κινητό';
-    btn.addEventListener('click', function(){ if(on) return; DeviceMotionEvent.requestPermission().then(function(r){ if(r==='granted') enable(); else btn.textContent = '📳 Δεν δόθηκε άδεια κίνησης'; }).catch(function(){ btn.textContent = '📳 Δεν υποστηρίζεται'; }); });
+    btn.textContent = 'Ενεργοποίηση';
+    btn.addEventListener('click', function(){ if(on) return; DeviceMotionEvent.requestPermission().then(function(r){ if(r==='granted') enable(); else btn.textContent = 'Χωρίς άδεια'; }).catch(function(){ btn.textContent = 'Δεν υποστηρίζεται'; }); });
   } else { enable(); }   // Android: δουλεύει κατευθείαν
 })();
 $('boxBox').innerHTML = grid();
