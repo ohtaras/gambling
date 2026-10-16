@@ -395,6 +395,10 @@ function waitStart(){ var L = $('bxGuyL'), R = $('bxGuyR'); WAIT = true; stageOn
   Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb'), function(b){ b.style.opacity = '.35'; var rr = function(){ return ((Math.random()*2-1)*60).toFixed(0)+'%'; }; for(var q=1;q<=4;q++){ b.style.setProperty('--a'+q, rr()); b.style.setProperty('--b'+q, rr()); } b.style.setProperty('--jd', (0.5+Math.random()*0.4).toFixed(2)+'s'); b.classList.add('jig'); });
   clearTimeout(waitTO); waitTO = setTimeout(waitEnd, 75000); }
 function waitEnd(){ if(!WAIT) return; WAIT = false; $('bxGuyL').classList.remove('alive'); $('bxGuyR').classList.remove('alive'); bxSay($('bxGuyL'),''); bxSay($('bxGuyR'),''); if(!busy) stageOff(); if(last && !view) start(); }
+function activeTicket(id){ var T = tkLoad(); for(var i=0;i<T.length;i++){ var t = T[i]; if(id >= t.start && id < t.start + t.draws && t.n.length <= 12) return t; } return null; }
+function tkWinFor(t, D){ var K = t.n.length, set = {}, ss = {}; D.arr.forEach(function(x){ set[x] = 1; }); (D.sc||[]).forEach(function(x){ ss[x] = 1; });
+  var a = t.n.filter(function(x){ return set[x]; }).length, b = t.n.filter(function(x){ return ss[x]; }).length;
+  if(useSC()) return scWin(K, a, b); if(useKB()) return kbWin(K, a, !!(D.b && t.n.indexOf(D.b)>=0)); return (PAYS[K]||{})[a]||0; }
 var BX_START_P = [["Πάμε! Σημαδεύουμε τα δικά μας νούμερα!","Κερνάει όποιος αστοχήσει!"],["Ζέσταμα χεριών… 🎯","Έχω σημάδι σαν τοξότης!"],["Ποιος θα βάλει τα περισσότερα;","Εγώ, και μετά πάμε για σουβλάκια!"],["Σημαδεύουμε την πρόβλεψη!","Αν αστοχήσεις, πληρώνεις τους καφέδες!"]];
 var BX_AIM = ["Σημαδεύω το {t}… 🎯","Πάει για το {t}!","Αυτή είναι για το {t}!","Το {t}, έλα στον μπαμπά!","Κλείνω το ένα μάτι… το {t}!"];
 var BX_HIT = ["Μπαμ! Το {n} μέσα! 🎯","Το {n}! Τζάμι! 💥","Ρε τι σημάδι έχω! Το {n}!","Το {n} κάθισε σαν κότα στο κοτέτσι!","{n}! Ούτε με GPS τόσο σωστά!","Το {n}! Γράψ' το στον λογαριασμό μου!"];
@@ -404,14 +408,18 @@ var BX_MISS_R = ["Στραβάδι! 🙈","Με τέτοιο σημάδι ούτ
 function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
 function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $('bxGuyL'), R = $('bxGuyR'), was = WAIT;
   WAIT = false; clearTimeout(waitTO);
-  var P = null, PN = [];
-  if(PRED && D.id > PRED.id){ P = {}; PRED.moves.forEach(function(m){ P[m[1]] = 1; PN.push(m[1]); }); PN.sort(function(a,b){return a-b;}); }
+  // στόχος: 1) η τελευταία πρόβλεψη, 2) αλλιώς το πιο πρόσφατο ενεργό δελτίο για αυτή την κλήρωση
+  var P = null, PN = [], SRC = 'pred', TK = activeTicket(D.id);
+  if(PRED && D.id > PRED.id){ PRED.moves.forEach(function(m){ PN.push(m[1]); }); }
+  else if(TK){ PN = TK.n.slice(); SRC = 'tk'; }
+  if(PN.length){ P = {}; PN.forEach(function(x){ P[x] = 1; }); PN.sort(function(a,b){return a-b;}); }
+  var TK2 = (SRC==='pred' && TK && TK.n.slice().sort(function(a,b){return a-b;}).join(',') !== PN.join(',')) ? TK : null;
   var balls = start(), list = D.arr.concat(D.sc||[]), STEP = P ? 430 : 115, D0 = P ? 1900 : 250, hits = [], schits = [], score = {L:0, R:0};
   var lastTalk = {L:0, R:0}, nSc = (D.sc||[]).length, got = {};
   function say(el, txt, force){ var k = el===L ? 'L' : 'R', now = Date.now(); if(!force && now - lastTalk[k] < 1100) return false; lastTalk[k] = now; bxSay(el, txt); return true; }
   function other(el){ return el===L ? R : L; }
   if(!was){ stageOn(); L.classList.add('alive'); R.classList.add('alive'); }
-  if(P){ var st = pick(BX_START_P); say(L, st[0], true); setTimeout(function(){ say(R, st[1], true); }, 800); }
+  if(P){ var st = SRC==='tk' ? pick([['Πάμε για το δελτίο μας! 🎫','Σημαδεύουμε τα νούμερα του δελτίου!'],['Το δελτίο τρέχει, ρίχνε σωστά!','Αν χάσουμε, φταις εσύ!'],['Για το δελτίο, όλα!','Κερνάει όποιος αστοχήσει!']]) : pick(BX_START_P); say(L, st[0], true); setTimeout(function(){ say(R, st[1], true); }, 800); }
   else { var tk = BX_NEW[Math.floor(Math.random()*BX_NEW.length)]; bxSay(L, tk[0]); setTimeout(function(){ bxSay(R, tk[1]); }, 700); }
   list.forEach(function(n, i){ var b = balls[n]; if(!b) return; b.dataset.l = b.style.left; b.dataset.t = b.style.top; var fromL = i % 2 === 0;
     b.style.transition = 'none'; b.style.left = fromL ? '-8%' : '99%'; b.style.top = (52 + Math.random()*12).toFixed(1)+'%'; b.style.opacity = '0'; });
@@ -446,9 +454,13 @@ function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $
         a = h+' στα '+K+extra+' — '+(win==='L' ? 'εγώ έβαλα '+score.L+', εσύ '+score.R+'!' : 'εσύ '+score.R+', εγώ '+score.L+'…');
         r = win==='L' ? 'Καλά, κερνάω εγώ τους καφέδες… 😒' : 'Χαχα! Κερνάς Σπύρο! ☕'; }
       else { a = h+' στα '+K+extra+', ισοπαλία στο σημάδι!'; r = 'Τα σπάμε στη μέση, τον καφέ και το κέρδος!'; }
-      bxSay(L, a); setTimeout(function(){ bxSay(R, r); }, 1200); }
+      if(SRC==='tk'){ var w0 = tkWinFor(TK, D); a = '🎫 Δελτίο: '+a; if(w0) r = 'Κέρδος '+eur(w0)+'! Κερνάω! 🎉'; }
+      bxSay(L, a); setTimeout(function(){ bxSay(R, r); }, 1200);
+      if(TK2){ setTimeout(function(){ var set = {}; D.arr.forEach(function(x){ set[x] = 1; }); var h2 = TK2.n.filter(function(x){ return set[x]; }).length, w2 = tkWinFor(TK2, D);
+        bxSay(L, '🎫 Και το δελτίο μας: '+h2+' στα '+TK2.n.length+'!'); setTimeout(function(){ bxSay(R, w2 ? 'Κέρδος '+eur(w2)+'! Δεν πάει άσχημα! 💶' : 'Τίποτα κι εκεί… κράτα το για την επόμενη!'); }, 1100); }, 3600); }
+    }
   }, END);
-  setTimeout(function(){ bxSay(L,''); bxSay(R,''); if(!busy) stageOff(); }, END + (P ? 5600 : 1700));
+  setTimeout(function(){ bxSay(L,''); bxSay(R,''); if(!busy) stageOff(); }, END + (P ? (TK2 ? 8800 : 5600) : 1700));
 }
 
 
