@@ -48,7 +48,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   <div class="shop"><b>Οχταράς &amp; Πετρόπουλος</b><span>Αγίας Τριάδος 43, Πάτρα · Πρακτορείο <b>Allwyn</b></span></div>
   <div class="card">
     <div class="ctrl">
-      <button class="btn" id="boxGo" disabled>📦 Κούνα το!</button>
+      <button class="btn" id="boxGo" disabled>📦 Κούνα το!</button><button class="btn2" id="boxReset" title="Δείξε ξανά την τελευταία κλήρωση">🔄 Δείτε την τελευταία κλήρωση</button>
       <label class="muted" style="font-size:14px">Πόσους: <select id="boxN"><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option selected>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>18</option><option>20</option></select></label>
     </div>
     <div id="boxHd"></div>
@@ -249,6 +249,7 @@ function tkRender(){
 }
 $('tkList').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-del]'); if(!b) return; if(!confirm('Να σβηστεί το δελτίο;')) return; tkSave(tkLoad().filter(function(t){ return String(t.id)!==b.dataset.del; })); drSave(); tkRender(); });
 tkRender();
+$('boxReset').addEventListener('click', function(){ if(busy) return; if(!last){ load(); return; } shownId = last.id; out = []; start(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; load(); });
 $('boxBox').innerHTML = grid();
 load(); setInterval(function(){ if(!document.hidden) load(); }, 30000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
