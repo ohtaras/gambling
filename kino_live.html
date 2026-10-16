@@ -2522,19 +2522,29 @@ cards.forEach(function(c){
   });
 });
 /* ---------- 📦 Κουτάκι: κουνάω την τελευταία κλήρωση ---------- */
-(function(){ var css = document.createElement('style'); css.textContent = '@keyframes bxShake{0%{transform:translate(0,0) rotate(0)}10%{transform:translate(-14px,3px) rotate(-3deg)}20%{transform:translate(14px,-3px) rotate(3deg)}30%{transform:translate(-12px,-4px) rotate(-2deg)}40%{transform:translate(12px,4px) rotate(2deg)}50%{transform:translate(-9px,2px) rotate(-1.5deg)}60%{transform:translate(9px,-2px) rotate(1.5deg)}70%{transform:translate(-6px,3px) rotate(-1deg)}80%{transform:translate(6px,-3px) rotate(1deg)}90%{transform:translate(-3px,0) rotate(0)}100%{transform:translate(0,0) rotate(0)}}.bxGuy{width:21%;max-width:170px;flex:none;position:relative;z-index:2}.bxGuy svg{display:block;width:100%;height:auto;overflow:visible}#boxWrap.shk{animation:bxShake .9s ease-in-out}#boxWrap.shk .arm{animation:bxArm .15s ease-in-out infinite alternate}@keyframes bxArm{from{transform:translateY(-3px)}to{transform:translateY(3px)}}.bxGuy .guy{animation:bxIdle 2.4s ease-in-out infinite;transform-origin:50% 100%}@keyframes bxIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}.bxb{position:absolute;width:9%;height:10%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(10px,3vw,15px);color:#111;background:radial-gradient(circle at 35% 30%,#fff7b0,#facc15 55%,#ca8a04);box-shadow:0 2px 4px rgba(0,0,0,.4);transition:left .7s cubic-bezier(.3,1.4,.5,1),top .7s cubic-bezier(.3,1.4,.5,1),opacity .5s,background .4s}.bxb.nw{background:radial-gradient(circle at 35% 30%,#d9ffd9,#22c55e 55%,#15803d)}'; document.head.appendChild(css); })();
+(function(){ var css = document.createElement('style'); css.textContent = '@keyframes bxShake{0%{transform:translate(0,0) rotate(0)}10%{transform:translate(-14px,3px) rotate(-3deg)}20%{transform:translate(14px,-3px) rotate(3deg)}30%{transform:translate(-12px,-4px) rotate(-2deg)}40%{transform:translate(12px,4px) rotate(2deg)}50%{transform:translate(-9px,2px) rotate(-1.5deg)}60%{transform:translate(9px,-2px) rotate(1.5deg)}70%{transform:translate(-6px,3px) rotate(-1deg)}80%{transform:translate(6px,-3px) rotate(1deg)}90%{transform:translate(-3px,0) rotate(0)}100%{transform:translate(0,0) rotate(0)}}.bxGuy{width:21%;max-width:170px;flex:none;position:relative;z-index:2;margin-right:-1.6%}.bxGuy.bxR{margin-right:0;margin-left:-1.6%}.bxGuy svg{display:block;width:100%;height:auto;overflow:visible}#boxWrap.shk{animation:bxShake .9s ease-in-out}#boxWrap.shk .arm{animation:bxArm .15s ease-in-out infinite alternate}@keyframes bxArm{from{transform:translateY(-3px)}to{transform:translateY(3px)}}.bxGuy .guy{animation:bxIdle 2.4s ease-in-out infinite;transform-origin:50% 100%}@keyframes bxIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}.bxb{position:absolute;width:9%;height:10%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(10px,3vw,15px);color:#111;background:radial-gradient(circle at 35% 30%,#fff7b0,#facc15 55%,#ca8a04);box-shadow:0 2px 4px rgba(0,0,0,.4);transition:left .7s cubic-bezier(.3,1.4,.5,1),top .7s cubic-bezier(.3,1.4,.5,1),opacity .5s,background .4s}.bxb.nw{background:radial-gradient(circle at 35% 30%,#d9ffd9,#22c55e 55%,#15803d)}'; document.head.appendChild(css); })();
 function bxGuySvg(who){
   var K='#111', sk='#f2c29b', skS='#d99a72';
   var legs = function(jean){ return '<path d="M34 150 L31 198 L46 198 L49 152 Z M53 152 L56 198 L71 198 L68 150 Z" fill="'+jean+'" stroke="'+K+'" stroke-width="2.2" stroke-linejoin="round"/>'+
     '<path d="M27 198 Q27 190 39 191 L48 193 L48 202 L27 202 Z M54 193 L64 191 Q77 190 77 198 L77 202 L54 202 Z" fill="#222" stroke="'+K+'" stroke-width="2"/>'; };
-  var arms = function(sleeve){ var a = function(y1,y2){ return '<path d="M70 '+y1+' Q90 '+(y1+2)+' 104 '+y2+'" fill="none" stroke="'+K+'" stroke-width="14" stroke-linecap="round"/><path d="M70 '+y1+' Q90 '+(y1+2)+' 104 '+y2+'" fill="none" stroke="'+sleeve+'" stroke-width="10" stroke-linecap="round"/>'+
-      '<ellipse cx="108" cy="'+y2+'" rx="7.5" ry="6.5" fill="'+sk+'" stroke="'+K+'" stroke-width="2"/><path d="M106 '+(y2-6)+' L106 '+(y2+6)+'" stroke="'+skS+'" stroke-width="1.5"/>'; };
-    return '<g class="arm">'+a(112,124)+a(132,146)+'</g>'; };
+  var hand = function(x,y){ // χέρι που πιάνει την άκρη του κουτιού: παλάμη, 4 δάχτυλα τυλιγμένα, αντίχειρας από πάνω
+    return '<g>'+
+      '<path d="M'+(x-7)+' '+(y-5)+' Q'+(x-1)+' '+(y-8)+' '+(x+5)+' '+(y-6)+' L'+(x+9)+' '+(y-5)+' Q'+(x+12)+' '+(y-3)+' '+(x+9)+' '+(y-1)+
+        ' Q'+(x+12)+' '+(y+1)+' '+(x+9)+' '+(y+3)+' Q'+(x+12)+' '+(y+5)+' '+(x+8)+' '+(y+6.5)+' Q'+(x+10)+' '+(y+9)+' '+(x+6)+' '+(y+9)+
+        ' L'+(x-1)+' '+(y+8)+' Q'+(x-7)+' '+(y+6)+' '+(x-7)+' '+(y-5)+' Z" fill="'+sk+'" stroke="'+K+'" stroke-width="1.8" stroke-linejoin="round"/>'+
+      '<path d="M'+(x+4)+' '+(y-1)+' L'+(x+8.5)+' '+(y-1)+' M'+(x+4)+' '+(y+3)+' L'+(x+8.5)+' '+(y+3)+' M'+(x+4)+' '+(y+6.5)+' L'+(x+7.5)+' '+(y+6.5)+'" stroke="'+skS+'" stroke-width="1.2" stroke-linecap="round"/>'+
+      '<path d="M'+(x-3)+' '+(y-6)+' Q'+(x+2)+' '+(y-12)+' '+(x+8)+' '+(y-10)+'" fill="none" stroke="'+K+'" stroke-width="5.2" stroke-linecap="round"/>'+
+      '<path d="M'+(x-3)+' '+(y-6)+' Q'+(x+2)+' '+(y-12)+' '+(x+8)+' '+(y-10)+'" fill="none" stroke="'+sk+'" stroke-width="2.8" stroke-linecap="round"/>'+
+    '</g>'; };
+  var limb = function(d, sleeve, w){ return '<path d="'+d+'" fill="none" stroke="'+K+'" stroke-width="'+(w+3.6)+'" stroke-linecap="round" stroke-linejoin="round"/><path d="'+d+'" fill="none" stroke="'+sleeve+'" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round"/>'; };
+  var armBack = function(sleeve){ return '<g class="arm">'+limb('M30 108 Q46 118 62 120 Q84 120 99 116', sleeve, 9)+'<path d="M95 112 L101 112 L101 120 L95 120 Z" fill="'+sleeve+'"/>'+hand(103,116)+'</g>'; };
+  var armFront = function(sleeve){ return '<g class="arm">'+limb('M72 106 Q80 128 82 142 Q92 146 99 146', sleeve, 10)+'<path d="M95 141.5 L101 141.5 L101 150.5 L95 150.5 Z" fill="'+sleeve+'" stroke="'+K+'" stroke-width="0"/>'+'<path d="M95 141 L95 151" stroke="'+K+'" stroke-width="1.6"/>'+hand(103,146)+'</g>'; };
+  var arms = function(){ return ''; };
   var torso = function(c, extra){ return '<path d="M22 112 Q24 98 50 96 Q76 98 78 112 L76 156 Q50 162 24 156 Z" fill="'+c+'" stroke="'+K+'" stroke-width="2.4" stroke-linejoin="round"/>'+(extra||''); };
   var h = '';
   if(who==='hood'){
-    h += legs('#3b5b8c') + torso('#1c1c1f','<path d="M44 104 L42 128 M56 104 L58 128" stroke="#eee" stroke-width="1.8" stroke-linecap="round"/><circle cx="42" cy="129" r="1.8" fill="#eee"/><circle cx="58" cy="129" r="1.8" fill="#eee"/><path d="M30 140 Q50 146 70 140" stroke="#333" stroke-width="2" fill="none"/>');
-    h += arms('#1c1c1f');
+    h += legs('#3b5b8c') + armBack('#1c1c1f') + torso('#1c1c1f','<path d="M44 104 L42 128 M56 104 L58 128" stroke="#eee" stroke-width="1.8" stroke-linecap="round"/><circle cx="42" cy="129" r="1.8" fill="#eee"/><circle cx="58" cy="129" r="1.8" fill="#eee"/><path d="M30 140 Q50 146 70 140" stroke="#333" stroke-width="2" fill="none"/>');
+    h += armFront('#1c1c1f');
     // κουκούλα
     h += '<path d="M50 4 Q94 6 95 56 Q96 98 70 106 L30 106 Q4 98 5 56 Q6 6 50 4 Z" fill="#232326" stroke="'+K+'" stroke-width="2.6"/>';
     h += '<ellipse cx="50" cy="60" rx="31" ry="38" fill="#141416"/>';
@@ -2559,8 +2569,8 @@ function bxGuySvg(who){
     // airpods
     h += '<rect x="20.5" y="58" width="4" height="9" rx="2" fill="#fff" stroke="'+K+'" stroke-width="1.2"/><rect x="75.5" y="58" width="4" height="9" rx="2" fill="#fff" stroke="'+K+'" stroke-width="1.2"/>';
   } else {
-    h += legs('#2f4a73') + torso('#2b313c','<path d="M40 97 L50 110 L60 97" fill="none" stroke="'+K+'" stroke-width="2"/>');
-    h += arms('#2b313c');
+    h += legs('#2f4a73') + armBack('#2b313c') + torso('#2b313c','<path d="M40 97 L50 110 L60 97" fill="none" stroke="'+K+'" stroke-width="2"/>');
+    h += armFront('#2b313c');
     // λαιμός
     h += '<rect x="42" y="88" width="16" height="14" fill="'+skS+'" stroke="'+K+'" stroke-width="1.8"/>';
     // αυτιά
