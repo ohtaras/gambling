@@ -426,6 +426,21 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     </div>
   </section>
 
+  <section class="card mt" data-k="box">
+    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>📦 Κουτάκι</span><span id="boxMeta"></span></h2>
+    <div class="cbody">
+      <div class="muted" style="font-size:12.5px;margin-bottom:6px">Βάζει τις 20 μπίλιες της <b>τελευταίας κλήρωσης</b> σε ένα κουτάκι και το κουνάει: κάθε μπίλια μένει ή πάει ένα κουτάκι ⬅ ➡ ⬆ ⬇. Κάθε φορά ξεκινάει πάλι από την τελευταία κλήρωση.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px">
+        <button class="btn" id="boxGo" style="font-size:16px;padding:6px 16px">📦 Κούνα το!</button>
+        <label class="muted" style="font-size:12px">Πόσους: <select id="boxN"><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>18</option><option>20</option></select></label>
+      </div>
+      <div id="boxHd" style="font-weight:700;text-align:center;margin-bottom:6px"></div>
+      <div id="boxBox" style="position:relative;width:100%;max-width:480px;margin:0 auto;aspect-ratio:10/8;background:#1e293b;border:3px solid #a16207;border-radius:10px;overflow:hidden"></div>
+      <div id="boxTxt" class="muted" style="font-size:12px;margin:8px 0;text-align:center;min-height:16px"></div>
+      <div id="boxRes" style="text-align:center"></div>
+    </div>
+  </section>
+
   <section class="card mt" data-k="late">
     <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>⏰ Καθυστερημένες στήλες</span><span id="lateMeta"></span></h2>
     <div class="cbody">
@@ -2357,7 +2372,7 @@ function applyAnchor(){
 }
 function updTtLock(){ var b = $('ttLock'); if(!b) return; var g = $('ttGoLock'); if(g){ g.style.display = ANCHOR && ANCHOR!==lastId ? '' : 'none'; g.title = ANCHOR ? 'Πήγαινε στην κλειδωμένη αρχή ('+anchorLbl()+')' : ''; } var on = ANCHOR && ANCHOR===lastId; b.textContent = ANCHOR ? (on ? '🔓 Ξεκλείδωμα' : '🔒 Αρχή εδώ') : '🔒 Αρχή εδώ'; b.style.background = ANCHOR ? '#f59e0b' : ''; b.style.color = ANCHOR ? '#1a1300' : ''; b.title = ANCHOR ? 'Κλειδωμένη αρχή: '+anchorLbl()+' — πάτα για '+(on?'ξεκλείδωμα':'μετακίνηση εδώ') : 'Κλείδωσε αυτή την κλήρωση ως πρώτη της «μέρας»'; }
 function setAnchor(id){ ANCHOR = id||0; lsSet('kl_anchor', String(ANCHOR)); if(ANCHOR) anchorWas = true; viewId = null; renderAll(); }
-function renderAll(){ applyAnchor(); updTtLock(); renderMan(); renderLate(); renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); agTick(); }
+function renderAll(){ applyAnchor(); updTtLock(); renderMan(); renderLate(); renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); try{ boxIdle(); }catch(e){} agTick(); }
 
 /* ---------- Countdown ---------- */
 function tick(){
@@ -2502,11 +2517,49 @@ cards.forEach(function(c){
   if(lsGet('kl_col_'+c.dataset.k)==='1') c.classList.add('collapsed');
   c.querySelector('h2.tg').addEventListener('click',function(e){
     if(e.target.closest('select,button,option')) return;
-    setCollapsed(c, !c.classList.contains('collapsed')); updAllBtn();
+    setCollapsed(c, !c.classList.contains('collapsed')); updAllBtn(); if(c.dataset.k==='box'){ boxLastShown = null; try{ boxIdle(); }catch(e){} }
   });
 });
+/* ---------- 📦 Κουτάκι: κουνάω την τελευταία κλήρωση ---------- */
+(function(){ var css = document.createElement('style'); css.textContent = '@keyframes bxShake{0%{transform:translate(0,0) rotate(0)}10%{transform:translate(-14px,3px) rotate(-3deg)}20%{transform:translate(14px,-3px) rotate(3deg)}30%{transform:translate(-12px,-4px) rotate(-2deg)}40%{transform:translate(12px,4px) rotate(2deg)}50%{transform:translate(-9px,2px) rotate(-1.5deg)}60%{transform:translate(9px,-2px) rotate(1.5deg)}70%{transform:translate(-6px,3px) rotate(-1deg)}80%{transform:translate(6px,-3px) rotate(1deg)}90%{transform:translate(-3px,0) rotate(0)}100%{transform:translate(0,0) rotate(0)}}#boxBox.shk{animation:bxShake .9s ease-in-out}.bxb{position:absolute;width:9%;height:10%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(10px,3vw,15px);color:#111;background:radial-gradient(circle at 35% 30%,#fff7b0,#facc15 55%,#ca8a04);box-shadow:0 2px 4px rgba(0,0,0,.4);transition:left .7s cubic-bezier(.3,1.4,.5,1),top .7s cubic-bezier(.3,1.4,.5,1),opacity .5s,background .4s}.bxb.nw{background:radial-gradient(circle at 35% 30%,#d9ffd9,#22c55e 55%,#15803d)}'; document.head.appendChild(css); })();
+var boxBusy = false, boxLastShown = null, boxOut = [];
+function boxLast(){ return today.concat(histPool).sort(function(a,b){return b.id-a.id;})[0]; }
+function boxPos(n){ var r = Math.floor((n-1)/10), c = (n-1)%10; return {l:(c*10+0.5)+'%', t:(r*12.5+1.25)+'%'}; }
+function boxGrid(){ var h = ''; for(var n=1;n<=80;n++){ var r = Math.floor((n-1)/10), c = (n-1)%10; h += '<div style="position:absolute;left:'+(c*10)+'%;top:'+(r*12.5)+'%;width:10%;height:12.5%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#64748b;border:1px solid #334155;box-sizing:border-box">'+n+'</div>'; } return h; }
+function boxStart(last){ var box = $('boxBox'); box.classList.remove('shk'); box.innerHTML = boxGrid(); var balls = {};
+  (last ? last.arr : []).forEach(function(n){ var b = document.createElement('div'); b.className = 'bxb'; var p = boxPos(n); b.style.left = p.l; b.style.top = p.t; b.textContent = n; box.appendChild(b); balls[n] = b; });
+  $('boxHd').textContent = last ? '🟡 Τελευταία κλήρωση #'+last.id+' · '+dateOf(last.t).split('-').reverse().join('/')+' '+hm(last.t) : 'Περιμένει κληρώσεις…';
+  return balls; }
+function boxIdle(){ var c = document.querySelector('.card[data-k="box"]'); if(!c || c.classList.contains('collapsed') || boxBusy) return;
+  var last = boxLast(); if(!last || (boxLastShown && boxLastShown===last.id)) return;
+  boxLastShown = last.id; boxOut = []; boxStart(last); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; $('boxMeta').textContent = '#'+last.id; }
+(function(){ $('boxN').value = lsGet('kl_box_n') || '12'; $('boxN').addEventListener('change', function(){ lsSet('kl_box_n', this.value); }); })();
+$('boxGo').addEventListener('click', function(){ if(boxBusy) return; var last = boxLast(); if(!last) return;
+  var v = +$('boxN').value || 12, src = last.arr.slice();
+  for(var i=src.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = src[i]; src[i] = src[j]; src[j] = t; }
+  var used = {}, moves = [], st = {stay:0, l:0, r:0, u:0, d:0}, MV = [['stay',0,0],['l',0,-1],['r',0,1],['u',-1,0],['d',1,0]];
+  for(var q=0; q<src.length && moves.length<v; q++){ var from = src[q], row = Math.floor((from-1)/10), col = (from-1)%10;
+    var mv = MV.slice(); for(var a=mv.length-1;a>0;a--){ var b = Math.floor(Math.random()*(a+1)), tt = mv[a]; mv[a] = mv[b]; mv[b] = tt; }
+    for(var m=0;m<mv.length;m++){ var r2 = row+mv[m][1], c2 = col+mv[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; used[to] = 1; moves.push([from,to]); st[mv[m][0]]++; break; } }
+  boxBusy = true; boxLastShown = last.id; $('boxRes').innerHTML = ''; $('boxTxt').textContent = 'Οι 20 μπίλιες της τελευταίας κλήρωσης…';
+  var balls = boxStart(last), box = $('boxBox');
+  setTimeout(function(){ $('boxHd').textContent = '📦 Κουνάω το κουτάκι…'; box.classList.add('shk'); }, 1500);
+  setTimeout(function(){
+    moves.forEach(function(mm){ var b = balls[mm[0]]; if(!b) return; delete balls[mm[0]]; var p = boxPos(mm[1]); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; if(mm[0]!==mm[1]) b.classList.add('nw'); });
+    Object.keys(balls).forEach(function(k){ balls[k].style.opacity = '0'; });
+    boxOut = moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
+    $('boxHd').textContent = '🎲 Οι '+boxOut.length+' αριθμοί σου (από #'+last.id+')';
+    $('boxTxt').textContent = st.stay+' έμειναν · '+st.l+'⬅ · '+st.r+'➡ · '+st.u+'⬆ · '+st.d+'⬇  ·  🟡 έμεινε · 🟢 μετακινήθηκε';
+    $('boxRes').innerHTML = '<div style="font-size:18px;font-weight:800;letter-spacing:1px;margin-bottom:8px">'+boxOut.join(' ')+'</div><button class="btn" id="boxToMy">➕ Στα δελτία μου</button> <button class="btn" id="boxToMan">🕹️ Στον Χειροκίνητο</button>';
+    boxBusy = false;
+  }, 2100);
+});
+$('boxRes').addEventListener('click', function(e){ var t = e.target; if(!boxOut.length) return;
+  if(t.id==='boxToMy'){ if(boxOut.length>12){ alert('Δελτίο ΚΙΝΟ παίρνει μέχρι 12 αριθμούς.'); return; } var nd = askDraws(); if(!nd) return; myAdd(boxOut, nd, '📦 Κουτάκι'); t.textContent = '✓ Μπήκε'; }
+  if(t.id==='boxToMan'){ manPick = boxOut.slice(); manSave(); renderMan(); var c = document.querySelector('.card[data-k="man"]'); if(c){ cards.forEach(function(x){ if(x!==c && winOpen(x)) setWin(x, false, false); }); setWin(c, true, true); } }
+});
 /* ---------- Γραμμή εργασιών: κάθε κάρτα ανοιγοκλείνει σαν παράθυρο ---------- */
-var TB = {board:['🎱','Κλήρωση'], today:['📋','Σήμερα'], my:['🎫','Δελτία'], rally:['🏁','Ράλι'], stats:['📊','Στατιστ.'], pos:['🔢','Θέσεις'], sim:['🎲','Προσομ.'], fwd:['🧪','Κανόνες'], gef:['🌉','Γέφυρα'], alc:['⚗️','Αλχημεία'], k8:['🎯','10×8'], man:['🕹️','Χειροκ.'], late:['⏰','Καθυστ.']};
+var TB = {board:['🎱','Κλήρωση'], today:['📋','Σήμερα'], my:['🎫','Δελτία'], rally:['🏁','Ράλι'], stats:['📊','Στατιστ.'], pos:['🔢','Θέσεις'], sim:['🎲','Προσομ.'], fwd:['🧪','Κανόνες'], gef:['🌉','Γέφυρα'], alc:['⚗️','Αλχημεία'], k8:['🎯','10×8'], man:['🕹️','Χειροκ.'], box:['📦','Κουτάκι'], late:['⏰','Καθυστ.']};
 function winOpen(c){ return !c.classList.contains('win-off'); }
 function setWin(c, on, scroll){
   c.classList.toggle('win-off', !on); lsSet('kl_win_'+c.dataset.k, on?'1':'0');
@@ -2530,7 +2583,7 @@ $('taskbar').addEventListener('click', function(e){
   var others = cards.filter(function(x){ return x!==c && winOpen(x); });
   if(winOpen(c) && !others.length){ setWin(c, false, false); return; }   // ήταν το μόνο ανοιχτό → κλείνει
   cards.forEach(function(x){ if(x!==c && winOpen(x)) setWin(x, false, false); });   // ένα παράθυρο τη φορά
-  setWin(c, true, true);
+  setWin(c, true, true); if(k==='box'){ boxLastShown = null; try{ boxIdle(); }catch(e){} }
 });
 renderTaskbar();
 $('btnAll').addEventListener('click',function(){
