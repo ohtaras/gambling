@@ -30,6 +30,8 @@ select{background:#1e293b;color:var(--text);border:1px solid #334155;border-radi
 #boxRes{text-align:center}
 .nums{font-size:22px;font-weight:900;letter-spacing:1px;margin:6px 0 10px;color:#fde68a}
 footer{text-align:center;font-size:11px;margin-top:14px}
+.bxb.pk{box-shadow:0 0 0 3px #fff,0 0 10px 3px #22d3ee}
+.pe{background:#0f172a;border:1px solid #23304d;border-radius:12px;padding:10px;margin-top:10px;font-size:13px;text-align:center}
 .bxb.sc{background:radial-gradient(circle at 35% 30%,#efe7ff,#a78bfa 55%,#6d28d9);color:#1a1033}
 .shop{display:flex;flex-direction:column;align-items:center;gap:2px;background:linear-gradient(90deg,#1a2442,#232f52);border:1px solid #2c3a63;border-radius:12px;padding:8px 10px;margin:0 0 10px;text-align:center}
 .shop b:first-child{font-size:16px;color:#fde68a;letter-spacing:.3px}.shop span{font-size:13px;color:#cbd5e1}
@@ -59,6 +61,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
     <div id="boxWrap" style="display:flex;align-items:center;justify-content:center"><div class="bxGuy" id="bxGuyL"></div><div id="boxBox" style="position:relative;flex:1;min-width:0;max-width:480px;aspect-ratio:10/8;background:#1e293b;border:3px solid #a16207;border-radius:10px;overflow:hidden"></div><div class="bxGuy bxR" id="bxGuyR"></div></div>
     <div id="boxTxt" class="muted"></div>
     <div id="boxRes"></div>
+    <div id="predEval"></div>
   </div>
   <div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-weight:800;font-size:16px">🎫 Τα δελτία μου <span id="tkCnt" class="muted" style="font-weight:400;font-size:13px"></span></div><label class="sw"><span style="font-size:13px">🟣 2η ευκαιρία</span><input type="checkbox" id="scSw"><span class="tr"></span><b id="scLbl" style="font-size:13px;min-width:28px">ΟΧΙ</b></label></div><div id="tkList"></div></div>
   <footer class="muted">Οι μπίλιες της τελευταίας κλήρωσης ΚΙΝΟ μένουν ή πάνε ένα κουτάκι ⬅ ➡ ⬆ ⬇. Για πλάκα — κάθε κλήρωση είναι τυχαία. Παίξτε υπεύθυνα, 18+.</footer>
@@ -181,7 +184,8 @@ async function load(){
     if(!d.arr.length) throw new Error('empty');
     var isNew = !last || last.id!==d.id; last = d; $('boxGo').disabled = false; if(isNew) tkCheck();
     $('lastInfo').textContent = 'Τελευταία κλήρωση #'+d.id+' · '+hm(d.t);
-    if(!busy && isNew){ shownId = d.id; out = []; start(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
+    if(isNew) predEval();
+    if(!busy && isNew){ shownId = d.id; out = []; start(); predMark(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
   }catch(e){ if(!last){ $('lastInfo').textContent = 'Δεν φόρτωσε η κλήρωση — ξαναδοκιμάζω…'; $('boxBox').innerHTML = grid(); } }
 }
 $('boxN').value = lsGet('kbx_n') || '12'; $('boxN').addEventListener('change', function(){ lsSet('kbx_n', this.value); });
@@ -198,7 +202,7 @@ $('boxGo').addEventListener('click', function(){ if(busy || !last) return;
   setTimeout(function(){
     moves.forEach(function(mm){ var b = balls[mm[0]]; if(!b) return; delete balls[mm[0]]; var p = boxPos(mm[1]); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; if(mm[0]!==mm[1]){ b.classList.remove('sc'); b.classList.add('nw'); } });
     Object.keys(balls).forEach(function(k){ balls[k].style.opacity = '0'; });
-    PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st}; lsSet('trv_pred', JSON.stringify(PRED)); predText(PRED, false); $('boxPred').disabled = false;
+    PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st}; lsSet('trv_pred', JSON.stringify(PRED)); predText(PRED, false); $('boxPred').disabled = false; predEval();
     busy = false; $('boxGo').disabled = false;
   }, 2750);
 });
@@ -211,6 +215,22 @@ function predText(P, replay){
       '<div class="add">'+(out.length>12 ? '<span class="muted" style="font-size:12px">Το δελτίο ΚΙΝΟ παίρνει έως 12 αριθμούς — διάλεξε «Πόσους» έως 12 για να το παρακολουθήσεις.</span>' :
       '<label class="muted" style="font-size:13px">για <select id="tkN">'+[1,2,3,4,5,6,8,10,12,15,20].map(function(n){ return '<option'+(n===5?' selected':'')+'>'+n+'</option>'; }).join('')+'</select> κληρώσεις</label><button class="btn2" id="tkAdd" style="background:#14532d;border-color:#166534">➕ Προσθήκη στο δελτίο</button>')+'</div>';
 }
+async function predEval(){
+  var el = $('predEval'); if(!PRED){ el.innerHTML = ''; return; }
+  var nums = PRED.moves.map(function(m){ return m[1]; }).sort(function(a,b){return a-b;}), K = nums.length, nid = PRED.id+1, d = null;
+  if(last && last.id===nid) d = {t:last.t, list:last.arr, sc:last.sc||[]};
+  else if(DR[nid]) d = {t:DR[nid][0], list:DR[nid][1], sc:DR[nid][2]||[]};
+  else if(last && last.id>nid){ try{ var r = await fetch('https://api.opap.gr/draws/v3.0/1100/'+nid+'?_='+Date.now(), {cache:'no-store'}); if(r.ok){ var c = await r.json(), w = c.winningNumbers||{}; if(w.list&&w.list.length){ d = {t:c.drawTime, list:w.list, sc:w.secondChance||[]}; DR[nid] = [d.t, d.list, d.sc]; } } }catch(e){} }
+  var chips = function(set, ss){ return nums.map(function(x){ return '<span class="chip'+(set&&set[x]?' hit':(ss&&ss[x]?' sch':''))+'">'+x+'</span>'; }).join(''); };
+  if(!d){ el.innerHTML = '<div class="pe"><b>🔮 Τελευταία πρόβλεψη</b> <span class="muted">(από #'+PRED.id+' · '+hm(PRED.t)+')</span><div style="margin:6px 0">'+chips()+'</div>⏳ Περιμένει την κλήρωση <b>#'+nid+'</b> για να αξιολογηθεί.</div>'; return; }
+  var SC = useSC(), set = {}, ss = {}; d.list.forEach(function(x){ set[x] = 1; }); if(SC) d.sc.forEach(function(x){ ss[x] = 1; });
+  var a = nums.filter(function(x){ return set[x]; }).length, b2 = nums.filter(function(x){ return ss[x]; }).length;
+  var w = K<=12 ? (SC ? scWin(K,a,b2) : ((PAYS[K]||{})[a]||0)) : null, cost = SC ? 1 : STAKE;
+  el.innerHTML = '<div class="pe"><b>🔮 Τελευταία πρόβλεψη</b> <span class="muted">(από #'+PRED.id+' · '+hm(PRED.t)+')</span><div style="margin:6px 0">'+chips(set, ss)+'</div>'+
+    'Στην κλήρωση <b>#'+nid+' · '+hm(d.t)+'</b>: <b style="font-size:16px">'+a+(b2?'<span style="color:#c4b5fd">+'+b2+'</span>':'')+'/'+K+'</b>'+
+    (w===null ? ' <span class="muted">(πάνω από 12 αριθμούς — χωρίς κέρδη)</span>' : ' · '+(w ? '<span class="win">κέρδος '+eur(w)+'</span>' : '<span class="muted">χωρίς κέρδος</span>')+' <span class="muted">για '+eur(cost)+(SC?' με 2η ευκαιρία':'')+'</span>')+'</div>';
+}
+function predMark(){ if(!PRED || !last || last.id!==PRED.id+1) return; var P = {}; PRED.moves.forEach(function(m){ P[m[1]] = 1; }); Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb'), function(b){ if(P[+b.textContent] && (useSC() || !b.classList.contains('sc'))) b.classList.add('pk'); }); }
 function predShow(){ if(busy || !PRED) return; var box = $('boxBox'); box.innerHTML = grid(); shownId = -1;
   PRED.moves.forEach(function(mm){ var b = document.createElement('div'); var p = boxPos(mm[1]); b.className = 'bxb'+(mm[0]!==mm[1] ? ' nw' : (PRED.sc.indexOf(mm[0])>=0 ? ' sc' : '')); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; box.appendChild(b); });
   predText(PRED, true); }
@@ -266,9 +286,9 @@ function tkRender(){
   }).join('');
 }
 $('tkList').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-del]'); if(!b) return; if(!confirm('Να σβηστεί το δελτίο;')) return; tkSave(tkLoad().filter(function(t){ return String(t.id)!==b.dataset.del; })); drSave(); tkRender(); });
-$('scSw').addEventListener('change', function(){ lsSet('trv_sc', this.checked?'1':'0'); tkRender(); });
+$('scSw').addEventListener('change', function(){ lsSet('trv_sc', this.checked?'1':'0'); tkRender(); predEval(); Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb.pk'), function(b){ b.classList.remove('pk'); }); predMark(); });
 tkRender();
-$('boxReset').addEventListener('click', function(){ if(busy) return; if(!last){ load(); return; } shownId = last.id; out = []; start(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; load(); });
+$('boxReset').addEventListener('click', function(){ if(busy) return; if(!last){ load(); return; } shownId = last.id; out = []; start(); predMark(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; load(); });
 $('boxBox').innerHTML = grid();
 load(); setInterval(function(){ if(!document.hidden) load(); }, 30000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
