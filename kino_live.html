@@ -2574,10 +2574,10 @@ function bxShakeAnim(done){
   // ποιος μιλάει πρώτος: τυχαίο — εκτός αν η ατάκα είναι «δεμένη» με πρόσωπο (όνομα, γυαλιά, κουκούλα…)
   var TK = bxTalkPick(), fixed = /Σπύρ|Ηρακλ|Οχτ[αά]ρ|γυαλι|κουκούλ|γένια|μπούκλ/.test(TK[0]+' '+TK[1]), first = L, second = R;
   if(!fixed && Math.random() < 0.5){ first = R; second = L; }
-  bxSay(first, TK[0]); setTimeout(function(){ bxSay(second, TK[1]); }, 900);
+  bxSay(first, TK[0]); setTimeout(function(){ bxSay(second, TK[1]); }, 1300);
   var seq = [[0,0],[-1,0],[1,0],[-1,0],[0,-1],[0,1],[0,-1],[1,0],[-1,0],[0,1],[0,-1],[.7,0],[-.6,0],[0,.4],[0,0]];
   for(var q=1;q<seq.length-1;q++){ seq[q] = [seq[q][0]*(0.7+Math.random()*0.5), seq[q][1]*(0.7+Math.random()*0.5)]; }
-  var seg = 85, T = seg*(seq.length-1), t0 = null;
+  var seg = 170, T = seg*(seq.length-1), t0 = null;
   function px2u(el){ var w = el.getBoundingClientRect().width || 80; return 120/w; }
   var uL = px2u(L), uR = px2u(R);
   function step(ts){ if(t0===null) t0 = ts; var t = Math.min(ts-t0, T), k = Math.min(Math.floor(t/seg), seq.length-2), f = (t - k*seg)/seg; f = f<.5 ? 2*f*f : 1-Math.pow(-2*f+2,2)/2;
@@ -2585,7 +2585,7 @@ function bxShakeAnim(done){
     box.style.transform = 'translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px)';
     bxSetArms(L, dx*uL, dy*uL);      // αριστερός: δεξιά = σπρώχνει
     bxSetArms(R, -dx*uR, dy*uR);     // δεξιός (καθρέφτης): δεξιά = τραβάει
-    if(t < T) requestAnimationFrame(step); else { setTimeout(function(){ bxSay(L, ''); bxSay(R, ''); }, 2200); box.style.transform = ''; bxSetArms(L,0,0); bxSetArms(R,0,0); if(done) done(); } }
+    if(t < T) requestAnimationFrame(step); else { setTimeout(function(){ bxSay(L, ''); bxSay(R, ''); }, 4500); box.style.transform = ''; bxSetArms(L,0,0); bxSetArms(R,0,0); if(done) done(); } }
   requestAnimationFrame(step);
 }
 var boxBusy = false, boxLastShown = null, boxOut = [];
@@ -2618,7 +2618,7 @@ $('boxGo').addEventListener('click', function(){ if(boxBusy) return; var last = 
     $('boxTxt').textContent = st.stay+' έμειναν · '+st.l+'⬅ · '+st.r+'➡ · '+st.u+'⬆ · '+st.d+'⬇  ·  🔴 έμειναν · ⚪ μετακινήθηκαν';
     $('boxRes').innerHTML = '<div style="font-size:18px;font-weight:800;letter-spacing:1px;margin-bottom:8px">'+boxOut.join(' ')+'</div><button class="btn" id="boxToMy">➕ Στα δελτία μου</button> <button class="btn" id="boxToMan">🕹️ Στον Χειροκίνητο</button>';
     boxBusy = false;
-  }, 2750);
+  }, 4000);
 });
 $('boxRes').addEventListener('click', function(e){ var t = e.target; if(!boxOut.length) return;
   if(t.id==='boxToMy'){ if(boxOut.length>12){ alert('Δελτίο ΚΙΝΟ παίρνει μέχρι 12 αριθμούς.'); return; } var nd = askDraws(); if(!nd) return; myAdd(boxOut, nd, '📦 Κουτάκι'); t.textContent = '✓ Μπήκε'; }
