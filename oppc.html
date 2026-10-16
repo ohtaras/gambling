@@ -30,6 +30,8 @@ select{background:#1e293b;color:var(--text);border:1px solid #334155;border-radi
 #boxRes{text-align:center}
 .nums{font-size:22px;font-weight:900;letter-spacing:1px;margin:6px 0 10px;color:#fde68a}
 footer{text-align:center;font-size:11px;margin-top:14px}
+.cdw{display:flex;justify-content:center;align-items:baseline;gap:8px;margin:0 0 10px;font-size:13px}.cdw b{font-size:22px;font-variant-numeric:tabular-nums;color:#fde68a;letter-spacing:1px}.cdw.now b{color:#4ade80}
+.disc{margin:12px 2px 0;font-size:11.5px;color:#94a3b8}.disc summary{cursor:pointer;font-weight:700;color:#cbd5e1}.disc p{margin:6px 0 0;line-height:1.5}
 .ghost{color:transparent;user-select:text;-webkit-user-select:text}.ghost::selection{color:#fff;background:#2563eb}@keyframes bxJig{0%{transform:translate(0,0)}20%{transform:translate(var(--a1),var(--b1))}40%{transform:translate(var(--a2),var(--b2))}60%{transform:translate(var(--a3),var(--b3))}80%{transform:translate(var(--a4),var(--b4))}100%{transform:translate(0,0)}}.bxb.jig{animation:bxJig var(--jd,.6s) ease-in-out infinite}#boxTxt,#boxTxt *{color:transparent!important}#boxTxt::selection,#boxTxt *::selection{color:#fff!important;background:#2563eb}
 .credit{text-align:right;font-size:11px;color:#64748b;margin:10px 2px 0;letter-spacing:.3px}.credit b{color:#94a3b8;font-weight:700}
 .rg{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 8px;font-size:10.5px;line-height:1.45;font-weight:700;letter-spacing:.2px;color:#cbd5e1;border-top:1px solid #23304d;padding-top:12px}.rg a{color:inherit;text-decoration:none}.rg .eeep{display:block;width:100%}.rg .eeep img{height:64px;width:auto;border-radius:6px;display:block;margin:0 auto 4px}
@@ -60,6 +62,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   <header><img src="https://ohtaras.github.io/gambling/img/oppc.svg" alt="" onerror="this.style.display='none'"><h1>Τράβα ρε 😜<small id="lastInfo">Φορτώνω την τελευταία κλήρωση…</small></h1></header>
   <div class="shop"><b>Οχταράς &amp; Πετρόπουλος</b><span class="aw">Αγίας Τριάδος 43, Πάτρα · Πρακτορείο <img src="https://ohtaras.github.io/gambling/img/allwyn.png" alt="Allwyn"> <b>Allwyn</b></span></div>
   <div class="card">
+    <div class="cdw"><span class="muted">⏱️ Επόμενη κλήρωση <span id="cdId"></span></span><b id="cdT">--:--</b></div>
     <div class="ctrl">
       <button class="btn" id="boxGo" disabled>📦 Κούνα το!</button><button class="btn2" id="boxPred" disabled title="Δείξε ξανά τους αριθμούς του τελευταίου κουνήματος">🔮 Δείτε την τελευταία πρόβλεψη</button>
       <label class="muted" style="font-size:14px">Πόσους: <select id="boxN"><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option selected>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>18</option><option>20</option></select></label>
@@ -73,6 +76,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   </div>
   <div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-weight:800;font-size:16px">🎫 Τα δελτία μου <span id="tkCnt" class="muted" style="font-weight:400;font-size:13px"></span></div><label class="sw"><span style="font-size:13px">🟢 2η ευκαιρία</span><input type="checkbox" id="scSw"><span class="tr"></span><b id="scLbl" style="font-size:13px;min-width:28px">ΟΧΙ</b></label></div><div id="tkList"></div></div>
   <footer class="rg"><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" class="eeep"><img src="https://ohtaras.github.io/gambling/img/eeep.png" alt="ΕΕΕΠ — Επιτροπή Εποπτείας και Ελέγχου Παιγνίων"></a><span><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener">18+ ΕΠΙΓΕΙΟ, 21+ ΨΗΦΙΑΚΟ | ΑΡΜΟΔΙΟΣ ΡΥΘΜΙΣΤΗΣ ΕΕΕΠ | ΚΙΝΔΥΝΟΣ ΕΘΙΣΜΟΥ &amp; ΑΠΩΛΕΙΑΣ ΠΕΡΙΟΥΣΙΑΣ | ΕΟΠΑΕ – ΓΡΑΜΜΗ ΣΥΜΒΟΥΛΕΥΤΙΚΗΣ:</a> <a href="tel:1114" style="white-space:nowrap">1114</a> <a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" style="white-space:nowrap">| ΠΑΙΞΕ ΥΠΕΥΘΥΝΑ</a></span></footer>
+  <details class="disc"><summary>⚠️ Αποποίηση ευθύνης</summary><p>Η σελίδα «Τράβα ρε» είναι <b>ψυχαγωγική</b> και δεν προβλέπει αποτελέσματα. Οι κληρώσεις ΚΙΝΟ είναι τυχαίες: κάθε αριθμός και κάθε συνδυασμός έχει την ίδια πιθανότητα, ό,τι κι αν δείχνει το «κούνημα» ή οποιαδήποτε στατιστική. Τα αποτελέσματα εμφανίζονται από δημόσια δεδομένα και μπορεί να καθυστερούν ή να περιέχουν λάθη· ισχύουν μόνο τα επίσημα αποτελέσματα της Allwyn/ΟΠΑΠ. Τα «δελτία» της σελίδας είναι εικονικά — η σελίδα δεν δέχεται στοιχήματα ούτε πληρωμές. Ο δημιουργός δεν φέρει καμία ευθύνη για αποφάσεις παιχνιδιού ή για τυχόν απώλειες. Μόνο για ενήλικες 18+. Παίξτε υπεύθυνα.</p></details>
   <div class="credit">Created by <b>Σπύρος Οχτάρας</b> · © 2026</div>
 </div>
 <script>
@@ -169,6 +173,7 @@ function bxShakeAnim(done){
 }
 
 var API = 'https://api.opap.gr/draws/v3.0/1100/last-result-and-active';
+var NEXT = null, cdPoll = 0;
 var last = null, view = null, busy = false, shownId = null, out = [], NAV = {};
 function cur(){ return view || last; }
 function boxPos(n){ var r = Math.floor((n-1)/10), c = (n-1)%10; return {l:(c*10+0.5)+'%', t:(r*12.5+1.25)+'%'}; }
@@ -182,7 +187,7 @@ function start(){ var box = $('boxBox'); box.innerHTML = grid(); var balls = {},
 async function load(){
   try{
     var r = await fetch(API+'?_='+Date.now(), {cache:'no-store'}); if(!r.ok) throw new Error(r.status);
-    var j = await r.json(), c = j.last || j; var w = c.winningNumbers || {};
+    var j = await r.json(), c = j.last || j; var w = c.winningNumbers || {}; if(j.active && j.active.drawTime){ NEXT = {id:j.active.drawId, t:j.active.drawTime}; }
     var d = {id:c.drawId, t:c.drawTime, arr:(w.list||[]).slice(), sc:(w.secondChance||[]).slice()};
     if(!d.arr.length) throw new Error('empty');
     var isNew = !last || last.id!==d.id; last = d; window.__lastId = d.id; NAV[d.id] = d; navUpd(); $('boxGo').disabled = false; if(isNew) tkCheck();
@@ -309,6 +314,12 @@ $('navBar').addEventListener('click', function(e){ var b = e.target.closest && e
 document.addEventListener('keydown', function(e){ if(e.key==='ArrowLeft' && cur()) navTo(cur().id-1,-1); if(e.key==='ArrowRight' && view) navTo(cur().id+1,1); });
 $('scSw').addEventListener('change', function(){ lsSet('trv_sc', this.checked?'1':'0'); tkRender(); predEval(); Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb.pk'), function(b){ b.classList.remove('pk'); }); predMark(); });
 tkRender();
+function cdTick(){ var nt = NEXT ? NEXT.t : (last ? last.t + 300000 : 0); if(!nt) return;
+  var ms = nt - Date.now(), w = $('cdT').parentNode;
+  $('cdId').textContent = NEXT ? '#'+NEXT.id : '';
+  if(ms > 0){ var m = Math.floor(ms/60000), sx = Math.floor(ms/1000)%60; $('cdT').textContent = (m<10?'0':'')+m+':'+(sx<10?'0':'')+sx; w.classList.remove('now'); }
+  else { $('cdT').textContent = 'τώρα! 🎱'; w.classList.add('now'); if(Date.now() - cdPoll > 5000){ cdPoll = Date.now(); load(); } } }
+setInterval(cdTick, 1000);
 $('boxBox').innerHTML = grid();
 load(); setInterval(function(){ if(!document.hidden) load(); }, 30000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
