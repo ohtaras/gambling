@@ -30,7 +30,8 @@ select{background:#1e293b;color:var(--text);border:1px solid #334155;border-radi
 #boxRes{text-align:center}
 .nums{font-size:22px;font-weight:900;letter-spacing:1px;margin:6px 0 10px;color:#fde68a}
 footer{text-align:center;font-size:11px;margin-top:14px}
-.rg{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 8px;font-size:10.5px;line-height:1.45;font-weight:700;letter-spacing:.2px;color:#cbd5e1;border-top:1px solid #23304d;padding-top:12px}.rg a{color:inherit;text-decoration:none}.rg .eeep{display:inline-block;border:2px solid #cbd5e1;border-radius:6px;padding:2px 7px;font-size:13px;font-weight:900;letter-spacing:1px}
+.rg{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 8px;font-size:10.5px;line-height:1.45;font-weight:700;letter-spacing:.2px;color:#cbd5e1;border-top:1px solid #23304d;padding-top:12px}.rg a{color:inherit;text-decoration:none}.rg .eeep{display:block;width:100%}.rg .eeep img{height:64px;width:auto;border-radius:6px;display:block;margin:0 auto 4px}
+.aw img{width:20px;height:20px;vertical-align:-5px;margin:0 2px 0 3px}
 .nav{display:flex;justify-content:center;gap:6px;margin:0 0 10px}.nav button{flex:1;max-width:84px;background:#1e293b;color:var(--text);border:1px solid #334155;border-radius:999px;padding:9px 0;font-size:15px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .nav button:active{transform:scale(.94)}.nav button:disabled{opacity:.35}.nav .lv{max-width:96px;background:#14532d;border-color:#22c55e}.nav .lv.off{background:#1e293b;border-color:#334155;color:#94a3b8}
 #boxBox.sl{animation:bxSl .25s ease-out}@keyframes bxSl{from{opacity:.3;transform:translateX(var(--sx,0))}to{opacity:1;transform:none}}
@@ -55,7 +56,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
 <body>
 <div class="wrap">
   <header><img src="https://ohtaras.github.io/gambling/img/oppc.svg" alt="" onerror="this.style.display='none'"><h1>Τράβα ρε 😜<small id="lastInfo">Φορτώνω την τελευταία κλήρωση…</small></h1></header>
-  <div class="shop"><b>Οχταράς &amp; Πετρόπουλος</b><span>Αγίας Τριάδος 43, Πάτρα · Πρακτορείο <b>Allwyn</b></span></div>
+  <div class="shop"><b>Οχταράς &amp; Πετρόπουλος</b><span class="aw">Αγίας Τριάδος 43, Πάτρα · Πρακτορείο <img src="https://ohtaras.github.io/gambling/img/allwyn.png" alt="Allwyn"> <b>Allwyn</b></span></div>
   <div class="card">
     <div class="ctrl">
       <button class="btn" id="boxGo" disabled>📦 Κούνα το!</button><button class="btn2" id="boxPred" disabled title="Δείξε ξανά τους αριθμούς του τελευταίου κουνήματος">🔮 Δείτε την τελευταία πρόβλεψη</button>
@@ -69,7 +70,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
     <div id="predEval"></div>
   </div>
   <div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-weight:800;font-size:16px">🎫 Τα δελτία μου <span id="tkCnt" class="muted" style="font-weight:400;font-size:13px"></span></div><label class="sw"><span style="font-size:13px">🟣 2η ευκαιρία</span><input type="checkbox" id="scSw"><span class="tr"></span><b id="scLbl" style="font-size:13px;min-width:28px">ΟΧΙ</b></label></div><div id="tkList"></div></div>
-  <footer class="rg"><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" class="eeep">ΕΕΕΠ</a><span><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener">18+ ΕΠΙΓΕΙΟ, 21+ ΨΗΦΙΑΚΟ | ΑΡΜΟΔΙΟΣ ΡΥΘΜΙΣΤΗΣ ΕΕΕΠ | ΚΙΝΔΥΝΟΣ ΕΘΙΣΜΟΥ &amp; ΑΠΩΛΕΙΑΣ ΠΕΡΙΟΥΣΙΑΣ | ΕΟΠΑΕ – ΓΡΑΜΜΗ ΣΥΜΒΟΥΛΕΥΤΙΚΗΣ:</a> <a href="tel:1114" style="white-space:nowrap">1114</a> <a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" style="white-space:nowrap">| ΠΑΙΞΕ ΥΠΕΥΘΥΝΑ</a></span></footer>
+  <footer class="rg"><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" class="eeep"><img src="https://ohtaras.github.io/gambling/img/eeep.png" alt="ΕΕΕΠ — Επιτροπή Εποπτείας και Ελέγχου Παιγνίων"></a><span><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener">18+ ΕΠΙΓΕΙΟ, 21+ ΨΗΦΙΑΚΟ | ΑΡΜΟΔΙΟΣ ΡΥΘΜΙΣΤΗΣ ΕΕΕΠ | ΚΙΝΔΥΝΟΣ ΕΘΙΣΜΟΥ &amp; ΑΠΩΛΕΙΑΣ ΠΕΡΙΟΥΣΙΑΣ | ΕΟΠΑΕ – ΓΡΑΜΜΗ ΣΥΜΒΟΥΛΕΥΤΙΚΗΣ:</a> <a href="tel:1114" style="white-space:nowrap">1114</a> <a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" style="white-space:nowrap">| ΠΑΙΞΕ ΥΠΕΥΘΥΝΑ</a></span></footer>
 </div>
 <script>
 (function(){
