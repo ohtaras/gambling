@@ -336,9 +336,9 @@ function cdTick(){ var nt = NEXT ? NEXT.t : (last ? last.t + 300000 : 0); if(!nt
 setInterval(cdTick, 1000);
 /* ---------- 🎬 Σκηνή: στο κινητό, όσο κουνάνε, όλα σβήνουν και ο Σπύρος, ο Ηρακλής και το κουτί έρχονται μπροστά ---------- */
 var STAGE = false;
-function stageOn(){ if(!(window.matchMedia && matchMedia('(pointer:coarse)').matches)) return;
+function stageOn(){
   var w = $('boxWrap'); w.style.transform = ''; var r = w.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight;
-  var sc = Math.min(vw*0.98/r.width, (vh*0.86)/(r.height+40)); if(sc < 1) sc = 1;
+  var sc = Math.min(vw*0.98/r.width, (vh*0.86)/(r.height+40)); if(sc < 1) sc = 1; if(sc > 1.8) sc = 1.8;
   var tx = (vw - r.width*sc)/2 - r.left, ty = (vh - r.height*sc)/2 + 20 - r.top;
   STAGE = true; document.body.classList.add('stage'); requestAnimationFrame(function(){ w.style.transform = 'translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+sc.toFixed(3)+')'; }); }
 function stageOff(){ if(!STAGE) return; STAGE = false; $('boxWrap').style.transform = ''; document.body.classList.remove('stage'); }
