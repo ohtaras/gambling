@@ -69,7 +69,7 @@ body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
 .chip{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:50%;background:#1e293b;border:1px solid #334155;font-weight:800;font-size:13px;margin:2px}
 .chip.sch{background:radial-gradient(circle at 35% 30%,#d9ffd9,#22c55e 55%,#15803d);color:#0b2d14;border-color:#15803d}
 .sw{display:inline-flex;align-items:center;gap:7px;cursor:pointer;user-select:none}.sw input{display:none}.sw .tr{width:42px;height:24px;border-radius:12px;background:#334155;position:relative;transition:background .2s}
-.sw .tr:after{content:'';position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}.sw input:checked+.tr{background:#16a34a}.sw input:checked+.tr:after{left:21px}
+.sw .tr:after{content:'';position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}.sw input:checked+.tr{background:#16a34a}.sw.kb input:checked+.tr{background:#dc2626}.sw input:checked+.tr:after{left:21px}
 .chip.hit{background:radial-gradient(circle at 35% 30%,#fff7b0,#facc15 55%,#ca8a04);color:#111;border-color:#ca8a04}
 table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}table.dr td{padding:4px 3px;border-top:1px solid #1f2a44}
 .win{color:#4ade80;font-weight:800}
@@ -82,7 +82,8 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   <div class="mhd"><b>☰ Μενού</b><button id="menuX" aria-label="Κλείσιμο">✕</button></div>
   <section id="mSet"><h3>⚙️ Ρυθμίσεις</h3>
     <div class="mrow" id="mShakeRow"><div><b>📳 Ενεργοποίηση Shake</b><div class="muted" id="mShakeTxt">Κούνα δυνατά το κινητό και ο Σπύρος με τον Ηρακλή κουνάνε το κουτί!</div></div><button class="btn2" id="shakeOn" >📳 Κούνα το κινητό</button></div>
-    <div class="mrow"><div><b>🟢 2η ευκαιρία στα δελτία</b><div class="muted">Αξιολόγηση των δελτίων και της πρόβλεψης μαζί με τη 2η ευκαιρία (1€/κλήρωση).</div></div><button class="btn2" id="mSc">ΟΧΙ</button></div>
+    <div class="mrow"><div><b>🟢 2η ευκαιρία στα δελτία</b><div class="muted">Αξιολόγηση μαζί με τη 2η ευκαιρία (1€/κλήρωση).</div></div><button class="btn2" id="mSc">ΟΧΙ</button></div>
+    <div class="mrow"><div><b>🔴 ΚΙΝΟ Bonus στα δελτία</b><div class="muted">Αν ο αριθμός Bonus είναι στους αριθμούς που πέτυχες, πληρώνει ο πίνακας ΚΙΝΟ Bonus (1€/κλήρωση). Δεν παίζεται μαζί με τη 2η ευκαιρία.</div></div><button class="btn2" id="mKb">ΟΧΙ</button></div>
       </section>
   <section id="mAbout"><h3>ℹ️ Ποιοι είμαστε</h3>
     <p><b>Οχταράς &amp; Πετρόπουλος ΙΚΕ</b> — πρακτορείο <b>Allwyn</b> στην Πάτρα, στην <b>Αγίας Τριάδος 43</b>.</p>
@@ -120,7 +121,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
     <div id="boxRes"></div>
     <div id="predEval"></div>
   </div>
-  <div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-weight:800;font-size:16px">🎫 Τα δελτία μου <span id="tkCnt" class="muted" style="font-weight:400;font-size:13px"></span></div><label class="sw"><span style="font-size:13px">🟢 2η ευκαιρία</span><input type="checkbox" id="scSw"><span class="tr"></span><b id="scLbl" style="font-size:13px;min-width:28px">ΟΧΙ</b></label></div><div id="tkList"></div></div>
+  <div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-weight:800;font-size:16px">🎫 Τα δελτία μου <span id="tkCnt" class="muted" style="font-weight:400;font-size:13px"></span></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><label class="sw"><span style="font-size:13px">🟢 2η ευκαιρία</span><input type="checkbox" id="scSw"><span class="tr"></span><b id="scLbl" style="font-size:13px;min-width:28px">ΟΧΙ</b></label><label class="sw kb"><span style="font-size:13px">🔴 ΚΙΝΟ Bonus</span><input type="checkbox" id="kbSw"><span class="tr"></span><b id="kbLbl" style="font-size:13px;min-width:28px">ΟΧΙ</b></label></div></div><div id="tkList"></div></div>
   <footer class="rg"><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" class="eeep"><img src="https://ohtaras.github.io/gambling/img/eeep.png" alt="ΕΕΕΠ — Επιτροπή Εποπτείας και Ελέγχου Παιγνίων"></a><span><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener">18+ ΕΠΙΓΕΙΟ, 21+ ΨΗΦΙΑΚΟ | ΑΡΜΟΔΙΟΣ ΡΥΘΜΙΣΤΗΣ ΕΕΕΠ | ΚΙΝΔΥΝΟΣ ΕΘΙΣΜΟΥ &amp; ΑΠΩΛΕΙΑΣ ΠΕΡΙΟΥΣΙΑΣ | ΕΟΠΑΕ – ΓΡΑΜΜΗ ΣΥΜΒΟΥΛΕΥΤΙΚΗΣ:</a> <a href="tel:1114" style="white-space:nowrap">1114</a> <a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" style="white-space:nowrap">| ΠΑΙΞΕ ΥΠΕΥΘΥΝΑ</a></span></footer>
   <div class="disc"><a href="#" id="discLink">⚠️ Αποποίηση ευθύνης &amp; όροι χρήσης</a> · <a href="#" id="aboutLink">ℹ️ Ποιοι είμαστε</a></div>
   <div class="credit">Created by <b>Σπύρος Οχτάρας</b> · © 2026</div>
@@ -219,7 +220,7 @@ function bxShakeAnim(done){
 }
 
 var API = 'https://api.opap.gr/draws/v3.0/1100/last-result-and-active';
-var NEXT = null, cdPoll = 0;
+var NEXT = null, cdPoll = 0, WAIT = false, WAITED = 0, waitTO = 0;
 var last = null, view = null, busy = false, shownId = null, out = [], NAV = {};
 function cur(){ return view || last; }
 function boxPos(n){ var r = Math.floor((n-1)/10), c = (n-1)%10; return {l:(c*10+0.5)+'%', t:(r*12.5+1.25)+'%'}; }
@@ -274,19 +275,19 @@ function predText(P, replay){
 async function predEval(){
   var el = $('predEval'); if(!PRED){ el.innerHTML = ''; return; }
   var nums = PRED.moves.map(function(m){ return m[1]; }).sort(function(a,b){return a-b;}), K = nums.length, cv = cur(), nid = (cv && cv.id > PRED.id) ? cv.id : PRED.id+1, d = null;
-  if(cv && cv.id===nid) d = {t:cv.t, list:cv.arr, sc:cv.sc||[]};
-  else if(last && last.id===nid) d = {t:last.t, list:last.arr, sc:last.sc||[]};
-  else if(DR[nid]) d = {t:DR[nid][0], list:DR[nid][1], sc:DR[nid][2]||[]};
-  else if(NAV[nid]) d = {t:NAV[nid].t, list:NAV[nid].arr, sc:NAV[nid].sc||[]};
+  if(cv && cv.id===nid) d = {t:cv.t, list:cv.arr, sc:cv.sc||[], b:cv.b};
+  else if(last && last.id===nid) d = {t:last.t, list:last.arr, sc:last.sc||[], b:last.b};
+  else if(DR[nid]) d = {t:DR[nid][0], list:DR[nid][1], sc:DR[nid][2]||[], b:DR[nid][3]};
+  else if(NAV[nid]) d = {t:NAV[nid].t, list:NAV[nid].arr, sc:NAV[nid].sc||[], b:NAV[nid].b};
   else if(last && last.id>nid){ try{ var r = await fetch('https://api.opap.gr/draws/v3.0/1100/'+nid+'?_='+Date.now(), {cache:'no-store'}); if(r.ok){ var c = await r.json(), w = c.winningNumbers||{}; if(w.list&&w.list.length){ d = {t:c.drawTime, list:w.list, sc:w.secondChance||[]}; DR[nid] = [d.t, d.list, d.sc]; } } }catch(e){} }
   var chips = function(set, ss){ return nums.map(function(x){ return '<span class="chip'+(set&&set[x]?' hit':(ss&&ss[x]?' sch':''))+'">'+x+'</span>'; }).join(''); };
   if(!d){ el.innerHTML = '<div class="pe"><b>🔮 Τελευταία πρόβλεψη</b> <span class="muted">(από #'+PRED.id+' · '+hm(PRED.t)+')</span><div style="margin:6px 0">'+chips()+'</div>⏳ Περιμένει την κλήρωση <b>#'+nid+'</b> για να αξιολογηθεί.</div>'; return; }
   var SC = useSC(), set = {}, ss = {}; d.list.forEach(function(x){ set[x] = 1; }); if(SC) d.sc.forEach(function(x){ ss[x] = 1; });
   var a = nums.filter(function(x){ return set[x]; }).length, b2 = nums.filter(function(x){ return ss[x]; }).length;
-  var w = K<=12 ? (SC ? scWin(K,a,b2) : ((PAYS[K]||{})[a]||0)) : null, cost = SC ? 1 : STAKE;
+  var KB = useKB(), bh = KB && d.b && nums.indexOf(d.b)>=0, w = K<=12 ? (SC ? scWin(K,a,b2) : (KB ? kbWin(K,a,bh) : ((PAYS[K]||{})[a]||0))) : null, cost = modeCost();
   el.innerHTML = '<div class="pe"><b>🔮 Τελευταία πρόβλεψη</b> <span class="muted">(από #'+PRED.id+' · '+hm(PRED.t)+')</span><div style="margin:6px 0">'+chips(set, ss)+'</div>'+
     'Στην κλήρωση <b>#'+nid+' · '+hm(d.t)+'</b>'+(nid-PRED.id>1?' <span class="muted">('+(nid-PRED.id)+'η μετά την πρόβλεψη)</span>':' <span class="muted">(η επόμενη)</span>')+': <b style="font-size:16px">'+a+(b2?'<span style="color:#4ade80">+'+b2+'</span>':'')+'/'+K+'</b>'+
-    (w===null ? ' <span class="muted">(πάνω από 12 αριθμούς — χωρίς κέρδη)</span>' : ' · '+(w ? '<span class="win">κέρδος '+eur(w)+'</span>' : '<span class="muted">χωρίς κέρδος</span>')+' <span class="muted">για '+eur(cost)+(SC?' με 2η ευκαιρία':'')+'</span>')+'</div>';
+    (w===null ? ' <span class="muted">(πάνω από 12 αριθμούς — χωρίς κέρδη)</span>' : ' · '+(w ? '<span class="win">κέρδος '+eur(w)+'</span>' : '<span class="muted">χωρίς κέρδος</span>')+(bh?' <b style="color:#f87171">🔴 Bonus '+d.b+'!</b>':'')+' <span class="muted">για '+eur(cost)+(SC?' με 2η ευκαιρία':(KB?' με ΚΙΝΟ Bonus':''))+'</span>')+'</div>';
 }
 function predMark(){ if(!PRED || !cur() || cur().id <= PRED.id) return; var P = {}; PRED.moves.forEach(function(m){ P[m[1]] = 1; }); Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb'), function(b){ if(P[+b.textContent] && (useSC() || !b.classList.contains('sc'))) b.classList.add('pk'); }); }
 function predShow(){ if(busy || !PRED) return; var box = $('boxBox'); box.innerHTML = grid(); shownId = -1;
@@ -308,38 +309,49 @@ var SCPAYS = {12:{12:500000,11:6250,10:625,9:250,8:37.5,7:8,6:3}, 11:{11:250000,
   10:{10:50000,9:2500,8:125,7:25,6:8,5:1.5}, 9:{9:20000,8:1000,7:50,6:7.5,5:2,4:1}, 8:{8:7500,7:250,6:17.5,5:4,4:1.5}, 7:{7:2500,6:40,5:8,4:1.5,3:1}, 6:{6:800,5:20,4:3.5,3:1},
   5:{5:225,4:12.5,3:1.5}, 4:{4:62.5,3:4,2:1.75}, 3:{3:25,2:3.75}, 2:{2:8,1:3.5}, 1:{1:8.5}};
 function scWin(K,a,b){ var m = (PAYS[K]||{})[a]||0; return b>0 ? Math.max(m, (SCPAYS[K]||{})[a+b]||0) : m; }
-function useSC(){ return lsGet('trv_sc')==='1'; }
+function trvMode(){ var m = lsGet('trv_mode'); if(m===null){ m = lsGet('trv_sc')==='1' ? 'sc' : ''; } return m || ''; }
+function setMode(m){ lsSet('trv_mode', m); lsSet('trv_sc', m==='sc'?'1':'0'); }
+function useSC(){ return trvMode()==='sc'; }
+function useKB(){ return trvMode()==='kb'; }
+// ΚΙΝΟ BONUS: αν ο αριθμός Bonus είναι μέσα στους αριθμούς που πέτυχες, πληρώνει ο πίνακας KINO BONUS (ανά 1€ → /2 για βάση 0,50€)
+var KBPAYS = {1:{1:52.5}, 2:{2:70,1:16}, 3:{3:175,2:18,1:8}, 4:{4:600,3:24,2:8,1:5}, 5:{5:1350,4:90,3:17,2:5,1:3}, 6:{6:4100,5:300,4:27,3:9,2:3,1:2},
+  7:{7:15000,6:400,5:80,4:13,3:8,2:3,1:2}, 8:{8:40000,7:3000,6:200,5:30,4:7,3:4,2:3,1:2}, 9:{9:100000,8:10000,7:500,6:70,5:15,4:6,3:4,2:3,1:2},
+  10:{10:250000,9:25000,8:1500,7:180,6:60,5:7,4:4,3:3,2:2.5,1:2}, 11:{11:1200000,10:31000,9:3500,8:550,7:105,6:25,5:6,4:4,3:3,2:2.5,1:2},
+  12:{12:2000000,11:75000,10:5500,9:2200,8:350,7:50,6:10,5:4,4:3.5,3:3,2:2.5,1:2}};
+function kbWin(K, a, bonusHit){ var base = (PAYS[K]||{})[a]||0; if(!bonusHit) return base; return Math.max(base, ((KBPAYS[K]||{})[a]||0)/2); }
+function modeCost(){ return trvMode() ? 1 : STAKE; }
+function modeLbl(){ var m = trvMode(); return m==='sc' ? ' (1€/κλήρωση με 2η ευκαιρία)' : (m==='kb' ? ' (1€/κλήρωση με ΚΙΝΟ Bonus)' : ' (0,50€/κλήρωση)'); }
 var STAKE = 0.5, DR = {};
 function eur(x){ return x.toLocaleString('el-GR',{minimumFractionDigits:2, maximumFractionDigits:2})+'€'; }
 function tkLoad(){ try{ return JSON.parse(lsGet('trv_tk')||'[]'); }catch(e){ return []; } }
 function tkSave(T){ lsSet('trv_tk', JSON.stringify(T)); }
-(function(){ try{ var c = JSON.parse(lsGet('trv_dr2')||'{}'); for(var k in c) DR[k] = c[k]; }catch(e){} })();
-function drSave(){ var T = tkLoad(), keep = {}; T.forEach(function(t){ for(var i=0;i<t.draws;i++){ var id = t.start+i; if(DR[id]) keep[id] = DR[id]; } }); DR = keep; lsSet('trv_dr2', JSON.stringify(keep)); }
+(function(){ try{ var c = JSON.parse(lsGet('trv_dr3')||'{}'); for(var k in c) DR[k] = c[k]; }catch(e){} })();
+function drSave(){ var T = tkLoad(), keep = {}; T.forEach(function(t){ for(var i=0;i<t.draws;i++){ var id = t.start+i; if(DR[id]) keep[id] = DR[id]; } }); DR = keep; lsSet('trv_dr3', JSON.stringify(keep)); }
 async function tkCheck(){
   var T = tkLoad(); if(!T.length || !last) { tkRender(); return; }
   var need = []; T.forEach(function(t){ for(var i=0;i<t.draws;i++){ var id = t.start+i; if(id<=last.id && !DR[id]) need.push(id); } });
   if(need.length){ var lo = Math.min.apply(null, need), hi = Math.max.apply(null, need);
     try{ for(var pg=0; pg<40; pg++){
         var r = await fetch('https://api.opap.gr/draws/v3.0/1100/draw-id/'+lo+'/'+hi+'?page='+pg+'&_='+Date.now(), {cache:'no-store'}); if(!r.ok) break;
-        var j = await r.json(); (j.content||[]).forEach(function(c){ if(c.winningNumbers && c.winningNumbers.list && c.winningNumbers.list.length) DR[c.drawId] = [c.drawTime, c.winningNumbers.list, c.winningNumbers.secondChance||[]]; });
+        var j = await r.json(); (j.content||[]).forEach(function(c){ if(c.winningNumbers && c.winningNumbers.list && c.winningNumbers.list.length) DR[c.drawId] = [c.drawTime, c.winningNumbers.list, c.winningNumbers.secondChance||[], (c.winningNumbers.bonus||[])[0]]; });
         if(j.last || pg >= (j.totalPages||1)-1) break; }
     }catch(e){}
     drSave(); }
   tkRender();
 }
 function tkRender(){
-  var T = tkLoad(), SC = useSC(); $('tkCnt').textContent = '('+T.length+'/5)'; $('scSw').checked = SC; $('scLbl').textContent = SC ? 'ΝΑΙ' : 'ΟΧΙ';
+  var T = tkLoad(), SC = useSC(), KB = useKB(); $('tkCnt').textContent = '('+T.length+'/5)'; $('scSw').checked = SC; $('scLbl').textContent = SC ? 'ΝΑΙ' : 'ΟΧΙ'; $('kbSw').checked = KB; $('kbLbl').textContent = KB ? 'ΝΑΙ' : 'ΟΧΙ';
   if(!T.length){ $('tkList').innerHTML = '<div class="muted" style="font-size:13px;margin-top:6px">Κούνα το κουτάκι και πάτα «➕ Προσθήκη στο δελτίο» για να το παρακολουθείς στις επόμενες κληρώσεις. Έως 5 δελτία.</div>'; return; }
   $('tkList').innerHTML = T.map(function(t){
     var K = t.n.length, rows = '', won = 0, done = 0, lastHits = null, best = 0;
     for(var i=0;i<t.draws;i++){ var id = t.start+i, d = DR[id];
       if(!d){ rows += '<tr><td>#'+id+'</td><td colspan="3" class="muted">'+(last && id<=last.id ? 'φορτώνει…' : (last && id===last.id+1 ? '⏳ επόμενη κλήρωση' : 'σε αναμονή'))+'</td></tr>'; continue; }
-      done++; var set = {}, ss = {}; d[1].forEach(function(x){ set[x] = 1; }); (d[2]||[]).forEach(function(x){ ss[x] = 1; }); var hits = t.n.filter(function(x){ return set[x]; }), sh = SC ? t.n.filter(function(x){ return ss[x]; }) : []; var w = SC ? scWin(K, hits.length, sh.length) : ((PAYS[K]||{})[hits.length]||0); won += w; lastHits = {}; for(var hk in set) lastHits[hk] = 1; if(SC) for(var sk2 in ss) lastHits[sk2] = 2; if(hits.length+sh.length>best) best = hits.length+sh.length;
-      rows += '<tr><td>#'+id+' · '+hm(d[0])+'</td><td><b>'+hits.length+(sh.length?'<span style="color:#4ade80">+'+sh.length+'</span>':'')+'/'+K+'</b></td><td class="muted">'+(hits.join(' ')||'—')+(sh.length?' <span style="color:#4ade80">🟢'+sh.join(' ')+'</span>':'')+'</td><td'+(w?' class="win"':'')+'>'+(w?eur(w):'—')+'</td></tr>'; }
-    var cost = t.draws*(SC ? 1 : STAKE), fin = done===t.draws;
+      done++; var set = {}, ss = {}; d[1].forEach(function(x){ set[x] = 1; }); (d[2]||[]).forEach(function(x){ ss[x] = 1; }); var hits = t.n.filter(function(x){ return set[x]; }), sh = SC ? t.n.filter(function(x){ return ss[x]; }) : []; var bh = KB && d[3] && t.n.indexOf(d[3])>=0, w = SC ? scWin(K, hits.length, sh.length) : (KB ? kbWin(K, hits.length, bh) : ((PAYS[K]||{})[hits.length]||0)); won += w; lastHits = {}; for(var hk in set) lastHits[hk] = 1; if(SC) for(var sk2 in ss) lastHits[sk2] = 2; if(hits.length+sh.length>best) best = hits.length+sh.length;
+      rows += '<tr><td>#'+id+' · '+hm(d[0])+'</td><td><b>'+hits.length+(sh.length?'<span style="color:#4ade80">+'+sh.length+'</span>':'')+'/'+K+'</b></td><td class="muted">'+(hits.join(' ')||'—')+(sh.length?' <span style="color:#4ade80">🟢'+sh.join(' ')+'</span>':'')+(bh?' <b style="color:#f87171">🔴B'+d[3]+'</b>':'')+'</td><td'+(w?' class="win"':'')+'>'+(w?eur(w):'—')+'</td></tr>'; }
+    var cost = t.draws*modeCost(), fin = done===t.draws;
     return '<div class="tk"><div class="hd"><span style="font-weight:800">'+K+' αριθμοί · '+t.draws+' κληρώσεις <span class="muted" style="font-weight:400;font-size:12px">από #'+t.start+'</span></span><button class="btn2" data-del="'+t.id+'" style="padding:3px 9px;font-size:12px">🗑</button></div>'+
       '<div style="margin-top:6px">'+t.n.map(function(x){ return '<span class="chip'+(lastHits&&lastHits[x]===1?' hit':(lastHits&&lastHits[x]===2?' sch':''))+'">'+x+'</span>'; }).join('')+'</div>'+
-      '<div style="font-size:13px;margin-top:6px">'+(fin?'✅ Τελείωσε':'▶️ Σε εξέλιξη')+' · '+done+'/'+t.draws+' κληρώσεις · καλύτερο '+best+'/'+K+' · κόστος '+eur(cost)+(SC?' (1€/κλήρωση με 2η ευκαιρία)':' (0,50€/κλήρωση)')+' · κέρδη <span class="'+(won?'win':'')+'">'+eur(won)+'</span></div>'+
+      '<div style="font-size:13px;margin-top:6px">'+(fin?'✅ Τελείωσε':'▶️ Σε εξέλιξη')+' · '+done+'/'+t.draws+' κληρώσεις · καλύτερο '+best+'/'+K+' · κόστος '+eur(cost)+modeLbl()+' · κέρδη <span class="'+(won?'win':'')+'">'+eur(won)+'</span></div>'+
       '<table class="dr">'+rows+'</table></div>';
   }).join('');
 }
@@ -361,40 +373,51 @@ $('navBar').addEventListener('click', function(e){ var b = e.target.closest && e
   el.addEventListener('touchend', function(e){ if(x0===null) return; var t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
     if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)*1.5 && cur()){ if(dx > 0) navTo(cur().id - 1, -1); else if(view) navTo(cur().id + 1, 1); } }, {passive:true}); })();
 document.addEventListener('keydown', function(e){ if(e.key==='ArrowLeft' && cur()) navTo(cur().id-1,-1); if(e.key==='ArrowRight' && view) navTo(cur().id+1,1); });
-$('scSw').addEventListener('change', function(){ lsSet('trv_sc', this.checked?'1':'0'); tkRender(); predEval(); Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb.pk'), function(b){ b.classList.remove('pk'); }); predMark(); });
+function modeChanged(){ $('scSw').checked = useSC(); $('kbSw').checked = useKB(); tkRender(); predEval(); Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb.pk'), function(b){ b.classList.remove('pk'); }); predMark(); try{ menuSync(); }catch(e){} }
+$('scSw').addEventListener('change', function(){ setMode(this.checked ? 'sc' : ''); modeChanged(); });
+$('kbSw').addEventListener('change', function(){ setMode(this.checked ? 'kb' : ''); modeChanged(); });
 tkRender();
 function cdTick(){ var nt = NEXT ? NEXT.t : (last ? last.t + 300000 : 0); if(!nt) return;
   var ms = nt - Date.now(), w = $('cdT').parentNode;
   $('cdId').textContent = NEXT ? '#'+NEXT.id : '';
   if(ms > 0){ var m = Math.floor(ms/60000), sx = Math.floor(ms/1000)%60; $('cdT').textContent = (m<10?'0':'')+m+':'+(sx<10?'0':'')+sx; w.classList.remove('now'); }
-  else { $('cdT').textContent = 'τώρα! 🎱'; w.classList.add('now'); if(Date.now() - cdPoll > 5000){ cdPoll = Date.now(); load(); } } }
+  else { $('cdT').textContent = 'τώρα! 🎱'; w.classList.add('now'); if(!WAIT && !view && !busy && !document.hidden && last && NEXT && NEXT.id > last.id && WAITED !== NEXT.id){ WAITED = NEXT.id; waitStart(); } if(Date.now() - cdPoll > 2000){ cdPoll = Date.now(); load(); } } }
 setInterval(cdTick, 1000);
 /* ---------- 🎱 Νέα κλήρωση: ο Σπύρος και ο Ηρακλής ζωντανεύουν και βάζουν οι ίδιοι τις μπάλες στο κουτί ---------- */
 var BX_NEW = [["Ήρθε νέα κλήρωση! Πιάσε μπάλες!","Μία εγώ, μία εσύ!"],["Φρέσκα νούμερα, ζεστά ακόμα!","Βάλ' τα με προσοχή, μη μας ζαλιστούν!"],["Νέα κλήρωση! Στρώσε το τραπέζι!","Μπαίνουν μία-μία, σαν κουλουράκια!"],["Ορίστε η παραγγελία σας!","Είκοσι κίτρινα κι ένα κόκκινο, παρακαλώ!"],["Πάρε την πράσινη, είναι για 2η ευκαιρία!","Και η κόκκινη για Bonus, μην τη χάσουμε!"],["Ξαναγεμίζουμε το κουτί!","Έτοιμο για νέο κούνημα!"]];
-function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $('bxGuyL'), R = $('bxGuyR');
-  var balls = start(), list = D.arr.concat(D.sc||[]), k = 0;
-  stageOn(); L.classList.add('alive'); R.classList.add('alive');
-  var tk = BX_NEW[Math.floor(Math.random()*BX_NEW.length)]; bxSay(L, tk[0]); setTimeout(function(){ bxSay(R, tk[1]); }, 900);
-  // όλες ξεκινάνε κρυμμένες στα χέρια (άκρες του κουτιού, στο ύψος των χερουλιών)
+var BX_WAIT = [["Έρχεται η κλήρωση! Ετοιμάσου!","Ανακατεύω τις μπάλες…"],["Σσσ… βγαίνουν τα νούμερα!","Κρατάω την ανάσα μου!"],["Τώρα είναι η ώρα!","Πιάσε μπάλες, έρχονται!"],["Ακούγεται το κουτί του ΟΠΑΠ!","Βάλε τα χέρια σου έτοιμα!"]];
+function armThrow(el){ var t0 = null; function st(ts){ if(t0===null) t0 = ts; var f = Math.min((ts-t0)/340, 1), o = Math.sin(Math.PI*f); bxSetArms(el, 9*o, -11*o); if(f < 1) requestAnimationFrame(st); else bxSetArms(el, 0, 0); } requestAnimationFrame(st); }
+function waitStart(){ var L = $('bxGuyL'), R = $('bxGuyR'); WAIT = true; stageOn(); L.classList.add('alive'); R.classList.add('alive');
+  var tk = BX_WAIT[Math.floor(Math.random()*BX_WAIT.length)]; bxSay(L, tk[0]); setTimeout(function(){ if(WAIT) bxSay(R, tk[1]); }, 800);
+  Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb'), function(b){ b.style.opacity = '.35'; var rr = function(){ return ((Math.random()*2-1)*60).toFixed(0)+'%'; }; for(var q=1;q<=4;q++){ b.style.setProperty('--a'+q, rr()); b.style.setProperty('--b'+q, rr()); } b.style.setProperty('--jd', (0.5+Math.random()*0.4).toFixed(2)+'s'); b.classList.add('jig'); });
+  clearTimeout(waitTO); waitTO = setTimeout(waitEnd, 75000); }
+function waitEnd(){ if(!WAIT) return; WAIT = false; $('bxGuyL').classList.remove('alive'); $('bxGuyR').classList.remove('alive'); bxSay($('bxGuyL'),''); bxSay($('bxGuyR'),''); if(!busy) stageOff(); if(last && !view) start(); }
+function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $('bxGuyL'), R = $('bxGuyR'), was = WAIT;
+  WAIT = false; clearTimeout(waitTO);
+  var balls = start(), list = D.arr.concat(D.sc||[]), STEP = 115, D0 = 250;
+  if(!was){ stageOn(); L.classList.add('alive'); R.classList.add('alive'); }
+  var tk = BX_NEW[Math.floor(Math.random()*BX_NEW.length)]; bxSay(L, tk[0]); setTimeout(function(){ bxSay(R, tk[1]); }, 700);
   list.forEach(function(n, i){ var b = balls[n]; if(!b) return; b.dataset.l = b.style.left; b.dataset.t = b.style.top; var fromL = i % 2 === 0;
-    b.style.transition = 'none'; b.style.left = fromL ? '-8%' : '99%'; b.style.top = (50 + Math.random()*14).toFixed(1)+'%'; b.style.opacity = '0'; });
+    b.style.transition = 'none'; b.style.left = fromL ? '-8%' : '99%'; b.style.top = (52 + Math.random()*12).toFixed(1)+'%'; b.style.opacity = '0'; });
   void box.offsetWidth;
   list.forEach(function(n, i){ var b = balls[n]; if(!b) return;
-    setTimeout(function(){ var fromL = i % 2 === 0; bxSetArms(fromL ? L : R, 6, -6); setTimeout(function(){ bxSetArms(fromL ? L : R, 0, 0); }, 160);
-      b.style.transition = 'left .55s cubic-bezier(.3,1.35,.5,1), top .55s cubic-bezier(.3,1.35,.5,1), opacity .2s'; b.style.opacity = '1'; b.style.left = b.dataset.l; b.style.top = b.dataset.t; }, 700 + i*170); });
-  setTimeout(function(){ L.classList.remove('alive'); R.classList.remove('alive'); list.forEach(function(n){ var b = balls[n]; if(b) b.style.transition = ''; }); predMark(); }, 700 + list.length*170 + 700);
-  setTimeout(function(){ bxSay(L,''); bxSay(R,''); if(!busy) stageOff(); }, 700 + list.length*170 + 2600);
+    setTimeout(function(){ armThrow(i % 2 === 0 ? L : R);
+      b.style.transition = 'left .5s cubic-bezier(.3,1.3,.5,1), top .5s cubic-bezier(.3,1.3,.5,1), opacity .15s'; b.style.opacity = '1'; b.style.left = b.dataset.l; b.style.top = b.dataset.t; }, D0 + i*STEP); });
+  setTimeout(function(){ L.classList.remove('alive'); R.classList.remove('alive'); list.forEach(function(n){ var b = balls[n]; if(b) b.style.transition = ''; }); predMark(); }, D0 + list.length*STEP + 600);
+  setTimeout(function(){ bxSay(L,''); bxSay(R,''); if(!busy) stageOff(); }, D0 + list.length*STEP + 2300);
 }
+
 /* ---------- ☰ Μενού ---------- */
 function menuOpen(sec){ document.body.classList.add('menu'); $('menu').setAttribute('aria-hidden','false'); menuSync(); if(sec){ var el = $(sec); if(el) setTimeout(function(){ el.scrollIntoView({behavior:'smooth', block:'start'}); }, 320); } else $('menu').scrollTop = 0; }
 function menuClose(){ document.body.classList.remove('menu'); $('menu').setAttribute('aria-hidden','true'); }
-function menuSync(){ var sc = useSC(); $('mSc').textContent = sc ? 'ΝΑΙ' : 'ΟΧΙ'; $('mSc').style.borderColor = sc ? '#22c55e' : ''; }
+function menuSync(){ var sc = useSC(), kb = useKB(); $('mSc').textContent = sc ? 'ΝΑΙ' : 'ΟΧΙ'; $('mSc').style.borderColor = sc ? '#22c55e' : ''; $('mKb').textContent = kb ? 'ΝΑΙ' : 'ΟΧΙ'; $('mKb').style.borderColor = kb ? '#ef4444' : ''; }
 $('menuBtn').addEventListener('click', function(){ menuOpen(); });
 $('menuX').addEventListener('click', menuClose); $('menuBg').addEventListener('click', menuClose);
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') menuClose(); });
 $('discLink').addEventListener('click', function(e){ e.preventDefault(); menuOpen('mDisc'); });
 $('aboutLink').addEventListener('click', function(e){ e.preventDefault(); menuOpen('mAbout'); });
-$('mSc').addEventListener('click', function(){ lsSet('trv_sc', useSC() ? '0' : '1'); $('scSw').checked = useSC(); tkRender(); predEval(); menuSync(); });
+$('mSc').addEventListener('click', function(){ setMode(useSC() ? '' : 'sc'); modeChanged(); });
+$('mKb').addEventListener('click', function(){ setMode(useKB() ? '' : 'kb'); modeChanged(); });
 /* ---------- 🎬 Σκηνή: στο κινητό, όσο κουνάνε, όλα σβήνουν και ο Σπύρος, ο Ηρακλής και το κουτί έρχονται μπροστά ---------- */
 var STAGE = false;
 function stageOn(){
