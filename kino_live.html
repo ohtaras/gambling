@@ -418,6 +418,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
         <select id="manSort"><option value="rank">Κατάταξη</option><option value="new">Πιο πρόσφατες</option><option value="old">Πιο παλιές</option><option value="gap">Μέγιστη καθυστέρηση</option></select>
         <select id="manWin"><option value="day">Σήμερα</option><option value="24">24 ώρες</option><option value="all">Όλες οι φορτωμένες</option></select>
       </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:12.5px"><span class="muted">Οι αριθμοί μου, σειρά:</span><select id="manNumSort"><option value="num">αύξουσα (1→80)</option><option value="recent">πιο πρόσφατα πρώτα (πριν 0…)</option><option value="old">πιο «ξεχασμένα» πρώτα</option><option value="most">περισσότερες φορές</option><option value="least">λιγότερες φορές</option><option value="hot">🔥 ζεστά → χλιαρά → κρύα</option><option value="cold">❄️ κρύα → χλιαρά → ζεστά</option><option value="warm">χλιαρά πρώτα</option></select></div>
       <div id="manNums" style="margin:6px 0"></div>
       <div class="chips" id="manChips"></div>
       <div class="scroll-x"><table class="ptab" id="manTable"></table></div>
@@ -1318,7 +1319,20 @@ function renderMan(){
     return st ? '<span style="'+st+'">'+n+'</span>' : String(n); };
   // ανά αριθμό
   var cnt = new Array(81).fill(0), lastSeen = {}; draws.forEach(function(d){ manPick.forEach(function(n){ if(d.set.has(n)){ cnt[n]++; lastSeen[n] = d.id; } }); });
-  $('manNums').innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12.5px">'+manPick.map(function(n){ return '<span><b>'+col(n)+'</b> <span class="muted">'+cnt[n]+'× · πριν '+(lastSeen[n]?lastId0-lastSeen[n]:'—')+'</span></span>'; }).join('')+'</div>';
+  var NS = $('manNumSort').value, tempOf = function(n){ return hc[n]>=HMIN ? 2 : hc[n]<=CMAX ? 0 : 1; }, ago = function(n){ return lastSeen[n] ? lastId0-lastSeen[n] : 1e9; };
+  var nums = manPick.slice().sort(function(a,b){
+    if(NS==='recent') return ago(a)-ago(b) || cnt[b]-cnt[a] || a-b;
+    if(NS==='old') return ago(b)-ago(a) || a-b;
+    if(NS==='most') return cnt[b]-cnt[a] || ago(a)-ago(b) || a-b;
+    if(NS==='least') return cnt[a]-cnt[b] || ago(b)-ago(a) || a-b;
+    if(NS==='hot') return tempOf(b)-tempOf(a) || hc[b]-hc[a] || ago(a)-ago(b) || a-b;
+    if(NS==='cold') return tempOf(a)-tempOf(b) || hc[a]-hc[b] || ago(b)-ago(a) || a-b;
+    if(NS==='warm') return (tempOf(a)===1?0:1)-(tempOf(b)===1?0:1) || hc[b]-hc[a] || a-b;
+    return a-b; });
+  var tl = ['❄️ κρύα','χλιαρά','🔥 ζεστά'], grp = (NS==='hot'||NS==='cold'||NS==='warm'), prevT = null;
+  $('manNums').innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12.5px">'+nums.map(function(n){
+    var lab = ''; if(grp){ var tt = tempOf(n); if(tt!==prevT){ prevT = tt; lab = '<span style="width:100%;font-size:11.5px;color:'+(tt===2?'#ef4444':tt===0?'#2563eb':'var(--muted)')+';margin-top:2px">'+tl[tt]+'</span>'; } }
+    return lab + '<span><b>'+col(n)+'</b> <span class="muted">'+cnt[n]+'× · πριν '+(lastSeen[n]?lastId0-lastSeen[n]:'—')+'</span></span>'; }).join('')+'</div>';
   // πόσα από τα δικά μου ανά κλήρωση
   var hist = {}; draws.forEach(function(d){ var h = manPick.filter(function(n){ return d.set.has(n); }).length; hist[h] = (hist[h]||0)+1; });
   // συνδυασμοί K από τα δικά μου
@@ -2373,6 +2387,7 @@ $('manHot').addEventListener('click', function(){ manPick = manTemp(true); manSa
 $('manCold').addEventListener('click', function(){ manPick = manTemp(false); manSave(); renderMan(); });
 $('manClear').addEventListener('click', function(){ manPick = []; manSave(); renderMan(); });
 $('manFromLast').addEventListener('click', function(){ var d = today.concat(histPool).sort(function(a,b){return b.id-a.id;})[0]; if(!d) return; manPick = d.arr.slice(); manSave(); renderMan(); });
+(function(){ var v = lsGet('kl_manNumSort'); if(v) $('manNumSort').value = v; $('manNumSort').addEventListener('change', function(){ lsSet('kl_manNumSort', this.value); renderMan(); }); })();
 ['manK','manMin','manSort','manWin'].forEach(function(id){ $(id).addEventListener('change', function(){ if(id==='manK') lsSet('kl_man_k', this.value); else lsSet('kl_'+id, this.value); renderMan(); }); });
 (function(){ ['manMin','manSort','manWin'].forEach(function(id){ var v = lsGet('kl_'+id); if(v) $(id).value = v; }); })();
 $('manTable').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-five]'); if(!b) return; var nd = askDraws(); if(!nd) return; myAdd(b.dataset.five.split(' ').map(Number), nd, '🕹️ Χειροκίνητος έλεγχος'); b.textContent = '✓'; });
