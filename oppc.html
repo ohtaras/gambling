@@ -65,7 +65,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   <div class="card">
     <div class="cdw"><span class="muted">⏱️ Επόμενη κλήρωση <span id="cdId"></span></span><b id="cdT">--:--</b></div>
     <div class="ctrl">
-      <button class="btn" id="boxGo" disabled>📦 Κούνα το!</button><button class="btn2" id="boxPred" disabled title="Δείξε ξανά τους αριθμούς του τελευταίου κουνήματος">🔮 Δείτε την τελευταία πρόβλεψη</button>
+      <button class="btn" id="boxGo" disabled>📦 Κούνα το!</button><button class="btn2" id="shakeOn" style="display:none">📳 Κούνα το κινητό</button><button class="btn2" id="boxPred" disabled title="Δείξε ξανά τους αριθμούς του τελευταίου κουνήματος">🔮 Δείτε την τελευταία πρόβλεψη</button>
       <label class="muted" style="font-size:14px">Πόσους: <select id="boxN"><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option selected>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>18</option><option>20</option></select></label>
     </div>
     <div class="nav" id="navBar"><button data-nv="-10">⏪ 10</button><button data-nv="-1">◀</button><button data-nv="live" id="navLive" class="lv">🟢 LIVE</button><button data-nv="1">▶</button><button data-nv="10">10 ⏩</button></div>
@@ -330,6 +330,22 @@ function cdTick(){ var nt = NEXT ? NEXT.t : (last ? last.t + 300000 : 0); if(!nt
   if(ms > 0){ var m = Math.floor(ms/60000), sx = Math.floor(ms/1000)%60; $('cdT').textContent = (m<10?'0':'')+m+':'+(sx<10?'0':'')+sx; w.classList.remove('now'); }
   else { $('cdT').textContent = 'τώρα! 🎱'; w.classList.add('now'); if(Date.now() - cdPoll > 5000){ cdPoll = Date.now(); load(); } } }
 setInterval(cdTick, 1000);
+/* ---------- 📳 Κούνημα του κινητού = «Κούνα το!» ---------- */
+(function(){
+  if(!('DeviceMotionEvent' in window) || !('ontouchstart' in window)) return;
+  var btn = $('shakeOn'), on = false, lastShake = 0, prev = null;
+  function onMotion(e){ var a = e.accelerationIncludingGravity || e.acceleration; if(!a || a.x===null) return;
+    var cur = {x:a.x||0, y:a.y||0, z:a.z||0};
+    if(prev){ var d = Math.abs(cur.x-prev.x) + Math.abs(cur.y-prev.y) + Math.abs(cur.z-prev.z);
+      if(d > 32 && Date.now() - lastShake > 2500){ lastShake = Date.now(); if(!busy && cur && $('boxGo') && !$('boxGo').disabled){ if(navigator.vibrate) try{ navigator.vibrate(60); }catch(err){} $('boxGo').click(); } } }
+    prev = cur; }
+  function enable(){ if(on) return; on = true; window.addEventListener('devicemotion', onMotion); btn.textContent = '📳 Κούνημα κινητού: ΝΑΙ'; btn.style.borderColor = '#22c55e'; }
+  btn.style.display = '';
+  if(typeof DeviceMotionEvent.requestPermission === 'function'){   // iPhone: χρειάζεται άδεια με πάτημα
+    btn.textContent = '📳 Ενεργοποίηση: κούνα το κινητό';
+    btn.addEventListener('click', function(){ if(on) return; DeviceMotionEvent.requestPermission().then(function(r){ if(r==='granted') enable(); else btn.textContent = '📳 Δεν δόθηκε άδεια κίνησης'; }).catch(function(){ btn.textContent = '📳 Δεν υποστηρίζεται'; }); });
+  } else { enable(); }   // Android: δουλεύει κατευθείαν
+})();
 $('boxBox').innerHTML = grid();
 load(); setInterval(function(){ if(!document.hidden) load(); }, 30000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
