@@ -528,13 +528,14 @@ $('discLink').addEventListener('click', function(e){ e.preventDefault(); menuOpe
 $('aboutLink').addEventListener('click', function(e){ e.preventDefault(); menuOpen('mAbout'); });
 $('contactLink').addEventListener('click', function(e){ e.preventDefault(); menuOpen('mContact'); });
 // feedback: στέλνεται μέσω Web3Forms — η διεύθυνση email δεν φαίνεται πουθενά στη σελίδα
-var FB_KEY = '';   // ← access key από web3forms.com
+var FB_KEY = '90065a2c-4f1a-43eb-8aef-e3defb73d409';   // access key web3forms.com (δεν αποκαλύπτει το email)
 $('fbForm').addEventListener('submit', async function(e){ e.preventDefault(); var st = $('fbSt'), msg = $('fbMsg').value.trim();
   if(!msg) return; if($('fbHp').checked) return;
   if(!FB_KEY){ st.textContent = 'Η φόρμα ενεργοποιείται σύντομα — ευχαριστούμε!'; return; }
   $('fbSend').disabled = true; st.textContent = 'Αποστολή…';
-  try{ var r = await fetch('https://api.web3forms.com/submit', {method:'POST', headers:{'Content-Type':'application/json', 'Accept':'application/json'},
-      body: JSON.stringify({access_key: FB_KEY, subject: 'Τράβα ρε — feedback', from_name: $('fbName').value || 'Επισκέπτης', email: $('fbMail').value || undefined, message: msg, page: location.href})});
+  try{ var fd = new FormData(); fd.append('access_key', FB_KEY); fd.append('subject', 'Τράβα ρε — feedback'); fd.append('from_name', 'Τράβα ρε');
+    fd.append('name', $('fbName').value.trim() || 'Επισκέπτης'); if($('fbMail').value.trim()) fd.append('email', $('fbMail').value.trim()); fd.append('message', msg); fd.append('page', location.href.split('?')[0]);
+    var r = await fetch('https://api.web3forms.com/submit', {method:'POST', headers:{'Accept':'application/json'}, body: fd});
     var j = await r.json(); if(j.success){ st.textContent = '✓ Στάλθηκε, ευχαριστούμε!'; $('fbMsg').value = ''; } else st.textContent = 'Κάτι πήγε στραβά, δοκιμάστε ξανά.'; }
   catch(err){ st.textContent = 'Δεν στάλθηκε — ελέγξτε τη σύνδεση.'; }
   $('fbSend').disabled = false; });
