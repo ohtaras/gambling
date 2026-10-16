@@ -2615,7 +2615,7 @@ function bxShakeAnim(done){
   var seq = [[0,0],[-1,0],[1,0],[-1,0],[0,-1],[0,1],[0,-1],[1,0],[-1,0],[0,1],[0,-1],[.7,0],[-.6,0],[0,.4],[0,0]];
   for(var q=1;q<seq.length-1;q++){ seq[q] = [seq[q][0]*(0.7+Math.random()*0.5), seq[q][1]*(0.7+Math.random()*0.5)]; }
   var seg = 170, T = seg*(seq.length-1), t0 = null;
-  function px2u(el){ var w = el.getBoundingClientRect().width || 80; return 120/w; }
+  function px2u(el){ var w = el.offsetWidth || el.getBoundingClientRect().width || 80; return 120/w; }
   var uL = px2u(L), uR = px2u(R);
   function step(ts){ if(t0===null) t0 = ts; var t = Math.min(ts-t0, T), k = Math.min(Math.floor(t/seg), seq.length-2), f = (t - k*seg)/seg; f = f<.5 ? 2*f*f : 1-Math.pow(-2*f+2,2)/2;
     var dx = (seq[k][0] + (seq[k+1][0]-seq[k][0])*f)*A, dy = (seq[k][1] + (seq[k+1][1]-seq[k][1])*f)*A;

@@ -30,6 +30,10 @@ select{background:#1e293b;color:var(--text);border:1px solid #334155;border-radi
 #boxRes{text-align:center}
 .nums{font-size:22px;font-weight:900;letter-spacing:1px;margin:6px 0 10px;color:#fde68a}
 footer{text-align:center;font-size:11px;margin-top:14px}
+#stageBg{position:fixed;inset:0;background:rgba(3,7,18,.9);z-index:50;opacity:0;pointer-events:none;transition:opacity .35s}
+body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
+#boxWrap{transition:transform .4s cubic-bezier(.3,1.2,.5,1);transform-origin:0 0}body.stage #boxWrap{position:relative;z-index:51}
+.bxGuy{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cdw{display:flex;justify-content:center;align-items:baseline;gap:8px;margin:0 0 10px;font-size:13px}.cdw b{font-size:22px;font-variant-numeric:tabular-nums;color:#fde68a;letter-spacing:1px}.cdw.now b{color:#4ade80}
 .disc{margin:12px 2px 0;font-size:11.5px;color:#94a3b8}.disc summary{cursor:pointer;font-weight:700;color:#cbd5e1}.disc p{margin:7px 0 0;line-height:1.5}.disc a{color:#93c5fd}
 .ghost{color:transparent;user-select:text;-webkit-user-select:text}.ghost::selection{color:#fff;background:#2563eb}@keyframes bxJig{0%{transform:translate(0,0)}20%{transform:translate(var(--a1),var(--b1))}40%{transform:translate(var(--a2),var(--b2))}60%{transform:translate(var(--a3),var(--b3))}80%{transform:translate(var(--a4),var(--b4))}100%{transform:translate(0,0)}}.bxb.jig{animation:bxJig var(--jd,.6s) ease-in-out infinite}#boxTxt,#boxTxt *{color:transparent!important}#boxTxt::selection,#boxTxt *::selection{color:#fff!important;background:#2563eb}
@@ -58,7 +62,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
 .bxGuy svg{filter:drop-shadow(0 0 1.5px rgba(255,255,255,.55))}
 </style>
 </head>
-<body>
+<body><div id="stageBg"></div>
 <div class="wrap">
   <header><img src="https://ohtaras.github.io/gambling/img/oppc.svg?v=1792183712" alt="" onerror="this.style.display='none'"><h1>Τράβα ρε 😜<small id="lastInfo">Φορτώνω την τελευταία κλήρωση…</small></h1></header>
   <div class="shop"><b>Οχταράς &amp; Πετρόπουλος</b><span class="aw">Αγίας Τριάδος 43, Πάτρα · Πρακτορείο <img src="https://ohtaras.github.io/gambling/img/allwyn.png" alt="Allwyn"> <b>Allwyn</b></span></div>
@@ -171,7 +175,7 @@ function bxShakeAnim(done){
   var seq = [[0,0],[-1,0],[1,0],[-1,0],[0,-1],[0,1],[0,-1],[1,0],[-1,0],[0,1],[0,-1],[.7,0],[-.6,0],[0,.4],[0,0]];
   for(var q=1;q<seq.length-1;q++){ seq[q] = [seq[q][0]*(0.7+Math.random()*0.5), seq[q][1]*(0.7+Math.random()*0.5)]; }
   var seg = 170, T = seg*(seq.length-1), t0 = null;
-  function px2u(el){ var w = el.getBoundingClientRect().width || 80; return 120/w; }
+  function px2u(el){ var w = el.offsetWidth || el.getBoundingClientRect().width || 80; return 120/w; }
   var uL = px2u(L), uR = px2u(R);
   function step(ts){ if(t0===null) t0 = ts; var t = Math.min(ts-t0, T), k = Math.min(Math.floor(t/seg), seq.length-2), f = (t - k*seg)/seg; f = f<.5 ? 2*f*f : 1-Math.pow(-2*f+2,2)/2;
     var dx = (seq[k][0] + (seq[k+1][0]-seq[k][0])*f)*A, dy = (seq[k][1] + (seq[k+1][1]-seq[k][1])*f)*A;
@@ -214,14 +218,14 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var 
   for(var q=0; q<src.length && moves.length<v; q++){ var from = src[q], row = Math.floor((from-1)/10), col = (from-1)%10;
     var mv = MV.slice(); for(var a=mv.length-1;a>0;a--){ var b = Math.floor(Math.random()*(a+1)), tt = mv[a]; mv[a] = mv[b]; mv[b] = tt; }
     for(var m=0;m<mv.length;m++){ var r2 = row+mv[m][1], c2 = col+mv[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; used[to] = 1; moves.push([from,to]); st[mv[m][0]]++; break; } }
-  busy = true; navUpd(); $('boxGo').disabled = true; shownId = last.id; $('boxRes').innerHTML = ''; $('boxTxt').textContent = 'Οι '+src.length+' μπίλιες της τελευταίας κλήρωσης (μαζί με τη 2η ευκαιρία)…';
+  busy = true; stageOn(); navUpd(); $('boxGo').disabled = true; shownId = last.id; $('boxRes').innerHTML = ''; $('boxTxt').textContent = 'Οι '+src.length+' μπίλιες της τελευταίας κλήρωσης (μαζί με τη 2η ευκαιρία)…';
   var balls = start();
   setTimeout(function(){ $('boxHd').textContent = '📦 Κουνάμε το κουτάκι…'; bxShakeAnim(); }, 1500);
   setTimeout(function(){
     moves.forEach(function(mm){ var b = balls[mm[0]]; if(!b) return; delete balls[mm[0]]; var p = boxPos(mm[1]); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; b.classList.remove('sc'); b.classList.remove('bn'); b.classList.add(mm[0]!==mm[1] ? 'nw' : 'st'); });
     Object.keys(balls).forEach(function(k){ balls[k].style.opacity = '0'; });
     PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st}; lsSet('trv_pred', JSON.stringify(PRED)); predText(PRED, false); $('boxPred').disabled = false; predEval();
-    busy = false; navUpd(); $('boxGo').disabled = false;
+    busy = false; navUpd(); $('boxGo').disabled = false; setTimeout(stageOff, 2200);
   }, 4000);
 });
 var PRED = null; try{ PRED = JSON.parse(lsGet('trv_pred')||'null'); }catch(e){}
@@ -330,6 +334,18 @@ function cdTick(){ var nt = NEXT ? NEXT.t : (last ? last.t + 300000 : 0); if(!nt
   if(ms > 0){ var m = Math.floor(ms/60000), sx = Math.floor(ms/1000)%60; $('cdT').textContent = (m<10?'0':'')+m+':'+(sx<10?'0':'')+sx; w.classList.remove('now'); }
   else { $('cdT').textContent = 'τώρα! 🎱'; w.classList.add('now'); if(Date.now() - cdPoll > 5000){ cdPoll = Date.now(); load(); } } }
 setInterval(cdTick, 1000);
+/* ---------- 🎬 Σκηνή: στο κινητό, όσο κουνάνε, όλα σβήνουν και ο Σπύρος, ο Ηρακλής και το κουτί έρχονται μπροστά ---------- */
+var STAGE = false;
+function stageOn(){ if(!(window.matchMedia && matchMedia('(pointer:coarse)').matches)) return;
+  var w = $('boxWrap'); w.style.transform = ''; var r = w.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight;
+  var sc = Math.min(vw*0.98/r.width, (vh*0.86)/(r.height+40)); if(sc < 1) sc = 1;
+  var tx = (vw - r.width*sc)/2 - r.left, ty = (vh - r.height*sc)/2 + 20 - r.top;
+  STAGE = true; document.body.classList.add('stage'); requestAnimationFrame(function(){ w.style.transform = 'translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+sc.toFixed(3)+')'; }); }
+function stageOff(){ if(!STAGE) return; STAGE = false; $('boxWrap').style.transform = ''; document.body.classList.remove('stage'); }
+$('stageBg').addEventListener('click', function(){ if(!busy) stageOff(); });
+window.addEventListener('orientationchange', function(){ if(STAGE){ setTimeout(function(){ var on = busy; stageOff(); if(on) stageOn(); }, 300); } });
+// πάτημα πάνω στον Σπύρο ή τον Ηρακλή = «Κούνα το!»
+['bxGuyL','bxGuyR'].forEach(function(id){ $(id).addEventListener('click', function(){ if(!busy && !$('boxGo').disabled) $('boxGo').click(); }); });
 /* ---------- 📳 Κούνημα του κινητού = «Κούνα το!» ---------- */
 (function(){
   if(!('DeviceMotionEvent' in window) || !('ontouchstart' in window)) return;
