@@ -79,10 +79,9 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
 <aside id="menu" aria-hidden="true">
   <div class="mhd"><b>☰ Μενού</b><button id="menuX" aria-label="Κλείσιμο">✕</button></div>
   <section id="mSet"><h3>⚙️ Ρυθμίσεις</h3>
-    <div class="mrow" id="mShakeRow" style="display:none"><div><b>📳 Κούνημα κινητού</b><div class="muted">Κούνα δυνατά το κινητό για να κουνήσουν ο Σπύρος και ο Ηρακλής το κουτί.</div></div><button class="btn2" id="shakeOn" >📳 Κούνα το κινητό</button></div>
+    <div class="mrow" id="mShakeRow"><div><b>📳 Ενεργοποίηση Shake</b><div class="muted" id="mShakeTxt">Κούνα δυνατά το κινητό και ο Σπύρος με τον Ηρακλή κουνάνε το κουτί!</div></div><button class="btn2" id="shakeOn" >📳 Κούνα το κινητό</button></div>
     <div class="mrow"><div><b>🟢 2η ευκαιρία στα δελτία</b><div class="muted">Αξιολόγηση των δελτίων και της πρόβλεψης μαζί με τη 2η ευκαιρία (1€/κλήρωση).</div></div><button class="btn2" id="mSc">ΟΧΙ</button></div>
-    <div class="mrow"><div><b>💬 Ατάκες στο κούνημα</b><div class="muted">Τα συννεφάκια με τις ατάκες του Σπύρου και του Ηρακλή.</div></div><button class="btn2" id="mTalk">ΝΑΙ</button></div>
-  </section>
+      </section>
   <section id="mAbout"><h3>ℹ️ Ποιοι είμαστε</h3>
     <p><b>Οχταράς &amp; Πετρόπουλος ΙΚΕ</b> — πρακτορείο <b>Allwyn</b> στην Πάτρα, στην <b>Αγίας Τριάδος 43</b>.</p>
     <p>Είμαστε ο Σπύρος και ο Ηρακλής — οι δύο που κουνάνε το κουτί! Στο πρακτορείο μας θα βρείτε όλα τα παιχνίδια της Allwyn, καφέ, κουβέντα και καλή παρέα, με ανοιχτές πόρτες 15 ώρες την ημέρα, 7 μέρες την εβδομάδα.</p>
@@ -186,7 +185,7 @@ function bxGuy(who, flip){ var cx = flip ? 62 : 50; return '<svg viewBox="-4 0 1
 (function(){ try{ $('bxGuyL').innerHTML = bxGuy('hood', false); $('bxGuyR').innerHTML = bxGuy('beard', true);
   $('bxGuyL').dataset.sl = '#17171a'; $('bxGuyR').dataset.sl = '#232c3d'; bxSetArms($('bxGuyL'),0,0); bxSetArms($('bxGuyR'),0,0); }catch(e){} })();
 // Κούνημα: το κουτί πάει δεξιά-αριστερά-πάνω-κάτω, ο ένας σπρώχνει κι ο άλλος τραβάει, μετά σταματάνε
-function bxSay(el, txt){ if(!el) return; if(txt && lsGet('trv_talk')==='0') return; var b = el.querySelector('.bub'); if(!b){ b = document.createElement('div'); b.className = 'bub'; el.appendChild(b); }
+function bxSay(el, txt){ if(!el) return;  var b = el.querySelector('.bub'); if(!b){ b = document.createElement('div'); b.className = 'bub'; el.appendChild(b); }
   if(txt){ b.textContent = txt; b.classList.remove('on'); void b.offsetWidth; b.classList.add('on'); } else b.classList.remove('on'); }
 var BX_TALK = [["Σπρώξε Ηρακλή! 💪", "Σήκωσέ το Σπύρο! 🙌"], ["Τράβα ρε Ηρακλή! 😜", "Τραβάω, αλλά η τύχη κάνει πίσω!"], ["Αυτή τη φορά το νιώθω!", "Το ίδιο είπες και χθες… 35 φορές!"], ["Μου έλειψε ένα για 12άρι!", "Σου έλειψαν και τα άλλα έντεκα!"], ["Παραλίγο να το πιάσω!", "Το «παραλίγο» δεν πληρώνει!"], ["Έπιασα 5 στα 12!", "Το 0 στα 12 πληρώνει περισσότερα! 😂"], ["Παίζω τα γενέθλια της πεθεράς!", "Γι' αυτό δεν βγαίνουν ποτέ!"], ["Κάνε σταυρό πριν το κουνήσεις!", "Έκανα, μου βγήκε Χ2! ⚽"], ["Αν πιάσω, κερνάω όλο το μαγαζί!", "Το είπες δυνατά, σε άκουσαν όλοι! 👂"], ["Σήμερα είναι η μέρα μου!", "Το λες κάθε μέρα από το 2018!"], ["Η τύχη είναι γυναίκα…", "…γι' αυτό δεν μας σηκώνει το τηλέφωνο! 📵"], ["Βάλε κι ένα Bonus για σιγουριά!", "Σιγουριά στο ΚΙΝΟ; Καλό αστείο!"], ["Κάθε 5 λεπτά νέα ελπίδα!", "Και κάθε 5 λεπτά νέα απογοήτευση!"], ["Το 80 δεν έχει βγει 20 κληρώσεις!", "Θα βγει μόλις το ξεπαίξεις!"], ["Ξεπαίζω το 7 και βγαίνει!", "Παίξ' το ξανά, να σιγουρευτούμε ότι δεν θα βγει! 😏"], ["Έχω αλάνθαστο σύστημα!", "Πες μου πόσα έβγαλε… α, τίποτα!"], ["Μόνο ένα δελτάκι, για το καλό!", "Το «ένα» σου έχει γίνει δεκάδα!"], ["Με το τζάκποτ πάμε Μαλδίβες!", "Με τα δικά μας, Καλόγρια! 🏖️"], ["Αν κερδίσουμε, Μύκονο!", "Αν χάσουμε, Ακτή Δυμαίων!"], ["Η γυναίκα μου νομίζει ότι δουλεύω!", "Δουλεύεις, κουνάς κουτιά! 📦"], ["Κλείσε τα μάτια και κούνα!", "Τα κλείνω κάθε φορά που βλέπω τα αποτελέσματα!"], ["Μυρίζομαι 10άρι!", "Σουβλάκια μυρίζεις, από δίπλα! 🥙"], ["Μου κλείνει το μάτι το 7!", "Και το 77 σε φλερτάρει, αλλά δεν έρχεται!"], ["Θα το κουνήσω με το αριστερό, για γούρι!", "Με το δεξί έχασες, δοκίμασε και με τα πόδια!"], ["Σήμερα έχω φίλινγκ!", "Το φίλινγκ σου έχει κάνει περισσότερη ζημιά από το χαλάζι!"], ["Πόσα θες να κερδίσεις;", "Όσα έχω χάσει, συν τα ρέστα!"], ["Πάμε για το μεγάλο!", "Πρώτα πιάσε το μικρό, μετά βλέπουμε!"], ["Αν βγει, ανοίγω δεύτερο πρακτορείο!", "Κι εγώ θα είμαι ο καλύτερός σου πελάτης!"], ["Τα νούμερά μου είναι ζεστά!", "Έχουν πάρει πυρετό από την αναμονή! 🤒"], ["Ποντάρω στα κρύα!", "Κρύα είναι και τα αποτελέσματα! 🥶"], ["Η στατιστική λέει ότι έρχεται!", "Η στατιστική λέει κι ότι είμαστε ψηλοί!"], ["Ηρακλή, εσύ έκανες 12 άθλους!", "Ο 13ος είναι να πιάσω 12άρι!"], ["Ο αρχαίος Ηρακλής δεν έπαιζε ΚΙΝΟ!", "Γι' αυτό τα κατάφερε με τους άθλους!"], ["Βάλε μια ευχή!", "Να βγουν τουλάχιστον όσα παίξαμε!"], ["Αν δεν είχα κακή τύχη…", "…δεν θα είχες καθόλου τύχη!"], ["Χθες έπιασα 4άρι!", "Και το λες σε όλη την Πάτρα από το πρωί!"], ["Παίζω το ίδιο δελτίο 3 χρόνια!", "Αν το αλλάξεις, θα βγει την επόμενη!"], ["Το ένιωσα στο κόκαλο!", "Αρθριτικά είναι, όχι τύχη! 🦴"], ["Έτσι κουνάνε οι επαγγελματίες!", "Επαγγελματίες χαμένοι! 😅"], ["Μη μιλάς, θα το γρουσουζέψεις!", "… 🤐"], ["Αν βγει 12άρι, θα κλάψω!", "Αν δεν βγει, πάλι θα κλάψεις!"], ["Ησυχία, ακούω τις μπίλιες!", "Λένε «άλλη φορά, φίλε»!"], ["Το 8 είναι το τυχερό μου!", "Γι' αυτό σε λένε Οχτάρα!"], ["Ηρακλή, βγάλε ένα οχτάρι!", "Εσύ είσαι ο Οχτάρας! 😂"], ["Τα γένια μου άσπρισαν περιμένοντας!", "Τα δικά μου μαύρισαν από τη στεναχώρια!"], ["Μην κοιτάς το ρολόι!", "Σε 5 λεπτά νέα κλήρωση, νέα όνειρα! ⏱️"], ["Γιατί ιδρώνεις;", "Κουβαλάω τις ελπίδες όλου του μαγαζιού!"], ["Πάρε ανάσα!", "Ανάσα παίρνω όταν βγει το πρώτο μου νούμερο!"], ["Ηρακλή, δεξιά!", "Το ΑΛΛΟ δεξιά!"], ["Έχω καλό προαίσθημα!", "Το ίδιο είχες και για τον Τζόκερ!"], ["Θέλω ένα κομπολόι για γούρι!", "Κι ένα σκόρδο για τη γρουσουζιά! 🧄"], ["Κούνα σαν φραπέ!", "Μέτριο με γάλα, κι ένα 5άρι παρακαλώ!"], ["Αν πιάσουμε, πού πάμε;", "Πρώτα για σουβλάκια, μετά βλέπουμε!"], ["Η 2η ευκαιρία είναι για μένα!", "Εσύ θέλεις και 3η και 4η!"], ["Θα το πιάσω και θα σταματήσω!", "Αυτό το λένε όλοι οι φιλόσοφοι του πάγκου!"], ["Το πρόγραμμα λέει να παίξω το 23!", "Το πρόγραμμα λέει και «παίξε υπεύθυνα»! 😉"], ["Βάζω όλα τα λεφτά μου!", "Ε όχι, βάλε ένα δίευρο και χαμογέλα!"], ["Ζυγίζει σαν τζάκποτ το κουτί!", "Αν ζύγιζε σαν τζάκποτ, θα το κουβαλούσα σπίτι!"], ["Το νιώθεις;", "Νιώθω μόνο πόνο στη μέση!"], ["Αν βγει το 1, θα έρθει και το 80!", "Αυτό λέγεται ελπίδα από άκρη σε άκρη!"], ["Ψηλά τα χέρια!", "Σαν να έπιασα 10άρι! 🙌"], ["Γιατί δεν παίζεις ποτέ το 13;", "Είναι οι φορές που έχασα σήμερα!"], ["Αν πιάσουμε, το λέμε στη μάνα;", "Πρώτα στην τράπεζα, μετά στη μάνα!"], ["Το σφράγισες το δελτίο;", "Το σφράγισα με φιλί! 💋"], ["Ο πελάτης έχει πάντα δίκιο!", "…και ποτέ 12άρι!"], ["Τώρα βγαίνουν τα νούμερα!", "Κάνω πως δεν κοιτάω! 🙈"], ["Ξέρω ότι θα βγει το 42!", "Το ξέρεις εδώ και 42 κληρώσεις!"], ["Πιο δυνατό κούνημα δεν έχει!", "Τόσο δυνατό, που μου έφυγε κι η ελπίδα!"], ["Ένα, δυο… ΤΡΑΒΑ!", "Τρία, τέσσερα… ΣΠΡΩΞΕ!"], ["Πιάσε κι από τη δική σου μεριά, Ηρακλή!", "Πιάνω! Εσύ κρατάς μόνο τις ελπίδες!"], ["Ηρακλή, ξύπνα!", "Ξύπνιος είμαι, ονειρεύομαι 12άρι!"], ["Ηρακλή, πάνω-κάτω!", "Σαν τον λογαριασμό μου! 📉📈"], ["Πιο ψηλά δεν πάει!", "Σήκωσέ το Σπύρο, να το δουν κι οι πελάτες!"], ["Τι λένε τα ζώδια σήμερα;", "Ο Κριός λέει «μην παίξεις το 12»!"], ["Αυτό το κούνημα έχει μέλλον!", "Το μέλλον είναι η επόμενη κλήρωση!"], ["Αν βγουν όλα, σε φιλάω!", "Τώρα εύχομαι να μη βγουν! 😆"], ["Κούνα με πίστη!", "Με πίστη και με διπλό εσπρέσο! ☕"], ["Είμαστε ομάδα!", "Ομάδα που χάνει μαζί, μένει μαζί!"]];
 function bxTalkPick(){ var n = BX_TALK.length, bag = null; try{ bag = JSON.parse(localStorage.getItem('bx_talk_bag')||'null'); }catch(e){}
@@ -371,14 +370,13 @@ setInterval(cdTick, 1000);
 /* ---------- ☰ Μενού ---------- */
 function menuOpen(sec){ document.body.classList.add('menu'); $('menu').setAttribute('aria-hidden','false'); menuSync(); if(sec){ var el = $(sec); if(el) setTimeout(function(){ el.scrollIntoView({behavior:'smooth', block:'start'}); }, 320); } else $('menu').scrollTop = 0; }
 function menuClose(){ document.body.classList.remove('menu'); $('menu').setAttribute('aria-hidden','true'); }
-function menuSync(){ var sc = useSC(); $('mSc').textContent = sc ? 'ΝΑΙ' : 'ΟΧΙ'; $('mSc').style.borderColor = sc ? '#22c55e' : ''; var tk = lsGet('trv_talk')!=='0'; $('mTalk').textContent = tk ? 'ΝΑΙ' : 'ΟΧΙ'; $('mTalk').style.borderColor = tk ? '#22c55e' : ''; }
+function menuSync(){ var sc = useSC(); $('mSc').textContent = sc ? 'ΝΑΙ' : 'ΟΧΙ'; $('mSc').style.borderColor = sc ? '#22c55e' : ''; }
 $('menuBtn').addEventListener('click', function(){ menuOpen(); });
 $('menuX').addEventListener('click', menuClose); $('menuBg').addEventListener('click', menuClose);
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') menuClose(); });
 $('discLink').addEventListener('click', function(e){ e.preventDefault(); menuOpen('mDisc'); });
 $('aboutLink').addEventListener('click', function(e){ e.preventDefault(); menuOpen('mAbout'); });
 $('mSc').addEventListener('click', function(){ lsSet('trv_sc', useSC() ? '0' : '1'); $('scSw').checked = useSC(); tkRender(); predEval(); menuSync(); });
-$('mTalk').addEventListener('click', function(){ lsSet('trv_talk', lsGet('trv_talk')==='0' ? '1' : '0'); menuSync(); });
 /* ---------- 🎬 Σκηνή: στο κινητό, όσο κουνάνε, όλα σβήνουν και ο Σπύρος, ο Ηρακλής και το κουτί έρχονται μπροστά ---------- */
 var STAGE = false;
 function stageOn(){
@@ -393,19 +391,24 @@ window.addEventListener('orientationchange', function(){ if(STAGE){ setTimeout(f
 ['bxGuyL','bxGuyR'].forEach(function(id){ $(id).addEventListener('click', function(){ if(!busy && !$('boxGo').disabled) $('boxGo').click(); }); });
 /* ---------- 📳 Κούνημα του κινητού = «Κούνα το!» ---------- */
 (function(){
-  if(!('DeviceMotionEvent' in window) || !('ontouchstart' in window)) return;
+  if(!('DeviceMotionEvent' in window) || !('ontouchstart' in window)){ var b0 = $('shakeOn'); b0.textContent = 'Μόνο σε κινητό'; b0.disabled = true; b0.style.display = ''; return; }
   var btn = $('shakeOn'), on = false, lastShake = 0, prev = null;
   function onMotion(e){ var a = e.accelerationIncludingGravity || e.acceleration; if(!a || a.x===null) return;
     var cur = {x:a.x||0, y:a.y||0, z:a.z||0};
     if(prev){ var d = Math.abs(cur.x-prev.x) + Math.abs(cur.y-prev.y) + Math.abs(cur.z-prev.z);
       if(d > 32 && Date.now() - lastShake > 2500){ lastShake = Date.now(); if(!busy && cur && $('boxGo') && !$('boxGo').disabled){ if(navigator.vibrate) try{ navigator.vibrate(60); }catch(err){} $('boxGo').click(); } } }
     prev = cur; }
-  function enable(){ if(on) return; on = true; window.addEventListener('devicemotion', onMotion); btn.textContent = 'ΝΑΙ'; btn.style.borderColor = '#22c55e'; }
-  btn.style.display = ''; $('mShakeRow').style.display = '';
-  if(typeof DeviceMotionEvent.requestPermission === 'function'){   // iPhone: χρειάζεται άδεια με πάτημα
-    btn.textContent = 'Ενεργοποίηση';
-    btn.addEventListener('click', function(){ if(on) return; DeviceMotionEvent.requestPermission().then(function(r){ if(r==='granted') enable(); else btn.textContent = 'Χωρίς άδεια'; }).catch(function(){ btn.textContent = 'Δεν υποστηρίζεται'; }); });
-  } else { enable(); }   // Android: δουλεύει κατευθείαν
+  function enable(){ if(on) return; on = true; window.addEventListener('devicemotion', onMotion); btn.textContent = 'ΝΑΙ'; btn.style.borderColor = '#22c55e'; lsSet('trv_shake','1'); }
+  function disable(){ on = false; window.removeEventListener('devicemotion', onMotion); btn.textContent = 'ΟΧΙ'; btn.style.borderColor = ''; lsSet('trv_shake','0'); }
+  btn.style.display = '';
+  var needPerm = typeof DeviceMotionEvent.requestPermission === 'function', granted = !needPerm;
+  btn.addEventListener('click', function(){
+    if(on){ disable(); return; }
+    if(granted){ enable(); return; }
+    DeviceMotionEvent.requestPermission().then(function(r){ if(r==='granted'){ granted = true; enable(); } else btn.textContent = 'Χωρίς άδεια'; }).catch(function(){ btn.textContent = 'Δεν υποστηρίζεται'; });
+  });
+  if(needPerm) btn.textContent = 'Ενεργοποίηση';     // iPhone: άδεια μόνο με πάτημα
+  else if(lsGet('trv_shake')==='0') disable(); else enable();   // Android
 })();
 $('boxBox').innerHTML = grid();
 load(); setInterval(function(){ if(!document.hidden) load(); }, 30000);
