@@ -30,6 +30,7 @@ select{background:#1e293b;color:var(--text);border:1px solid #334155;border-radi
 #boxRes{text-align:center}
 .nums{font-size:22px;font-weight:900;letter-spacing:1px;margin:6px 0 10px;color:#fde68a}
 footer{text-align:center;font-size:11px;margin-top:14px}
+.bxb.sc{background:radial-gradient(circle at 35% 30%,#efe7ff,#a78bfa 55%,#6d28d9);color:#1a1033}
 .shop{display:flex;flex-direction:column;align-items:center;gap:2px;background:linear-gradient(90deg,#1a2442,#232f52);border:1px solid #2c3a63;border-radius:12px;padding:8px 10px;margin:0 0 10px;text-align:center}
 .shop b:first-child{font-size:16px;color:#fde68a;letter-spacing:.3px}.shop span{font-size:13px;color:#cbd5e1}
 .tk{background:#0f172a;border:1px solid #23304d;border-radius:12px;padding:10px;margin-top:10px}
@@ -166,14 +167,14 @@ var last = null, busy = false, shownId = null, out = [];
 function boxPos(n){ var r = Math.floor((n-1)/10), c = (n-1)%10; return {l:(c*10+0.5)+'%', t:(r*12.5+1.25)+'%'}; }
 function grid(){ var h = ''; for(var n=1;n<=80;n++){ var r = Math.floor((n-1)/10), c = (n-1)%10; h += '<div style="position:absolute;left:'+(c*10)+'%;top:'+(r*12.5)+'%;width:10%;height:12.5%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#64748b;border:1px solid #334155;box-sizing:border-box">'+n+'</div>'; } return h; }
 function start(){ var box = $('boxBox'); box.innerHTML = grid(); var balls = {};
-  last.arr.forEach(function(n){ var b = document.createElement('div'); b.className = 'bxb'; var p = boxPos(n); b.style.left = p.l; b.style.top = p.t; b.textContent = n; box.appendChild(b); balls[n] = b; });
-  $('boxHd').textContent = '🟡 Τελευταία κλήρωση #'+last.id+' · '+dmy(last.t)+' '+hm(last.t);
+  last.arr.concat(last.sc||[]).forEach(function(n){ var b = document.createElement('div'); b.className = 'bxb'+((last.sc||[]).indexOf(n)>=0?' sc':''); var p = boxPos(n); b.style.left = p.l; b.style.top = p.t; b.textContent = n; box.appendChild(b); balls[n] = b; });
+  $('boxHd').innerHTML = '🟡 Τελευταία κλήρωση #'+last.id+' · '+dmy(last.t)+' '+hm(last.t)+((last.sc||[]).length?'<div class="muted" style="font-size:12px;font-weight:400;margin-top:2px">🟡 20 αριθμοί · 🟣 2η ευκαιρία: <b style="color:#c4b5fd">'+last.sc.join(' ')+'</b></div>':'');
   return balls; }
 async function load(){
   try{
     var r = await fetch(API+'?_='+Date.now(), {cache:'no-store'}); if(!r.ok) throw new Error(r.status);
     var j = await r.json(), c = j.last || j; var w = c.winningNumbers || {};
-    var d = {id:c.drawId, t:c.drawTime, arr:(w.list||[]).slice()};
+    var d = {id:c.drawId, t:c.drawTime, arr:(w.list||[]).slice(), sc:(w.secondChance||[]).slice()};
     if(!d.arr.length) throw new Error('empty');
     var isNew = !last || last.id!==d.id; last = d; $('boxGo').disabled = false; if(isNew) tkCheck();
     $('lastInfo').textContent = 'Τελευταία κλήρωση #'+d.id+' · '+hm(d.t);
@@ -182,21 +183,21 @@ async function load(){
 }
 $('boxN').value = lsGet('kbx_n') || '12'; $('boxN').addEventListener('change', function(){ lsSet('kbx_n', this.value); });
 $('boxGo').addEventListener('click', function(){ if(busy || !last) return;
-  var v = +$('boxN').value || 12, src = last.arr.slice();
+  var v = +$('boxN').value || 12, src = last.arr.concat(last.sc||[]);
   for(var i=src.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = src[i]; src[i] = src[j]; src[j] = t; }
   var used = {}, moves = [], st = {stay:0, l:0, r:0, u:0, d:0}, MV = [['stay',0,0],['l',0,-1],['r',0,1],['u',-1,0],['d',1,0]];
   for(var q=0; q<src.length && moves.length<v; q++){ var from = src[q], row = Math.floor((from-1)/10), col = (from-1)%10;
     var mv = MV.slice(); for(var a=mv.length-1;a>0;a--){ var b = Math.floor(Math.random()*(a+1)), tt = mv[a]; mv[a] = mv[b]; mv[b] = tt; }
     for(var m=0;m<mv.length;m++){ var r2 = row+mv[m][1], c2 = col+mv[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; used[to] = 1; moves.push([from,to]); st[mv[m][0]]++; break; } }
-  busy = true; $('boxGo').disabled = true; shownId = last.id; $('boxRes').innerHTML = ''; $('boxTxt').textContent = 'Οι 20 μπίλιες της τελευταίας κλήρωσης…';
+  busy = true; $('boxGo').disabled = true; shownId = last.id; $('boxRes').innerHTML = ''; $('boxTxt').textContent = 'Οι '+src.length+' μπίλιες της τελευταίας κλήρωσης (μαζί με τη 2η ευκαιρία)…';
   var balls = start();
   setTimeout(function(){ $('boxHd').textContent = '📦 Κουνάμε το κουτάκι…'; bxShakeAnim(); }, 1500);
   setTimeout(function(){
-    moves.forEach(function(mm){ var b = balls[mm[0]]; if(!b) return; delete balls[mm[0]]; var p = boxPos(mm[1]); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; if(mm[0]!==mm[1]) b.classList.add('nw'); });
+    moves.forEach(function(mm){ var b = balls[mm[0]]; if(!b) return; delete balls[mm[0]]; var p = boxPos(mm[1]); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; if(mm[0]!==mm[1]){ b.classList.remove('sc'); b.classList.add('nw'); } });
     Object.keys(balls).forEach(function(k){ balls[k].style.opacity = '0'; });
     out = moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
     $('boxHd').textContent = '🎲 Οι '+out.length+' αριθμοί σου (από #'+last.id+')';
-    $('boxTxt').textContent = st.stay+' έμειναν · '+st.l+'⬅ · '+st.r+'➡ · '+st.u+'⬆ · '+st.d+'⬇  ·  🟡 έμεινε · 🟢 μετακινήθηκε';
+    $('boxTxt').textContent = st.stay+' έμειναν · '+st.l+'⬅ · '+st.r+'➡ · '+st.u+'⬆ · '+st.d+'⬇  ·  🟡🟣 έμεινε · 🟢 μετακινήθηκε';
     $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'')+
       '<div class="add">'+(out.length>12 ? '<span class="muted" style="font-size:12px">Το δελτίο ΚΙΝΟ παίρνει έως 12 αριθμούς — διάλεξε «Πόσους» έως 12 για να το παρακολουθήσεις.</span>' :
       '<label class="muted" style="font-size:13px">για <select id="tkN">'+[1,2,3,4,5,6,8,10,12,15,20].map(function(n){ return '<option'+(n===5?' selected':'')+'>'+n+'</option>'; }).join('')+'</select> κληρώσεις</label><button class="btn2" id="tkAdd" style="background:#14532d;border-color:#166534">➕ Προσθήκη στο δελτίο</button>')+'</div>';
