@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>📦 Κουτάκι ΚΙΝΟ</title>
-<meta property="og:title" content="📦 Κουτάκι ΚΙΝΟ">
+<title>Τράβα ρε 😜</title>
+<meta property="og:title" content="Τράβα ρε 😜">
 <meta property="og:description" content="Κουνάμε το κουτάκι με τις μπίλιες της τελευταίας κλήρωσης!">
 <meta property="og:image" content="https://ohtaras.github.io/gambling/img/logo.jpg">
 <link rel="icon" href="https://ohtaras.github.io/gambling/img/icon.png"><link rel="apple-touch-icon" href="https://ohtaras.github.io/gambling/img/icon.png">
@@ -35,7 +35,7 @@ footer{text-align:center;font-size:11px;margin-top:14px}
 </head>
 <body>
 <div class="wrap">
-  <header><img src="https://ohtaras.github.io/gambling/img/logo.jpg" alt="" onerror="this.style.display='none'"><h1>📦 Κουτάκι ΚΙΝΟ<small id="lastInfo">Φορτώνω την τελευταία κλήρωση…</small></h1></header>
+  <header><img src="https://ohtaras.github.io/gambling/img/logo.jpg" alt="" onerror="this.style.display='none'"><h1>Τράβα ρε 😜<small id="lastInfo">Φορτώνω την τελευταία κλήρωση…</small></h1></header>
   <div class="card">
     <div class="ctrl">
       <button class="btn" id="boxGo" disabled>📦 Κούνα το!</button>
@@ -190,7 +190,7 @@ $('boxGo').addEventListener('click', function(){ if(busy || !last) return;
     busy = false; $('boxGo').disabled = false;
   }, 2750);
 });
-$('boxRes').addEventListener('click', function(e){ var txt = '📦 Κουτάκι ΚΙΝΟ (από #'+(last?last.id:'')+'): '+out.join(' ');
+$('boxRes').addEventListener('click', function(e){ var txt = 'Τράβα ρε 😜 (από #'+(last?last.id:'')+'): '+out.join(' ');
   if(e.target.id==='cp'){ (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function(){ e.target.textContent = '✓ Αντιγράφηκε'; }, function(){ prompt('Αντέγραψε:', txt); }); }
   if(e.target.id==='sh'){ navigator.share({text: txt + '\n' + location.href}).catch(function(){}); }
 });
