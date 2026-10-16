@@ -82,6 +82,8 @@ body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
 .chip.hit{background:radial-gradient(circle at 35% 30%,#fff7b0,#facc15 55%,#ca8a04);color:#111;border-color:#ca8a04}
 table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}table.dr td{padding:4px 3px;border-top:1px solid #1f2a44}
 .win{color:#4ade80;font-weight:800}
+.wins{margin-top:12px;border-color:#a16207!important;background:linear-gradient(180deg,#1c1606,#111827)!important}.wins h3{margin:0 0 8px;font-size:17px;color:#fde047;display:flex;justify-content:space-between;align-items:center}.wins h3 button{background:none;border:0;color:#475569;font-size:13px;cursor:pointer;opacity:.35}.wins h3 button:hover{opacity:1}.wrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 10px;border-radius:10px;background:#0f172a;border:1px solid #3f3a1a;margin-top:6px;font-size:14px}.wrow .wamt{margin-left:auto;font-size:20px;font-weight:900;color:#4ade80;white-space:nowrap}.wrow .wn .chip{min-width:24px;height:24px;font-size:12px}.wrow.new{animation:wglow 1.2s ease-in-out 4}@keyframes wglow{50%{box-shadow:0 0 0 3px #facc15}}body.fs.hw #boxFrame{max-width:min(980px,calc(100vh - 360px))!important}body.fs .wins .wrow:nth-child(n+5){display:none}
+
 .add{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:10px}
 .bxGuy svg{filter:drop-shadow(0 0 1.5px rgba(255,255,255,.55))}
 </style>
@@ -137,6 +139,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
     <div id="boxRes"></div>
     <div id="predEval"></div>
   </div>
+  <div class="card wins" id="winsCard" style="display:none"><h3><span>🏆 Επιτυχίες προβλέψεων</span><button id="winsClr" title="Καθαρισμός">🗑</button></h3><div id="winsList"></div></div>
   <div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-weight:800;font-size:16px">🎫 Τα δελτία μου <span id="tkCnt" class="muted" style="font-weight:400;font-size:13px"></span></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><label class="sw"><span style="font-size:13px">🟢 2η ευκαιρία</span><input type="checkbox" id="scSw"><span class="tr"></span><b id="scLbl" style="font-size:13px;min-width:28px">ΟΧΙ</b></label><label class="sw kb"><span style="font-size:13px">🔴 ΚΙΝΟ Bonus</span><input type="checkbox" id="kbSw"><span class="tr"></span><b id="kbLbl" style="font-size:13px;min-width:28px">ΟΧΙ</b></label></div></div><div id="tkList"></div></div>
   <footer class="rg"><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" class="eeep"><img src="https://ohtaras.github.io/gambling/img/eeep.png" alt="ΕΕΕΠ — Επιτροπή Εποπτείας και Ελέγχου Παιγνίων"></a><span><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener">18+ ΕΠΙΓΕΙΟ, 21+ ΨΗΦΙΑΚΟ | ΑΡΜΟΔΙΟΣ ΡΥΘΜΙΣΤΗΣ ΕΕΕΠ | ΚΙΝΔΥΝΟΣ ΕΘΙΣΜΟΥ &amp; ΑΠΩΛΕΙΑΣ ΠΕΡΙΟΥΣΙΑΣ | ΕΟΠΑΕ – ΓΡΑΜΜΗ ΣΥΜΒΟΥΛΕΥΤΙΚΗΣ:</a> <a href="tel:1114" style="white-space:nowrap">1114</a> <a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" style="white-space:nowrap">| ΠΑΙΞΕ ΥΠΕΥΘΥΝΑ</a></span></footer>
   <div class="disc"><a href="#" id="discLink">⚠️ Αποποίηση ευθύνης &amp; όροι χρήσης</a> · <a href="#" id="aboutLink">ℹ️ Ποιοι είμαστε</a> · <a href="#" id="contactLink">✉️ Επικοινωνία</a></div>
@@ -305,7 +308,20 @@ async function predEval(){
   el.innerHTML = '<div class="pe"><b>🔮 Τελευταία πρόβλεψη</b> <span class="muted">(από #'+PRED.id+' · '+hm(PRED.t)+')</span><div style="margin:6px 0">'+chips(set, ss)+'</div>'+
     'Στην κλήρωση <b>#'+nid+' · '+hm(d.t)+'</b>'+(nid-PRED.id>1?' <span class="muted">('+(nid-PRED.id)+'η μετά την πρόβλεψη)</span>':' <span class="muted">(η επόμενη)</span>')+': <b style="font-size:16px">'+a+(b2?'<span style="color:#4ade80">+'+b2+'</span>':'')+'/'+K+'</b>'+
     (w===null ? ' <span class="muted">(πάνω από 12 αριθμούς — χωρίς κέρδη)</span>' : ' · '+(w ? '<span class="win">κέρδος '+eur(w)+'</span>' : '<span class="muted">χωρίς κέρδος</span>')+(bh?' <b style="color:#f87171">🔴 Bonus '+d.b+'!</b>':'')+' <span class="muted">για '+eur(cost)+(SC?' με 2η ευκαιρία':(KB?' με ΚΙΝΟ Bonus':''))+'</span>')+'</div>';
+  if(w) winAdd({p:PRED.id, pt:PRED.t, d:nid, t:d.t, n:nums, h:nums.filter(function(x){ return set[x]; }), s:nums.filter(function(x){ return ss[x]; }), b:bh?d.b:0, w:w, c:cost, m:SC?'sc':(KB?'kb':'')});
 }
+var WINS = []; try{ WINS = JSON.parse(lsGet('trv_wins')||'[]'); }catch(e){ WINS = []; }
+function winAdd(o){ var k = o.p+'-'+o.d+'-'+o.m; if(WINS.some(function(x){ return x.p+'-'+x.d+'-'+x.m === k; })) return; o.new = 1; WINS.push(o); WINS.sort(function(a,b){ return b.d-a.d || b.w-a.w; }); WINS = WINS.slice(0,30); lsSet('trv_wins', JSON.stringify(WINS)); winsRender(); }
+function winsRender(){ var c = $('winsCard'); document.body.classList.toggle('hw', WINS.length>0); if(!WINS.length){ c.style.display = 'none'; return; } c.style.display = '';
+  $('winsList').innerHTML = WINS.map(function(o){ var H = {}, S = {}; o.h.forEach(function(x){ H[x] = 1; }); (o.s||[]).forEach(function(x){ S[x] = 1; });
+    var dd = new Date(o.t), dt = pad(dd.getDate())+'/'+pad(dd.getMonth()+1)+' '+hm(o.t);
+    return '<div class="wrow'+(o.new?' new':'')+'"><span>🎯 Κλήρωση <b>#'+o.d+'</b> <span class="muted">'+dt+'</span></span><span class="muted">πρόβλεψη από #'+o.p+'</span>'+
+      '<span class="wn">'+o.n.map(function(x){ return '<span class="chip'+(H[x]?' hit':(S[x]?' sch':''))+'">'+x+'</span>'; }).join('')+'</span>'+
+      '<b>'+o.h.length+((o.s&&o.s.length)?'<span style="color:#4ade80">+'+o.s.length+'</span>':'')+'/'+o.n.length+'</b>'+(o.b?' <b style="color:#f87171">🔴 Bonus '+o.b+'</b>':'')+
+      '<span class="wamt">💰 '+eur(o.w)+' <span class="muted" style="font-size:11px;font-weight:400">για '+eur(o.c)+(o.m==='sc'?' · 2η ευκαιρία':(o.m==='kb'?' · ΚΙΝΟ Bonus':''))+'</span></span></div>'; }).join('');
+  if(WINS.some(function(o){ return o.new; })){ WINS.forEach(function(o){ delete o.new; }); lsSet('trv_wins', JSON.stringify(WINS)); } }
+winsRender(); $('winsClr').addEventListener('click', function(){ if(confirm('Να διαγραφούν όλες οι επιτυχίες από τον πίνακα;')){ WINS = []; lsSet('trv_wins','[]'); winsRender(); } });
+
 function predMark(){ if(!PRED || !cur() || cur().id <= PRED.id) return; var P = {}; PRED.moves.forEach(function(m){ P[m[1]] = 1; }); Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb'), function(b){ if(P[+b.textContent] && (useSC() || !b.classList.contains('sc'))) b.classList.add('pk'); }); }
 function predShow(){ if(busy || !PRED) return; var box = $('boxBox'); box.innerHTML = grid(); shownId = -1;
   PRED.moves.forEach(function(mm){ var b = document.createElement('div'); var p = boxPos(mm[1]); b.className = 'bxb'+(mm[0]!==mm[1] ? ' nw' : ' st'); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; box.appendChild(b); });
