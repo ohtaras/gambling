@@ -30,12 +30,22 @@ select{background:#1e293b;color:var(--text);border:1px solid #334155;border-radi
 #boxRes{text-align:center}
 .nums{font-size:22px;font-weight:900;letter-spacing:1px;margin:6px 0 10px;color:#fde68a}
 footer{text-align:center;font-size:11px;margin-top:14px}
+.shop{display:flex;flex-direction:column;align-items:center;gap:2px;background:linear-gradient(90deg,#1a2442,#232f52);border:1px solid #2c3a63;border-radius:12px;padding:8px 10px;margin:0 0 10px;text-align:center}
+.shop b:first-child{font-size:16px;color:#fde68a;letter-spacing:.3px}.shop span{font-size:13px;color:#cbd5e1}
+.tk{background:#0f172a;border:1px solid #23304d;border-radius:12px;padding:10px;margin-top:10px}
+.tk .hd{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:50%;background:#1e293b;border:1px solid #334155;font-weight:800;font-size:13px;margin:2px}
+.chip.hit{background:radial-gradient(circle at 35% 30%,#fff7b0,#facc15 55%,#ca8a04);color:#111;border-color:#ca8a04}
+table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}table.dr td{padding:4px 3px;border-top:1px solid #1f2a44}
+.win{color:#4ade80;font-weight:800}
+.add{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:10px}
 .bxGuy svg{filter:drop-shadow(0 0 1.5px rgba(255,255,255,.55))}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header><img src="https://ohtaras.github.io/gambling/img/logo.jpg" alt="" onerror="this.style.display='none'"><h1>Τράβα ρε 😜<small id="lastInfo">Φορτώνω την τελευταία κλήρωση…</small></h1></header>
+  <div class="shop"><b>Οχταράς &amp; Πετρόπουλος</b><span>Αγίας Τριάδος 43 · Πρακτορείο <b>Allwyn</b></span></div>
   <div class="card">
     <div class="ctrl">
       <button class="btn" id="boxGo" disabled>📦 Κούνα το!</button>
@@ -46,6 +56,7 @@ footer{text-align:center;font-size:11px;margin-top:14px}
     <div id="boxTxt" class="muted"></div>
     <div id="boxRes"></div>
   </div>
+  <div class="card" style="margin-top:12px"><div style="font-weight:800;font-size:16px">🎫 Τα δελτία μου <span id="tkCnt" class="muted" style="font-weight:400;font-size:13px"></span></div><div id="tkList"></div></div>
   <footer class="muted">Οι μπίλιες της τελευταίας κλήρωσης ΚΙΝΟ μένουν ή πάνε ένα κουτάκι ⬅ ➡ ⬆ ⬇. Για πλάκα — κάθε κλήρωση είναι τυχαία. Παίξτε υπεύθυνα, 18+.</footer>
 </div>
 <script>
@@ -164,7 +175,7 @@ async function load(){
     var j = await r.json(), c = j.last || j; var w = c.winningNumbers || {};
     var d = {id:c.drawId, t:c.drawTime, arr:(w.list||[]).slice()};
     if(!d.arr.length) throw new Error('empty');
-    last = d; $('boxGo').disabled = false;
+    var isNew = !last || last.id!==d.id; last = d; $('boxGo').disabled = false; if(isNew) tkCheck();
     $('lastInfo').textContent = 'Τελευταία κλήρωση #'+d.id+' · '+hm(d.t);
     if(!busy && shownId!==d.id){ shownId = d.id; out = []; start(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
   }catch(e){ if(!last){ $('lastInfo').textContent = 'Δεν φόρτωσε η κλήρωση — ξαναδοκιμάζω…'; $('boxBox').innerHTML = grid(); } }
@@ -186,14 +197,58 @@ $('boxGo').addEventListener('click', function(){ if(busy || !last) return;
     out = moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
     $('boxHd').textContent = '🎲 Οι '+out.length+' αριθμοί σου (από #'+last.id+')';
     $('boxTxt').textContent = st.stay+' έμειναν · '+st.l+'⬅ · '+st.r+'➡ · '+st.u+'⬆ · '+st.d+'⬇  ·  🟡 έμεινε · 🟢 μετακινήθηκε';
-    $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'');
+    $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'')+
+      '<div class="add">'+(out.length>12 ? '<span class="muted" style="font-size:12px">Το δελτίο ΚΙΝΟ παίρνει έως 12 αριθμούς — διάλεξε «Πόσους» έως 12 για να το παρακολουθήσεις.</span>' :
+      '<label class="muted" style="font-size:13px">για <select id="tkN">'+[1,2,3,4,5,6,8,10,12,15,20].map(function(n){ return '<option'+(n===5?' selected':'')+'>'+n+'</option>'; }).join('')+'</select> κληρώσεις</label><button class="btn2" id="tkAdd" style="background:#14532d;border-color:#166534">➕ Προσθήκη στο δελτίο</button>')+'</div>';
     busy = false; $('boxGo').disabled = false;
   }, 2750);
 });
 $('boxRes').addEventListener('click', function(e){ var txt = 'Τράβα ρε 😜 (από #'+(last?last.id:'')+'): '+out.join(' ');
   if(e.target.id==='cp'){ (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function(){ e.target.textContent = '✓ Αντιγράφηκε'; }, function(){ prompt('Αντέγραψε:', txt); }); }
   if(e.target.id==='sh'){ navigator.share({text: txt + '\n' + location.href}).catch(function(){}); }
+  if(e.target.id==='tkAdd'){ var T = tkLoad(); if(T.length>=5){ alert('Έχεις ήδη 5 δελτία (το όριο). Σβήσε ένα για να βάλεις καινούργιο.'); return; }
+    var n = +$('tkN').value || 5; T.unshift({id:Date.now(), n:out.slice(), start:last.id+1, draws:n}); tkSave(T); e.target.textContent = '✓ Μπήκε στα δελτία'; e.target.disabled = true; tkRender(); tkCheck(); }
 });
+/* ---------- 🎫 Δελτία: έως 5, παρακολούθηση για Χ κληρώσεις ---------- */
+var PAYS = {1:{1:1.25}, 2:{1:0.5,2:2.5}, 3:{2:1.25,3:12.5}, 4:{2:0.5,3:2,4:50}, 5:{3:1,4:10,5:225}, 6:{3:0.5,4:3.5,5:25,6:800}, 7:{3:0.5,4:1.5,5:10,6:50,7:2500},
+  8:{4:1,5:5,6:25,7:500,8:7500}, 9:{4:0.5,5:2.5,6:12.5,7:100,8:2000,9:20000}, 10:{0:1,5:1,6:10,7:40,8:250,9:5000,10:50000},
+  11:{0:1,5:0.5,6:5,7:25,8:125,9:750,10:7500,11:250000}, 12:{0:2,6:2.5,7:12.5,8:75,9:500,10:1250,11:12500,12:500000}};
+var STAKE = 0.5, DR = {};
+function eur(x){ return x.toLocaleString('el-GR',{minimumFractionDigits:2, maximumFractionDigits:2})+'€'; }
+function tkLoad(){ try{ return JSON.parse(lsGet('trv_tk')||'[]'); }catch(e){ return []; } }
+function tkSave(T){ lsSet('trv_tk', JSON.stringify(T)); }
+(function(){ try{ var c = JSON.parse(lsGet('trv_dr')||'{}'); for(var k in c) DR[k] = c[k]; }catch(e){} })();
+function drSave(){ var T = tkLoad(), keep = {}; T.forEach(function(t){ for(var i=0;i<t.draws;i++){ var id = t.start+i; if(DR[id]) keep[id] = DR[id]; } }); DR = keep; lsSet('trv_dr', JSON.stringify(keep)); }
+async function tkCheck(){
+  var T = tkLoad(); if(!T.length || !last) { tkRender(); return; }
+  var need = []; T.forEach(function(t){ for(var i=0;i<t.draws;i++){ var id = t.start+i; if(id<=last.id && !DR[id]) need.push(id); } });
+  if(need.length){ var lo = Math.min.apply(null, need), hi = Math.max.apply(null, need);
+    try{ for(var pg=0; pg<40; pg++){
+        var r = await fetch('https://api.opap.gr/draws/v3.0/1100/draw-id/'+lo+'/'+hi+'?page='+pg+'&_='+Date.now(), {cache:'no-store'}); if(!r.ok) break;
+        var j = await r.json(); (j.content||[]).forEach(function(c){ if(c.winningNumbers && c.winningNumbers.list && c.winningNumbers.list.length) DR[c.drawId] = [c.drawTime, c.winningNumbers.list]; });
+        if(j.last || pg >= (j.totalPages||1)-1) break; }
+    }catch(e){}
+    drSave(); }
+  tkRender();
+}
+function tkRender(){
+  var T = tkLoad(); $('tkCnt').textContent = '('+T.length+'/5)';
+  if(!T.length){ $('tkList').innerHTML = '<div class="muted" style="font-size:13px;margin-top:6px">Κούνα το κουτάκι και πάτα «➕ Προσθήκη στο δελτίο» για να το παρακολουθείς στις επόμενες κληρώσεις. Έως 5 δελτία.</div>'; return; }
+  $('tkList').innerHTML = T.map(function(t){
+    var K = t.n.length, rows = '', won = 0, done = 0, lastHits = null, best = 0;
+    for(var i=0;i<t.draws;i++){ var id = t.start+i, d = DR[id];
+      if(!d){ rows += '<tr><td>#'+id+'</td><td colspan="3" class="muted">'+(last && id<=last.id ? 'φορτώνει…' : (last && id===last.id+1 ? '⏳ επόμενη κλήρωση' : 'σε αναμονή'))+'</td></tr>'; continue; }
+      done++; var set = {}; d[1].forEach(function(x){ set[x] = 1; }); var hits = t.n.filter(function(x){ return set[x]; }); var w = (PAYS[K]||{})[hits.length]||0; won += w; lastHits = set; if(hits.length>best) best = hits.length;
+      rows += '<tr><td>#'+id+' · '+hm(d[0])+'</td><td><b>'+hits.length+'/'+K+'</b></td><td class="muted">'+(hits.join(' ')||'—')+'</td><td'+(w?' class="win"':'')+'>'+(w?eur(w):'—')+'</td></tr>'; }
+    var cost = t.draws*STAKE, fin = done===t.draws;
+    return '<div class="tk"><div class="hd"><span style="font-weight:800">'+K+' αριθμοί · '+t.draws+' κληρώσεις <span class="muted" style="font-weight:400;font-size:12px">από #'+t.start+'</span></span><button class="btn2" data-del="'+t.id+'" style="padding:3px 9px;font-size:12px">🗑</button></div>'+
+      '<div style="margin-top:6px">'+t.n.map(function(x){ return '<span class="chip'+(lastHits&&lastHits[x]?' hit':'')+'">'+x+'</span>'; }).join('')+'</div>'+
+      '<div style="font-size:13px;margin-top:6px">'+(fin?'✅ Τελείωσε':'▶️ Σε εξέλιξη')+' · '+done+'/'+t.draws+' κληρώσεις · καλύτερο '+best+'/'+K+' · κόστος '+eur(cost)+' (0,50€/κλήρωση) · κέρδη <span class="'+(won?'win':'')+'">'+eur(won)+'</span></div>'+
+      '<table class="dr">'+rows+'</table></div>';
+  }).join('');
+}
+$('tkList').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-del]'); if(!b) return; if(!confirm('Να σβηστεί το δελτίο;')) return; tkSave(tkLoad().filter(function(t){ return String(t.id)!==b.dataset.del; })); drSave(); tkRender(); });
+tkRender();
 $('boxBox').innerHTML = grid();
 load(); setInterval(function(){ if(!document.hidden) load(); }, 30000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
