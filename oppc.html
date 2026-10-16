@@ -41,7 +41,7 @@ body.menu #menu{transform:none}body.menu #menuBg{opacity:1;pointer-events:auto}b
 #menu .mhd{display:flex;justify-content:space-between;align-items:center;font-size:17px;margin-bottom:6px}#menu .mhd button{background:none;border:0;color:#fff;font-size:22px;cursor:pointer}
 #menu .msec{margin-top:14px;border:1px solid #23304d;border-radius:12px;padding:0 12px;background:#111a2e}#menu .msec summary{cursor:pointer;font-size:15px;font-weight:800;color:#fde68a;padding:11px 0;list-style:none}#menu .msec summary::-webkit-details-marker{display:none}#menu .msec summary:after{content:'▾';float:right;color:#94a3b8;transition:transform .2s}#menu .msec[open] summary:after{transform:rotate(180deg)}#menu .msec[open]{padding-bottom:10px}
 #menu .mrg{margin-top:14px;border:1px solid #23304d;border-radius:12px;padding:10px 12px;background:#111a2e;text-align:center;font-size:11px;font-weight:700;line-height:1.45;color:#cbd5e1}#menu .mrg img{height:58px;border-radius:6px;display:block;margin:0 auto 6px}#menu .mrg a{color:inherit;text-decoration:none}
-#menu .mcontact{margin-top:14px;border:1px solid #23304d;border-radius:12px;padding:10px 12px;background:#111a2e;font-size:13.5px}#menu .mcontact .muted{font-size:11.5px;margin:2px 0 8px}#menu .mcontact a.btn2{display:inline-block;text-decoration:none;color:#fff;font-size:13px;word-break:break-all}
+#menu .mcontact{margin-top:14px;border:1px solid #23304d;border-radius:12px;padding:10px 12px;background:#111a2e;font-size:13.5px}#menu .mcontact .muted{font-size:11.5px;margin:2px 0 8px}#menu .mcontact textarea,#menu .mcontact input{width:100%;box-sizing:border-box;background:#0b1220;color:#e5e7eb;border:1px solid #334155;border-radius:8px;padding:8px;font:inherit;font-size:13px;margin-bottom:6px}
 #menu h3{font-size:15px;margin:16px 0 8px;color:#fde68a;border-bottom:1px solid #23304d;padding-bottom:5px}
 #menu p{font-size:13.5px;line-height:1.5;margin:6px 0}#menu #mDisc p{font-size:12px;color:#94a3b8}#menu a{color:#93c5fd}
 .mrow{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #1f2a44;font-size:13.5px}.mrow .muted{font-size:11.5px;margin-top:2px}.mrow button{flex:none}
@@ -99,8 +99,12 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
     <p>Το «Τράβα ρε» το φτιάξαμε για πλάκα, για τους φίλους και τους πελάτες μας: να κουνάμε το κουτί, να γελάμε με τις ατάκες και να παρακολουθούμε τις κληρώσεις — πάντα με μέτρο.</p>
     <p class="muted">Περάστε να μας γνωρίσετε από κοντά! 👋</p>
   </details>
-  <div class="mcontact"><b>✉️ Επικοινωνία &amp; feedback</b><div class="muted">Ιδέες, παρατηρήσεις ή κάποιο λάθος; Γράψτε μας!</div><a class="btn2" href="mailto:ohtaras.petropoulos@gmail.com?subject=%CE%A4%CF%81%CE%AC%CE%B2%CE%B1%20%CF%81%CE%B5%20-%20feedback">ohtaras.petropoulos@gmail.com</a></div>
-  <details id="mDisc" class="msec"><summary>⚠️ Αποποίηση ευθύνης &amp; όροι χρήσης</summary>
+  <div class="mcontact" id="mContact"><b>✉️ Επικοινωνία &amp; feedback</b><div class="muted">Ιδέες, παρατηρήσεις ή κάποιο λάθος; Γράψτε μας!</div>
+    <form id="fbForm"><textarea id="fbMsg" rows="4" maxlength="2000" placeholder="Το μήνυμά σας…" required></textarea>
+      <input id="fbName" maxlength="80" placeholder="Όνομα (προαιρετικό)"><input id="fbMail" type="email" maxlength="120" placeholder="Email για απάντηση (προαιρετικό)">
+      <input type="checkbox" id="fbHp" tabindex="-1" autocomplete="off" style="display:none">
+      <button class="btn2" type="submit" id="fbSend">📨 Αποστολή</button><span id="fbSt" class="muted" style="margin-left:8px"></span></form></div>
+    <details id="mDisc" class="msec"><summary>⚠️ Αποποίηση ευθύνης &amp; όροι χρήσης</summary>
     <p><b>1. Χαρακτήρας της σελίδας.</b> Το «Τράβα ρε» είναι εργαλείο <b>ψυχαγωγίας</b>. Δεν είναι επίσημη εφαρμογή της Allwyn/ΟΠΑΠ και δεν αποτελεί σύστημα πρόβλεψης, συμβουλή ή προτροπή για συμμετοχή σε τυχερά παίγνια.</p>
     <p><b>2. Τυχαιότητα.</b> Οι κληρώσεις ΚΙΝΟ είναι τυχαίες και ανεξάρτητες μεταξύ τους. Κάθε αριθμός και κάθε συνδυασμός έχει την ίδια πιθανότητα σε κάθε κλήρωση. Το «κούνημα», οι «προβλέψεις» και κάθε στατιστικό στοιχείο δεν αυξάνουν την πιθανότητα κέρδους.</p>
     <p><b>3. Ακρίβεια δεδομένων.</b> Τα αποτελέσματα εμφανίζονται από δημόσια διαθέσιμα δεδομένα, χωρίς εγγύηση πληρότητας ή ακρίβειας, και μπορεί να καθυστερούν ή να περιέχουν σφάλματα. <b>Ισχύουν μόνο τα επίσημα αποτελέσματα της Allwyn/ΟΠΑΠ.</b> Τα ποσά κερδών που εμφανίζονται είναι ενδεικτικά.</p>
@@ -132,7 +136,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   </div>
   <div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-weight:800;font-size:16px">🎫 Τα δελτία μου <span id="tkCnt" class="muted" style="font-weight:400;font-size:13px"></span></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><label class="sw"><span style="font-size:13px">🟢 2η ευκαιρία</span><input type="checkbox" id="scSw"><span class="tr"></span><b id="scLbl" style="font-size:13px;min-width:28px">ΟΧΙ</b></label><label class="sw kb"><span style="font-size:13px">🔴 ΚΙΝΟ Bonus</span><input type="checkbox" id="kbSw"><span class="tr"></span><b id="kbLbl" style="font-size:13px;min-width:28px">ΟΧΙ</b></label></div></div><div id="tkList"></div></div>
   <footer class="rg"><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" class="eeep"><img src="https://ohtaras.github.io/gambling/img/eeep.png" alt="ΕΕΕΠ — Επιτροπή Εποπτείας και Ελέγχου Παιγνίων"></a><span><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener">18+ ΕΠΙΓΕΙΟ, 21+ ΨΗΦΙΑΚΟ | ΑΡΜΟΔΙΟΣ ΡΥΘΜΙΣΤΗΣ ΕΕΕΠ | ΚΙΝΔΥΝΟΣ ΕΘΙΣΜΟΥ &amp; ΑΠΩΛΕΙΑΣ ΠΕΡΙΟΥΣΙΑΣ | ΕΟΠΑΕ – ΓΡΑΜΜΗ ΣΥΜΒΟΥΛΕΥΤΙΚΗΣ:</a> <a href="tel:1114" style="white-space:nowrap">1114</a> <a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" style="white-space:nowrap">| ΠΑΙΞΕ ΥΠΕΥΘΥΝΑ</a></span></footer>
-  <div class="disc"><a href="#" id="discLink">⚠️ Αποποίηση ευθύνης &amp; όροι χρήσης</a> · <a href="#" id="aboutLink">ℹ️ Ποιοι είμαστε</a> · <a href="mailto:ohtaras.petropoulos@gmail.com?subject=%CE%A4%CF%81%CE%AC%CE%B2%CE%B1%20%CF%81%CE%B5%20-%20feedback">✉️ Επικοινωνία</a></div>
+  <div class="disc"><a href="#" id="discLink">⚠️ Αποποίηση ευθύνης &amp; όροι χρήσης</a> · <a href="#" id="aboutLink">ℹ️ Ποιοι είμαστε</a> · <a href="#" id="contactLink">✉️ Επικοινωνία</a></div>
   <div class="credit">Created by <b>Σπύρος Οχτάρας</b> · © 2026</div>
 </div>
 <script>
@@ -517,6 +521,18 @@ $('menuX').addEventListener('click', menuClose); $('menuBg').addEventListener('c
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') menuClose(); });
 $('discLink').addEventListener('click', function(e){ e.preventDefault(); menuOpen('mDisc'); });
 $('aboutLink').addEventListener('click', function(e){ e.preventDefault(); menuOpen('mAbout'); });
+$('contactLink').addEventListener('click', function(e){ e.preventDefault(); menuOpen('mContact'); });
+// feedback: στέλνεται μέσω Web3Forms — η διεύθυνση email δεν φαίνεται πουθενά στη σελίδα
+var FB_KEY = '';   // ← access key από web3forms.com
+$('fbForm').addEventListener('submit', async function(e){ e.preventDefault(); var st = $('fbSt'), msg = $('fbMsg').value.trim();
+  if(!msg) return; if($('fbHp').checked) return;
+  if(!FB_KEY){ st.textContent = 'Η φόρμα ενεργοποιείται σύντομα — ευχαριστούμε!'; return; }
+  $('fbSend').disabled = true; st.textContent = 'Αποστολή…';
+  try{ var r = await fetch('https://api.web3forms.com/submit', {method:'POST', headers:{'Content-Type':'application/json', 'Accept':'application/json'},
+      body: JSON.stringify({access_key: FB_KEY, subject: 'Τράβα ρε — feedback', from_name: $('fbName').value || 'Επισκέπτης', email: $('fbMail').value || undefined, message: msg, page: location.href})});
+    var j = await r.json(); if(j.success){ st.textContent = '✓ Στάλθηκε, ευχαριστούμε!'; $('fbMsg').value = ''; } else st.textContent = 'Κάτι πήγε στραβά, δοκιμάστε ξανά.'; }
+  catch(err){ st.textContent = 'Δεν στάλθηκε — ελέγξτε τη σύνδεση.'; }
+  $('fbSend').disabled = false; });
 $('mSc').addEventListener('click', function(){ setMode(useSC() ? '' : 'sc'); modeChanged(); });
 $('mKb').addEventListener('click', function(){ setMode(useKB() ? '' : 'kb'); modeChanged(); });
 /* ---------- 🎬 Σκηνή: στο κινητό, όσο κουνάνε, όλα σβήνουν και ο Σπύρος, ο Ηρακλής και το κουτί έρχονται μπροστά ---------- */
