@@ -437,8 +437,11 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
   </section>
 
   <section class="card mt" data-k="box">
-    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>📦 Κουτάκι</span><span id="boxMeta"></span></h2>
+    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>📦 Κουτάκι · Τράβα ρε 😜</span><span id="boxMeta"></span></h2>
     <div class="cbody">
+      <iframe id="trvFrame" data-src="oppc.html?embed=1" title="Τράβα ρε" allow="screen-wake-lock; accelerometer; gyroscope" style="width:100%;height:1100px;border:0;border-radius:12px;background:#0b1220;display:block"></iframe>
+      <div style="text-align:right;font-size:12px;margin-top:4px"><a href="oppc.html" target="_blank" rel="noopener">↗ Άνοιγμα σε πλήρη οθόνη</a></div>
+      <div id="oldBox" style="display:none">
       <div class="muted" style="font-size:12.5px;margin-bottom:6px">Βάζει τις 20 μπίλιες της <b>τελευταίας κλήρωσης</b> σε ένα κουτάκι και το κουνάει: κάθε μπίλια μένει ή πάει ένα κουτάκι ⬅ ➡ ⬆ ⬇. Κάθε φορά ξεκινάει πάλι από την τελευταία κλήρωση.</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px">
         <button class="btn" id="boxGo" style="font-size:16px;padding:6px 16px">📦 Κούνα το!</button>
@@ -449,6 +452,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
       <div id="boxTxt" class="muted" style="font-size:12px;margin:8px 0;text-align:center;min-height:16px"></div>
       <div id="boxRes" style="text-align:center"></div>
     </div>
+</div>
   </section>
 
   <section class="card mt" data-k="late">
@@ -2635,7 +2639,9 @@ function boxStart(last){ var box = $('boxBox'); box.classList.remove('shk'); box
   (last ? last.arr.concat(last.sc||[]) : []).forEach(function(n){ var b = document.createElement('div'); b.className = 'bxb'+((last.sc||[]).indexOf(n)>=0?' sc':(n===last.b?' bn':'')); var p = boxPos(n); b.style.left = p.l; b.style.top = p.t; b.textContent = n; box.appendChild(b); balls[n] = b; });
   $('boxHd').innerHTML = last ? '🟡 Τελευταία κλήρωση #'+last.id+' · '+dateOf(last.t).split('-').reverse().join('/')+' '+hm(last.t)+'<div class="muted" style="font-size:12px;font-weight:400;margin-top:2px">🟡 20 αριθμοί'+(last.b?' · 🔴 ΚΙΝΟ Bonus: <b style="color:#ef4444">'+last.b+'</b>':'')+((last.sc||[]).length?' · 🟢 2η ευκαιρία: <b style="color:#16a34a">'+last.sc.join(' ')+'</b>':'')+'</div>' : 'Περιμένει κληρώσεις…';
   return balls; }
-function boxIdle(){ var c = document.querySelector('.card[data-k="box"]'); if(!c || c.classList.contains('collapsed') || boxBusy) return;
+function trvLoad(){ var f = $('trvFrame'); if(f && !f.src){ f.src = f.dataset.src; } }
+window.addEventListener('message', function(e){ var d = e.data; if(d && d.trvH){ var f = $('trvFrame'); if(f) f.style.height = Math.max(400, Math.ceil(d.trvH)) + 'px'; } });
+function boxIdle(){ var c = document.querySelector('.card[data-k="box"]'); if(c && !c.classList.contains('collapsed')) trvLoad(); if(!c || c.classList.contains('collapsed') || boxBusy) return;
   var last = boxLast(); if(!last || (boxLastShown && boxLastShown===last.id)) return;
   boxLastShown = last.id; boxOut = []; boxStart(last); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; $('boxMeta').textContent = '#'+last.id; }
 (function(){ $('boxN').value = lsGet('kl_box_n') || '12'; $('boxN').addEventListener('change', function(){ lsSet('kl_box_n', this.value); }); })();
