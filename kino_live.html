@@ -2534,25 +2534,25 @@ var BXK='#111', BXSK='#eda67c', BXSKS='#c98058';
       '<path d="M'+(x-3)+' '+(y-6)+' Q'+(x+2)+' '+(y-12)+' '+(x+8)+' '+(y-10)+'" fill="none" stroke="'+BXSK+'" stroke-width="2.8" stroke-linecap="round"/>'+
     '</g>'; }
   function bxLimb(d, sleeve, w){ var K=BXK; return '<path d="'+d+'" fill="none" stroke="'+BXK+'" stroke-width="'+(w+3.6)+'" stroke-linecap="round" stroke-linejoin="round"/><path d="'+d+'" fill="none" stroke="'+sleeve+'" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round"/>'; }
-function bxArmB(sl, ox, oy){ return bxLimb('M24 108 Q44 120 '+(62+ox*.45)+' '+(120+oy*.5)+' Q'+(84+ox*.8)+' '+(120+oy)+' '+(99+ox)+' '+(116+oy), sl, 9)+bxHand(103+ox,116+oy); }
-function bxArmF(sl, ox, oy){ return bxLimb('M78 106 Q84 128 '+(82+ox*.45)+' '+(142+oy*.5)+' Q'+(92+ox*.8)+' '+(146+oy)+' '+(99+ox)+' '+(146+oy), sl, 10)+bxHand(103+ox,146+oy); }
+function bxArmB(sl, ox, oy){ return bxLimb('M62 105 Q72 110 '+(80+ox*.45)+' '+(114+oy*.5)+' Q'+(90+ox*.8)+' '+(117+oy)+' '+(99+ox)+' '+(116+oy), sl, 9)+bxHand(103+ox,116+oy); }
+function bxArmF(sl, ox, oy){ return bxLimb('M76 108 Q84 128 '+(82+ox*.45)+' '+(142+oy*.5)+' Q'+(92+ox*.8)+' '+(146+oy)+' '+(99+ox)+' '+(146+oy), sl, 10)+bxHand(103+ox,146+oy); }
 function bxSetArms(el, ox, oy){ if(!el) return; var sl = el.dataset.sl; var b = el.querySelector('.aB'), f = el.querySelector('.aF'); if(b) b.innerHTML = bxArmB(sl,ox,oy); if(f) f.innerHTML = bxArmF(sl,ox,oy); }
 function bxGuySvg(who){
   var K='#111', sk='#f2c29b', skS='#d99a72';
   var legs = function(jean){ return '<path d="M34 150 L31 198 L46 198 L49 152 Z M53 152 L56 198 L71 198 L68 150 Z" fill="'+jean+'" stroke="'+K+'" stroke-width="2.2" stroke-linejoin="round"/>'+
     '<path d="M27 198 Q27 190 39 191 L48 193 L48 202 L27 202 Z M54 193 L64 191 Q77 190 77 198 L77 202 L54 202 Z" fill="#222" stroke="'+K+'" stroke-width="2"/>'; };
-  var torso = function(c, extra){ return '<path d="M15 118 Q16 101 35 97.5 Q50 95 65 97.5 Q84 101 85 118 L81 158 Q50 164 19 158 Z" fill="'+c+'" stroke="'+K+'" stroke-width="2.4" stroke-linejoin="round"/>'+(extra||''); };
+  var torso = function(c, extra){ return '<path d="M22 118 Q22 101 40 97.5 Q56 95 70 98.5 Q85 103 85 120 L81 158 Q52 165 25 158 Z" fill="'+c+'" stroke="'+K+'" stroke-width="2.4" stroke-linejoin="round"/>'+(extra||''); };
   var h = '';
   if(who==='hood'){
     // ===== Σπύρος: σγουρά γκριζοκαστανά μαλλιά, ψηλό μέτωπο, βαριά βλέφαρα, κόκκινα μάγουλα, άσπρο-γκρι μούσι, μαύρο μπλουζάκι
     var skA = '#eda67c', skB = '#c98058';
-    h += legs('#33507d') + torso('#17171a','<path d="M38 98.5 Q50 110 62 98.5" fill="#0e0e10" stroke="#3a3a40" stroke-width="2.4"/><path d="M30 112 Q34 136 30 154 M70 112 Q66 136 70 154" stroke="#26262b" stroke-width="2" fill="none"/>') + '<g class="aB"></g>';
+    h += legs('#33507d') + torso('#17171a','<path d="M41 98 Q51 108 61 98" fill="#0e0e10" stroke="#3a3a40" stroke-width="2.2"/><path d="M33 114 Q37 136 33 154" stroke="#26262b" stroke-width="2" fill="none"/>') + '<g class="aB"></g>';
     h += '<g class="aF"></g>';
     h += '<rect x="43" y="84" width="14" height="15" fill="'+skB+'" stroke="'+K+'" stroke-width="1.8"/>';
   } else {
     // ===== Ηρακλής: σκούρα κοντά μαλλιά, μεγάλα αυτιά, χαμογελαστά «σφιχτά» μάτια, πυκνά μαύρα γένια, σκούρο μπλε μπλουζάκι
     var sA = '#eda67c', sB = '#c98058';
-    h += legs('#2f4a73') + torso('#232c3d','<path d="M38 98.5 Q50 110 62 98.5" fill="#161c28" stroke="#3d4a63" stroke-width="2.4"/><path d="M30 112 Q34 136 30 154 M70 112 Q66 136 70 154" stroke="#1b2231" stroke-width="2" fill="none"/>') + '<g class="aB"></g>';
+    h += legs('#2f4a73') + torso('#232c3d','<path d="M41 98 Q51 108 61 98" fill="#161c28" stroke="#3d4a63" stroke-width="2.2"/><path d="M33 114 Q37 136 33 154" stroke="#1b2231" stroke-width="2" fill="none"/>') + '<g class="aB"></g>';
     h += '<g class="aF"></g>';
     h += '<rect x="43" y="84" width="14" height="15" fill="'+sB+'" stroke="'+K+'" stroke-width="1.8"/>';
   }
