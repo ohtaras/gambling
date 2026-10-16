@@ -14,7 +14,7 @@
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .wrap{max-width:820px;margin:0 auto;padding:14px 12px 30px}
 header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-header img{width:64px;height:64px;border-radius:14px;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+header img{width:clamp(88px,24vw,120px);height:clamp(88px,24vw,120px);border-radius:18px;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,.5)}
 header h1{margin:0;font-size:22px}
 header small{display:block;color:var(--muted);font-size:12px;font-weight:400}
 .card{background:var(--card);border:1px solid #1f2a44;border-radius:16px;padding:14px}
@@ -30,6 +30,8 @@ select{background:#1e293b;color:var(--text);border:1px solid #334155;border-radi
 #boxRes{text-align:center}
 .nums{font-size:22px;font-weight:900;letter-spacing:1px;margin:6px 0 10px;color:#fde68a}
 footer{text-align:center;font-size:11px;margin-top:14px}
+.tapHint{width:100%;text-align:center;font-size:15px;font-weight:700;color:#fde68a;padding:4px 6px;animation:tapPulse 1.8s ease-in-out infinite}.tapHint b{color:#fff}@keyframes tapPulse{0%,100%{opacity:1}50%{opacity:.55}}
+.bxGuy:hover svg{filter:drop-shadow(0 0 6px rgba(253,230,138,.7))}
 .rgtop{color:#cbd5e1;text-align:right;font-size:10px;line-height:1.35;font-weight:700;letter-spacing:.15px;opacity:.85;margin:0 0 6px;position:relative;z-index:52}.rgtop a{color:inherit;text-decoration:none;white-space:normal}.rgtop a[href^="tel"]{white-space:nowrap}
 #stageBg{position:fixed;inset:0;background:rgba(3,7,18,.9);z-index:50;opacity:0;pointer-events:none;transition:opacity .35s}
 body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
@@ -71,7 +73,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   <div class="card">
     <div class="cdw"><span class="muted">⏱️ Επόμενη κλήρωση <span id="cdId"></span></span><b id="cdT">--:--</b></div>
     <div class="ctrl">
-      <button class="btn" id="boxGo" disabled>📦 Κούνα το!</button><button class="btn2" id="shakeOn" style="display:none">📳 Κούνα το κινητό</button><button class="btn2" id="boxPred" disabled title="Δείξε ξανά τους αριθμούς του τελευταίου κουνήματος">🔮 Δείτε την τελευταία πρόβλεψη</button>
+      <button class="btn" id="boxGo" disabled style="display:none">📦 Κούνα το!</button><div class="tapHint">👆 Πάτα πάνω στον <b>Σπύρο</b> ή στον <b>Ηρακλή</b> για να κουνήσουν το κουτί!</div><button class="btn2" id="shakeOn" style="display:none">📳 Κούνα το κινητό</button><button class="btn2" id="boxPred" disabled title="Δείξε ξανά τους αριθμούς του τελευταίου κουνήματος">🔮 Δείτε την τελευταία πρόβλεψη</button>
       <label class="muted" style="font-size:14px">Πόσους: <select id="boxN"><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option selected>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>18</option><option>20</option></select></label>
     </div>
     <div class="nav" id="navBar"><button data-nv="-10">⏪ 10</button><button data-nv="-1">◀</button><button data-nv="live" id="navLive" class="lv">🟢 LIVE</button><button data-nv="1">▶</button><button data-nv="10">10 ⏩</button></div>
@@ -237,7 +239,9 @@ function predText(P, replay){
     $('boxTxt').innerHTML = '<span class="ghost">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</span>';
     $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'')+
       '<div class="add">'+(out.length>12 ? '<span class="muted" style="font-size:12px">Το δελτίο ΚΙΝΟ παίρνει έως 12 αριθμούς — διάλεξε «Πόσους» έως 12 για να το παρακολουθήσεις.</span>' :
-      '<label class="muted" style="font-size:13px">για <select id="tkN">'+[1,2,3,4,5,6,8,10,12,15,20].map(function(n){ return '<option'+(n===5?' selected':'')+'>'+n+'</option>'; }).join('')+'</select> κληρώσεις</label><button class="btn2" id="tkAdd" style="background:#14532d;border-color:#166534">➕ Προσθήκη στο δελτίο</button>')+'</div>';
+      '<label class="muted" style="font-size:13px">για <select id="tkN">'+(function(){ var gap = (last && P.id < last.id) ? Math.min(last.id - P.id, 300) : 0, o = '';
+        if(gap) o += '<option value="'+gap+'" selected>έως τη LIVE ('+gap+')</option>';
+        return o + [1,2,3,4,5,6,8,10,12,15,20,30,50].map(function(n){ return '<option'+(n===5 && !gap?' selected':'')+'>'+n+'</option>'; }).join(''); })()+'</select> κληρώσεις</label><button class="btn2" id="tkAdd" style="background:#14532d;border-color:#166534">➕ Προσθήκη στο δελτίο</button>')+'</div>';
 }
 async function predEval(){
   var el = $('predEval'); if(!PRED){ el.innerHTML = ''; return; }
@@ -266,7 +270,7 @@ $('boxRes').addEventListener('click', function(e){ var txt = 'Τράβα ρε �
   if(e.target.id==='cp'){ (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function(){ e.target.textContent = '✓ Αντιγράφηκε'; }, function(){ prompt('Αντέγραψε:', txt); }); }
   if(e.target.id==='sh'){ navigator.share({text: txt + '\n' + location.href}).catch(function(){}); }
   if(e.target.id==='tkAdd'){ var T = tkLoad(); if(T.length>=5){ alert('Έχεις ήδη 5 δελτία (το όριο). Σβήσε ένα για να βάλεις καινούργιο.'); return; }
-    var n = +$('tkN').value || 5; T.unshift({id:Date.now(), n:out.slice(), start:last.id+1, draws:n}); tkSave(T); e.target.textContent = '✓ Μπήκε στα δελτία'; e.target.disabled = true; tkRender(); tkCheck(); }
+    var n = +$('tkN').value || 5; T.unshift({id:Date.now(), n:out.slice(), start:(PRED ? PRED.id : last.id)+1, draws:n}); tkSave(T); e.target.textContent = '✓ Μπήκε στα δελτία'; e.target.disabled = true; tkRender(); tkCheck(); }
 });
 /* ---------- 🎫 Δελτία: έως 5, παρακολούθηση για Χ κληρώσεις ---------- */
 var PAYS = {1:{1:1.25}, 2:{1:0.5,2:2.5}, 3:{2:1.25,3:12.5}, 4:{2:0.5,3:2,4:50}, 5:{3:1,4:10,5:225}, 6:{3:0.5,4:3.5,5:25,6:800}, 7:{3:0.5,4:1.5,5:10,6:50,7:2500},
