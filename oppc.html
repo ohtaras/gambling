@@ -392,20 +392,40 @@ function waitStart(){ var L = $('bxGuyL'), R = $('bxGuyR'); WAIT = true; stageOn
   Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb'), function(b){ b.style.opacity = '.35'; var rr = function(){ return ((Math.random()*2-1)*60).toFixed(0)+'%'; }; for(var q=1;q<=4;q++){ b.style.setProperty('--a'+q, rr()); b.style.setProperty('--b'+q, rr()); } b.style.setProperty('--jd', (0.5+Math.random()*0.4).toFixed(2)+'s'); b.classList.add('jig'); });
   clearTimeout(waitTO); waitTO = setTimeout(waitEnd, 75000); }
 function waitEnd(){ if(!WAIT) return; WAIT = false; $('bxGuyL').classList.remove('alive'); $('bxGuyR').classList.remove('alive'); bxSay($('bxGuyL'),''); bxSay($('bxGuyR'),''); if(!busy) stageOff(); if(last && !view) start(); }
+var BX_HIT = ["Το {n}! Το έχουμε! 🎯","{n}! Μέσα στην πρόβλεψη!","Να το {n}! Ένα ακόμα!","Ωπ, το {n} το παίξαμε!","{n}! Σου το 'λεγα!","Μπήκε το {n}! 💪"];
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
 function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $('bxGuyL'), R = $('bxGuyR'), was = WAIT;
   WAIT = false; clearTimeout(waitTO);
-  var balls = start(), list = D.arr.concat(D.sc||[]), STEP = 115, D0 = 250;
+  // υπάρχει πρόβλεψη (κούνημα) για αυτή την κλήρωση; τότε «στοχεύουν» τα νούμερά της
+  var P = null, PN = [];
+  if(PRED && D.id > PRED.id){ P = {}; PRED.moves.forEach(function(m){ P[m[1]] = 1; PN.push(m[1]); }); PN.sort(function(a,b){return a-b;}); }
+  var balls = start(), list = D.arr.concat(D.sc||[]), STEP = P ? 300 : 115, D0 = P ? 1600 : 250, hits = [], schits = [];
   if(!was){ stageOn(); L.classList.add('alive'); R.classList.add('alive'); }
-  var tk = BX_NEW[Math.floor(Math.random()*BX_NEW.length)]; bxSay(L, tk[0]); setTimeout(function(){ bxSay(R, tk[1]); }, 700);
+  if(P){ var two = PN.slice().sort(function(){ return Math.random()-.5; }).slice(0,2).sort(function(a,b){return a-b;});
+    bxSay(L, 'Πάμε να δούμε την πρόβλεψη! 🔮'); setTimeout(function(){ bxSay(R, 'Θέλω να δω το '+two[0]+' και το '+two[1]+'!'); }, 700); }
+  else { var tk = BX_NEW[Math.floor(Math.random()*BX_NEW.length)]; bxSay(L, tk[0]); setTimeout(function(){ bxSay(R, tk[1]); }, 700); }
   list.forEach(function(n, i){ var b = balls[n]; if(!b) return; b.dataset.l = b.style.left; b.dataset.t = b.style.top; var fromL = i % 2 === 0;
     b.style.transition = 'none'; b.style.left = fromL ? '-8%' : '99%'; b.style.top = (52 + Math.random()*12).toFixed(1)+'%'; b.style.opacity = '0'; });
   void box.offsetWidth;
+  var nSc = (D.sc||[]).length;
   list.forEach(function(n, i){ var b = balls[n]; if(!b) return;
-    setTimeout(function(){ armThrow(i % 2 === 0 ? L : R);
-      b.style.transition = 'left .5s cubic-bezier(.3,1.3,.5,1), top .5s cubic-bezier(.3,1.3,.5,1), opacity .15s'; b.style.opacity = '1'; b.style.left = b.dataset.l; b.style.top = b.dataset.t; }, D0 + i*STEP); });
-  setTimeout(function(){ L.classList.remove('alive'); R.classList.remove('alive'); list.forEach(function(n){ var b = balls[n]; if(b) b.style.transition = ''; }); predMark(); }, D0 + list.length*STEP + 600);
-  setTimeout(function(){ bxSay(L,''); bxSay(R,''); if(!busy) stageOff(); }, D0 + list.length*STEP + 2300);
+    setTimeout(function(){ var who = i % 2 === 0 ? L : R; armThrow(who);
+      b.style.transition = 'left .5s cubic-bezier(.3,1.3,.5,1), top .5s cubic-bezier(.3,1.3,.5,1), opacity .15s'; b.style.opacity = '1'; b.style.left = b.dataset.l; b.style.top = b.dataset.t;
+      if(P && P[n]){ var isSc = i >= list.length - nSc; (isSc ? schits : hits).push(n);
+        setTimeout(function(){ b.classList.add('pk'); bxSay(who, pick(BX_HIT).replace('{n}', n) + (isSc ? ' (2η ευκαιρία)' : '')); }, 380); }
+    }, D0 + i*STEP); });
+  var END = D0 + list.length*STEP + 700;
+  setTimeout(function(){ L.classList.remove('alive'); R.classList.remove('alive'); list.forEach(function(n){ var b = balls[n]; if(b) b.style.transition = ''; }); predMark(); predEval();
+    if(P){ var K = PN.length, h = hits.length, extra = schits.length ? ' (+'+schits.length+' στη 2η ευκαιρία)' : '', a, r;
+      if(h === 0){ a = 'Τίποτα! Ούτε ένα! 😅'; r = 'Το κουτί μας κορόιδεψε… ξανακούνα!'; }
+      else if(h >= Math.max(5, Math.ceil(K*0.6))){ a = 'ΤΕΡΑΣΤΙΟ! '+h+' στα '+K+'! 🎉'+extra; r = 'Είπα εγώ ότι το νιώθω!'; }
+      else if(h >= Math.ceil(K*0.35)){ a = h+' στα '+K+', κάτι γίνεται!'+extra; r = 'Λίγο ακόμα και πάμε Καλόγρια! 🏖️'; }
+      else { a = 'Μόνο '+h+' στα '+K+'…'+extra; r = 'Την επόμενη, σίγουρα! 😏'; }
+      bxSay(L, a); setTimeout(function(){ bxSay(R, r); }, 1100); }
+  }, END);
+  setTimeout(function(){ bxSay(L,''); bxSay(R,''); if(!busy) stageOff(); }, END + (P ? 5200 : 1700));
 }
+
 
 /* ---------- ☰ Μενού ---------- */
 function menuOpen(sec){ document.body.classList.add('menu'); $('menu').setAttribute('aria-hidden','false'); menuSync(); if(sec){ var el = $(sec); if(el) setTimeout(function(){ el.scrollIntoView({behavior:'smooth', block:'start'}); }, 320); } else $('menu').scrollTop = 0; }
