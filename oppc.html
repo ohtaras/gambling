@@ -367,7 +367,7 @@ async function navTo(id, dir){ if(busy || !last) return; if(id >= last.id){ view
   out = []; var box = $('boxBox'); start(); predMark(); predEval(); box.style.setProperty('--sx', (dir||0)*30+'px'); box.classList.remove('sl'); void box.offsetWidth; box.classList.add('sl');
   $('boxTxt').textContent = view ? 'Κούνα το κι από εδώ — ή πήγαινε μπρος-πίσω (σύρε το κουτάκι δεξιά/αριστερά).' : 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
 $('navBar').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-nv]'); if(!b || b.disabled) return; var k = b.dataset.nv;
-  if(k==='live'){ navTo(Infinity, 1); return; } navTo(cur().id + (+k), +k>0 ? 1 : -1); });
+  if(k==='live'){ if(busy || !last) return; view = null; out = []; $('boxRes').innerHTML = ''; placeAnim(); navUpd(); predEval(); return; } navTo(cur().id + (+k), +k>0 ? 1 : -1); });
 (function(){ var x0 = null, y0 = 0; var el = $('boxWrap');
   el.addEventListener('touchstart', function(e){ var t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; }, {passive:true});
   el.addEventListener('touchend', function(e){ if(x0===null) return; var t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
