@@ -1299,13 +1299,13 @@ function manHist(base, keys){   // για «δεν έχουν βγει»: τελ
   var poolMin = all[all.length-1].id, aN = 0; if(ARCH){ for(var ai=ARCH.n-1; ai>=0; ai--){ if(ARCH.id[ai]<poolMin){ aN = ai+1; break; } } }
   var pos = new Int8Array(81).fill(-1); base.forEach(function(n,i){ pos[n]=i; });
   var K = keys[0].split(' ').length, L = all.length+aN, pc = function(x){ x = x-((x>>>1)&0x55555555); x = (x&0x33333333)+((x>>>2)&0x33333333); return (((x+(x>>>4))&0x0F0F0F0F)*0x01010101)>>>24; };
-  var cj = [], cm = [], tOf = function(j){ return j<all.length ? all[j].t : ARCH.t[aN-1-(j-all.length)]; };
+  var cj = [], cm = [], tOf = function(j){ return j<all.length ? all[j].t : ARCH.t[aN-1-(j-all.length)]; }, idOf = function(j){ return j<all.length ? all[j].id : ARCH.id[aN-1-(j-all.length)]; };
   for(var j=0;j<all.length;j++){ var m = 0, ar = all[j].arr; for(var q=0;q<20;q++){ var ix = pos[ar[q]]; if(ix>=0) m |= (1<<ix); } if(pc(m)>=K){ cj.push(j); cm.push(m); } }
   for(var j2=0;j2<aN;j2++){ var m2 = 0, off = (aN-1-j2)*20; for(var q2=0;q2<20;q2++){ var ix2 = pos[ARCH.nums[off+q2]]; if(ix2>=0) m2 |= (1<<ix2); } if(pc(m2)>=K){ cj.push(all.length+j2); cm.push(m2); } }
   var E = comb(80,K)/comb(20,K), out = {};
   keys.forEach(function(k){ var km = 0; k.split(' ').forEach(function(x){ km |= (1<<pos[+x]); }); var last = -1, times = 0;
     for(var q=0;q<cj.length;q++){ if((cm[q]&km)===km){ if(last<0) last = cj[q]; times++; } }
-    out[k] = {delay: last<0 ? L : last, never: last<0, t: last<0 ? 0 : tOf(last), times: times, E: E, L: L, w: times/(L/E)}; });
+    out[k] = {delay: last<0 ? L : last, never: last<0, t: last<0 ? 0 : tOf(last), id: last<0 ? 0 : idOf(last), times: times, E: E, L: L, w: times/(L/E)}; });
   return out;
 }
 var manPick = (function(){ try{ return JSON.parse(lsGet('kl_man')||'[]'); }catch(e){ return []; } })();
@@ -1381,8 +1381,8 @@ function renderMan(){
     $('manChips').innerHTML = chip('Δεν έχουν βγει ολόκληρες', total>cap ? 'πάρα πολλοί συνδυασμοί ('+Math.round(total).toLocaleString('el-GR')+') — διάλεξε λιγότερους αριθμούς' : miss.length.toLocaleString('el-GR')+' από '+Math.round(total).toLocaleString('el-GR'))+chip('Βγήκαν', Object.keys(M).length);
     $('manTable').innerHTML = miss.length ? '<tr><th>#</th><th>Δεν έχει βγει ολόκληρη ('+({day:'σήμερα','24':'στο 24ωρο',all:'στις φορτωμένες'}[WM]||'')+')</th><th>🔥/❄️</th><th></th></tr>'+miss.slice(0,40).map(function(k,i){
         var h = MH[k], KK = k.split(' ').length, info = '';
-        if(h){ info = '<br><span class="muted" style="font-size:11px">⏳ σε όλο το ιστορικό: '+(h.never ? 'ποτέ σε '+h.L.toLocaleString('el-GR')+' κληρώσεις' : 'τελευταία φορά '+hm(h.t)+' '+dateOf(h.t).split('-').reverse().join('/')+', πριν <b>'+h.delay.toLocaleString('el-GR')+'</b> κληρ.')+' ('+(h.delay/h.E).toFixed(1).replace('.',',')+'× το 1 στις '+Math.round(h.E).toLocaleString('el-GR')+')<br>⚖️ αναμενόταν '+(h.L/h.E).toFixed(1).replace('.',',')+' · βγήκε '+h.times+' → βάρος <b style="color:'+(h.w<0.8?'#2563eb':h.w>1.2?'#ef4444':'inherit')+'">'+h.w.toFixed(2).replace('.',',')+'</b></span>'; }
-        if(TT && nextD){ var hh = k.split(' ').filter(function(x){ return nextD.set.has(+x); }).length; info += '<br><b style="font-size:12px;color:'+(hh===KK?'#22c55e':'inherit')+'">🔮 στην επόμενη ('+hm(nextD.t)+'): '+hh+'/'+KK+(hh===KK?' 🎉':'')+'</b>'; }
+        if(h){ info = '<br><span class="muted" style="font-size:11px">⏳ σε όλο το ιστορικό: '+(h.never ? 'ποτέ σε '+h.L.toLocaleString('el-GR')+' κληρώσεις' : 'τελευταία φορά #'+h.id+' · '+dateOf(h.t).split('-').reverse().join('/')+' '+hm(h.t)+', πριν <b>'+h.delay.toLocaleString('el-GR')+'</b> κληρ.')+' ('+(h.delay/h.E).toFixed(1).replace('.',',')+'× το 1 στις '+Math.round(h.E).toLocaleString('el-GR')+')<br>⚖️ αναμενόταν '+(h.L/h.E).toFixed(1).replace('.',',')+' · βγήκε '+h.times+' → βάρος <b style="color:'+(h.w<0.8?'#2563eb':h.w>1.2?'#ef4444':'inherit')+'">'+h.w.toFixed(2).replace('.',',')+'</b></span>'; }
+        if(TT && nextD){ var hh = k.split(' ').filter(function(x){ return nextD.set.has(+x); }).length; info += '<br><b style="font-size:12px;color:'+(hh===KK?'#22c55e':'inherit')+'">🔮 στην επόμενη (#'+nextD.id+' · '+dateOf(nextD.t).split('-').reverse().join('/')+' '+hm(nextD.t)+'): '+hh+'/'+KK+(hh===KK?' 🎉':'')+'</b>'; }
         return '<tr><td>'+(i+1)+'</td><td><b style="white-space:nowrap">'+k.split(' ').map(function(x){return col(+x);}).join(' ')+'</b>'+info+'</td><td style="white-space:nowrap"><span style="color:#ef4444">🔥'+hotN(k)+'</span> <span style="color:#2563eb">❄️'+coldN(k)+'</span></td><td><button class="btn" data-five="'+k+'" style="padding:2px 8px">➕</button></td></tr>'; }).join('') +
         (miss.length>40?'<tr><td colspan="4" class="muted">… και άλλες '+(miss.length-40)+'</td></tr>':'') + '<tr><td colspan="4" class="muted" style="font-size:11px">Πρώτες οι στήλες με τους περισσότερους 🔥 ζεστούς (στις τελευταίες '+HX+' κληρώσεις)· σε ισοπαλία, η πιο «καυτή» συνολικά.</td></tr>'
       : '<tr><td class="muted">'+(total>cap?'Διάλεξε λιγότερους αριθμούς ή μικρότερο μέγεθος.':'Όλοι οι συνδυασμοί έχουν βγει τουλάχιστον μία φορά σε αυτό το διάστημα.')+'</td></tr>';
@@ -1390,11 +1390,11 @@ function renderMan(){
   }
   var top = rows.slice(0,30), nxD = null;
   if(TT){ var allR2 = ttAll(); for(var ni2=0; ni2<allR2.length; ni2++){ if(allR2[ni2].id>lastId0){ nxD = allR2[ni2]; break; } } }
-  $('manTable').innerHTML = top.length ? '<tr><th>#</th><th>Συνδυασμός</th><th>Φορές</th><th>Βγήκε ολόκληρη στις</th><th></th></tr>'+top.map(function(r,i){
+  $('manTable').innerHTML = top.length ? '<tr><th>#</th><th>Συνδυασμός</th><th>Φορές</th><th>Βγήκε ολόκληρη (αρ. κλήρωσης · ημ/νία · ώρα)</th><th></th></tr>'+top.map(function(r,i){
       var now = r.at===lastId0;
-      return '<tr'+(now?' style="background:rgba(139,92,246,.15)"':'')+'><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+r.k.split(' ').map(function(x){return col(+x);}).join(' ')+'</b></td><td><b>'+r.n+'</b>'+(now?' 🔥':'')+'</td><td style="font-size:12px"><b>'+r.ids.map(function(id){ return byId[id]?hm(byId[id].t):'#'+id; }).join(', ')+'</b>'+
+      return '<tr'+(now?' style="background:rgba(139,92,246,.15)"':'')+'><td>'+(i+1)+'</td><td style="white-space:nowrap"><b>'+r.k.split(' ').map(function(x){return col(+x);}).join(' ')+'</b></td><td><b>'+r.n+'</b>'+(now?' 🔥':'')+'</td><td style="font-size:12px">'+r.ids.map(function(id){ var d = byId[id]; return '<div style="white-space:nowrap"><b>#'+id+'</b>'+(d?' · '+dateOf(d.t).split('-').reverse().join('/')+' <b>'+hm(d.t)+'</b>':'')+'</div>'; }).join('')+
         '<br><span class="muted" style="font-size:11px">'+(lastId0===r.at ? 'μόλις βγήκε, στην τελευταία κλήρωση' : 'από τότε πέρασαν '+(lastId0-r.at)+' κληρώσεις')+(r.n>1?' · μεγαλύτερο διάστημα ανάμεσα στις εμφανίσεις: '+r.gap+' κληρ.':'')+'</span>'+
-        (TT ? (nxD ? (function(){ var KK = r.k.split(' ').length, hh = r.k.split(' ').filter(function(x){ return nxD.set.has(+x); }).length; return '<br><b style="color:'+(hh===KK?'#22c55e':'inherit')+'">🔮 στην επόμενη ('+hm(nxD.t)+'): '+hh+'/'+KK+(hh===KK?' 🎉 ολόκληρη!':'')+'</b>'; })() : '<br><span class="muted">🔮 δεν υπάρχει ακόμα επόμενη κλήρωση</span>') : '')+
+        (TT ? (nxD ? (function(){ var KK = r.k.split(' ').length, hh = r.k.split(' ').filter(function(x){ return nxD.set.has(+x); }).length; return '<br><b style="color:'+(hh===KK?'#22c55e':'inherit')+'">🔮 στην επόμενη (#'+nxD.id+' · '+dateOf(nxD.t).split('-').reverse().join('/')+' '+hm(nxD.t)+'): '+hh+'/'+KK+(hh===KK?' 🎉 ολόκληρη!':'')+'</b>'; })() : '<br><span class="muted">🔮 δεν υπάρχει ακόμα επόμενη κλήρωση</span>') : '')+
         '</td><td><button class="btn" data-five="'+r.k+'" style="padding:2px 8px">➕</button></td></tr>';
     }).join('') + (rows.length>30?'<tr><td colspan="4" class="muted">… και άλλοι '+(rows.length-30)+'</td></tr>':'') : '<tr><td class="muted">Κανένας συνδυασμός '+K+' από τους αριθμούς σου με '+MIN+'+ φορές σε αυτό το διάστημα.</td></tr>';
 }
