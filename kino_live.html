@@ -2523,20 +2523,70 @@ cards.forEach(function(c){
 });
 /* ---------- 📦 Κουτάκι: κουνάω την τελευταία κλήρωση ---------- */
 (function(){ var css = document.createElement('style'); css.textContent = '@keyframes bxShake{0%{transform:translate(0,0) rotate(0)}10%{transform:translate(-14px,3px) rotate(-3deg)}20%{transform:translate(14px,-3px) rotate(3deg)}30%{transform:translate(-12px,-4px) rotate(-2deg)}40%{transform:translate(12px,4px) rotate(2deg)}50%{transform:translate(-9px,2px) rotate(-1.5deg)}60%{transform:translate(9px,-2px) rotate(1.5deg)}70%{transform:translate(-6px,3px) rotate(-1deg)}80%{transform:translate(6px,-3px) rotate(1deg)}90%{transform:translate(-3px,0) rotate(0)}100%{transform:translate(0,0) rotate(0)}}.bxGuy{width:21%;max-width:170px;flex:none;position:relative;z-index:2}.bxGuy svg{display:block;width:100%;height:auto;overflow:visible}#boxWrap.shk{animation:bxShake .9s ease-in-out}#boxWrap.shk .arm{animation:bxArm .15s ease-in-out infinite alternate}@keyframes bxArm{from{transform:translateY(-3px)}to{transform:translateY(3px)}}.bxGuy .guy{animation:bxIdle 2.4s ease-in-out infinite;transform-origin:50% 100%}@keyframes bxIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}.bxb{position:absolute;width:9%;height:10%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(10px,3vw,15px);color:#111;background:radial-gradient(circle at 35% 30%,#fff7b0,#facc15 55%,#ca8a04);box-shadow:0 2px 4px rgba(0,0,0,.4);transition:left .7s cubic-bezier(.3,1.4,.5,1),top .7s cubic-bezier(.3,1.4,.5,1),opacity .5s,background .4s}.bxb.nw{background:radial-gradient(circle at 35% 30%,#d9ffd9,#22c55e 55%,#15803d)}'; document.head.appendChild(css); })();
-function bxGuy(img, body, flip){
-  // καρικατούρα: μεγάλο κεφάλι (φωτογραφία) + ζωγραφιστό σώμα, τα χέρια πιάνουν το κουτάκι
-  var g = '<svg viewBox="0 0 100 210"><g class="guy">'+
-    '<g'+(flip?' transform="translate(100,0) scale(-1,1)"':'')+'>'+
-    '<path d="M28 196 L33 150 L45 150 L43 196 Z M55 196 L57 150 L69 150 L72 196 Z" fill="#1f2937" stroke="#000" stroke-width="2"/>'+
-    '<ellipse cx="36" cy="199" rx="12" ry="5" fill="#111"/><ellipse cx="66" cy="199" rx="12" ry="5" fill="#111"/>'+
-    '<path d="M22 100 Q50 86 80 100 L76 156 Q50 162 26 156 Z" fill="'+body+'" stroke="#000" stroke-width="2.5"/>'+
-    '<g class="arm"><path d="M74 106 Q92 112 104 122" fill="none" stroke="#000" stroke-width="13" stroke-linecap="round"/><path d="M74 106 Q92 112 104 122" fill="none" stroke="'+body+'" stroke-width="9" stroke-linecap="round"/><circle cx="106" cy="123" r="7" fill="#e8b48a" stroke="#000" stroke-width="2"/>'+
-    '<path d="M74 128 Q92 138 104 146" fill="none" stroke="#000" stroke-width="13" stroke-linecap="round"/><path d="M74 128 Q92 138 104 146" fill="none" stroke="'+body+'" stroke-width="9" stroke-linecap="round"/><circle cx="106" cy="147" r="7" fill="#e8b48a" stroke="#000" stroke-width="2"/></g>'+
-    '</g>'+
-    '<image href="'+img+'" x="2" y="0" width="96" height="104" preserveAspectRatio="xMidYMax meet"/>'+
-    '</g></svg>';
-  return g; }
-(function(){ try{ $('bxGuyL').innerHTML = bxGuy('img/car1.png', '#111827', false); $('bxGuyR').innerHTML = bxGuy('img/car2.png', '#4b5563', true); }catch(e){} })();
+function bxGuySvg(who){
+  var K='#111', sk='#f2c29b', skS='#d99a72';
+  var legs = function(jean){ return '<path d="M34 150 L31 198 L46 198 L49 152 Z M53 152 L56 198 L71 198 L68 150 Z" fill="'+jean+'" stroke="'+K+'" stroke-width="2.2" stroke-linejoin="round"/>'+
+    '<path d="M27 198 Q27 190 39 191 L48 193 L48 202 L27 202 Z M54 193 L64 191 Q77 190 77 198 L77 202 L54 202 Z" fill="#222" stroke="'+K+'" stroke-width="2"/>'; };
+  var arms = function(sleeve){ var a = function(y1,y2){ return '<path d="M70 '+y1+' Q90 '+(y1+2)+' 104 '+y2+'" fill="none" stroke="'+K+'" stroke-width="14" stroke-linecap="round"/><path d="M70 '+y1+' Q90 '+(y1+2)+' 104 '+y2+'" fill="none" stroke="'+sleeve+'" stroke-width="10" stroke-linecap="round"/>'+
+      '<ellipse cx="108" cy="'+y2+'" rx="7.5" ry="6.5" fill="'+sk+'" stroke="'+K+'" stroke-width="2"/><path d="M106 '+(y2-6)+' L106 '+(y2+6)+'" stroke="'+skS+'" stroke-width="1.5"/>'; };
+    return '<g class="arm">'+a(112,124)+a(132,146)+'</g>'; };
+  var torso = function(c, extra){ return '<path d="M22 112 Q24 98 50 96 Q76 98 78 112 L76 156 Q50 162 24 156 Z" fill="'+c+'" stroke="'+K+'" stroke-width="2.4" stroke-linejoin="round"/>'+(extra||''); };
+  var h = '';
+  if(who==='hood'){
+    h += legs('#3b5b8c') + torso('#1c1c1f','<path d="M44 104 L42 128 M56 104 L58 128" stroke="#eee" stroke-width="1.8" stroke-linecap="round"/><circle cx="42" cy="129" r="1.8" fill="#eee"/><circle cx="58" cy="129" r="1.8" fill="#eee"/><path d="M30 140 Q50 146 70 140" stroke="#333" stroke-width="2" fill="none"/>');
+    h += arms('#1c1c1f');
+    // κουκούλα
+    h += '<path d="M50 4 Q94 6 95 56 Q96 98 70 106 L30 106 Q4 98 5 56 Q6 6 50 4 Z" fill="#232326" stroke="'+K+'" stroke-width="2.6"/>';
+    h += '<ellipse cx="50" cy="60" rx="31" ry="38" fill="#141416"/>';
+    // πρόσωπο
+    h += '<path d="M24 52 Q24 24 50 22 Q76 24 76 52 L76 70 Q76 98 50 100 Q24 98 24 70 Z" fill="'+sk+'" stroke="'+K+'" stroke-width="2.2"/>';
+    // μπούκλες
+    var cur = [[30,30],[37,24],[45,21],[53,20],[61,22],[68,26],[73,33],[27,38],[74,41]];
+    cur.forEach(function(c){ h += '<circle cx="'+c[0]+'" cy="'+c[1]+'" r="5.8" fill="#7a5638" stroke="'+K+'" stroke-width="1.6"/><path d="M'+(c[0]-2)+' '+c[1]+' a2 2 0 1 1 3 1.5" fill="none" stroke="#4a3220" stroke-width="1.2"/>'; });
+    // ρυτίδες μετώπου
+    h += '<path d="M40 36 Q50 34 60 36 M42 40 Q50 38.5 58 40" stroke="'+skS+'" stroke-width="1.3" fill="none"/>';
+    // γένια (γκρι)
+    h += '<path d="M25 64 Q26 84 36 94 Q44 104 50 104 Q56 104 64 94 Q74 84 75 64 Q70 76 62 76 Q56 72 50 73 Q44 72 38 76 Q30 76 25 64 Z" fill="#c9c9c9" stroke="'+K+'" stroke-width="2"/>';
+    h += '<path d="M38 78 Q50 72 62 78 Q56 82 50 80 Q44 82 38 78 Z" fill="#b3b3b3" stroke="'+K+'" stroke-width="1.6"/>';
+    h += '<path d="M45 86 Q50 88 55 86" stroke="#7a3b2e" stroke-width="2" fill="none" stroke-linecap="round"/>';
+    h += '<path d="M33 90 l2 3 M40 96 l1 3 M60 96 l-1 3 M67 90 l-2 3 M50 99 l0 3" stroke="#8e8e8e" stroke-width="1.2"/>';
+    // μύτη
+    h += '<path d="M50 52 Q47 64 45 68 Q50 72 55 68" fill="none" stroke="'+skS+'" stroke-width="1.8" stroke-linecap="round"/>';
+    // aviators
+    h += '<path d="M26 48 Q37 45 46 48 Q47 60 39 63 Q28 64 26 54 Z M54 48 Q63 45 74 48 Q74 60 63 63 Q53 62 54 48 Z" fill="#1d1d22" stroke="#9aa3ad" stroke-width="2"/>';
+    h += '<path d="M46 49 Q50 47 54 49" stroke="#9aa3ad" stroke-width="2" fill="none"/><path d="M24 48 L20 50 M76 48 L80 50" stroke="#9aa3ad" stroke-width="1.8"/>';
+    h += '<path d="M30 50 Q34 49 37 50 M58 50 Q62 49 65 50" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>';
+    // airpods
+    h += '<rect x="20.5" y="58" width="4" height="9" rx="2" fill="#fff" stroke="'+K+'" stroke-width="1.2"/><rect x="75.5" y="58" width="4" height="9" rx="2" fill="#fff" stroke="'+K+'" stroke-width="1.2"/>';
+  } else {
+    h += legs('#2f4a73') + torso('#2b313c','<path d="M40 97 L50 110 L60 97" fill="none" stroke="'+K+'" stroke-width="2"/>');
+    h += arms('#2b313c');
+    // λαιμός
+    h += '<rect x="42" y="88" width="16" height="14" fill="'+skS+'" stroke="'+K+'" stroke-width="1.8"/>';
+    // αυτιά
+    h += '<ellipse cx="20" cy="56" rx="6" ry="9" fill="'+sk+'" stroke="'+K+'" stroke-width="2"/><ellipse cx="80" cy="56" rx="6" ry="9" fill="'+sk+'" stroke="'+K+'" stroke-width="2"/>';
+    // πρόσωπο
+    h += '<path d="M21 46 Q21 12 50 10 Q79 12 79 46 L79 62 Q79 94 50 96 Q21 94 21 62 Z" fill="'+sk+'" stroke="'+K+'" stroke-width="2.2"/>';
+    // μαλλιά κοντά
+    h += '<path d="M20 44 Q16 14 44 7 Q70 2 80 22 Q84 32 80 44 Q78 30 70 26 Q56 22 46 25 Q30 28 24 34 Z" fill="#3a2a1f" stroke="'+K+'" stroke-width="2"/>';
+    h += '<path d="M34 14 l3 6 M46 9 l2 7 M58 9 l1 7 M69 14 l-1 7" stroke="#5a4232" stroke-width="1.5"/>';
+    // φρύδια
+    h += '<path d="M28 41 Q36 36 45 40 M55 40 Q64 36 72 41" stroke="#2a1d15" stroke-width="4" fill="none" stroke-linecap="round"/>';
+    // μάτια (κοιτάνε προς το κουτί)
+    h += '<ellipse cx="37" cy="49" rx="6" ry="4" fill="#fff" stroke="'+K+'" stroke-width="1.5"/><ellipse cx="63" cy="49" rx="6" ry="4" fill="#fff" stroke="'+K+'" stroke-width="1.5"/>';
+    h += '<circle cx="39.5" cy="49" r="2.6" fill="#3b2416"/><circle cx="65.5" cy="49" r="2.6" fill="#3b2416"/><circle cx="40.3" cy="48.2" r=".8" fill="#fff"/><circle cx="66.3" cy="48.2" r=".8" fill="#fff"/>';
+    h += '<path d="M31 53.5 Q37 56 43 53.5 M57 53.5 Q63 56 69 53.5" stroke="'+skS+'" stroke-width="1.2" fill="none"/>';
+    // μύτη
+    h += '<path d="M50 50 Q48 62 45 66 Q50 70 56 66" fill="none" stroke="'+skS+'" stroke-width="2" stroke-linecap="round"/>';
+    // γένια σκούρα
+    h += '<path d="M22 60 Q22 84 34 92 Q42 98 50 98 Q58 98 66 92 Q78 84 78 60 Q74 72 66 73 Q58 69 50 70 Q42 69 34 73 Q26 72 22 60 Z" fill="#33251c" stroke="'+K+'" stroke-width="2"/>';
+    h += '<path d="M37 74 Q50 67 63 74 Q57 77 50 76 Q43 77 37 74 Z" fill="#2a1d15" stroke="'+K+'" stroke-width="1.5"/>';
+    h += '<path d="M42 81 Q50 86 58 81" stroke="#fff" stroke-width="2.4" fill="#a24a3a" stroke-linecap="round"/>';
+  }
+  return h;
+}
+function bxGuy(who, flip){ return '<svg viewBox="-4 0 120 210"><g class="guy"><g'+(flip?' transform="translate(112,0) scale(-1,1)"':'')+'>'+bxGuySvg(who)+'</g></g></svg>'; }
+(function(){ try{ $('bxGuyL').innerHTML = bxGuy('hood', false); $('bxGuyR').innerHTML = bxGuy('beard', true); }catch(e){} })();
 var boxBusy = false, boxLastShown = null, boxOut = [];
 function boxLast(){ return today.concat(histPool).sort(function(a,b){return b.id-a.id;})[0]; }
 function boxPos(n){ var r = Math.floor((n-1)/10), c = (n-1)%10; return {l:(c*10+0.5)+'%', t:(r*12.5+1.25)+'%'}; }
