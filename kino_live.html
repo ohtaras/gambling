@@ -2572,7 +2572,7 @@ function bxTalkPick(){ var n = BX_TALK.length, bag = null; try{ bag = JSON.parse
 function bxShakeAnim(done){
   var box = $('boxFrame') || $('boxBox'), L = $('bxGuyL'), R = $('bxGuyR'), A = Math.max(5, box.clientWidth/36);
   // ποιος μιλάει πρώτος: τυχαίο — εκτός αν η ατάκα είναι «δεμένη» με πρόσωπο (όνομα, γυαλιά, κουκούλα…)
-  var TK = bxTalkPick(), fixed = /Σπύρ|Ηρακλ|Οχταρ|γυαλι|κουκούλ|γένια|μπούκλ/.test(TK[0]+' '+TK[1]), first = L, second = R;
+  var TK = bxTalkPick(), fixed = /Σπύρ|Ηρακλ|Οχτ[αά]ρ|γυαλι|κουκούλ|γένια|μπούκλ/.test(TK[0]+' '+TK[1]), first = L, second = R;
   if(!fixed && Math.random() < 0.5){ first = R; second = L; }
   bxSay(first, TK[0]); setTimeout(function(){ bxSay(second, TK[1]); }, 900);
   var seq = [[0,0],[-1,0],[1,0],[-1,0],[0,-1],[0,1],[0,-1],[1,0],[-1,0],[0,1],[0,-1],[.7,0],[-.6,0],[0,.4],[0,0]];
