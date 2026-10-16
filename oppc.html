@@ -46,6 +46,8 @@ body.menu #menu{transform:none}body.menu #menuBg{opacity:1;pointer-events:auto}b
 #stageBg{position:fixed;inset:0;background:rgba(3,7,18,.9);z-index:50;opacity:0;pointer-events:none;transition:opacity .35s}
 body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
 #boxWrap{transition:transform .4s cubic-bezier(.3,1.2,.5,1);transform-origin:0 0}body.stage #boxWrap{position:relative;z-index:51}
+.bxGuy.alive .guy{animation:bxHop .45s ease-in-out infinite alternate;transform-origin:50% 100%}.bxR.alive .guy{animation-delay:.22s}
+@keyframes bxHop{from{transform:translateY(0) rotate(0)}to{transform:translateY(-6px) rotate(-1.5deg)}}
 .bxGuy{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cdw{display:flex;justify-content:center;align-items:baseline;gap:8px;margin:0 0 10px;font-size:13px}.cdw b{font-size:22px;font-variant-numeric:tabular-nums;color:#fde68a;letter-spacing:1px}.cdw.now b{color:#4ade80}
 .disc{margin:12px 2px 0;font-size:11.5px;color:#94a3b8}.disc summary{cursor:pointer;font-weight:700;color:#cbd5e1}.disc p{margin:7px 0 0;line-height:1.5}.disc a{color:#93c5fd}
@@ -234,10 +236,10 @@ async function load(){
     var j = await r.json(), c = j.last || j; var w = c.winningNumbers || {}; if(j.active && j.active.drawTime){ NEXT = {id:j.active.drawId, t:j.active.drawTime}; }
     var d = {id:c.drawId, t:c.drawTime, arr:(w.list||[]).slice(), sc:(w.secondChance||[]).slice(), b:(w.bonus||[])[0]};
     if(!d.arr.length) throw new Error('empty');
-    var isNew = !last || last.id!==d.id; last = d; window.__lastId = d.id; NAV[d.id] = d; navUpd(); $('boxGo').disabled = false; if(isNew) tkCheck();
+    var hadPrev = !!last, isNew = !last || last.id!==d.id; last = d; window.__lastId = d.id; NAV[d.id] = d; navUpd(); $('boxGo').disabled = false; if(isNew) tkCheck();
     $('lastInfo').textContent = 'Τελευταία κλήρωση #'+d.id+' · '+hm(d.t);
     if(isNew) predEval();
-    if(!busy && isNew && !view){ shownId = d.id; out = []; start(); predMark(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
+    if(!busy && isNew && !view){ shownId = d.id; out = []; if(hadPrev) placeAnim(); else start(); predMark(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
   }catch(e){ if(!last){ $('lastInfo').textContent = 'Δεν φόρτωσε η κλήρωση — ξαναδοκιμάζω…'; $('boxBox').innerHTML = grid(); } }
 }
 $('boxN').value = lsGet('kbx_n') || '12'; $('boxN').addEventListener('change', function(){ lsSet('kbx_n', this.value); });
@@ -367,6 +369,22 @@ function cdTick(){ var nt = NEXT ? NEXT.t : (last ? last.t + 300000 : 0); if(!nt
   if(ms > 0){ var m = Math.floor(ms/60000), sx = Math.floor(ms/1000)%60; $('cdT').textContent = (m<10?'0':'')+m+':'+(sx<10?'0':'')+sx; w.classList.remove('now'); }
   else { $('cdT').textContent = 'τώρα! 🎱'; w.classList.add('now'); if(Date.now() - cdPoll > 5000){ cdPoll = Date.now(); load(); } } }
 setInterval(cdTick, 1000);
+/* ---------- 🎱 Νέα κλήρωση: ο Σπύρος και ο Ηρακλής ζωντανεύουν και βάζουν οι ίδιοι τις μπάλες στο κουτί ---------- */
+var BX_NEW = [["Ήρθε νέα κλήρωση! Πιάσε μπάλες!","Μία εγώ, μία εσύ!"],["Φρέσκα νούμερα, ζεστά ακόμα!","Βάλ' τα με προσοχή, μη μας ζαλιστούν!"],["Νέα κλήρωση! Στρώσε το τραπέζι!","Μπαίνουν μία-μία, σαν κουλουράκια!"],["Ορίστε η παραγγελία σας!","Είκοσι κίτρινα κι ένα κόκκινο, παρακαλώ!"],["Πάρε την πράσινη, είναι για 2η ευκαιρία!","Και η κόκκινη για Bonus, μην τη χάσουμε!"],["Ξαναγεμίζουμε το κουτί!","Έτοιμο για νέο κούνημα!"]];
+function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $('bxGuyL'), R = $('bxGuyR');
+  var balls = start(), list = D.arr.concat(D.sc||[]), k = 0;
+  stageOn(); L.classList.add('alive'); R.classList.add('alive');
+  var tk = BX_NEW[Math.floor(Math.random()*BX_NEW.length)]; bxSay(L, tk[0]); setTimeout(function(){ bxSay(R, tk[1]); }, 900);
+  // όλες ξεκινάνε κρυμμένες στα χέρια (άκρες του κουτιού, στο ύψος των χερουλιών)
+  list.forEach(function(n, i){ var b = balls[n]; if(!b) return; b.dataset.l = b.style.left; b.dataset.t = b.style.top; var fromL = i % 2 === 0;
+    b.style.transition = 'none'; b.style.left = fromL ? '-8%' : '99%'; b.style.top = (50 + Math.random()*14).toFixed(1)+'%'; b.style.opacity = '0'; });
+  void box.offsetWidth;
+  list.forEach(function(n, i){ var b = balls[n]; if(!b) return;
+    setTimeout(function(){ var fromL = i % 2 === 0; bxSetArms(fromL ? L : R, 6, -6); setTimeout(function(){ bxSetArms(fromL ? L : R, 0, 0); }, 160);
+      b.style.transition = 'left .55s cubic-bezier(.3,1.35,.5,1), top .55s cubic-bezier(.3,1.35,.5,1), opacity .2s'; b.style.opacity = '1'; b.style.left = b.dataset.l; b.style.top = b.dataset.t; }, 700 + i*170); });
+  setTimeout(function(){ L.classList.remove('alive'); R.classList.remove('alive'); list.forEach(function(n){ var b = balls[n]; if(b) b.style.transition = ''; }); predMark(); }, 700 + list.length*170 + 700);
+  setTimeout(function(){ bxSay(L,''); bxSay(R,''); if(!busy) stageOff(); }, 700 + list.length*170 + 2600);
+}
 /* ---------- ☰ Μενού ---------- */
 function menuOpen(sec){ document.body.classList.add('menu'); $('menu').setAttribute('aria-hidden','false'); menuSync(); if(sec){ var el = $(sec); if(el) setTimeout(function(){ el.scrollIntoView({behavior:'smooth', block:'start'}); }, 320); } else $('menu').scrollTop = 0; }
 function menuClose(){ document.body.classList.remove('menu'); $('menu').setAttribute('aria-hidden','true'); }
