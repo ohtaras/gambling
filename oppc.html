@@ -383,16 +383,27 @@ function cdTick(){ var nt = NEXT ? NEXT.t : (last ? last.t + 300000 : 0); if(!nt
   if(ms > 0){ var m = Math.floor(ms/60000), sx = Math.floor(ms/1000)%60; $('cdT').textContent = (m<10?'0':'')+m+':'+(sx<10?'0':'')+sx; w.classList.remove('now'); }
   else { $('cdT').textContent = 'τώρα! 🎱'; w.classList.add('now'); if(!WAIT && !view && !busy && !document.hidden && last && NEXT && NEXT.id > last.id && WAITED !== NEXT.id){ WAITED = NEXT.id; waitStart(); } if(Date.now() - cdPoll > 2000){ cdPoll = Date.now(); load(); } } }
 setInterval(cdTick, 1000);
+/* ---------- 🔆 Η οθόνη μένει αναμμένη όσο είναι ανοιχτή η σελίδα (κινητό & υπολογιστής) ---------- */
+var WL = null;
+async function wakeOn(){ try{ if('wakeLock' in navigator && !document.hidden && !WL){ WL = await navigator.wakeLock.request('screen'); WL.addEventListener('release', function(){ WL = null; }); } }catch(e){ WL = null; } }
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) wakeOn(); });
+['click','touchend','keydown'].forEach(function(ev){ document.addEventListener(ev, function(){ if(!WL) wakeOn(); }, {passive:true}); });
+wakeOn();
 /* ---------- 🎱 Νέα κλήρωση: ο Σπύρος και ο Ηρακλής ζωντανεύουν και βάζουν οι ίδιοι τις μπάλες στο κουτί ---------- */
 var BX_NEW = [["Ήρθε νέα κλήρωση! Πιάσε μπάλες!","Μία εγώ, μία εσύ!"],["Φρέσκα νούμερα, ζεστά ακόμα!","Βάλ' τα με προσοχή, μη μας ζαλιστούν!"],["Νέα κλήρωση! Στρώσε το τραπέζι!","Μπαίνουν μία-μία, σαν κουλουράκια!"],["Ορίστε η παραγγελία σας!","Είκοσι κίτρινα κι ένα κόκκινο, παρακαλώ!"],["Πάρε την πράσινη, είναι για 2η ευκαιρία!","Και η κόκκινη για Bonus, μην τη χάσουμε!"],["Ξαναγεμίζουμε το κουτί!","Έτοιμο για νέο κούνημα!"]];
 var BX_WAIT = [["Έρχεται η κλήρωση! Ετοιμάσου!","Ανακατεύω τις μπάλες…"],["Σσσ… βγαίνουν τα νούμερα!","Κρατάω την ανάσα μου!"],["Τώρα είναι η ώρα!","Πιάσε μπάλες, έρχονται!"],["Ακούγεται το κουτί του ΟΠΑΠ!","Βάλε τα χέρια σου έτοιμα!"]];
+function armPull(el){ var t0 = null; function st(ts){ if(t0===null) t0 = ts; var f = Math.min((ts-t0)/300, 1), o = Math.sin(Math.PI*f); bxSetArms(el, -7*o, 6*o); if(f < 1) requestAnimationFrame(st); else bxSetArms(el, 0, 0); } requestAnimationFrame(st); }
 function armThrow(el){ var t0 = null; function st(ts){ if(t0===null) t0 = ts; var f = Math.min((ts-t0)/340, 1), o = Math.sin(Math.PI*f); bxSetArms(el, 9*o, -11*o); if(f < 1) requestAnimationFrame(st); else bxSetArms(el, 0, 0); } requestAnimationFrame(st); }
 function waitStart(){ var L = $('bxGuyL'), R = $('bxGuyR'); WAIT = true; stageOn(); L.classList.add('alive'); R.classList.add('alive');
   var tk = BX_WAIT[Math.floor(Math.random()*BX_WAIT.length)];
   if(PRED && NEXT && NEXT.id > PRED.id){ var pn = PRED.moves.map(function(m){ return m[1]; }); var x = pn[Math.floor(Math.random()*pn.length)], y = pn[Math.floor(Math.random()*pn.length)];
     tk = [['Έρχεται! Ετοίμασε το σημάδι για το '+x+'!','Εγώ παίρνω το '+y+', μην κλέβεις!'],['Τέντωσε τα χέρια, θα στοχεύσουμε!','Το '+x+' είναι δικό μου, το νιώθω!'],['Σσσ… τώρα βγαίνουν!','Αν δεν βάλω το '+y+', κερνάω!']][Math.floor(Math.random()*3)]; }
   bxSay(L, tk[0]); setTimeout(function(){ if(WAIT) bxSay(R, tk[1]); }, 800);
-  Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb'), function(b){ b.style.opacity = '.35'; var rr = function(){ return ((Math.random()*2-1)*60).toFixed(0)+'%'; }; for(var q=1;q<=4;q++){ b.style.setProperty('--a'+q, rr()); b.style.setProperty('--b'+q, rr()); } b.style.setProperty('--jd', (0.5+Math.random()*0.4).toFixed(2)+'s'); b.classList.add('jig'); });
+  // μαζεύουν τις μπάλες της προηγούμενης κλήρωσης από το ταμπλό, μία-μία, προς τα χέρια τους
+  var old = Array.prototype.slice.call(document.querySelectorAll('#boxBox .bxb'));
+  old.forEach(function(b, i){ var toL = (parseFloat(b.style.left)||0) < 50; setTimeout(function(){ armPull(toL ? L : R);
+      b.classList.remove('pk'); b.style.transition = 'left .55s cubic-bezier(.5,0,.75,0), top .55s cubic-bezier(.5,0,.75,0), opacity .55s ease-in, transform .55s';
+      b.style.left = toL ? '-9%' : '100%'; b.style.top = (52 + Math.random()*12).toFixed(1)+'%'; b.style.opacity = '0'; b.style.transform = 'scale(.6)'; }, 900 + i*90); });
   clearTimeout(waitTO); waitTO = setTimeout(waitEnd, 75000); }
 function waitEnd(){ if(!WAIT) return; WAIT = false; $('bxGuyL').classList.remove('alive'); $('bxGuyR').classList.remove('alive'); bxSay($('bxGuyL'),''); bxSay($('bxGuyR'),''); if(!busy) stageOff(); if(last && !view) start(); }
 function activeTicket(id){ var T = tkLoad(); for(var i=0;i<T.length;i++){ var t = T[i]; if(id >= t.start && id < t.start + t.draws && t.n.length <= 12) return t; } return null; }
