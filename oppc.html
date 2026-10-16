@@ -41,6 +41,7 @@ footer{text-align:center;font-size:11px;margin-top:14px}
 #boxBox.sl{animation:bxSl .25s ease-out}@keyframes bxSl{from{opacity:.3;transform:translateX(var(--sx,0))}to{opacity:1;transform:none}}
 .bxb.pk{box-shadow:0 0 0 3px #fff,0 0 10px 3px #22d3ee}
 .pe{background:#0f172a;border:1px solid #23304d;border-radius:12px;padding:10px;margin-top:10px;font-size:13px;text-align:center}
+.bxb.bn{background:radial-gradient(circle at 35% 30%,#ffd1d1,#ef4444 55%,#991b1b);color:#fff;box-shadow:0 0 0 2px #fde68a,0 2px 4px rgba(0,0,0,.4)}
 .bxb.sc{background:radial-gradient(circle at 35% 30%,#d9ffd9,#22c55e 55%,#15803d);color:#0b2d14}
 .shop{display:flex;flex-direction:column;align-items:center;gap:2px;background:linear-gradient(90deg,#1a2442,#232f52);border:1px solid #2c3a63;border-radius:12px;padding:8px 10px;margin:0 0 10px;text-align:center}
 .shop b:first-child{font-size:16px;color:#fde68a;letter-spacing:.3px}.shop span{font-size:13px;color:#cbd5e1}
@@ -188,16 +189,16 @@ function cur(){ return view || last; }
 function boxPos(n){ var r = Math.floor((n-1)/10), c = (n-1)%10; return {l:(c*10+0.5)+'%', t:(r*12.5+1.25)+'%'}; }
 function grid(){ var h = ''; for(var n=1;n<=80;n++){ var r = Math.floor((n-1)/10), c = (n-1)%10; h += '<div style="position:absolute;left:'+(c*10)+'%;top:'+(r*12.5)+'%;width:10%;height:12.5%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#334155;border:1px solid #273449;box-sizing:border-box">'+n+'</div>'; } return h; }
 function start(){ var box = $('boxBox'); box.innerHTML = grid(); var balls = {}, last = cur();
-  last.arr.concat(last.sc||[]).forEach(function(n){ var b = document.createElement('div'); b.className = 'bxb'+((last.sc||[]).indexOf(n)>=0?' sc':''); var p = boxPos(n); b.style.left = p.l; b.style.top = p.t; b.textContent = n; box.appendChild(b); balls[n] = b; });
+  last.arr.concat(last.sc||[]).forEach(function(n){ var b = document.createElement('div'); b.className = 'bxb'+((last.sc||[]).indexOf(n)>=0?' sc':(n===last.b?' bn':'')); var p = boxPos(n); b.style.left = p.l; b.style.top = p.t; b.textContent = n; box.appendChild(b); balls[n] = b; });
   var ago = view && window.__lastId ? (window.__lastId - last.id) : 0;
   navUpd();
-  $('boxHd').innerHTML = (view ? '⏪ Κλήρωση #'+last.id+' · '+dmy(last.t)+' '+hm(last.t)+'<div class="muted" style="font-size:12px;font-weight:400">πριν '+ago+' '+(ago===1?'κλήρωση':'κληρώσεις')+'</div>' : '🟢 LIVE · Τελευταία κλήρωση #'+last.id+' · '+dmy(last.t)+' '+hm(last.t))+((last.sc||[]).length?'<div class="muted" style="font-size:12px;font-weight:400;margin-top:2px">🟡 20 αριθμοί · 🟢 2η ευκαιρία: <b style="color:#4ade80">'+last.sc.join(' ')+'</b></div>':'');
+  $('boxHd').innerHTML = (view ? '⏪ Κλήρωση #'+last.id+' · '+dmy(last.t)+' '+hm(last.t)+'<div class="muted" style="font-size:12px;font-weight:400">πριν '+ago+' '+(ago===1?'κλήρωση':'κληρώσεις')+'</div>' : '🟢 LIVE · Τελευταία κλήρωση #'+last.id+' · '+dmy(last.t)+' '+hm(last.t))+'<div class="muted" style="font-size:12px;font-weight:400;margin-top:2px">🟡 20 αριθμοί'+(last.b?' · 🔴 ΚΙΝΟ Bonus: <b style="color:#f87171">'+last.b+'</b>':'')+((last.sc||[]).length?' · 🟢 2η ευκαιρία: <b style="color:#4ade80">'+last.sc.join(' ')+'</b>':'')+'</div>';
   return balls; }
 async function load(){
   try{
     var r = await fetch(API+'?_='+Date.now(), {cache:'no-store'}); if(!r.ok) throw new Error(r.status);
     var j = await r.json(), c = j.last || j; var w = c.winningNumbers || {}; if(j.active && j.active.drawTime){ NEXT = {id:j.active.drawId, t:j.active.drawTime}; }
-    var d = {id:c.drawId, t:c.drawTime, arr:(w.list||[]).slice(), sc:(w.secondChance||[]).slice()};
+    var d = {id:c.drawId, t:c.drawTime, arr:(w.list||[]).slice(), sc:(w.secondChance||[]).slice(), b:(w.bonus||[])[0]};
     if(!d.arr.length) throw new Error('empty');
     var isNew = !last || last.id!==d.id; last = d; window.__lastId = d.id; NAV[d.id] = d; navUpd(); $('boxGo').disabled = false; if(isNew) tkCheck();
     $('lastInfo').textContent = 'Τελευταία κλήρωση #'+d.id+' · '+hm(d.t);
@@ -217,7 +218,7 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var 
   var balls = start();
   setTimeout(function(){ $('boxHd').textContent = '📦 Κουνάμε το κουτάκι…'; bxShakeAnim(); }, 1500);
   setTimeout(function(){
-    moves.forEach(function(mm){ var b = balls[mm[0]]; if(!b) return; delete balls[mm[0]]; var p = boxPos(mm[1]); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; b.classList.remove('sc'); b.classList.add(mm[0]!==mm[1] ? 'nw' : 'st'); });
+    moves.forEach(function(mm){ var b = balls[mm[0]]; if(!b) return; delete balls[mm[0]]; var p = boxPos(mm[1]); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; b.classList.remove('sc'); b.classList.remove('bn'); b.classList.add(mm[0]!==mm[1] ? 'nw' : 'st'); });
     Object.keys(balls).forEach(function(k){ balls[k].style.opacity = '0'; });
     PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st}; lsSet('trv_pred', JSON.stringify(PRED)); predText(PRED, false); $('boxPred').disabled = false; predEval();
     busy = false; navUpd(); $('boxGo').disabled = false;
@@ -309,7 +310,7 @@ function navUpd(){ var L = $('navLive'); if(!L || !last) return; var live = !vie
 async function navTo(id, dir){ if(busy || !last) return; if(id >= last.id){ view = null; } else {
     var d = NAV[id];
     if(!d){ $('boxHd').textContent = '⏳ Φορτώνω την κλήρωση #'+id+'…';
-      try{ var r = await fetch('https://api.opap.gr/draws/v3.0/1100/'+id+'?_='+Date.now(), {cache:'no-store'}); if(!r.ok) throw 0; var c = await r.json(), w = c.winningNumbers||{}; if(!w.list||!w.list.length) throw 0; d = {id:c.drawId, t:c.drawTime, arr:w.list.slice(), sc:(w.secondChance||[]).slice()}; NAV[id] = d; }
+      try{ var r = await fetch('https://api.opap.gr/draws/v3.0/1100/'+id+'?_='+Date.now(), {cache:'no-store'}); if(!r.ok) throw 0; var c = await r.json(), w = c.winningNumbers||{}; if(!w.list||!w.list.length) throw 0; d = {id:c.drawId, t:c.drawTime, arr:w.list.slice(), sc:(w.secondChance||[]).slice(), b:(w.bonus||[])[0]}; NAV[id] = d; }
       catch(e){ $('boxHd').textContent = 'Δεν βρέθηκε η κλήρωση #'+id; return; } }
     view = d; }
   out = []; var box = $('boxBox'); start(); predMark(); box.style.setProperty('--sx', (dir||0)*30+'px'); box.classList.remove('sl'); void box.offsetWidth; box.classList.add('sl');
