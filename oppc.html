@@ -52,7 +52,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   <div class="shop"><b>Οχταράς &amp; Πετρόπουλος</b><span>Αγίας Τριάδος 43, Πάτρα · Πρακτορείο <b>Allwyn</b></span></div>
   <div class="card">
     <div class="ctrl">
-      <button class="btn" id="boxGo" disabled>📦 Κούνα το!</button><button class="btn2" id="boxReset" title="Δείξε ξανά την τελευταία κλήρωση">🔄 Δείτε την τελευταία κλήρωση</button>
+      <button class="btn" id="boxGo" disabled>📦 Κούνα το!</button><button class="btn2" id="boxReset" title="Δείξε ξανά την τελευταία κλήρωση">🔄 Δείτε την τελευταία κλήρωση</button><button class="btn2" id="boxPred" disabled title="Δείξε ξανά τους αριθμούς του τελευταίου κουνήματος">🔮 Δείτε την τελευταία πρόβλεψη</button>
       <label class="muted" style="font-size:14px">Πόσους: <select id="boxN"><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option selected>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>18</option><option>20</option></select></label>
     </div>
     <div id="boxHd"></div>
@@ -181,7 +181,7 @@ async function load(){
     if(!d.arr.length) throw new Error('empty');
     var isNew = !last || last.id!==d.id; last = d; $('boxGo').disabled = false; if(isNew) tkCheck();
     $('lastInfo').textContent = 'Τελευταία κλήρωση #'+d.id+' · '+hm(d.t);
-    if(!busy && shownId!==d.id){ shownId = d.id; out = []; start(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
+    if(!busy && isNew){ shownId = d.id; out = []; start(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
   }catch(e){ if(!last){ $('lastInfo').textContent = 'Δεν φόρτωσε η κλήρωση — ξαναδοκιμάζω…'; $('boxBox').innerHTML = grid(); } }
 }
 $('boxN').value = lsGet('kbx_n') || '12'; $('boxN').addEventListener('change', function(){ lsSet('kbx_n', this.value); });
@@ -198,16 +198,25 @@ $('boxGo').addEventListener('click', function(){ if(busy || !last) return;
   setTimeout(function(){
     moves.forEach(function(mm){ var b = balls[mm[0]]; if(!b) return; delete balls[mm[0]]; var p = boxPos(mm[1]); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; if(mm[0]!==mm[1]){ b.classList.remove('sc'); b.classList.add('nw'); } });
     Object.keys(balls).forEach(function(k){ balls[k].style.opacity = '0'; });
-    out = moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
-    $('boxHd').textContent = '🎲 Οι '+out.length+' αριθμοί σου (από #'+last.id+')';
-    $('boxTxt').textContent = st.stay+' έμειναν · '+st.l+'⬅ · '+st.r+'➡ · '+st.u+'⬆ · '+st.d+'⬇  ·  🟡🟣 έμεινε · 🟢 μετακινήθηκε';
-    $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'')+
-      '<div class="add">'+(out.length>12 ? '<span class="muted" style="font-size:12px">Το δελτίο ΚΙΝΟ παίρνει έως 12 αριθμούς — διάλεξε «Πόσους» έως 12 για να το παρακολουθήσεις.</span>' :
-      '<label class="muted" style="font-size:13px">για <select id="tkN">'+[1,2,3,4,5,6,8,10,12,15,20].map(function(n){ return '<option'+(n===5?' selected':'')+'>'+n+'</option>'; }).join('')+'</select> κληρώσεις</label><button class="btn2" id="tkAdd" style="background:#14532d;border-color:#166534">➕ Προσθήκη στο δελτίο</button>')+'</div>';
+    PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st}; lsSet('trv_pred', JSON.stringify(PRED)); predText(PRED, false); $('boxPred').disabled = false;
     busy = false; $('boxGo').disabled = false;
   }, 2750);
 });
-$('boxRes').addEventListener('click', function(e){ var txt = 'Τράβα ρε 😜 (από #'+(last?last.id:'')+'): '+out.join(' ');
+var PRED = null; try{ PRED = JSON.parse(lsGet('trv_pred')||'null'); }catch(e){}
+function predText(P, replay){
+  out = P.moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
+    $('boxHd').textContent = (replay ? '🔮 Η τελευταία πρόβλεψη: ' : '🎲 Οι ')+out.length+' αριθμοί'+(replay?'':' σου')+' (από #'+P.id+' · '+hm(P.t)+')';
+    $('boxTxt').textContent = P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇  ·  🟡🟣 έμεινε · 🟢 μετακινήθηκε';
+    $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'')+
+      '<div class="add">'+(out.length>12 ? '<span class="muted" style="font-size:12px">Το δελτίο ΚΙΝΟ παίρνει έως 12 αριθμούς — διάλεξε «Πόσους» έως 12 για να το παρακολουθήσεις.</span>' :
+      '<label class="muted" style="font-size:13px">για <select id="tkN">'+[1,2,3,4,5,6,8,10,12,15,20].map(function(n){ return '<option'+(n===5?' selected':'')+'>'+n+'</option>'; }).join('')+'</select> κληρώσεις</label><button class="btn2" id="tkAdd" style="background:#14532d;border-color:#166534">➕ Προσθήκη στο δελτίο</button>')+'</div>';
+}
+function predShow(){ if(busy || !PRED) return; var box = $('boxBox'); box.innerHTML = grid(); shownId = -1;
+  PRED.moves.forEach(function(mm){ var b = document.createElement('div'); var p = boxPos(mm[1]); b.className = 'bxb'+(mm[0]!==mm[1] ? ' nw' : (PRED.sc.indexOf(mm[0])>=0 ? ' sc' : '')); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; box.appendChild(b); });
+  predText(PRED, true); }
+$('boxPred').addEventListener('click', predShow);
+if(PRED) $('boxPred').disabled = false;
+$('boxRes').addEventListener('click', function(e){ var txt = 'Τράβα ρε 😜 (από #'+(PRED?PRED.id:'')+'): '+out.join(' ');
   if(e.target.id==='cp'){ (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function(){ e.target.textContent = '✓ Αντιγράφηκε'; }, function(){ prompt('Αντέγραψε:', txt); }); }
   if(e.target.id==='sh'){ navigator.share({text: txt + '\n' + location.href}).catch(function(){}); }
   if(e.target.id==='tkAdd'){ var T = tkLoad(); if(T.length>=5){ alert('Έχεις ήδη 5 δελτία (το όριο). Σβήσε ένα για να βάλεις καινούργιο.'); return; }
