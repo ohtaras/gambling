@@ -316,7 +316,7 @@ var HBP = null, HRES = {}, HGAP = {};
 function histLoad(){ if(HBP) return HBP; HBP = (async function(){
   var idx = await (await fetch('data/kino/index.json?_='+Date.now(), {cache:'no-store'})).json(), F = idx.files, M = new Array(F.length);
   for(var i=0;i<F.length;i+=8) await Promise.all(F.slice(i,i+8).map(function(f,j){ var at = i+j; return fetch('data/kino/bits/'+f.f+'?v='+f.max).then(function(r){ if(!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(function(b){ M[at] = {f:f.f, n:f.n, max:f.max, W:b.byteLength/320, u:new Uint32Array(b)}; }); }));
-  return {M:M, total:idx.total, max:F[F.length-1].max, t0:F[0].f}; })(); HBP.catch(function(){ HBP = null; }); return HBP; }
+  var b0 = await (await fetch('data/kino/'+F[0].f+'?v='+F[0].max)).arrayBuffer(); return {M:M, total:idx.total, max:F[F.length-1].max, t0:new DataView(b0).getUint32(4, true)*1000}; })(); HBP.catch(function(){ HBP = null; }); return HBP; }
 async function histGap(H){ if(!last || last.id <= H.max) return []; var lo = H.max+1, hi = last.id, need = [];
   for(var id=lo; id<=hi; id++){ if(HGAP[id]) continue; var x = DR[id] ? DR[id][1] : (NAV[id] ? NAV[id].arr : (last.id===id ? last.arr : null)); if(x) HGAP[id] = {id:id, t:DR[id] ? DR[id][0] : (NAV[id] ? NAV[id].t : last.t), list:x}; else need.push(id); }
   if(need.length){ try{ for(var pg=0; pg<40; pg++){ var r = await fetch('https://api.opap.gr/draws/v3.0/1100/draw-id/'+need[0]+'/'+need[need.length-1]+'?page='+pg+'&_='+Date.now(), {cache:'no-store'}); if(!r.ok) break; var j = await r.json();
@@ -327,10 +327,10 @@ async function histCalc(nums){ var H = await histLoad(), K = nums.length, cnt = 
     for(var j=0;j<W;j++){ var x = u[o[0]+j]; for(var k=1;k<K && x;k++) x &= u[o[k]+j]; if(x){ x = x>>>0; var c = x - ((x>>>1) & 0x55555555); c = (c & 0x33333333) + ((c>>>2) & 0x33333333); cnt += (((c + (c>>>4)) & 0x0F0F0F0F) * 0x01010101) >>> 24; lm = mi; lb = j*32 + 31 - Math.clz32(x); } } });
   if(lm >= 0){ var m = H.M[lm], b = await (await fetch('data/kino/'+m.f+'?v='+m.max)).arrayBuffer(), dv = new DataView(b); L = {id:dv.getUint32(lb*31, true), t:dv.getUint32(lb*31+4, true)*1000}; }
   var G = await histGap(H), n = H.total + G.length; G.forEach(function(g){ var s = {}; g.list.forEach(function(x){ s[x] = 1; }); if(K && nums.every(function(x){ return s[x]; })){ cnt++; L = {id:g.id, t:g.t}; } });
-  return {cnt:cnt, last:L, n:n, from:H.t0.slice(5,7)+'/'+H.t0.slice(0,4)}; }
+  return {cnt:cnt, last:L, n:n, from:dmy(H.t0)}; }
 function histTxt(r, K){ if(r===undefined || r===null) return '⏳ Ψάχνω σε όλο το ιστορικό του ΚΙΝΟ…'; if(r.err) return '';
   var dd = r.last ? new Date(r.last.t) : null, ago = (r.last && last) ? last.id - r.last.id : 0;
-  return '📜 Σε όλο το ιστορικό (από '+r.from+' · '+r.n.toLocaleString('el-GR')+' κληρώσεις): '+(r.cnt ? 'οι '+K+' αριθμοί βγήκαν <b>όλοι μαζί</b> <b style="color:#fde047;font-size:15px">'+r.cnt.toLocaleString('el-GR')+' '+(r.cnt===1?'φορά':'φορές')+'</b><br>τελευταία φορά: <b>#'+r.last.id+'</b> · '+pad(dd.getDate())+'/'+pad(dd.getMonth()+1)+'/'+dd.getFullYear()+' '+hm(r.last.t)+(ago ? ' <span class="muted">(πριν '+ago.toLocaleString('el-GR')+' κληρώσεις)</span>' : ' <b style="color:#4ade80">(στην τελευταία κλήρωση!)</b>') : 'οι '+K+' αριθμοί <b>δεν έχουν βγει ποτέ όλοι μαζί</b>'); }
+  return '📜 Σε όλο το ιστορικό (από '+r.from+' · '+r.n.toLocaleString('el-GR')+' κληρώσεις): '+(r.cnt ? 'οι '+K+' αριθμοί βγήκαν <b>όλοι μαζί</b> <b style="color:#fde047;font-size:15px">'+r.cnt.toLocaleString('el-GR')+' '+(r.cnt===1?'φορά':'φορές')+'</b><br>τελευταία φορά: <b>#'+r.last.id+'</b> · '+dmy(r.last.t)+' '+hm(r.last.t)+(ago ? ' <span class="muted">(πριν '+ago.toLocaleString('el-GR')+' κληρώσεις)</span>' : ' <b style="color:#4ade80">(στην τελευταία κλήρωση!)</b>') : 'οι '+K+' αριθμοί <b>δεν έχουν βγει ποτέ όλοι μαζί</b>'); }
 function histKey(nums){ return nums.join(',')+'@'+(last ? last.id : 0); }
 function histLine(nums){ return '<div class="ph" id="phLine">'+histTxt(HRES[histKey(nums)], nums.length)+'</div>'; }
 function histFill(nums){ var k = histKey(nums); if(k in HRES) return; HRES[k] = null; histCalc(nums).then(function(r){ HRES[k] = r; }, function(e){ console.warn('hist', e); HRES[k] = {err:1}; }).then(function(){ var el = $('phLine'); if(el && PRED && histKey(PRED.moves.map(function(m){ return m[1]; }).sort(function(a,b){ return a-b; })) === k) el.innerHTML = histTxt(HRES[k], nums.length); }); }
@@ -339,7 +339,7 @@ var WINS = []; try{ WINS = JSON.parse(lsGet('trv_wins')||'[]').filter(winFull); 
 function winAdd(o){ if(!winFull(o)) return; var kf = function(x){ return x.d+'-'+x.m+'-'+x.n.join(','); }, k = kf(o); if(WINS.some(function(x){ return kf(x) === k; })) return; o.new = 1; WINS.push(o); WINS.sort(function(a,b){ return b.d-a.d || b.w-a.w; }); WINS = WINS.slice(0,30); lsSet('trv_wins', JSON.stringify(WINS)); winsRender(); }
 function winsRender(){ var c = $('winsCard'); document.body.classList.toggle('hw', WINS.length>0); if(!WINS.length){ c.style.display = 'none'; return; } c.style.display = '';
   $('winsList').innerHTML = WINS.map(function(o){ var H = {}, S = {}; o.h.forEach(function(x){ H[x] = 1; }); (o.s||[]).forEach(function(x){ S[x] = 1; });
-    var dd = new Date(o.t), dt = pad(dd.getDate())+'/'+pad(dd.getMonth()+1)+' '+hm(o.t);
+    var dd = new Date(o.t), dt = dmy(o.t)+' '+hm(o.t);
     return '<div class="wrow'+(o.new?' new':'')+'"><span>🎯 Κλήρωση <b>#'+o.d+'</b> <span class="muted">'+dt+'</span></span><span class="muted">'+(o.tk?'δελτίο':'πρόβλεψη')+' από #'+o.p+'</span>'+
       '<span class="wn">'+o.n.map(function(x){ return '<span class="chip'+(H[x]?' hit':(S[x]?' sch':''))+'">'+x+'</span>'; }).join('')+'</span>'+
       '<b>'+o.h.length+((o.s&&o.s.length)?'<span style="color:#4ade80">+'+o.s.length+'</span>':'')+'/'+o.n.length+'</b>'+(o.b?' <b style="color:#f87171">🔴 Bonus '+o.b+'</b>':'')+
