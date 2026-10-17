@@ -82,6 +82,7 @@ body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
 .chip.hit{background:radial-gradient(circle at 35% 30%,#fff7b0,#facc15 55%,#ca8a04);color:#111;border-color:#ca8a04}
 table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}table.dr td{padding:4px 3px;border-top:1px solid #1f2a44}
 .win{color:#4ade80;font-weight:800}
+.ph{margin-top:8px;padding-top:8px;border-top:1px dashed #334155;font-size:13px;line-height:1.5}
 .wins{margin-top:12px;border-color:#a16207!important;background:linear-gradient(180deg,#1c1606,#111827)!important}.wins h3{margin:0 0 8px;font-size:17px;color:#fde047;display:flex;justify-content:space-between;align-items:center}.wins h3 button{background:none;border:0;color:#475569;font-size:13px;cursor:pointer;opacity:.35}.wins h3 button:hover{opacity:1}.wrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 10px;border-radius:10px;background:#0f172a;border:1px solid #3f3a1a;margin-top:6px;font-size:14px}.wrow .wamt{margin-left:auto;font-size:20px;font-weight:900;color:#4ade80;white-space:nowrap}.wrow .wn .chip{min-width:24px;height:24px;font-size:12px}.wrow.new{animation:wglow 1.2s ease-in-out 4}@keyframes wglow{50%{box-shadow:0 0 0 3px #facc15}}body.fs.hw #boxFrame{max-width:min(980px,calc(100vh - 360px))!important}body.fs .wins .wrow:nth-child(n+5){display:none}
 
 .add{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:10px}
@@ -301,15 +302,38 @@ async function predEval(){
   else if(NAV[nid]) d = {t:NAV[nid].t, list:NAV[nid].arr, sc:NAV[nid].sc||[], b:NAV[nid].b};
   else if(last && last.id>nid){ try{ var r = await fetch('https://api.opap.gr/draws/v3.0/1100/'+nid+'?_='+Date.now(), {cache:'no-store'}); if(r.ok){ var c = await r.json(), w = c.winningNumbers||{}; if(w.list&&w.list.length){ d = {t:c.drawTime, list:w.list, sc:w.secondChance||[]}; DR[nid] = [d.t, d.list, d.sc]; } } }catch(e){} }
   var chips = function(set, ss){ return nums.map(function(x){ return '<span class="chip'+(set&&set[x]?' hit':(ss&&ss[x]?' sch':''))+'">'+x+'</span>'; }).join(''); };
-  if(!d){ el.innerHTML = '<div class="pe"><b>🔮 Τελευταία πρόβλεψη</b> <span class="muted">(από #'+PRED.id+' · '+hm(PRED.t)+')</span><div style="margin:6px 0">'+chips()+'</div>⏳ Περιμένει την κλήρωση <b>#'+nid+'</b> για να αξιολογηθεί.</div>'; return; }
+  if(!d){ el.innerHTML = '<div class="pe"><b>🔮 Τελευταία πρόβλεψη</b> <span class="muted">(από #'+PRED.id+' · '+hm(PRED.t)+')</span><div style="margin:6px 0">'+chips()+'</div>⏳ Περιμένει την κλήρωση <b>#'+nid+'</b> για να αξιολογηθεί.'+histLine(nums)+'</div>'; histFill(nums); return; }
   var SC = useSC(), set = {}, ss = {}; d.list.forEach(function(x){ set[x] = 1; }); if(SC) d.sc.forEach(function(x){ ss[x] = 1; });
   var a = nums.filter(function(x){ return set[x]; }).length, b2 = nums.filter(function(x){ return ss[x]; }).length;
   var KB = useKB(), bh = KB && d.b && nums.indexOf(d.b)>=0, w = K<=12 ? (SC ? scWin(K,a,b2) : (KB ? kbWin(K,a,bh) : ((PAYS[K]||{})[a]||0))) : null, cost = modeCost();
   el.innerHTML = '<div class="pe"><b>🔮 Τελευταία πρόβλεψη</b> <span class="muted">(από #'+PRED.id+' · '+hm(PRED.t)+')</span><div style="margin:6px 0">'+chips(set, ss)+'</div>'+
     'Στην κλήρωση <b>#'+nid+' · '+hm(d.t)+'</b>'+(nid-PRED.id>1?' <span class="muted">('+(nid-PRED.id)+'η μετά την πρόβλεψη)</span>':' <span class="muted">(η επόμενη)</span>')+': <b style="font-size:16px">'+a+(b2?'<span style="color:#4ade80">+'+b2+'</span>':'')+'/'+K+'</b>'+
-    (w===null ? ' <span class="muted">(πάνω από 12 αριθμούς — χωρίς κέρδη)</span>' : ' · '+(w ? '<span class="win">κέρδος '+eur(w)+'</span>' : '<span class="muted">χωρίς κέρδος</span>')+(bh?' <b style="color:#f87171">🔴 Bonus '+d.b+'!</b>':'')+' <span class="muted">για '+eur(cost)+(SC?' με 2η ευκαιρία':(KB?' με ΚΙΝΟ Bonus':''))+'</span>')+'</div>';
+    (w===null ? ' <span class="muted">(πάνω από 12 αριθμούς — χωρίς κέρδη)</span>' : ' · '+(w ? '<span class="win">κέρδος '+eur(w)+'</span>' : '<span class="muted">χωρίς κέρδος</span>')+(bh?' <b style="color:#f87171">🔴 Bonus '+d.b+'!</b>':'')+' <span class="muted">για '+eur(cost)+(SC?' με 2η ευκαιρία':(KB?' με ΚΙΝΟ Bonus':''))+'</span>')+histLine(nums)+'</div>'; histFill(nums);
   if(w) winAdd({p:PRED.id, pt:PRED.t, d:nid, t:d.t, n:nums, h:nums.filter(function(x){ return set[x]; }), s:nums.filter(function(x){ return ss[x]; }), b:bh?d.b:0, w:w, c:cost, m:SC?'sc':(KB?'kb':'')});
 }
+/* 📜 Ιστορικό: πόσες φορές βγήκε ολόκληρη η πρόβλεψη σε όλες τις κληρώσεις (bitsets ανά μήνα: data/kino/bits) */
+var HBP = null, HRES = {}, HGAP = {};
+function histLoad(){ if(HBP) return HBP; HBP = (async function(){
+  var idx = await (await fetch('data/kino/index.json?_='+Date.now(), {cache:'no-store'})).json(), F = idx.files, M = new Array(F.length);
+  for(var i=0;i<F.length;i+=8) await Promise.all(F.slice(i,i+8).map(function(f,j){ var at = i+j; return fetch('data/kino/bits/'+f.f+'?v='+f.max).then(function(r){ if(!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(function(b){ M[at] = {f:f.f, n:f.n, max:f.max, W:b.byteLength/320, u:new Uint32Array(b)}; }); }));
+  return {M:M, total:idx.total, max:F[F.length-1].max, t0:F[0].f}; })(); HBP.catch(function(){ HBP = null; }); return HBP; }
+async function histGap(H){ if(!last || last.id <= H.max) return []; var lo = H.max+1, hi = last.id, need = [];
+  for(var id=lo; id<=hi; id++){ if(HGAP[id]) continue; var x = DR[id] ? DR[id][1] : (NAV[id] ? NAV[id].arr : (last.id===id ? last.arr : null)); if(x) HGAP[id] = {id:id, t:DR[id] ? DR[id][0] : (NAV[id] ? NAV[id].t : last.t), list:x}; else need.push(id); }
+  if(need.length){ try{ for(var pg=0; pg<40; pg++){ var r = await fetch('https://api.opap.gr/draws/v3.0/1100/draw-id/'+need[0]+'/'+need[need.length-1]+'?page='+pg+'&_='+Date.now(), {cache:'no-store'}); if(!r.ok) break; var j = await r.json();
+      (j.content||[]).forEach(function(c){ if(c.winningNumbers && c.winningNumbers.list && c.winningNumbers.list.length===20) HGAP[c.drawId] = {id:c.drawId, t:c.drawTime, list:c.winningNumbers.list}; }); if(j.last || pg >= (j.totalPages||1)-1) break; } }catch(e){} }
+  var out = []; for(var k=lo; k<=hi; k++) if(HGAP[k]) out.push(HGAP[k]); return out; }
+async function histCalc(nums){ var H = await histLoad(), K = nums.length, cnt = 0, lm = -1, lb = -1, L = null;
+  if(K && K<=20) H.M.forEach(function(m, mi){ var u = m.u, W = m.W, o = nums.map(function(v){ return (v-1)*W; });
+    for(var j=0;j<W;j++){ var x = u[o[0]+j]; for(var k=1;k<K && x;k++) x &= u[o[k]+j]; if(x){ x = x>>>0; var c = x - ((x>>>1) & 0x55555555); c = (c & 0x33333333) + ((c>>>2) & 0x33333333); cnt += (((c + (c>>>4)) & 0x0F0F0F0F) * 0x01010101) >>> 24; lm = mi; lb = j*32 + 31 - Math.clz32(x); } } });
+  if(lm >= 0){ var m = H.M[lm], b = await (await fetch('data/kino/'+m.f+'?v='+m.max)).arrayBuffer(), dv = new DataView(b); L = {id:dv.getUint32(lb*31, true), t:dv.getUint32(lb*31+4, true)*1000}; }
+  var G = await histGap(H), n = H.total + G.length; G.forEach(function(g){ var s = {}; g.list.forEach(function(x){ s[x] = 1; }); if(K && nums.every(function(x){ return s[x]; })){ cnt++; L = {id:g.id, t:g.t}; } });
+  return {cnt:cnt, last:L, n:n, from:H.t0.slice(5,7)+'/'+H.t0.slice(0,4)}; }
+function histTxt(r, K){ if(r===undefined || r===null) return '⏳ Ψάχνω σε όλο το ιστορικό του ΚΙΝΟ…'; if(r.err) return '';
+  var dd = r.last ? new Date(r.last.t) : null, ago = (r.last && last) ? last.id - r.last.id : 0;
+  return '📜 Σε όλο το ιστορικό (από '+r.from+' · '+r.n.toLocaleString('el-GR')+' κληρώσεις): '+(r.cnt ? 'οι '+K+' αριθμοί βγήκαν <b>όλοι μαζί</b> <b style="color:#fde047;font-size:15px">'+r.cnt.toLocaleString('el-GR')+' '+(r.cnt===1?'φορά':'φορές')+'</b><br>τελευταία φορά: <b>#'+r.last.id+'</b> · '+pad(dd.getDate())+'/'+pad(dd.getMonth()+1)+'/'+dd.getFullYear()+' '+hm(r.last.t)+(ago ? ' <span class="muted">(πριν '+ago.toLocaleString('el-GR')+' κληρώσεις)</span>' : ' <b style="color:#4ade80">(στην τελευταία κλήρωση!)</b>') : 'οι '+K+' αριθμοί <b>δεν έχουν βγει ποτέ όλοι μαζί</b>'); }
+function histKey(nums){ return nums.join(',')+'@'+(last ? last.id : 0); }
+function histLine(nums){ return '<div class="ph" id="phLine">'+histTxt(HRES[histKey(nums)], nums.length)+'</div>'; }
+function histFill(nums){ var k = histKey(nums); if(k in HRES) return; HRES[k] = null; histCalc(nums).then(function(r){ HRES[k] = r; }, function(e){ console.warn('hist', e); HRES[k] = {err:1}; }).then(function(){ var el = $('phLine'); if(el && PRED && histKey(PRED.moves.map(function(m){ return m[1]; }).sort(function(a,b){ return a-b; })) === k) el.innerHTML = histTxt(HRES[k], nums.length); }); }
 function winFull(o){ return o.n.length>=4 && o.h.length+(o.s||[]).length===o.n.length; }
 var WINS = []; try{ WINS = JSON.parse(lsGet('trv_wins')||'[]').filter(winFull); }catch(e){ WINS = []; }
 function winAdd(o){ if(!winFull(o)) return; var kf = function(x){ return x.d+'-'+x.m+'-'+x.n.join(','); }, k = kf(o); if(WINS.some(function(x){ return kf(x) === k; })) return; o.new = 1; WINS.push(o); WINS.sort(function(a,b){ return b.d-a.d || b.w-a.w; }); WINS = WINS.slice(0,30); lsSet('trv_wins', JSON.stringify(WINS)); winsRender(); }

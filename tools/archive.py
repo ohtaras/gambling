@@ -22,6 +22,13 @@ def load_all():
             d[r[0]] = [r[0], r[1]*1000, list(r[2:22]), sc]
     return d
 
+def month_bits(rows):
+    """bits/YYYY-MM.bin: για κάθε αριθμό 1..80 ένα bitset W=ceil(n/32) λέξεων uint32 LE· bit i = βγήκε στην i-οστή κλήρωση του μήνα (με σειρά id)."""
+    W = (len(rows) + 31) // 32; B = [[0] * W for _ in range(80)]
+    for i, x in enumerate(rows):
+        for v in x[2]: B[v - 1][i >> 5] |= 1 << (i & 31)
+    return b''.join(struct.pack('<%dI' % W, *r) for r in B)
+
 def save_all(d):
     os.makedirs(ROOT, exist_ok=True)
     by = {}
@@ -34,6 +41,9 @@ def save_all(d):
         buf = b''.join(REC.pack(x[0], x[1]//1000, *x[2], *((list(x[3]) + [0, 0, 0])[:3])) for x in rows)
         p = os.path.join(ROOT, m + '.bin')
         if not os.path.exists(p) or open(p, 'rb').read() != buf: open(p, 'wb').write(buf)
+        bits = month_bits(rows); pb = os.path.join(ROOT, 'bits', m + '.bin')
+        os.makedirs(os.path.dirname(pb), exist_ok=True)
+        if not os.path.exists(pb) or open(pb, 'rb').read() != bits: open(pb, 'wb').write(bits)
         files.append({'f': m + '.bin', 'n': len(rows), 'min': rows[0][0], 'max': rows[-1][0]})
     total = sum(f['n'] for f in files)
     json.dump({'v': 1, 'rec': REC.size, 'total': total, 'updated': int(time.time()), 'files': files}, open(os.path.join(ROOT, 'index.json'), 'w'), separators=(',', ':'))
