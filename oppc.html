@@ -7,7 +7,7 @@
 <meta property="og:title" content="Τράβα ρε 😜">
 <meta property="og:description" content="Κουνάμε το κουτάκι με τις μπίλιες της τελευταίας κλήρωσης!">
 <meta property="og:image" content="https://ohtaras.github.io/gambling/img/oppc.png?v=1792183712">
-<link rel="icon" href="https://ohtaras.github.io/gambling/img/oppc.svg?v=1792183712" type="image/svg+xml"><link rel="apple-touch-icon" href="https://ohtaras.github.io/gambling/img/oppc.png?v=1792183712">
+<link rel="icon" href="https://ohtaras.github.io/gambling/img/oppc.svg?v=1792183712" type="image/svg+xml"><link rel="apple-touch-icon" href="img/app_180.png?v=1"><link rel="manifest" href="oppc.webmanifest?v=1"><meta name="theme-color" content="#0b1220"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="apple-mobile-web-app-title" content="Τράβα ρε">
 <style>
 :root{--bg:#0b1220;--card:#111a2e;--text:#e5e7eb;--muted:#94a3b8;--gold:#d4a84b}
 *{box-sizing:border-box}
@@ -93,7 +93,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
 <aside id="menu" aria-hidden="true">
   <div class="mhd"><b>☰ Μενού</b><button id="menuX" aria-label="Κλείσιμο">✕</button></div>
   <section id="mSet"><h3>⚙️ Ρυθμίσεις</h3>
-    <div class="mrow" id="mShakeRow"><div><b>📳 Ενεργοποίηση Shake</b><div class="muted" id="mShakeTxt">Κούνα δυνατά το κινητό και ο Σπύρος με τον Ηρακλή κουνάνε το κουτί!</div></div><button class="btn2" id="shakeOn" >📳 Κούνα το κινητό</button></div>
+    <div class="mrow" id="mAppRow"><div><b>📲 Εφαρμογή στο κινητό</b><div class="muted" id="mAppTxt">Βάλ' το στην οθόνη του κινητού σαν εφαρμογή — ανοίγει χωρίς διεύθυνση και μπάρες.</div></div><button class="btn2" id="appInst">📲 Εγκατάσταση</button></div><div class="mrow" id="mShakeRow"><div><b>📳 Ενεργοποίηση Shake</b><div class="muted" id="mShakeTxt">Κούνα δυνατά το κινητό και ο Σπύρος με τον Ηρακλή κουνάνε το κουτί!</div></div><button class="btn2" id="shakeOn" >📳 Κούνα το κινητό</button></div>
     <div class="mrow"><div><b>🟢 2η ευκαιρία στα δελτία</b><div class="muted">Αξιολόγηση μαζί με τη 2η ευκαιρία (1€/κλήρωση).</div></div><button class="btn2" id="mSc">ΟΧΙ</button></div>
     <div class="mrow"><div><b>🔴 ΚΙΝΟ Bonus στα δελτία</b><div class="muted">Αν ο αριθμός Bonus είναι στους αριθμούς που πέτυχες, πληρώνει ο πίνακας ΚΙΝΟ Bonus (1€/κλήρωση). Δεν παίζεται μαζί με τη 2η ευκαιρία.</div></div><button class="btn2" id="mKb">ΟΧΙ</button></div>
       </section>
@@ -574,6 +574,18 @@ function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $
 /* ---------- ☰ Μενού ---------- */
 function menuOpen(sec){ document.body.classList.add('menu'); $('menu').setAttribute('aria-hidden','false'); menuSync(); if(sec){ var el = $(sec); if(el && el.tagName==='DETAILS') el.open = true; if(el) setTimeout(function(){ el.scrollIntoView({behavior:'smooth', block:'start'}); }, 320); } else $('menu').scrollTop = 0; }
 function menuClose(){ document.body.classList.remove('menu'); $('menu').setAttribute('aria-hidden','true'); }
+(function(){ var ev = null, row = $('mAppRow'), btn = $('appInst'), txt = $('mAppTxt');
+  var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1), app = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+  if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(function(){});
+  if(document.body.classList.contains('embed')){ row.style.display = 'none'; return; }
+  if(app){ txt.textContent = 'Είσαι ήδη στην εφαρμογή 👍'; btn.style.display = 'none'; return; }
+  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); ev = e; });
+  window.addEventListener('appinstalled', function(){ txt.textContent = '✓ Μπήκε στην οθόνη του κινητού!'; btn.style.display = 'none'; });
+  btn.addEventListener('click', function(){
+    if(ev){ ev.prompt(); ev.userChoice.then(function(){ ev = null; }); return; }
+    txt.innerHTML = ios ? '<b>Στο iPhone:</b> άνοιξε τη σελίδα στο <b>Safari</b> → πάτα το <b>Κοινοποίηση</b> (τετράγωνο με βελάκι ⬆️) → <b>«Προσθήκη στην οθόνη Αφετηρίας»</b> → <b>Προσθήκη</b>.'
+      : '<b>Στο Android:</b> πάτα τις <b>⋮</b> πάνω δεξιά στο Chrome → <b>«Εγκατάσταση εφαρμογής»</b> ή <b>«Προσθήκη στην αρχική οθόνη»</b>.'; });
+})();
 function menuSync(){ var sc = useSC(), kb = useKB(); $('mSc').textContent = sc ? 'ΝΑΙ' : 'ΟΧΙ'; $('mSc').style.borderColor = sc ? '#22c55e' : ''; $('mKb').textContent = kb ? 'ΝΑΙ' : 'ΟΧΙ'; $('mKb').style.borderColor = kb ? '#ef4444' : ''; }
 $('menuBtn').addEventListener('click', function(){ menuOpen(); });
 $('menuX').addEventListener('click', menuClose); $('menuBg').addEventListener('click', menuClose);

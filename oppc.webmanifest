@@ -1,0 +1,18 @@
+{
+  "name": "Τράβα ρε 😜 · OPPC",
+  "short_name": "Τράβα ρε",
+  "description": "Κουνάμε το κουτάκι με τις μπίλιες της τελευταίας κλήρωσης ΚΙΝΟ — Οχτάρας & Πετρόπουλος, Πάτρα",
+  "id": "./oppc.html",
+  "start_url": "./oppc.html?app=1",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "lang": "el",
+  "icons": [
+    {"src": "img/app_192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "img/app_512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "img/app_512m.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
