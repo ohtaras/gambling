@@ -268,7 +268,7 @@ $('boxN').value = lsGet('kbx_n') || '12'; $('boxN').addEventListener('change', f
 $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var last = cur();
   var v = +$('boxN').value || 12, src = last.arr.concat(last.sc||[]);
   for(var i=src.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = src[i]; src[i] = src[j]; src[j] = t; }
-  var used = {}, moves = [], st = {stay:0, l:0, r:0, u:0, d:0}, MV = [['stay',0,0],['l',0,-1],['r',0,1],['u',-1,0],['d',1,0]];
+  var used = {}, moves = [], st = {stay:0, l:0, r:0, u:0, d:0, ul:0, ur:0, dl:0, dr:0}, MV = [['stay',0,0],['l',0,-1],['r',0,1],['u',-1,0],['d',1,0],['ul',-1,-1],['ur',-1,1],['dl',1,-1],['dr',1,1]]; /* 9 θέσεις: μένει + 8 γειτονικές (και διαγώνια) */
   for(var q=0; q<src.length && moves.length<v; q++){ var from = src[q], row = Math.floor((from-1)/10), col = (from-1)%10;
     var mv = MV.slice(); for(var a=mv.length-1;a>0;a--){ var b = Math.floor(Math.random()*(a+1)), tt = mv[a]; mv[a] = mv[b]; mv[b] = tt; }
     for(var m=0;m<mv.length;m++){ var r2 = row+mv[m][1], c2 = col+mv[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; used[to] = 1; moves.push([from,to]); st[mv[m][0]]++; break; } }
@@ -286,7 +286,7 @@ var PRED = null; try{ PRED = JSON.parse(lsGet('trv_pred')||'null'); }catch(e){}
 function predText(P, replay){
   out = P.moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
     $('boxHd').textContent = (replay ? '🔮 Η τελευταία πρόβλεψη: ' : '🎲 Οι ')+out.length+' αριθμοί'+(replay?'':' σου')+' (από #'+P.id+' · '+hm(P.t)+')';
-    $('boxTxt').innerHTML = '<span class="ghost">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</span>';
+    $('boxTxt').innerHTML = '<span class="ghost">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇ · '+(P.st.ul||0)+'↖ · '+(P.st.ur||0)+'↗ · '+(P.st.dl||0)+'↙ · '+(P.st.dr||0)+'↘  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</span>';
     $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'')+
       '<div class="add">'+(out.length>12 ? '<span class="muted" style="font-size:12px">Το δελτίο ΚΙΝΟ παίρνει έως 12 αριθμούς — διάλεξε «Πόσους» έως 12 για να το παρακολουθήσεις.</span>' :
       '<label class="muted" style="font-size:13px">για <select id="tkN">'+(function(){ var gap = (last && P.id < last.id) ? Math.min(last.id - P.id, 300) : 0, o = '';
