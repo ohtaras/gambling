@@ -94,7 +94,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   <div class="mhd"><b>☰ Μενού</b><button id="menuX" aria-label="Κλείσιμο">✕</button></div>
   <section id="mSet"><h3>⚙️ Ρυθμίσεις</h3>
     <div class="mrow" id="mAppRow"><div><b><img src="img/oppc_i192.png" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:-6px;margin-right:6px">Εφαρμογή στο κινητό</b><div class="muted" id="mAppTxt">Βάλ' το στην οθόνη του κινητού σαν εφαρμογή — ανοίγει χωρίς διεύθυνση και μπάρες.</div></div><button class="btn2" id="appInst"><img src="img/oppc_i192.png" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:-6px;margin-right:6px">Εγκατάσταση</button></div><div class="mrow" id="mShakeRow"><div><b>📳 Ενεργοποίηση Shake</b><div class="muted" id="mShakeTxt">Κούνα δυνατά το κινητό και ο Σπύρος με τον Ηρακλή κουνάνε το κουτί!</div></div><button class="btn2" id="shakeOn" >📳 Κούνα το κινητό</button></div>
-    <div class="mrow"><div><b>🟢 2η ευκαιρία στα δελτία</b><div class="muted">Αξιολόγηση μαζί με τη 2η ευκαιρία (1€/κλήρωση).</div></div><button class="btn2" id="mSc">ΟΧΙ</button></div>
+    <div class="mrow"><div><b>🤖 Πρόβλεψη: <span id="mAutoLbl">ΑΥΤΟΜΑΤΗ</span></b><div class="muted">ΑΥΤΟΜΑΤΗ: 1 λεπτό μετά από κάθε κλήρωση ο Σπύρος κι ο Ηρακλής κουνάνε μόνοι τους το κουτί και βγάζουν νέα πρόβλεψη. ΧΕΙΡΟΚΙΝΗΤΗ: μόνο όταν πατήσεις πάνω τους.</div></div><button class="btn2" id="mAuto">ON</button></div><div class="mrow"><div><b>🟢 2η ευκαιρία στα δελτία</b><div class="muted">Αξιολόγηση μαζί με τη 2η ευκαιρία (1€/κλήρωση).</div></div><button class="btn2" id="mSc">ΟΧΙ</button></div>
     <div class="mrow"><div><b>🔴 ΚΙΝΟ Bonus στα δελτία</b><div class="muted">Αν ο αριθμός Bonus είναι στους αριθμούς που πέτυχες, πληρώνει ο πίνακας ΚΙΝΟ Bonus (1€/κλήρωση). Δεν παίζεται μαζί με τη 2η ευκαιρία.</div></div><button class="btn2" id="mKb">ΟΧΙ</button></div>
       </section>
   <div class="mrg"><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener"><img src="https://ohtaras.github.io/gambling/img/eeep.png" alt="ΕΕΕΠ — Επιτροπή Εποπτείας και Ελέγχου Παιγνίων"></a>
@@ -140,7 +140,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
     <div id="boxRes"></div>
     <div id="predEval"></div>
   </div>
-  <div class="card wins" id="winsCard" style="display:none"><h3><span>🏆 Απόλυτες επιτυχίες</span><button id="winsClr" title="Καθαρισμός">🗑</button></h3><div id="winsList"></div></div>
+  <div class="card wins" id="winsCard" style="display:none"><h3><span>🏆 Κέρδη 20€ και πάνω</span><button id="winsClr" title="Καθαρισμός">🗑</button></h3><div id="winsList"></div></div>
   <div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-weight:800;font-size:16px">🎫 Τα δελτία μου <span id="tkCnt" class="muted" style="font-weight:400;font-size:13px"></span></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><label class="sw"><span style="font-size:13px">🟢 2η ευκαιρία</span><input type="checkbox" id="scSw"><span class="tr"></span><b id="scLbl" style="font-size:13px;min-width:28px">ΟΧΙ</b></label><label class="sw kb"><span style="font-size:13px">🔴 ΚΙΝΟ Bonus</span><input type="checkbox" id="kbSw"><span class="tr"></span><b id="kbLbl" style="font-size:13px;min-width:28px">ΟΧΙ</b></label></div></div><div id="tkList"></div></div>
   <footer class="rg"><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" class="eeep"><img src="https://ohtaras.github.io/gambling/img/eeep.png" alt="ΕΕΕΠ — Επιτροπή Εποπτείας και Ελέγχου Παιγνίων"></a><span><a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener">18+ ΕΠΙΓΕΙΟ, 21+ ΨΗΦΙΑΚΟ | ΑΡΜΟΔΙΟΣ ΡΥΘΜΙΣΤΗΣ ΕΕΕΠ | ΚΙΝΔΥΝΟΣ ΕΘΙΣΜΟΥ &amp; ΑΠΩΛΕΙΑΣ ΠΕΡΙΟΥΣΙΑΣ | ΕΟΠΑΕ – ΓΡΑΜΜΗ ΣΥΜΒΟΥΛΕΥΤΙΚΗΣ:</a> <a href="tel:1114" style="white-space:nowrap">1114</a> <a href="https://www.gamingcommission.gov.gr/" target="_blank" rel="noopener" style="white-space:nowrap">| ΠΑΙΞΕ ΥΠΕΥΘΥΝΑ</a></span></footer>
   <div class="disc"><a href="#" id="discLink">⚠️ Αποποίηση ευθύνης &amp; όροι χρήσης</a> · <a href="#" id="aboutLink">ℹ️ Ποιοι είμαστε</a> · <a href="#" id="contactLink">✉️ Επικοινωνία</a></div>
@@ -240,7 +240,7 @@ function bxShakeAnim(done){
 }
 
 var API = 'https://api.opap.gr/draws/v3.0/1100/last-result-and-active';
-var AUTO = false, AUTOD = 0;
+var AUTO = lsGet('trv_auto2')!=='0', AUTOD = 0;
 var NEXT = null, cdPoll = 0, WAIT = false, WAITED = 0, waitTO = 0;
 var last = null, view = null, busy = false, shownId = null, out = [], NAV = {};
 function cur(){ return view || last; }
@@ -334,7 +334,8 @@ function histTxt(r, K){ if(r===undefined || r===null) return '⏳ Ψάχνω σ�
 function histKey(nums){ return nums.join(',')+'@'+(last ? last.id : 0); }
 function histLine(nums){ return '<div class="ph" id="phLine">'+histTxt(HRES[histKey(nums)], nums.length)+'</div>'; }
 function histFill(nums){ var k = histKey(nums); if(k in HRES) return; HRES[k] = null; histCalc(nums).then(function(r){ HRES[k] = r; }, function(e){ console.warn('hist', e); HRES[k] = {err:1}; }).then(function(){ var el = $('phLine'); if(el && PRED && histKey(PRED.moves.map(function(m){ return m[1]; }).sort(function(a,b){ return a-b; })) === k) el.innerHTML = histTxt(HRES[k], nums.length); }); }
-function winFull(o){ return o.n.length>=4 && o.h.length+(o.s||[]).length===o.n.length; }
+var WIN_MIN = 20; /* στον πίνακα μπαίνουν μόνο κέρδη ≥ 20€ */
+function winFull(o){ return (o.w||0) >= WIN_MIN; }
 var WINS = []; try{ WINS = JSON.parse(lsGet('trv_wins')||'[]').filter(winFull); }catch(e){ WINS = []; }
 function winAdd(o){ if(!winFull(o)) return; var kf = function(x){ return x.d+'-'+x.m+'-'+x.n.join(','); }, k = kf(o); if(WINS.some(function(x){ return kf(x) === k; })) return; o.new = 1; WINS.push(o); WINS.sort(function(a,b){ return b.d-a.d || b.w-a.w; }); WINS = WINS.slice(0,30); lsSet('trv_wins', JSON.stringify(WINS)); winsRender(); }
 function winsRender(){ var c = $('winsCard'); document.body.classList.toggle('hw', WINS.length>0); if(!WINS.length){ c.style.display = 'none'; return; } c.style.display = '';
@@ -437,7 +438,9 @@ $('kbSw').addEventListener('change', function(){ setMode(this.checked ? 'kb' : '
 tkRender();
 function cdTick(){ var nt = NEXT ? NEXT.t : (last ? last.t + 300000 : 0); if(!nt) return;
   var ms = nt - Date.now(), w = $('pbar'), st0 = last ? last.t : nt - 300000, tot = Math.max(60000, nt - st0);
-  if(ms > 0 && AUTO && NEXT && AUTOD !== NEXT.id && (1 - ms/tot) >= 0.5 && !busy && !view && !WAIT && !document.hidden && last && !$('boxGo').disabled){ AUTOD = NEXT.id; $('boxGo').click(); }
+  /* 🤖 1 λεπτό μετά από κάθε κλήρωση ο Σπύρος κι ο Ηρακλής κουνάνε μόνοι τους το κουτί → νέα πρόβλεψη (αν δεν έχει ήδη γίνει από αυτή την κλήρωση) */
+  if(AUTO && last && AUTOD !== last.id && (!PRED || PRED.id < last.id) && Date.now() - last.t >= 60000 && !busy && !WAIT && (!NEXT || NEXT.id <= last.id || NEXT.t - Date.now() > 15000)){
+    AUTOD = last.id; if(view){ view = null; out = []; start(); navUpd(); } $('boxGo').disabled = false; $('boxGo').click(); }
   if(ms > 0){ $('pbI').style.width = Math.min(100, Math.max(0, 100*(1 - ms/tot))).toFixed(2)+'%'; w.classList.remove('now'); var m = Math.floor(ms/60000), sx = Math.floor(ms/1000)%60; w.title = 'Επόμενη κλήρωση σε '+m+':'+(sx<10?'0':'')+sx; }
   else { w.classList.add('now'); w.title = 'Η κλήρωση γίνεται τώρα'; if(ms < -10000 && !WAIT && !view && !busy && !document.hidden && last && NEXT && NEXT.id > last.id && WAITED !== NEXT.id){ WAITED = NEXT.id; waitStart(); } if(Date.now() - cdPoll > 2000){ cdPoll = Date.now(); load(); } } }
 setInterval(cdTick, 1000);
@@ -605,6 +608,8 @@ $('fbForm').addEventListener('submit', async function(e){ e.preventDefault(); va
     var j = await r.json(); if(j.success){ st.textContent = '✓ Στάλθηκε, ευχαριστούμε!'; $('fbMsg').value = ''; } else st.textContent = 'Κάτι πήγε στραβά, δοκιμάστε ξανά.'; }
   catch(err){ st.textContent = 'Δεν στάλθηκε — ελέγξτε τη σύνδεση.'; }
   $('fbSend').disabled = false; });
+(function(){ function u(){ $('mAuto').textContent = AUTO ? 'ON' : 'OFF'; $('mAuto').style.borderColor = AUTO ? '#22c55e' : ''; $('mAutoLbl').textContent = AUTO ? 'ΑΥΤΟΜΑΤΗ' : 'ΧΕΙΡΟΚΙΝΗΤΗ'; }
+  $('mAuto').addEventListener('click', function(){ AUTO = !AUTO; lsSet('trv_auto2', AUTO ? '1' : '0'); if(AUTO && last && PRED && PRED.id >= last.id) AUTOD = last.id; u(); }); u(); })();
 $('mSc').addEventListener('click', function(){ setMode(useSC() ? '' : 'sc'); modeChanged(); });
 $('mKb').addEventListener('click', function(){ setMode(useKB() ? '' : 'kb'); modeChanged(); });
 /* ---------- 🎬 Σκηνή: στο κινητό, όσο κουνάνε, όλα σβήνουν και ο Σπύρος, ο Ηρακλής και το κουτί έρχονται μπροστά ---------- */
