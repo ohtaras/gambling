@@ -198,12 +198,12 @@ function bxSetArms(el, ox, oy){ if(!el) return; var f = el.querySelector('.pup')
   var dx = ox*(w/120)*side, dy = oy*(w/120);               // μετατόπιση στην οθόνη (ακολουθεί το κουτί)
   var st = el._pp || (el._pp = {hx:0, hv:0, t:0}), now = performance.now(), dt = Math.min(.05, st.t ? (now-st.t)/1000 : .016); st.t = now;
   var A = Math.max(5, (($('boxFrame')||{}).clientWidth||300)/36), nx0 = dx/A, ny0 = dy/A;
-  var lean = nx0*7, tx = dx*1.05, ty = dy*0.6 - Math.abs(nx0)*w*0.012;            // κορμός: πάει με το κουτί, γέρνει και «σηκώνεται»
+  var lean = nx0*2.2, tx = dx, ty = dy*0.5 - Math.abs(nx0)*w*0.004;            // κορμός: πάει με το κουτί, γέρνει και «σηκώνεται»
   var hipD = (P.hip[1]-P.neck[1])*sc, nx = hipD*Math.sin(lean*Math.PI/180);
   // κεφάλι με «ελατήριο»: καθυστερεί λίγο και ταλαντεύεται
-  st.hv += ((tx+nx) - st.hx)*420*dt; st.hv *= Math.pow(.0015, dt); st.hx += st.hv*dt;
-  var tilt = Math.max(-4, Math.min(4, (st.hx-(tx+nx))*-0.5 + lean*0.3));
-  var legH = (P.H - P.hip[1])*sc, sk = -Math.atan2(tx, legH)*180/Math.PI, sq = 1 - Math.max(-.04, Math.min(.06, ny0*0.05));
+  st.hx = tx+nx; st.hv = 0; st.hx += st.hv*dt;
+  var tilt = lean*0.4;
+  var legH = (P.H - P.hip[1])*sc, sk = -Math.atan2(tx, legH)*180/Math.PI, sq = 1 - Math.max(-.015, Math.min(.02, ny0*0.015));
   var T = f.querySelector('.pT'), Hd = f.querySelector('.pH'), Lg = f.querySelector('.pL');
   if(!ox && !oy){ st.hx = 0; st.hv = 0; T.style.transform = Hd.style.transform = Lg.style.transform = ''; return; }
   T.style.transform = 'translate('+tx.toFixed(1)+'px,'+(ty+(1-sq)*legH).toFixed(1)+'px) rotate('+lean.toFixed(2)+'deg)';
