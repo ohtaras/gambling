@@ -456,31 +456,40 @@ var WT_PRE = [["Πώς θα το κουνήσουμε αυτή τη φορά;", 
 /* 📊 Ατάκες με ΠΡΑΓΜΑΤΙΚΑ στατιστικά: υπολογίζονται κάθε φορά από τις κληρώσεις της ημέρας → δεν επαναλαμβάνονται */
 var ST_RE = ['Με τέτοια στατιστικά, γιατί χάνουμε ακόμα;','Τα στατιστικά τα ξέρεις, την τύχη όχι!','Ο λογιστής μας θα σε ζήλευε!','Πού τα ξέρεις αυτά; Τα βλέπεις στον ύπνο σου;','Ωραία νούμερα. Κρίμα που δεν τα παίξαμε!','Σε έχω για στατιστικολόγο της ομάδας!','Αυτά να τα πεις και στην εφορία!','Ο ΟΠΑΠ πρέπει να σε προσλάβει!','Και με όλα αυτά, πάλι το κουτί αποφασίζει!','Εντυπωσιακό! Πες μου και τα επόμενα 20 τώρα!','Άρα κατά τη στατιστική κερδίζουμε… κάποια στιγμή!','Χρήσιμο. Σχεδόν όσο ένα δελτίο που δεν κέρδισε!','Ξέρεις κι άλλα; Πες τα, περνάει η ώρα!','Γράψ\' το σε χαρτάκι, να το δείξουμε στους πελάτες!','Κι εγώ που νόμιζα ότι ξέρεις μόνο να κουνάς!'];
 function dayIds(){ if(!last) return []; var k = athDay(last.t).key, D = DAYS[k]; if(!D) return []; return Object.keys(D.m).map(Number).filter(function(i){ return i <= last.id; }).sort(function(a,b){ return a-b; }); }
-function statLine(){ if(!last) return null; var DC = dayCnt(last), n = DC.n, A = last.arr, ids = dayIds(), k = athDay(last.t).key, D = DAYS[k];
-  var nums = (PRED && PRED.id >= last.id) ? PRED.moves.map(function(m){ return m[1]; }) : A, x = nums[Math.floor(Math.random()*nums.length)];
+var ST_PROMO = ['Δελτίο και στυλό είναι δίπλα σου!','Αν το πιστεύεις, σημείωσέ το στο δελτίο!','Η επόμενη κλήρωση περιμένει το δελτίο σου!','Τα στατιστικά τα είπαμε, το δελτίο το γεμίζεις εσύ!','Πάρε ένα δελτίο να το δοκιμάσεις!','Ένα κουτάκι στο δελτίο και είσαι μέσα!','Παίξε με μέτρο, παίξε με κέφι!','Γράψ\' το στο δελτίο πριν κλείσει η κλήρωση!'];
+function stC(n,k){ if(k<0||k>n) return 0; var r = 1; for(var i=1;i<=k;i++) r = r*(n-k+i)/i; return r; }
+function stAny(K){ var P = PAYS[K]; if(!P) return 0; var t = 0; for(var h in P) t += stC(20,+h)*stC(60,K-h)/stC(80,K); return t; }
+function statLine(){ if(!last) return null; var DC = dayCnt(last), n = DC.n, ids = dayIds(), k = athDay(last.t).key, D = DAYS[k];
+  var hasP = PRED && PRED.id >= last.id, nums = hasP ? PRED.moves.map(function(m){ return m[1]; }) : null, K = nums ? nums.length : 0;
+  var x = nums ? nums[Math.floor(Math.random()*K)] : 1+Math.floor(Math.random()*80);
   var gap = function(v){ for(var i=ids.length-1, g=0; i>=0; i--, g++){ if(D.m[ids[i]].indexOf(v) >= 0) return g; } return null; };
-  var prev = D && ids.length > 1 ? D.m[ids[ids.length-2]] : null, odd = A.filter(function(v){ return v%2; }).length, sum = A.reduce(function(a,b){ return a+b; }, 0), lo = A.filter(function(v){ return v<=40; }).length;
-  var srt = A.slice().sort(function(a,b){ return a-b; }), pairs = 0; for(var i=1;i<srt.length;i++) if(srt[i]===srt[i-1]+1) pairs++;
-  var hot = 1, cold = 1; for(var v=1; v<=80; v++){ if(DC.c[v] > DC.c[hot]) hot = v; if(DC.c[v] < DC.c[cold]) cold = v; }
-  var dec = [0,0,0,0,0,0,0,0]; A.forEach(function(v){ dec[Math.floor((v-1)/10)]++; }); var dmax = dec.indexOf(Math.max.apply(null, dec));
-  var L = [];
-  if(n >= 10){ L.push('Το '+x+' έχει βγει '+DC.c[x]+' φορές σήμερα σε '+n+' κληρώσεις, '+Math.round(100*DC.c[x]/n)+'%. Το κανονικό είναι 25%.');
-    L.push('Ο πιο ζεστός σήμερα είναι το '+hot+' με '+DC.c[hot]+' φορές, ο πιο κρύος το '+cold+' με μόλις '+DC.c[cold]+'.');
-    L.push('Σήμερα έχουν γίνει '+n+' κληρώσεις και μένουν άλλες '+Math.max(0, 288-n)+' μέχρι τα μεσάνυχτα.');
-    var ab = 0; for(var v2=1; v2<=80; v2++) if(DC.c[v2] > n*0.25) ab++; L.push('Σήμερα '+ab+' από τους 80 αριθμούς είναι πάνω από το κανονικό και '+(80-ab)+' από κάτω.');
-    var gx = gap(x); if(gx !== null) L.push(gx === 0 ? 'Το '+x+' βγήκε και στην τελευταία κλήρωση!' : 'Το '+x+' λείπει εδώ και '+gx+' κληρώσεις. Κατά μέσο όρο ένας αριθμός ξαναβγαίνει σε 4.');
-    var none = []; for(var v3=1; v3<=80; v3++){ var g3 = gap(v3); if(g3 === null || g3 >= 15) none.push(v3); } if(none.length) L.push('Το '+none[Math.floor(Math.random()*none.length)]+' έχει να βγει πάνω από 15 κληρώσεις σήμερα.'); }
-  L.push('Στην τελευταία κλήρωση βγήκαν '+odd+' μονά και '+(20-odd)+' ζυγά.');
-  L.push('Το άθροισμα της τελευταίας κλήρωσης ήταν '+sum+'. Ο μέσος όρος είναι 810.');
-  L.push('Στην τελευταία κλήρωση βγήκαν '+lo+' χαμηλοί (1–40) και '+(20-lo)+' ψηλοί (41–80).');
-  L.push('Στην τελευταία κλήρωση είχαμε '+pairs+' ζευγάρια συνεχόμενων αριθμών.');
-  L.push('Η πιο γεμάτη δεκάδα στην τελευταία ήταν η '+(dmax*10+1)+'–'+(dmax*10+10)+' με '+dec[dmax]+' αριθμούς.');
-  L.push('Ο μικρότερος αριθμός της τελευταίας ήταν το '+srt[0]+' και ο μεγαλύτερος το '+srt[19]+'.');
-  if(last.b) L.push('Το ΚΙΝΟ Bonus της τελευταίας ήταν το '+last.b+'.');
-  if(prev){ var rr = A.filter(function(v){ return prev.indexOf(v) >= 0; }).length; L.push('Από τους 20 της τελευταίας, οι '+rr+' ήταν επανάληψη από την προηγούμενη. Ο μέσος όρος είναι 5.'); }
-  if(PRED && PRED.id >= last.id){ var pr = nums.filter(function(v){ return A.indexOf(v) >= 0; }).length; L.push('Από τους '+nums.length+' της πρόβλεψης, οι '+pr+' βγήκαν και στην τελευταία κλήρωση.');
-    if(n >= 10){ var hp = nums.filter(function(v){ return DC.c[v] > n*0.25; }).length; L.push('Η πρόβλεψή μας έχει '+hp+' ζεστούς και '+(nums.length-hp)+' κρύους της ημέρας.'); } }
-  return [L[Math.floor(Math.random()*L.length)], ST_RE[Math.floor(Math.random()*ST_RE.length)]]; }
+  var hm = function(id){ var t = drawTime(id); if(!t) return ''; var d = new Date(t); return pad(d.getHours())+':'+pad(d.getMinutes()); };
+  var R = function(a){ return a[Math.floor(Math.random()*a.length)]; }, L = [];
+  if(D && n >= 10){
+    var hot = 1, cold = 1; for(var v=1; v<=80; v++){ if(DC.c[v] > DC.c[hot]) hot = v; if(DC.c[v] < DC.c[cold]) cold = v; }
+    var px = Math.round(100*DC.c[x]/n); if(Math.abs(px-25) >= 5) L.push(['Το '+x+' έχει βγει '+DC.c[x]+' φορές σε '+n+' κληρώσεις σήμερα, δηλαδή '+px+'%. Το κανονικό είναι 25%.', px > 25 ? R(['Είναι σε μέρα του. Το σημειώνεις;','Ζεστό χέρι, ζεστός αριθμός! Δελτίο και στυλό!']) : R(['Του χρωστάνε εμφανίσεις. Θα το βάλεις;','Όποιος πιστεύει ότι θα ξυπνήσει, το σημειώνει!'])]);
+    L.push(['Ο πιο ζεστός αριθμός της ημέρας είναι το '+hot+' με '+DC.c[hot]+' εμφανίσεις!', R(['Θα τον βάλεις στο δελτίο ή θα τον αφήσεις να καίει μόνος;','Ο ζεστός αριθμός θέλει ζεστό δελτίο!'])]);
+    L.push(['Ο πιο κρύος σήμερα είναι το '+cold+' με μόλις '+DC.c[cold]+' εμφανίσεις.', R(['Όποιος πιστεύει ότι θα ξυπνήσει, το σημειώνει!','Κάποτε θα ζεσταθεί. Θα είσαι μέσα όταν γίνει;'])]);
+    var left = Math.max(0, 288-n); if(left) L.push(['Μένουν ακόμα '+left+' κληρώσεις μέχρι τα μεσάνυχτα!', left+' ευκαιρίες για ένα δελτίο. Διάλεξε τη δική σου!']);
+    var mx = 0, mv = 0; for(var v4=1; v4<=80; v4++){ var g4 = gap(v4); if(g4 === null) g4 = ids.length; if(g4 > mx){ mx = g4; mv = v4; } }
+    if(mx >= 12) L.push(['Το '+mv+' λείπει εδώ και '+mx+' κληρώσεις, το μεγαλύτερο κενό της ημέρας!', R(['Κανονικά ένας αριθμός ξαναβγαίνει σε 4. Το σημειώνεις;','Θα γυρίσει κάποια στιγμή. Θα το έχεις στο δελτίο;'])]);
+    var gx = gap(x); if(gx !== null && gx >= 6) L.push(['Το '+x+' έχει να βγει '+gx+' κληρώσεις.', 'Κατά μέσο όρο ξαναβγαίνει σε 4. Εσύ τι λες;']);
+    var r20 = ids.slice(-20), fc = {}, fb = 0, fv = 0; r20.forEach(function(id){ D.m[id].forEach(function(v){ fc[v] = (fc[v]||0)+1; if(fc[v] > fb){ fb = fc[v]; fv = v; } }); });
+    if(r20.length >= 20 && fb >= 9) L.push(['Στις τελευταίες 20 κληρώσεις το '+fv+' βγήκε '+fb+' φορές! Το κανονικό είναι 5.', R(['Είναι σε φόρμα. Το βάζεις;','Τέτοια φόρμα θέλει δελτίο!'])]);
+    var st = [], l3 = ids.slice(-3); if(l3.length === 3) for(var v5=1; v5<=80; v5++){ if(l3.every(function(id){ return D.m[id].indexOf(v5) >= 0; })) st.push(v5); }
+    if(st.length) L.push([(st.length===1 ? 'Το '+st[0]+' έχει βγει' : 'Τα '+st.join(', ')+' έχουν βγει')+' στις 3 τελευταίες κληρώσεις συνεχόμενα!', R(['Θα το κάνει τέταρτη; Σημείωσέ το και θα δεις!','Σερί σαν αυτό αξίζει ένα κουτάκι στο δελτίο!'])]);
+    if(nums && PAYS[K]){ var w = 0, best = 0, bid = 0, won = 0; ids.forEach(function(id){ var h = nums.filter(function(v){ return D.m[id].indexOf(v) >= 0; }).length; if(PAYS[K][h]){ w++; won += PAYS[K][h]; } if(h > best){ best = h; bid = id; } });
+      L.push(['Αν έπαιζες σήμερα τα '+K+' νούμερα του κουτιού σε όλες τις '+n+' κληρώσεις, θα κέρδιζες κάτι σε '+w+' από αυτές!', R(['Από τώρα και πέρα μπορείς να τα σημειώσεις εσύ!','Δελτίο, στυλό και τα νούμερα του κουτιού!'])]);
+      if(best >= 2 && bid) L.push(['Τα νούμερα του κουτιού έπιασαν σήμερα '+best+' στα '+K+' στην κλήρωση των '+hm(bid)+'!', R(['Πάμε για καλύτερο; Δελτίο και στυλό!','Αυτό ήταν το ζέσταμα. Σημείωσέ τα!'])]);
+      if(K >= 2){ var n1 = nums[0], n2 = nums[1], tg = ids.filter(function(id){ return D.m[id].indexOf(n1) >= 0 && D.m[id].indexOf(n2) >= 0; }).length;
+        if(tg >= 3) L.push(['Το '+n1+' και το '+n2+' βγήκαν μαζί '+tg+' φορές σήμερα!', 'Τα αγαπημένα, όπως λέμε. Τα βάζεις παρέα στο δελτίο;']); }
+      var hp = nums.filter(function(v){ return DC.c[v] > n*0.25; }).length; L.push(['Η πρόβλεψή μας έχει '+hp+' ζεστούς και '+(K-hp)+' κρύους της ημέρας.', R(ST_PROMO)]); }
+    var AL = null; try{ AL = alogLoad(); }catch(e){} if(AL && AL.items.length >= 3){ var tw = 0, td = 0; AL.items.forEach(function(it){ var A2 = drawNums(it.id+1); if(!A2) return; td++; var h2 = it.n.filter(function(v){ return A2.indexOf(v) >= 0; }).length; if(PAYS[it.n.length] && PAYS[it.n.length][h2]) tw++; });
+      if(td >= 3 && tw) L.push(['Σήμερα οι αυτόματες προβλέψεις του κουτιού έπιασαν κέρδος '+tw+' φορές στις '+td+'!', R(['Η επόμενη μπορεί να είναι η δική σου. Δελτίο και στυλό!','Δεν είναι εγγύηση, είναι κέφι. Σημειώνεις;'])]); }
+  }
+  if(K && PAYS[K]){ var pa = stAny(K); if(pa > 0) L.push(['Με '+K+' αριθμούς, κάποιο κέρδος έρχεται κατά μέσο όρο μία φορά στις '+(1/pa).toFixed(1).replace('.',',')+' κληρώσεις.', R(['Οι αριθμοί είναι αυτοί. Το δελτίο είναι δικό σου!','Τα νούμερα του κουτιού είναι στην οθόνη, το δελτίο δίπλα σου!'])]);
+    var pf = stC(20,K)/stC(80,K); if(K >= 3 && K <= 7) L.push(['Το '+K+'/'+K+' πληρώνει '+(PAYS[K][K]*2).toLocaleString('el-GR')+' φορές το ποντάρισμα!', 'Έρχεται μία στις '+Math.round(1/pf).toLocaleString('el-GR')+' κληρώσεις, αλλά κάποιος θα το πιάσει!']); }
+  if(!L.length) return null; return R(L); }
 function wtPre(){ // μετά την κλήρωση, μέχρι να κουνήσουν: κουβέντα για το πώς θα το κουνήσουν
   var src = WT_PRE.slice(), sx = null; if(AUTO && last){ var ms = last.t + 120000 - Date.now(); if(ms > 12000){ var m = Math.floor(ms/60000), s2 = Math.floor(ms/1000)%60; sx = m ? m+' λεπτ'+(m===1?'ό':'ά')+(s2>9 ? ' και '+s2+'″' : '') : s2+'″'; } else return; }
   if(!WT_PBAG.length){ for(var i=0;i<src.length+(sx?WT_APRE.length:0);i++) WT_PBAG.push(i); for(var j=WT_PBAG.length-1;j>0;j--){ var k = Math.floor(Math.random()*(j+1)), t = WT_PBAG[j]; WT_PBAG[j] = WT_PBAG[k]; WT_PBAG[k] = t; } }
