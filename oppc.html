@@ -437,7 +437,7 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var 
 });
 /* 🎬 Πραγματικό βιντεάκι κουνήματος (AI, Wan 2.2): παίζει πάνω από το κουτί, μετά φαίνονται τα πραγματικά νούμερα */
 var VID_ON = lsGet('trv_vid')!=='0';
-var VIDS = {shake:'shake1', throw:'throw1', win:'win1'}, VCUR = 'shake1';
+var VIDS = {shake:'shake1', throw:'throw1', win:'win1', lose:'lose1'}, VCUR = 'shake1';
 function vidPlay(name, ms){ var v = $('shakeVid'); if(!v || !VID_ON) return false; var f = VIDS[name];
   if(VCUR !== f){ VCUR = f; v.poster = ''; v.innerHTML = '<source src="vid/'+f+'.mp4?v=1" type="video/mp4"><source src="vid/'+f+'.webm?v=1" type="video/webm">'; v.load(); }
   try{ v.currentTime = 0; }catch(e){}
@@ -760,7 +760,7 @@ function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $
       else { a = h+' στα '+K+hl+extra+', ισοπαλία στο σημάδι!'; r = 'Ισοπαλία — όπως κι ο λογαριασμός μας: μηδέν!'; }
       a = (SRC==='tk' ? '🎫 Δελτίο '+(function(){ var T = tkLoad(); for(var q=0;q<T.length;q++) if(T[q].id===TK.id) return (q+1)+' ('+TK.n.length+' αριθμοί)'; return ''; })()+': ' : '🔮 Πρόβλεψη: ')+a;
       var wP = SRC==='pred' ? (K<=12 ? ((PAYS[K]||{})[h]||0) : 0) : tkWinFor(TK, D), wT = TKS.some(function(t){ return tkWinFor(t, D) > 0; });
-      if(!JACK && (wP > 0 || wT)) setTimeout(function(){ vidPlay('win', 3900); }, 600);
+      if(!JACK) setTimeout(function(){ vidPlay((wP > 0 || wT) ? 'win' : 'lose', 3900); }, 600);
       if(SRC==='tk'){ var w0 = tkWinFor(TK, D); if(w0) r = 'Κέρδος '+eur(w0)+'! Επιτέλους ένα χαρούμενο νέο! 🎉'; }
       bxSay(L, a); setTimeout(function(){ bxSay(R, r); }, 1200);
       // όλα τα ενεργά δελτία, ένα-ένα, με αριθμό δελτίου, πόσους έπιασε (και 2η ευκαιρία αν είναι ανοιχτή) και ποιους
