@@ -59,7 +59,7 @@ body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
 #boxFrame{margin:0!important;z-index:3}#bxGuyL .fig{translate:7% 0}#bxGuyR .fig{translate:-29% 0}.bxGuy{z-index:1!important}
 .bxGuy:hover .fimg{filter:drop-shadow(0 0 6px rgba(253,230,138,.7))}
 .bxGuy.alive .fig{animation:bxHop .45s ease-in-out infinite alternate;transform-origin:50% 100%}
-.fig{position:relative}.hd{position:absolute;top:-1.43%;width:58.33%;height:45.24%;transform-origin:50% 88%;transition:transform .45s cubic-bezier(.3,1.3,.5,1);pointer-events:none}.hd img{display:block;width:100%;height:100%;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 0 1.5px rgba(255,255,255,.55))}
+.fig{position:relative}.fig .hd{position:absolute;top:-1.43%;width:58.33%;height:45.24%;transform-origin:50% 88%;transition:transform .45s cubic-bezier(.3,1.3,.5,1);pointer-events:none}.fig .hd img{display:block;width:100%;height:100%;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 0 1.5px rgba(255,255,255,.55))}
 #bxGuyL.turn .hd,#bxGuyL.alive .hd{transform:perspective(240px) rotateY(34deg) rotateZ(4deg) translateX(7%)}#bxGuyR.turn .hd,#bxGuyR.alive .hd{transform:perspective(240px) rotateY(-34deg) rotateZ(-4deg) translateX(-7%)}.bxR.alive .fig{animation-delay:.22s}
 @keyframes bxHop{from{transform:translateY(0) rotate(0)}to{transform:translateY(-6px) rotate(-1.5deg)}}
 .bxGuy{cursor:pointer;-webkit-tap-highlight-color:transparent}
