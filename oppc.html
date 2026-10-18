@@ -481,13 +481,21 @@ function tkRender(){
       done++; var set = {}, ss = {}; d[1].forEach(function(x){ set[x] = 1; }); (d[2]||[]).forEach(function(x){ ss[x] = 1; }); var hits = t.n.filter(function(x){ return set[x]; }), sh = SC ? t.n.filter(function(x){ return ss[x]; }) : []; var bh = KB && d[3] && t.n.indexOf(d[3])>=0, w = SC ? scWin(K, hits.length, sh.length) : (KB ? kbWin(K, hits.length, bh) : ((PAYS[K]||{})[hits.length]||0)); won += w; if(w) winAdd({p:t.start-1, d:id, t:d[0], n:t.n.slice().sort(function(a,b){return a-b;}), h:hits, s:sh, b:bh?d[3]:0, w:w, c:modeCost(), m:SC?'sc':(KB?'kb':''), tk:1}); lastHits = {}; for(var hk in set) lastHits[hk] = 1; if(SC) for(var sk2 in ss) lastHits[sk2] = 2; if(hits.length+sh.length>best) best = hits.length+sh.length;
       rows += '<tr><td>#'+id+' · '+hm(d[0])+'</td><td><b>'+hits.length+(sh.length?'<span style="color:#4ade80">+'+sh.length+'</span>':'')+'/'+K+'</b></td><td class="muted">'+(hits.join(' ')||'—')+(sh.length?' <span style="color:#4ade80">🟢'+sh.join(' ')+'</span>':'')+(bh?' <b style="color:#f87171">🔴B'+d[3]+'</b>':'')+'</td><td'+(w?' class="win"':'')+'>'+(w?eur(w):'—')+'</td></tr>'; }
     var cost = t.draws*modeCost(), fin = done===t.draws;
-    return '<div class="tk"><div class="hd"><span style="font-weight:800">'+K+' αριθμοί · '+t.draws+' κληρώσεις <span class="muted" style="font-weight:400;font-size:12px">από #'+t.start+'</span></span><button class="btn2" data-del="'+t.id+'" style="padding:3px 9px;font-size:12px">🗑</button></div>'+
+    return '<div class="tk"><div class="hd"><span style="font-weight:800">'+K+' αριθμοί · '+t.draws+' κληρώσεις <span class="muted" style="font-weight:400;font-size:12px">από #'+t.start+'</span></span><span style="display:flex;gap:6px"><button class="btn2" data-rep="'+t.id+'" title="Ξαναπαίξε το ίδιο δελτίο από την επόμενη κλήρωση" style="padding:3px 9px;font-size:12px'+(fin?';background:#14532d;border-color:#166534':'')+'">🔁 Επανάληψη</button><button class="btn2" data-del="'+t.id+'" style="padding:3px 9px;font-size:12px">🗑</button></span></div>'+
       '<div style="margin-top:6px">'+t.n.map(function(x){ return '<span class="chip'+(lastHits&&lastHits[x]===1?' hit':(lastHits&&lastHits[x]===2?' sch':''))+'">'+x+'</span>'; }).join('')+'</div>'+
       '<div style="font-size:13px;margin-top:6px">'+(fin?'✅ Τελείωσε':'▶️ Σε εξέλιξη')+' · '+done+'/'+t.draws+' κληρώσεις · καλύτερο '+best+'/'+K+' · κόστος '+eur(cost)+modeLbl()+' · κέρδη <span class="'+(won?'win':'')+'">'+eur(won)+'</span></div>'+
       '<table class="dr">'+rows+'</table></div>';
   }).join('');
 }
-$('tkList').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-del]'); if(!b) return; if(!confirm('Να σβηστεί το δελτίο;')) return; tkSave(tkLoad().filter(function(t){ return String(t.id)!==b.dataset.del; })); drSave(); tkRender(); });
+$('tkList').addEventListener('click', function(e){ var r = e.target.closest && e.target.closest('[data-rep]'); if(r){ tkRepeat(r.dataset.rep); return; } var b = e.target.closest && e.target.closest('[data-del]'); if(!b) return; if(!confirm('Να σβηστεί το δελτίο;')) return; tkSave(tkLoad().filter(function(t){ return String(t.id)!==b.dataset.del; })); drSave(); tkRender(); });
+/* 🔁 Επανάληψη δελτίου: ίδιοι αριθμοί, ίδιος αριθμός κληρώσεων, από την επόμενη κλήρωση */
+function tkRepeat(id){ var T = tkLoad(), i = -1; T.forEach(function(t, k){ if(String(t.id)===String(id)) i = k; }); if(i<0 || !last) return;
+  var t = T[i], st = (NEXT && NEXT.id > last.id) ? NEXT.id : last.id+1, fin = (t.start + t.draws - 1) <= last.id;
+  var nt = {id:Date.now(), n:t.n.slice(), start:fin ? st : Math.max(st, t.start + t.draws), draws:t.draws}; // αν τρέχει ακόμα, η επανάληψη ξεκινάει μόλις τελειώσει
+  if(fin){ T[i] = nt; }                       // τελειωμένο → αντικαθίσταται από την επανάληψη
+  else if(T.length >= 5){ alert('Έχεις ήδη 5 δελτία. Σβήσε ένα ή περίμενε να τελειώσει αυτό για να το επαναλάβεις.'); return; }
+  else T.unshift(nt);
+  tkSave(T); tkRender(); tkCheck(); }
 function navUpd(){ var L = $('navLive'); if(!L || !last) return; var live = !view; L.classList.toggle('off', !live); L.textContent = live ? '🟢 LIVE' : '⏩ LIVE';
   Array.prototype.forEach.call(document.querySelectorAll('[data-nv]'), function(b){ var k = b.dataset.nv; if(k==='live') return; b.disabled = busy || (+k>0 && live); }); }
 async function navTo(id, dir){ if(busy || !last) return; if(id >= last.id){ view = null; } else {
