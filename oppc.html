@@ -27,7 +27,7 @@ header small{display:block;color:var(--muted);font-size:12px;font-weight:400}
 .btn2{background:#1e293b;color:var(--text);border:1px solid #334155;border-radius:10px;padding:7px 14px;font-size:14px;cursor:pointer}
 select{background:#1e293b;color:var(--text);border:1px solid #334155;border-radius:8px;padding:6px 8px;font-size:15px}
 #boxHd{font-weight:800;text-align:center;margin:4px 0 10px;font-size:16px}
-#boxTxt{font-size:12.5px;margin:10px 0;text-align:center;min-height:16px}
+#boxTxt{font-size:12.5px;margin:4px 0;text-align:center;min-height:0}
 #boxRes{text-align:center}
 .nums{font-size:22px;font-weight:900;letter-spacing:1px;margin:6px 0 10px;color:#fde68a}
 footer{text-align:center;font-size:11px;margin-top:14px}
@@ -74,7 +74,7 @@ body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
 .bxGuy{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cdw{display:flex;justify-content:center;align-items:baseline;gap:8px;margin:0 0 10px;font-size:13px}.cdw b{font-size:22px;font-variant-numeric:tabular-nums;color:#fde68a;letter-spacing:1px}.cdw.now b{color:#4ade80}
 .disc{margin:12px 2px 0;font-size:11.5px;color:#94a3b8}.disc summary{cursor:pointer;font-weight:700;color:#cbd5e1}.disc p{margin:7px 0 0;line-height:1.5}.disc a{color:#93c5fd}
-.ghost{color:transparent;user-select:text;-webkit-user-select:text}.ghost::selection{color:#fff;background:#2563eb}@keyframes bxJig{0%{transform:translate(0,0)}20%{transform:translate(var(--a1),var(--b1))}40%{transform:translate(var(--a2),var(--b2))}60%{transform:translate(var(--a3),var(--b3))}80%{transform:translate(var(--a4),var(--b4))}100%{transform:translate(0,0)}}.bxb.jig{animation:bxJig var(--jd,.6s) ease-in-out infinite}#boxTxt,#boxTxt *{color:transparent!important}#boxTxt::selection,#boxTxt *::selection{color:#fff!important;background:#2563eb}
+.ghost{color:transparent;user-select:text;-webkit-user-select:text}.ghost::selection{color:#fff;background:#2563eb}@keyframes bxJig{0%{transform:translate(0,0)}20%{transform:translate(var(--a1),var(--b1))}40%{transform:translate(var(--a2),var(--b2))}60%{transform:translate(var(--a3),var(--b3))}80%{transform:translate(var(--a4),var(--b4))}100%{transform:translate(0,0)}}.bxb.jig{animation:bxJig var(--jd,.6s) ease-in-out infinite}
 .credit{text-align:right;font-size:11px;color:#64748b;margin:10px 2px 0;letter-spacing:.3px}.credit b{color:#94a3b8;font-weight:700}
 .rg{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 8px;font-size:10.5px;line-height:1.45;font-weight:700;letter-spacing:.2px;color:#cbd5e1;border-top:1px solid #23304d;padding-top:12px}.rg a{color:inherit;text-decoration:none}.rg .eeep{display:block;width:100%}.rg .eeep img{height:64px;width:auto;border-radius:6px;display:block;margin:0 auto 4px}
 .aw img{width:20px;height:20px;vertical-align:-5px;margin:0 2px 0 3px}
@@ -97,7 +97,7 @@ body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
 table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}table.dr td{padding:4px 3px;border-top:1px solid #1f2a44}
 .win{color:#4ade80;font-weight:800}
 .alog{margin-top:10px;background:#0f172a;border:1px solid #23304d;border-radius:12px;padding:8px 10px;font-size:13px}.alog summary{cursor:pointer;line-height:1.5}.alog table{width:100%;margin-top:6px}.alog td{padding:3px 4px;border-top:1px solid #1e293b;font-size:12.5px}
-.pull{font-size:13px;line-height:1.5;margin:4px 0}
+.pull{font-size:13px;line-height:1.5;margin:4px 0}.bxInfo{margin:2px 0;font-size:12px}.bxInfo>summary{cursor:pointer;opacity:.45;list-style:none;display:inline-block;padding:1px 6px;border-radius:8px;font-size:11px}.bxInfo>summary::-webkit-details-marker{display:none}.bxInfo[open]>summary{opacity:.8}body.fs .bxInfo{display:none}
 .ph{margin-top:8px;padding-top:8px;border-top:1px dashed #334155;font-size:13px;line-height:1.5}
 .wins{margin-top:12px;border-color:#a16207!important;background:linear-gradient(180deg,#1c1606,#111827)!important}.wins h3{margin:0 0 8px;font-size:17px;color:#fde047;display:flex;justify-content:space-between;align-items:center}.wins h3 button{background:none;border:0;color:#475569;font-size:13px;cursor:pointer;opacity:.35}.wins h3 button:hover{opacity:1}.wrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 10px;border-radius:10px;background:#0f172a;border:1px solid #3f3a1a;margin-top:6px;font-size:14px}.wrow .wamt{margin-left:auto;font-size:20px;font-weight:900;color:#4ade80;white-space:nowrap}.wrow .wn .chip{min-width:24px;height:24px;font-size:12px}.wrow.new{animation:wglow 1.2s ease-in-out 4}@keyframes wglow{50%{box-shadow:0 0 0 3px #facc15}}body.fs.hw #boxFrame{max-width:min(980px,calc(100vh - 360px))!important}body.fs .wins .wrow:nth-child(n+5){display:none}
 
@@ -534,7 +534,7 @@ function alogRender(){ var el = $('alog'); if(!el) return; var L = alogLoad(); l
 function predText(P, replay){
   out = P.moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
     $('boxHd').textContent = (replay ? '🔮 Η τελευταία πρόβλεψη: ' : '🎲 Οι ')+out.length+' αριθμοί'+(replay?'':' σου')+' για την κλήρωση των '+hm(P.t+300000)+' · #'+(P.id+1);
-    $('boxTxt').innerHTML = pullLine(P)+tplLine(P)+'<span class="ghost">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇ · '+(P.st.ul||0)+'↖ · '+(P.st.ur||0)+'↗ · '+(P.st.dl||0)+'↙ · '+(P.st.dr||0)+'↘  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</span>';
+    $('boxTxt').innerHTML = '<details class="bxInfo"><summary>ℹ️ Λεπτομέρειες</summary>'+pullLine(P)+tplLine(P)+'<div class="pull">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇ · '+(P.st.ul||0)+'↖ · '+(P.st.ur||0)+'↗ · '+(P.st.dl||0)+'↙ · '+(P.st.dr||0)+'↘  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</div></details>';
     $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'')+
       '<div class="add">'+(out.length>12 ? '<span class="muted" style="font-size:12px">Το δελτίο ΚΙΝΟ παίρνει έως 12 αριθμούς — διάλεξε «Πόσους» έως 12 για να το παρακολουθήσεις.</span>' :
       '<label class="muted" style="font-size:13px">για <select id="tkN">'+(function(){ var gap = (last && P.id < last.id) ? Math.min(last.id - P.id, 300) : 0, o = '';
