@@ -353,11 +353,12 @@ function dayLoad(d){ if(!d) return Promise.resolve(); var A = athDay(d.t), k = A
         for(var i=0;i<F.length;i++){ if(!ms[F[i].f]) continue; var b = await (await fetch('data/kino/'+F[i].f+'?v='+F[i].max)).arrayBuffer(), dv = new DataView(b), u8 = new Uint8Array(b);
           for(var o=0; o+31<=b.byteLength; o+=31){ var t = dv.getUint32(o+4, true)*1000; if(t < D.start || t >= end) continue; D.m[dv.getUint32(o, true)] = Array.prototype.slice.call(u8.subarray(o+8, o+28)); } }
         D.amax = F[F.length-1].max; D.arch = 1; }catch(e){} }
-    var known = Object.keys(D.m).map(Number), lo = known.length ? Math.max.apply(null, known)+1 : d.id - Math.round((d.t - D.start)/300000), need = [];
-    lo = Math.max(lo, D.amax+1);
-    for(var id=lo; id<=d.id; id++){ if(D.m[id]) continue; var x = DR[id] ? DR[id][1] : (NAV[id] ? NAV[id].arr : (last && last.id===id ? last.arr : (HGAP[id] ? HGAP[id].list : null))); if(x) D.m[id] = x.slice(); else need.push(id); }
+    // όλη η μέρα από την πρώτη κλήρωση: γεμίζουμε ΚΑΘΕ κενό (όχι μόνο μετά την τελευταία γνωστή)
+    var known = Object.keys(D.m).map(Number), est = d.id - Math.round((d.t - D.start)/300000), lo = known.length ? Math.min(Math.min.apply(null, known), est) : est, need = [];
+    if(D.first) lo = D.first; else if(known.length && Math.min.apply(null, known) <= est) D.first = lo = Math.min.apply(null, known);
+    D.no = D.no || {}; for(var id=lo; id<=d.id; id++){ if(D.m[id] || D.no[id]) continue; var x = DR[id] ? DR[id][1] : (NAV[id] ? NAV[id].arr : (last && last.id===id ? last.arr : (HGAP[id] ? HGAP[id].list : null))); if(x) D.m[id] = x.slice(); else need.push(id); }
     if(need.length){ try{ for(var pg=0; pg<40; pg++){ var r = await fetch('https://api.opap.gr/draws/v3.0/1100/draw-id/'+need[0]+'/'+need[need.length-1]+'?page='+pg+'&_='+Date.now(), {cache:'no-store'}); if(!r.ok) break; var j = await r.json();
-        (j.content||[]).forEach(function(c){ if(c.drawTime >= D.start && c.winningNumbers && c.winningNumbers.list && c.winningNumbers.list.length===20) D.m[c.drawId] = c.winningNumbers.list.slice(); }); if(j.last || pg >= (j.totalPages||1)-1) break; } }catch(e){} }
+        (j.content||[]).forEach(function(c){ if(c.drawTime < D.start) D.no[c.drawId] = 1; if(c.drawTime >= D.start && c.winningNumbers && c.winningNumbers.list && c.winningNumbers.list.length===20) D.m[c.drawId] = c.winningNumbers.list.slice(); }); if(j.last || pg >= (j.totalPages||1)-1) break; } }catch(e){} }
   })().finally(function(){ DAYP[k] = null; });
   return DAYP[k]; }
 function dayCnt(d){ var A = athDay(d.t), D = DAYS[A.key], c = new Array(81).fill(0), n = 0; if(D) for(var id in D.m){ if(+id > d.id) continue; n++; D.m[id].forEach(function(x){ c[x]++; }); } return {c:c, n:n, hm:A.hm}; }
@@ -441,7 +442,7 @@ function histTxt(r, K){ if(r===undefined || r===null) return '⏳ Ψάχνω σ�
   return '📜 Σε όλο το ιστορικό (από '+r.from+' · '+r.n.toLocaleString('el-GR')+' κληρώσεις): '+(r.cnt ? 'οι '+K+' αριθμοί βγήκαν <b>όλοι μαζί</b> <b style="color:#fde047;font-size:15px">'+r.cnt.toLocaleString('el-GR')+' '+(r.cnt===1?'φορά':'φορές')+'</b><br>τελευταία φορά: <b>#'+r.last.id+'</b> · '+dmy(r.last.t)+' '+hm(r.last.t)+(ago ? ' <span class="muted">(πριν '+ago.toLocaleString('el-GR')+' κληρώσεις)</span>' : ' <b style="color:#4ade80">(στην τελευταία κλήρωση!)</b>') : 'οι '+K+' αριθμοί <b>δεν έχουν βγει ποτέ όλοι μαζί</b>'); }
 function histKey(nums){ return nums.join(',')+'@'+(last ? last.id : 0); }
 function histLine(nums){ return '<div class="ph" id="phLine">'+histTxt(HRES[histKey(nums)], nums.length)+'</div>'; }
-function histFill(nums){ var k = histKey(nums); if(k in HRES) return; HRES[k] = null; histCalc(nums).then(function(r){ HRES[k] = r; }, function(e){ console.warn('hist', e); HRES[k] = {err:1}; }).then(function(){ var el = $('phLine'); if(el && PRED && histKey(PRED.moves.map(function(m){ return m[1]; }).sort(function(a,b){ return a-b; })) === k) el.innerHTML = histTxt(HRES[k], nums.length); }); }
+function histFill(nums){ var k = histKey(nums); if(k in HRES) return; HRES[k] = null; histCalc(nums).then(function(r){ HRES[k] = r; }, function(e){ console.warn('hist', e); HRES[k] = {err:1}; setTimeout(function(){ delete HRES[k]; }, 20000); }).then(function(){ var el = $('phLine'); if(el && PRED && histKey(PRED.moves.map(function(m){ return m[1]; }).sort(function(a,b){ return a-b; })) === k) el.innerHTML = histTxt(HRES[k], nums.length); }); }
 var WIN_MIN = 20; /* στον πίνακα μπαίνουν μόνο κέρδη ≥ 20€ */
 function winFull(o){ return (o.w||0) >= WIN_MIN; }
 var WINS = []; try{ WINS = JSON.parse(lsGet('trv_wins')||'[]').filter(winFull); }catch(e){ WINS = []; }
