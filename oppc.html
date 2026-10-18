@@ -437,13 +437,15 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var 
 });
 /* 🎬 Πραγματικό βιντεάκι κουνήματος (AI, Wan 2.2): παίζει πάνω από το κουτί, μετά φαίνονται τα πραγματικά νούμερα */
 var VID_ON = lsGet('trv_vid')!=='0';
-var VIDS = {shake:'shake1', throw:'throw1', win:'win1', lose:'lose1'}, VCUR = 'shake1';
-function vidPlay(name, ms){ var v = $('shakeVid'); if(!v || !VID_ON) return false; var f = VIDS[name];
+var VIDS = {shake:['shake1'], throw:['throw1'], win:['win1'], lose:['lose1'], idle:['idle1']}, VCUR = 'shake1';
+function vidPlay(name, ms){ var v = $('shakeVid'); if(!v || !VID_ON) return false; var L = VIDS[name]; if(!L || !L.length) return false; var f = L[Math.floor(Math.random()*L.length)];
   if(VCUR !== f){ VCUR = f; v.poster = ''; v.innerHTML = '<source src="vid/'+f+'.mp4?v=1" type="video/mp4"><source src="vid/'+f+'.webm?v=1" type="video/webm">'; v.load(); }
   try{ v.currentTime = 0; }catch(e){}
   var p = v.play(); var show = function(){ v.classList.add('on'); }; if(p && p.then) p.then(show, function(){}); else show();
   clearTimeout(v._t); v._t = setTimeout(function(){ v.classList.remove('on'); setTimeout(function(){ try{ v.pause(); }catch(e){} }, 400); }, ms||3900); return true; }
 function vidShake(){ vidPlay('shake', 3900); }
+// αναμονή: κάθε ~2,5' που δεν γίνεται τίποτα, ένα μικρό βιντεάκι «ζωής»
+setInterval(function(){ var v = $('shakeVid'); if(!VID_ON || busy || WAIT || document.hidden || (v && v.classList.contains('on'))) return; if(NEXT && NEXT.t - Date.now() < 30000) return; vidPlay('idle', 2100); }, 150000);
 var PRED = null; try{ PRED = JSON.parse(lsGet('trv_pred')||'null'); }catch(e){}
 /* 📒 Ημερολόγιο αυτόματων προβλέψεων: κάθε αυτόματη πρόβλεψη καταγράφεται, κρίνεται στην επόμενη κλήρωση, και σβήνει με την αλλαγή της μέρας */
 var AUTONOW = false, AUTOMK = false;
