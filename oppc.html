@@ -109,6 +109,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   <div class="mhd"><b>☰ Μενού</b><button id="menuX" aria-label="Κλείσιμο">✕</button></div>
   <section id="mSet"><h3>⚙️ Ρυθμίσεις</h3>
     <div class="mrow" id="mAppRow"><div><b><img src="img/oppc_i192.png" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:-6px;margin-right:6px">Εφαρμογή στο κινητό</b><div class="muted" id="mAppTxt">Βάλ' το στην οθόνη του κινητού σαν εφαρμογή — ανοίγει χωρίς διεύθυνση και μπάρες.</div></div><button class="btn2" id="appInst"><img src="img/oppc_i192.png" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:-6px;margin-right:6px">Εγκατάσταση</button></div><div class="mrow" id="mShakeRow"><div><b>📳 Ενεργοποίηση Shake</b><div class="muted" id="mShakeTxt">Κούνα δυνατά το κινητό και ο Σπύρος με τον Ηρακλή κουνάνε το κουτί!</div></div><button class="btn2" id="shakeOn" >📳 Κούνα το κινητό</button></div>
+    <div class="mrow"><div><b>📋 Ίδιος «τρόπος» με χθες</b><div class="muted">Η πρόβλεψη μοιάζει με τη χθεσινή κλήρωση της ίδιας ώρας: ίδιες επαναλήψεις, μονά/ζυγά, χαμηλά/ψηλά, ζεστά.</div></div><button class="btn2" id="mTpl">ON</button></div>
     <div class="mrow"><div><b>🎬 Βιντεάκι κουνήματος</b><div class="muted">Ο Σπύρος κι ο Ηρακλής κουνάνε το κουτί σε κανονικό βίντεο.</div></div><button class="btn2" id="mVid">ON</button></div>
     <div class="mrow"><div><b>🤖 Πρόβλεψη: <span id="mAutoLbl">ΑΥΤΟΜΑΤΗ</span></b><div class="muted">ΑΥΤΟΜΑΤΗ: 2 λεπτά μετά από κάθε κλήρωση ο Σπύρος κι ο Ηρακλής κουνάνε μόνοι τους το κουτί και βγάζουν νέα πρόβλεψη. ΧΕΙΡΟΚΙΝΗΤΗ: μόνο όταν πατήσεις πάνω τους.</div></div><button class="btn2" id="mAuto">ON</button></div><div class="mrow"><div><b>🟢 2η ευκαιρία στα δελτία</b><div class="muted">Αξιολόγηση μαζί με τη 2η ευκαιρία (1€/κλήρωση).</div></div><button class="btn2" id="mSc">ΟΧΙ</button></div>
     <div class="mrow"><div><b>🔴 ΚΙΝΟ Bonus στα δελτία</b><div class="muted">Αν ο αριθμός Bonus είναι στους αριθμούς που πέτυχες, πληρώνει ο πίνακας ΚΙΝΟ Bonus (1€/κλήρωση). Δεν παίζεται μαζί με τη 2η ευκαιρία.</div></div><button class="btn2" id="mKb">ΟΧΙ</button></div>
@@ -329,7 +330,7 @@ async function load(){
     if(!d.arr.length) throw new Error('empty');
     var hadPrev = !!last, isNew = !last || last.id!==d.id; last = d; window.__lastId = d.id; NAV[d.id] = d; navUpd(); $('boxGo').disabled = false; if(isNew) tkCheck();
     $('lastInfo').textContent = 'Τελευταία κλήρωση #'+d.id+' · '+hm(d.t);
-    if(isNew){ predEval(); dayLoad(d); }
+    if(isNew){ predEval(); dayLoad(d); dayLoad({id:d.id-287, t:d.t-86400000+300000}); }
     if(!busy && isNew && !view){ shownId = d.id; out = []; if(hadPrev) newDrawShow(d); else start(); predMark(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
   }catch(e){ if(!last){ $('lastInfo').textContent = 'Δεν φόρτωσε η κλήρωση — ξαναδοκιμάζω…'; $('boxBox').innerHTML = grid(); } }
 }
@@ -371,6 +372,21 @@ function pullSay(w, DC){ var mx = 0; for(var x=1;x<=80;x++) if(DC.c[x] > DC.c[mx
   if(DC.n >= 48 && z >= 2.5 && Math.random() < 0.6){ var H = ['🔥 Το '+mx+' έχει ήδη '+c+' σήμερα! Πάει για ρεκόρ Γκίνες!','🔥 '+c+' φορές το '+mx+'! Ούτε ο ΕΝΦΙΑ δεν έρχεται τόσο συχνά!','🔥 Το '+mx+' πήρε φωτιά — '+c+' φορές! Φέρτε πυροσβεστήρα! 🧯'],
       C = ['❄️ Το '+mx+' έπιασε '+c+' — άλλο ένα και παθαίνει έμφραγμα!','❄️ '+c+' φορές το '+mx+'; Θέλει σύνταξη, άσ\' το να ξεκουραστεί!','❄️ Το '+mx+' με '+c+' έφτασε στο ταβάνι — από εκεί μόνο γκρεμός!'], L = w==='hot' ? H : C; return L[Math.floor(Math.random()*L.length)]; }
   return PULL_TXT[w][Math.floor(Math.random()*PULL_TXT[w].length)]; }
+var TPL_ON = lsGet('trv_tpl')!=='0';
+function drawNums(id){ for(var k in DAYS){ var m = DAYS[k].m; if(m && m[id]) return m[id]; } if(DR[id]) return DR[id][1]; if(NAV[id]) return NAV[id].arr; if(last && last.id===id) return last.arr; return null; }
+function drawTime(id){ return last ? last.t - (last.id-id)*300000 : 0; }
+// χαρακτηριστικά ενός συνόλου αριθμών σε σχέση με την «προηγούμενη» κλήρωση και τα ζεστά της ημέρας (ως ποσοστά, για να συγκρίνονται 20 με 23 ή με 6)
+function tplFeat(prev, DC){ var P = {}, E = DC.n*0.25; prev.arr.forEach(function(x){ P[x] = 1; });
+  return function(nums){ var n = nums.length||1, r = 0, o = 0, lo = 0, h = 0; nums.forEach(function(x){ if(P[x]) r++; if(x%2) o++; if(x<=40) lo++; if(DC.n >= 12 && DC.c[x] > E) h++; });
+    return {n:n, rep:r/n, odd:o/n, low:lo/n, hot:DC.n >= 12 ? h/n : null}; }; }
+function tplDist(a, b){ var d = Math.abs(a.rep-b.rep)*2 + Math.abs(a.odd-b.odd) + Math.abs(a.low-b.low); if(a.hot!==null && b.hot!==null) d += Math.abs(a.hot-b.hot); return Math.round(d*1000)/1000; }
+// χθες την ίδια ώρα: η κλήρωση που ακολούθησε (Yn) σε σχέση με την προηγούμενή της (Yp)
+function tplGet(cur){ var Yp = cur.id - 288, Yn = Yp + 1, A = drawNums(Yp), B = drawNums(Yn); if(!A || !B || A.length!==20 || B.length!==20) return null;
+  var tp = drawTime(Yp), dc = dayCnt({id:Yp, t:tp}), f = tplFeat({arr:A}, dc)(B), D = new Date(drawTime(Yn));
+  f.id = Yn; f.hm = pad(D.getHours())+':'+pad(D.getMinutes()); return f; }
+function tplLine(P){ var u = P.tpl; if(!u) return ''; var y = u.y, k = u.k, pc = function(x){ return Math.round(x*20); }, pk = function(x){ return Math.round(x*k.n); };
+  return '<div class="pull">📋 Ίδιος «τρόπος» με χθες '+y.hm+' (#'+y.id+'): '+pc(y.rep)+' επαναλήψεις · '+pc(y.odd)+' μονά/'+(20-pc(y.odd))+' ζυγά · '+pc(y.low)+' χαμηλά (1–40)'+(y.hot!==null ? ' · '+pc(y.hot)+' ζεστά' : '')+
+    '<br><span class="muted">Η πρόβλεψη ('+k.n+'): '+pk(k.rep)+' επαναλήψεις · '+pk(k.odd)+' μονά/'+(k.n-pk(k.odd))+' ζυγά · '+pk(k.low)+' χαμηλά'+(k.hot!==null ? ' · '+pk(k.hot)+' ζεστά' : '')+'</span></div>'; }
 function pullLine(P){ var u = P.pull; if(!u) return ''; if(!u.n) return '<div class="pull">🕐 Δεν βρέθηκαν ακόμα στοιχεία της ημέρας — κουνήθηκε χωρίς τράβηγμα.</div>';
   return '<div class="pull">🕐 '+u.hm+' · '+(u.w==='hot' ? '🔥' : '❄️')+' Κέρδισε ο <b>'+((u.who||(u.w==='hot'?'S':'I'))==='S' ? 'Σπύρος' : 'Ηρακλής')+'</b> — το κουτί τράβηξε προς τους '+(u.w==='hot' ? '<b class="hot">ζεστούς</b>' : '<b class="cold">κρύους</b>')+
     ' της ημέρας <span class="muted">('+u.n+' κληρώσεις σήμερα · ένταση '+Math.round(100*u.b/PULL_MAX)+'%)</span>'+(u.top && u.top.length ? '<br>'+u.top.map(function(t){ return '<b>'+t[0]+'</b> <span class="muted">('+t[1]+'×)</span>'; }).join(' · ') : '')+'</div>'; }
@@ -378,13 +394,25 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var 
   var v = +$('boxN').value || 12, src = last.arr.concat(last.sc||[]);
   for(var i=src.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = src[i]; src[i] = src[j]; src[j] = t; }
   var DC = dayCnt(last), PW = Math.random() < 0.5 ? 'hot' : 'cold', PWHO = Math.random() < 0.5 ? 'S' : 'I', PS = PW==='hot' ? 1 : -1, PB = PULL_MAX*Math.min(1, DC.n/288), DE = DC.n*0.25, DS = Math.max(1, Math.sqrt(DC.n*0.1875)); if(!DC.n) PB = 0; dayLoad(last);
-  var used = {}, moves = [], st = {stay:0, l:0, r:0, u:0, d:0, ul:0, ur:0, dl:0, dr:0}, MV = [['stay',0,0],['l',0,-1],['r',0,1],['u',-1,0],['d',1,0],['ul',-1,-1],['ur',-1,1],['dl',1,-1],['dr',1,1]]; /* 9 θέσεις: μένει + 8 γειτονικές (και διαγώνια) */
-  for(var q=0; q<src.length && moves.length<v; q++){ var from = src[q], row = Math.floor((from-1)/10), col = (from-1)%10;
-    var cand = [], wsum = 0; for(var m=0;m<MV.length;m++){ var r2 = row+MV[m][1], c2 = col+MV[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; var w = Math.exp(PS*PB*(DC.c[to]-DE)/DS); cand.push([MV[m][0], to, w]); wsum += w; }
-    /* επανάληψη: όπως στην πραγματικότητα, κάθε αριθμός της κλήρωσης ξαναβγαίνει ~25% → το «μένει» ζυγίζει ώστε να είναι ~1 στις 4 */
-    var c0 = cand.filter(function(c){ return c[0]==='stay'; })[0]; if(c0 && cand.length > 1){ var k = (cand.length-1)/3; wsum += c0[2]*(k-1); c0[2] *= k; }
-    if(!cand.length) continue; var rr = Math.random()*wsum, pk = cand[cand.length-1]; for(var z=0; z<cand.length; z++){ rr -= cand[z][2]; if(rr <= 0){ pk = cand[z]; break; } }
-    used[pk[1]] = 1; moves.push([from, pk[1]]); st[pk[0]]++; }
+  var MV = [['stay',0,0],['l',0,-1],['r',0,1],['u',-1,0],['d',1,0],['ul',-1,-1],['ur',-1,1],['dl',1,-1],['dr',1,1]]; /* 9 θέσεις: μένει + 8 γειτονικές (και διαγώνια) */
+  function shakeAll(){ var S = src.slice(); for(var i=S.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = S[i]; S[i] = S[j]; S[j] = t; }
+    var used = {}, mv = [];
+    for(var q=0; q<S.length; q++){ var from = S[q], row = Math.floor((from-1)/10), col = (from-1)%10;
+      var cand = [], wsum = 0; for(var m=0;m<MV.length;m++){ var r2 = row+MV[m][1], c2 = col+MV[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; var w = Math.exp(PS*PB*(DC.c[to]-DE)/DS); cand.push([MV[m][0], to, w]); wsum += w; }
+      /* επανάληψη: όπως στην πραγματικότητα, κάθε αριθμός της κλήρωσης ξαναβγαίνει ~25% → το «μένει» ζυγίζει ώστε να είναι ~1 στις 4 */
+      var c0 = cand.filter(function(c){ return c[0]==='stay'; })[0]; if(c0 && cand.length > 1){ var k = (cand.length-1)/3; wsum += c0[2]*(k-1); c0[2] *= k; }
+      if(!cand.length) continue; var rr = Math.random()*wsum, pk = cand[cand.length-1]; for(var z=0; z<cand.length; z++){ rr -= cand[z][2]; if(rr <= 0){ pk = cand[z]; break; } }
+      used[pk[1]] = 1; mv.push([from, pk[1], pk[0]]); }
+    return mv; }
+  // 📋 «Τρόπος» της χθεσινής κλήρωσης την ίδια ώρα: κουνάμε πολλές φορές ΟΛΕΣ τις 23 μπίλιες και κρατάμε το κούνημα που της μοιάζει περισσότερο
+  var TPL = TPL_ON ? tplGet(last) : null, FEAT = tplFeat(last, DC), moves, best = null, tries = TPL ? 400 : 1;
+  for(var tr=0; tr<tries; tr++){ var mv = shakeAll(), f = FEAT(mv.map(function(m){ return m[1]; })), sc0 = TPL ? tplDist(f, TPL) : 0; if(!best || sc0 < best.sc){ best = {mv:mv, sc:sc0, f:f}; if(sc0 === 0) break; } }
+  // από τις 23 κρατάμε όσους ζητάει το «Πόσους», με την ίδια αναλογία (επαναλήψεις, ζεστά, μονά, χαμηλά)
+  var pickK = best.mv;
+  if(best.mv.length > v){ var bk = null; for(var t2=0; t2<(TPL?300:1); t2++){ var sh = best.mv.slice(); for(var i2=sh.length-1;i2>0;i2--){ var j2 = Math.floor(Math.random()*(i2+1)), tt = sh[i2]; sh[i2] = sh[j2]; sh[j2] = tt; }
+      sh = sh.slice(0, v); var d2 = TPL ? tplDist(FEAT(sh.map(function(m){ return m[1]; })), TPL) : 0; if(!bk || d2 < bk.d){ bk = {mv:sh, d:d2}; } } pickK = bk.mv; }
+  moves = pickK.map(function(m){ return [m[0], m[1]]; }); var st = {stay:0, l:0, r:0, u:0, d:0, ul:0, ur:0, dl:0, dr:0}; pickK.forEach(function(m){ st[m[2]]++; });
+  var TPLINFO = TPL ? {y:TPL, g:FEAT(best.mv.map(function(m){ return m[1]; })), k:FEAT(moves.map(function(m){ return m[1]; }))} : null;
   busy = true; stageOn(); navUpd(); $('boxGo').disabled = true; shownId = last.id; vidShake(); $('boxRes').innerHTML = ''; $('boxTxt').textContent = 'Οι '+src.length+' μπίλιες της τελευταίας κλήρωσης (μαζί με τη 2η ευκαιρία)…';
   var balls = start();
   setTimeout(function(){ $('boxHd').textContent = '📦 Κουνάμε το κουτάκι…'; bxShakeAnim(); }, 1500);
@@ -392,7 +420,7 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var 
     moves.forEach(function(mm){ var b = balls[mm[0]]; if(!b) return; delete balls[mm[0]]; var p = boxPos(mm[1]); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; b.classList.remove('sc'); b.classList.remove('bn'); b.classList.add(mm[0]!==mm[1] ? 'nw' : 'st'); });
     Object.keys(balls).forEach(function(k){ balls[k].style.opacity = '0'; });
     var pn = moves.map(function(mm){ return mm[1]; }).sort(function(a,b){ return PW==='hot' ? DC.c[b]-DC.c[a] : DC.c[a]-DC.c[b]; }).slice(0,4).map(function(x){ return [x, DC.c[x]]; });
-    PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st, pull:{w:PW, who:PWHO, n:DC.n, hm:DC.hm, b:PB, top:pn}}; bxSay(PWHO==='S' ? $('bxGuyL') : $('bxGuyR'), pullSay(PW, DC)); lsSet('trv_pred', JSON.stringify(PRED)); predText(PRED, false); $('boxPred').disabled = false; predEval();
+    PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st, pull:{w:PW, who:PWHO, n:DC.n, hm:DC.hm, b:PB, top:pn}, tpl:TPLINFO}; bxSay(PWHO==='S' ? $('bxGuyL') : $('bxGuyR'), pullSay(PW, DC)); lsSet('trv_pred', JSON.stringify(PRED)); predText(PRED, false); $('boxPred').disabled = false; predEval();
     busy = false; navUpd(); $('boxGo').disabled = false; setTimeout(stageOff, 2200);
   }, 4000);
 });
@@ -409,7 +437,7 @@ var PRED = null; try{ PRED = JSON.parse(lsGet('trv_pred')||'null'); }catch(e){}
 function predText(P, replay){
   out = P.moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
     $('boxHd').textContent = (replay ? '🔮 Η τελευταία πρόβλεψη: ' : '🎲 Οι ')+out.length+' αριθμοί'+(replay?'':' σου')+' (από #'+P.id+' · '+hm(P.t)+')';
-    $('boxTxt').innerHTML = pullLine(P)+'<span class="ghost">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇ · '+(P.st.ul||0)+'↖ · '+(P.st.ur||0)+'↗ · '+(P.st.dl||0)+'↙ · '+(P.st.dr||0)+'↘  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</span>';
+    $('boxTxt').innerHTML = pullLine(P)+tplLine(P)+'<span class="ghost">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇ · '+(P.st.ul||0)+'↖ · '+(P.st.ur||0)+'↗ · '+(P.st.dl||0)+'↙ · '+(P.st.dr||0)+'↘  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</span>';
     $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'')+
       '<div class="add">'+(out.length>12 ? '<span class="muted" style="font-size:12px">Το δελτίο ΚΙΝΟ παίρνει έως 12 αριθμούς — διάλεξε «Πόσους» έως 12 για να το παρακολουθήσεις.</span>' :
       '<label class="muted" style="font-size:13px">για <select id="tkN">'+(function(){ var gap = (last && P.id < last.id) ? Math.min(last.id - P.id, 300) : 0, o = '';
@@ -758,6 +786,7 @@ $('fbForm').addEventListener('submit', async function(e){ e.preventDefault(); va
 (function(){ function u(){ $('mAuto').textContent = AUTO ? 'ON' : 'OFF'; $('mAuto').style.borderColor = AUTO ? '#22c55e' : ''; $('mAutoLbl').textContent = AUTO ? 'ΑΥΤΟΜΑΤΗ' : 'ΧΕΙΡΟΚΙΝΗΤΗ'; }
   $('mAuto').addEventListener('click', function(){ AUTO = !AUTO; lsSet('trv_auto2', AUTO ? '1' : '0'); if(AUTO && last && PRED && PRED.id >= last.id) AUTOD = last.id; u(); }); u(); })();
 (function(){ function u(){ $('mVid').textContent = VID_ON ? 'ON' : 'OFF'; $('mVid').style.borderColor = VID_ON ? '#22c55e' : ''; } $('mVid').addEventListener('click', function(){ VID_ON = !VID_ON; lsSet('trv_vid', VID_ON?'1':'0'); u(); }); u(); })();
+(function(){ function u(){ $('mTpl').textContent = TPL_ON ? 'ON' : 'OFF'; $('mTpl').style.borderColor = TPL_ON ? '#22c55e' : ''; } $('mTpl').addEventListener('click', function(){ TPL_ON = !TPL_ON; lsSet('trv_tpl', TPL_ON?'1':'0'); u(); }); u(); })();
 $('mSc').addEventListener('click', function(){ setMode(useSC() ? '' : 'sc'); modeChanged(); });
 $('mKb').addEventListener('click', function(){ setMode(useKB() ? '' : 'kb'); modeChanged(); });
 /* ---------- 🎬 Σκηνή: στο κινητό, όσο κουνάνε, όλα σβήνουν και ο Σπύρος, ο Ηρακλής και το κουτί έρχονται μπροστά ---------- */
