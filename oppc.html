@@ -55,7 +55,9 @@ body.menu #menu{transform:none}body.menu #menuBg{opacity:1;pointer-events:auto}b
 #stageBg{position:fixed;inset:0;background:rgba(3,7,18,.9);z-index:50;opacity:0;pointer-events:none;transition:opacity .35s}
 body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
 #boxWrap{transition:transform .4s cubic-bezier(.3,1.2,.5,1);transform-origin:0 0}body.stage #boxWrap{position:relative;z-index:51}
-.bxGuy.alive .guy{animation:bxHop .45s ease-in-out infinite alternate;transform-origin:50% 100%}.bxR.alive .guy{animation-delay:.22s}
+.bxGuy.alive .fig{animation:bxHop .45s ease-in-out infinite alternate;transform-origin:50% 100%}
+.fig{position:relative}.hd{position:absolute;top:-1.43%;width:58.33%;height:45.24%;transform-origin:50% 88%;transition:transform .45s cubic-bezier(.3,1.3,.5,1);pointer-events:none}.hd img{display:block;width:100%;height:100%;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 0 1.5px rgba(255,255,255,.55))}
+#bxGuyL.turn .hd,#bxGuyL.alive .hd{transform:perspective(240px) rotateY(34deg) rotateZ(4deg) translateX(7%)}#bxGuyR.turn .hd,#bxGuyR.alive .hd{transform:perspective(240px) rotateY(-34deg) rotateZ(-4deg) translateX(-7%)}.bxR.alive .fig{animation-delay:.22s}
 @keyframes bxHop{from{transform:translateY(0) rotate(0)}to{transform:translateY(-6px) rotate(-1.5deg)}}
 .bxGuy{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cdw{display:flex;justify-content:center;align-items:baseline;gap:8px;margin:0 0 10px;font-size:13px}.cdw b{font-size:22px;font-variant-numeric:tabular-nums;color:#fde68a;letter-spacing:1px}.cdw.now b{color:#4ade80}
@@ -170,8 +172,8 @@ var BXK='#3a2418', BXSK='#eda67c', BXSKS='#c98058';
       '<path d="'+d+'" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="'+(w*.35)+'" stroke-linecap="round" transform="translate(-.6,-1.2)"/>';
     if(sd) o += '<path d="'+sd+'" fill="none" stroke="#0d0d10" stroke-width="'+(w+5.2)+'" stroke-linecap="butt"/><path d="'+sd+'" fill="none" stroke="'+sleeve+'" stroke-width="'+(w+3)+'" stroke-linecap="butt"/><path d="'+sd+'" fill="none" stroke="#fff" stroke-opacity=".09" stroke-width="'+(w*.45)+'" stroke-linecap="butt" transform="translate(-1,-.5)"/>';
     return o; }
-function bxArmB(sl, ox, oy){ return bxLimb('M52 106 Q68 112 '+(80+ox*.45)+' '+(114+oy*.5)+' Q'+(91+ox*.8)+' '+(117+oy)+' '+(99+ox)+' '+(116+oy), sl, 11, 'M50 105 L62 109')+bxHand(103+ox,116+oy); }
-function bxArmF(sl, ox, oy){ return bxLimb('M58 108 Q62 132 '+(82+ox*.45)+' '+(142+oy*.5)+' Q'+(92+ox*.8)+' '+(146+oy)+' '+(99+ox)+' '+(146+oy), sl, 12, 'M58.5 101 L61 117')+bxHand(103+ox,146+oy); }
+function bxArmB(sl, ox, oy){ var ex = 55+ox*.35, ey = 127+oy*.45; return bxLimb('M49 103 Q'+(51+ox*.15)+' '+(117+oy*.2)+' '+ex+' '+ey+' Q'+(ex+12+ox*.3)+' '+(ey-6+oy*.4)+' '+(99+ox)+' '+(117+oy), sl, 11, 'M49 103 L'+(51+ox*.12).toFixed(1)+' '+(116+oy*.15).toFixed(1))+bxHand(103+ox,116+oy); }
+function bxArmF(sl, ox, oy){ var ex = 63+ox*.35, ey = 136+oy*.45; return bxLimb('M58 102 Q'+(60+ox*.15)+' '+(120+oy*.2)+' '+ex+' '+ey+' Q'+(ex+14+ox*.3)+' '+(ey+6+oy*.5)+' '+(99+ox)+' '+(146+oy), sl, 12, 'M58 101 L'+(59.6+ox*.12).toFixed(1)+' '+(117+oy*.15).toFixed(1))+bxHand(103+ox,146+oy); }
 function bxSetArms(el, ox, oy){ if(!el) return; var sl = el.dataset.sl; var b = el.querySelector('.aB'), f = el.querySelector('.aF'); if(b) b.innerHTML = bxArmB(sl,ox,oy); if(f) f.innerHTML = bxArmF(sl,ox,oy); }
 function bxBody(shirt, shirtD, jean, neck, p){ var K = '#0d0d10', h = '';
   // υλικά (gradient) — «φιγούρα» με απαλή 3D σκίαση
@@ -225,7 +227,7 @@ function bxGuySvg(who){
   return h;
 }
 var BX_HEAD = {hood:'https://ohtaras.github.io/gambling/img/head_spyros.png', beard:'https://ohtaras.github.io/gambling/img/head_iraklis.png'};
-function bxGuy(who, flip){ var cx = flip ? 62 : 50; return '<svg viewBox="-4 0 120 210"><g class="guy"><g'+(flip?' transform="translate(112,0) scale(-1,1)"':'')+'>'+bxGuySvg(who)+'</g><image href="'+BX_HEAD[who]+'" x="'+(cx-35)+'" y="-3" width="70" height="95" preserveAspectRatio="xMidYMax meet"/></g></svg>'; }
+function bxGuy(who, flip){ var cx = flip ? 62 : 50; return '<div class="fig"><svg viewBox="-4 0 120 210"><g class="guy"><g'+(flip?' transform="translate(112,0) scale(-1,1)"':'')+'>'+bxGuySvg(who)+'</g></g></svg><div class="hd" style="left:'+((cx-31)/120*100).toFixed(2)+'%"><img src="'+BX_HEAD[who]+'" alt=""></div></div>'; }
 (function(){ try{ $('bxGuyL').innerHTML = bxGuy('hood', false); $('bxGuyR').innerHTML = bxGuy('beard', true);
   $('bxGuyL').dataset.sl = '#1b1b1f'; $('bxGuyR').dataset.sl = '#26314a'; bxSetArms($('bxGuyL'),0,0); bxSetArms($('bxGuyR'),0,0); }catch(e){} })();
 // Κούνημα: το κουτί πάει δεξιά-αριστερά-πάνω-κάτω, ο ένας σπρώχνει κι ο άλλος τραβάει, μετά σταματάνε
@@ -243,6 +245,7 @@ function bxShakeAnim(done){
   JB.forEach(function(b){ var rr = function(){ return ((Math.random()*2-1)*70).toFixed(0)+'%'; };
     for(var q=1;q<=4;q++){ b.style.setProperty('--a'+q, rr()); b.style.setProperty('--b'+q, rr()); }
     b.style.setProperty('--jd', (0.45+Math.random()*0.4).toFixed(2)+'s'); b.style.animationDelay = (-Math.random()*0.5).toFixed(2)+'s'; b.classList.add('jig'); });
+  L.classList.add('turn'); R.classList.add('turn');
   var TK = bxTalkPick(), fixed = /Σπύρ|Ηρακλ|Οχτ[αά]ρ|γυαλι|κουκούλ|γένια|μπούκλ/.test(TK[0]+' '+TK[1]), first = L, second = R;
   if(!fixed && Math.random() < 0.5){ first = R; second = L; }
   bxSay(first, TK[0]); setTimeout(function(){ bxSay(second, TK[1]); }, 1300);
@@ -256,7 +259,7 @@ function bxShakeAnim(done){
     box.style.transform = 'translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px)';
     bxSetArms(L, dx*uL, dy*uL);      // αριστερός: δεξιά = σπρώχνει
     bxSetArms(R, -dx*uR, dy*uR);     // δεξιός (καθρέφτης): δεξιά = τραβάει
-    if(t < T) requestAnimationFrame(step); else { JB.forEach(function(b){ b.classList.remove('jig'); b.style.animationDelay = ''; }); setTimeout(function(){ bxSay(L, ''); bxSay(R, ''); }, 4500); box.style.transform = ''; bxSetArms(L,0,0); bxSetArms(R,0,0); if(done) done(); } }
+    if(t < T) requestAnimationFrame(step); else { JB.forEach(function(b){ b.classList.remove('jig'); b.style.animationDelay = ''; }); setTimeout(function(){ bxSay(L, ''); bxSay(R, ''); }, 4500); box.style.transform = ''; bxSetArms(L,0,0); bxSetArms(R,0,0); setTimeout(function(){ L.classList.remove('turn'); R.classList.remove('turn'); }, 900); if(done) done(); } }
   requestAnimationFrame(step);
 }
 
