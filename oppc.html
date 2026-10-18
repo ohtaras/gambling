@@ -55,6 +55,13 @@ body.menu #menu{transform:none}body.menu #menuBg{opacity:1;pointer-events:auto}b
 #stageBg{position:fixed;inset:0;background:rgba(3,7,18,.9);z-index:50;opacity:0;pointer-events:none;transition:opacity .35s}
 body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
 #boxWrap{transition:transform .4s cubic-bezier(.3,1.2,.5,1);transform-origin:0 0}body.stage #boxWrap{position:relative;z-index:51}
+.pup{position:relative}.pup .pz{display:block;width:100%;height:auto;visibility:hidden}.pup .pp{position:absolute;inset:0;pointer-events:none}.pup .pp img{position:absolute;left:0;top:0;width:100%;height:auto;-webkit-user-select:none;user-select:none}
+.pup .pp img{filter:drop-shadow(0 0 1.3px rgba(255,255,255,.45))}.pup .pL{z-index:1}.pup .pT{z-index:2}.pup .pH{z-index:3}
+.pup .iT{animation:bxBreath 3.4s ease-in-out infinite}.pup .hb{position:absolute;inset:0;animation:bxBreathH 3.4s ease-in-out infinite}.pup .iH{animation:bxHeadIdle 6.2s ease-in-out infinite}
+#bxGuyR .pup .iT,#bxGuyR .pup .hb{animation-delay:-1.3s}#bxGuyR .pup .iH{animation-delay:-2.7s;animation-duration:7.1s}
+@keyframes bxBreath{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.022) scaleX(1.006)}}@keyframes bxBreathH{0%,100%{transform:translateY(0)}50%{transform:translateY(-.85%)}}
+@keyframes bxHeadIdle{0%,100%{transform:rotate(0)}18%{transform:rotate(-2.2deg)}30%{transform:rotate(-2.2deg)}52%{transform:rotate(1.6deg) translateY(.3%)}66%{transform:rotate(1.6deg) translateY(.3%)}84%{transform:rotate(-.6deg)}}
+.bxGuy:hover .pp img{filter:drop-shadow(0 0 6px rgba(253,230,138,.75))}
 .fimg{display:block;width:100%;height:auto;transform-origin:50% 100%;filter:drop-shadow(0 0 1.5px rgba(255,255,255,.5));-webkit-user-select:none;user-select:none}
 #boxFrame{margin:0!important;z-index:3}#bxGuyL .fig{translate:7% 0}#bxGuyR .fig{translate:-29% 0}.bxGuy{z-index:1!important}
 .bxGuy:hover .fimg{filter:drop-shadow(0 0 6px rgba(253,230,138,.7))}
@@ -187,8 +194,20 @@ function bxArm(sl, ox, oy, S, E, hy, w){ // ώμος S → αγκώνας E → 
   return o + bxHand(hx+4, hy2); }
 function bxArmB(sl, ox, oy){ return bxArm(sl, ox, oy, [50,100], [66,121], 117, 10); }
 function bxArmF(sl, ox, oy){ return bxArm(sl, ox, oy, [56,102], [69,134], 146, 11); }
-function bxSetArms(el, ox, oy){ if(!el) return; var im = el.querySelector('.fimg'); if(!im) return; var k = (el.offsetWidth||100)/120; // κρατάνε το κουτί: ακολουθούν το κούνημα, με μια μικρή κλίση σαν να σπρώχνουν/τραβάνε
-  im.style.transform = (ox||oy) ? 'translate('+(ox*k).toFixed(1)+'px,'+(oy*k).toFixed(1)+'px) rotate('+(ox*.35*(el.id==='bxGuyR'?-1:1)).toFixed(2)+'deg)' : ''; }
+function bxSetArms(el, ox, oy){ if(!el) return; var f = el.querySelector('.pup'); if(!f) return; var P = BX_PUP[f.dataset.who], w = el.offsetWidth||100, sc = w/P.W, side = el.id==='bxGuyR' ? -1 : 1;
+  var dx = ox*(w/120)*side, dy = oy*(w/120);               // μετατόπιση στην οθόνη (ακολουθεί το κουτί)
+  var st = el._pp || (el._pp = {hx:0, hv:0, t:0}), now = performance.now(), dt = Math.min(.05, st.t ? (now-st.t)/1000 : .016); st.t = now;
+  var lean = dx*0.45, tx = dx*0.92, ty = dy*0.55;            // κορμός: πάει με το κουτί και γέρνει
+  var hipD = (P.hip[1]-P.neck[1])*sc, nx = hipD*Math.sin(lean*Math.PI/180);
+  // κεφάλι με «ελατήριο»: καθυστερεί λίγο και ταλαντεύεται
+  st.hv += ((tx+nx) - st.hx)*180*dt; st.hv *= Math.pow(.02, dt); st.hx += st.hv*dt;
+  var tilt = Math.max(-9, Math.min(9, (st.hx-(tx+nx))*-0.9 + lean*0.6));
+  var legH = (P.H - P.hip[1])*sc, sk = -Math.atan2(tx, legH)*180/Math.PI, sq = 1 - Math.max(-.03, Math.min(.04, dy*0.004));
+  var T = f.querySelector('.pT'), Hd = f.querySelector('.pH'), Lg = f.querySelector('.pL');
+  if(!ox && !oy){ st.hx = 0; st.hv = 0; T.style.transform = Hd.style.transform = Lg.style.transform = ''; return; }
+  T.style.transform = 'translate('+tx.toFixed(1)+'px,'+(ty+(1-sq)*legH).toFixed(1)+'px) rotate('+lean.toFixed(2)+'deg)';
+  Hd.style.transform = 'translate('+st.hx.toFixed(1)+'px,'+(ty+(1-sq)*legH).toFixed(1)+'px) rotate('+tilt.toFixed(2)+'deg)';
+  Lg.style.transform = 'skewX('+sk.toFixed(2)+'deg) scaleY('+sq.toFixed(3)+')'; }
 function bxBody(shirt, shirtD, jean, neck, p){ var K = '#0d0d10', h = '';
   // υλικά (gradient) — «φιγούρα» με απαλή 3D σκίαση
   h += '<defs>'+
@@ -241,8 +260,15 @@ function bxGuySvg(who){
   return h;
 }
 var BX_HEAD = {hood:'https://ohtaras.github.io/gambling/img/head_spyros.png', beard:'https://ohtaras.github.io/gambling/img/head_iraklis.png'};
-var BX_FIG = {hood:'https://ohtaras.github.io/gambling/img/fig_spyros.png?v=1', beard:'https://ohtaras.github.io/gambling/img/fig_iraklis.png?v=1'};
-function bxGuy(who, flip){ return '<div class="fig"><img class="fimg" src="'+BX_FIG[who]+'" alt="'+(who==='hood'?'Σπύρος':'Ηρακλής')+'" draggable="false"></div>'; }
+/* 🎭 Φιγούρες «κούκλες»: πόδια / κορμός με χέρια / κεφάλι — κάθε κομμάτι κινείται χωριστά */
+var BX_IMG = 'https://ohtaras.github.io/gambling/img/';
+var BX_PUP = {hood:{n:'spyros', W:439, H:720, hip:[240,445], neck:[252,272]}, beard:{n:'iraklis', W:445, H:720, hip:[300,430], neck:[310,250]}};
+function bxGuy(who, flip){ var P = BX_PUP[who], v = '?v=1', o = function(pt){ return (100*pt[0]/P.W).toFixed(1)+'% '+(100*pt[1]/P.H).toFixed(1)+'%'; };
+  return '<div class="fig pup" data-who="'+who+'">'+
+    '<img class="pz" src="'+BX_IMG+P.n+'_torso.png'+v+'" alt="" draggable="false">'+
+    '<div class="pp pL" style="transform-origin:50% 100%"><img src="'+BX_IMG+P.n+'_legs.png'+v+'" alt="" draggable="false"></div>'+
+    '<div class="pp pT" style="transform-origin:'+o(P.hip)+'"><img class="iT" style="transform-origin:'+o(P.hip)+'" src="'+BX_IMG+P.n+'_torso.png'+v+'" alt="'+(who==='hood'?'Σπύρος':'Ηρακλής')+'" draggable="false"></div>'+
+    '<div class="pp pH" style="transform-origin:'+o(P.neck)+'"><div class="hb"><img class="iH" style="transform-origin:'+o(P.neck)+'" src="'+BX_IMG+P.n+'_head.png'+v+'" alt="" draggable="false"></div></div></div>'; }
 (function(){ try{ $('bxGuyL').innerHTML = bxGuy('hood', false); $('bxGuyR').innerHTML = bxGuy('beard', true);
   $('bxGuyL').dataset.sl = '#1b1b1f'; $('bxGuyR').dataset.sl = '#26314a'; bxSetArms($('bxGuyL'),0,0); bxSetArms($('bxGuyR'),0,0); }catch(e){} })();
 // Κούνημα: το κουτί πάει δεξιά-αριστερά-πάνω-κάτω, ο ένας σπρώχνει κι ο άλλος τραβάει, μετά σταματάνε
