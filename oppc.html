@@ -82,6 +82,7 @@ body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
 .chip.hit{background:radial-gradient(circle at 35% 30%,#fff7b0,#facc15 55%,#ca8a04);color:#111;border-color:#ca8a04}
 table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}table.dr td{padding:4px 3px;border-top:1px solid #1f2a44}
 .win{color:#4ade80;font-weight:800}
+.pull{font-size:13px;line-height:1.5;margin:4px 0}#boxTxt .pull,#boxTxt .pull *{color:#e5e7eb!important}#boxTxt .pull .muted{color:#94a3b8!important}#boxTxt .pull .hot{color:#fb923c!important}#boxTxt .pull .cold{color:#60a5fa!important}
 .ph{margin-top:8px;padding-top:8px;border-top:1px dashed #334155;font-size:13px;line-height:1.5}
 .wins{margin-top:12px;border-color:#a16207!important;background:linear-gradient(180deg,#1c1606,#111827)!important}.wins h3{margin:0 0 8px;font-size:17px;color:#fde047;display:flex;justify-content:space-between;align-items:center}.wins h3 button{background:none;border:0;color:#475569;font-size:13px;cursor:pointer;opacity:.35}.wins h3 button:hover{opacity:1}.wrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 10px;border-radius:10px;background:#0f172a;border:1px solid #3f3a1a;margin-top:6px;font-size:14px}.wrow .wamt{margin-left:auto;font-size:20px;font-weight:900;color:#4ade80;white-space:nowrap}.wrow .wn .chip{min-width:24px;height:24px;font-size:12px}.wrow.new{animation:wglow 1.2s ease-in-out 4}@keyframes wglow{50%{box-shadow:0 0 0 3px #facc15}}body.fs.hw #boxFrame{max-width:min(980px,calc(100vh - 360px))!important}body.fs .wins .wrow:nth-child(n+5){display:none}
 
@@ -260,25 +261,55 @@ async function load(){
     if(!d.arr.length) throw new Error('empty');
     var hadPrev = !!last, isNew = !last || last.id!==d.id; last = d; window.__lastId = d.id; NAV[d.id] = d; navUpd(); $('boxGo').disabled = false; if(isNew) tkCheck();
     $('lastInfo').textContent = 'Τελευταία κλήρωση #'+d.id+' · '+hm(d.t);
-    if(isNew) predEval();
+    if(isNew){ predEval(); dayLoad(d); }
     if(!busy && isNew && !view){ shownId = d.id; out = []; if(hadPrev) newDrawShow(d); else start(); predMark(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
   }catch(e){ if(!last){ $('lastInfo').textContent = 'Δεν φόρτωσε η κλήρωση — ξαναδοκιμάζω…'; $('boxBox').innerHTML = grid(); } }
 }
 $('boxN').value = lsGet('kbx_n') || '12'; $('boxN').addEventListener('change', function(){ lsSet('kbx_n', this.value); });
+/* 🕐 Στοιχεία της ημέρας (00:00–23:55 ώρα Ελλάδας): πόσες φορές βγήκε κάθε αριθμός σήμερα μέχρι την κλήρωση που κουνάμε.
+   Ο Σπύρος τραβάει το κουτί προς τους ΖΕΣΤΟΥΣ, ο Ηρακλής προς τους ΚΡΥΟΥΣ — κερδίζει ένας στην τύχη· όσο προχωράει η μέρα, τόσο δυναμώνει το τράβηγμα. */
+var DAYS = {}, DAYP = {}, PULL_MAX = 0.8;
+var ATHF = new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Athens', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
+function athDay(t){ var o = {}; ATHF.formatToParts(new Date(t)).forEach(function(p){ o[p.type] = p.value; }); var h = (+o.hour)%24;
+  return {key:o.year+'-'+o.month+'-'+o.day, start:t - ((h*60 + (+o.minute))*60 + (+o.second))*1000 - (t%1000), hm:pad(h)+':'+o.minute}; }
+function dayLoad(d){ if(!d) return Promise.resolve(); var A = athDay(d.t), k = A.key, D = DAYS[k] || (DAYS[k] = {start:A.start, m:{}, arch:0, amax:0});
+  if(DAYP[k]) return DAYP[k];
+  DAYP[k] = (async function(){
+    if(!D.arch){ try{ var idx = await (await fetch('data/kino/index.json?_='+Date.now(), {cache:'no-store'})).json(), F = idx.files, end = D.start + 86400000;
+        var ms = {}; [D.start, end-1].forEach(function(t){ ms[new Date(t).toISOString().slice(0,7)+'.bin'] = 1; });
+        for(var i=0;i<F.length;i++){ if(!ms[F[i].f]) continue; var b = await (await fetch('data/kino/'+F[i].f+'?v='+F[i].max)).arrayBuffer(), dv = new DataView(b), u8 = new Uint8Array(b);
+          for(var o=0; o+31<=b.byteLength; o+=31){ var t = dv.getUint32(o+4, true)*1000; if(t < D.start || t >= end) continue; D.m[dv.getUint32(o, true)] = Array.prototype.slice.call(u8.subarray(o+8, o+28)); } }
+        D.amax = F[F.length-1].max; D.arch = 1; }catch(e){} }
+    var known = Object.keys(D.m).map(Number), lo = known.length ? Math.max.apply(null, known)+1 : d.id - Math.round((d.t - D.start)/300000), need = [];
+    lo = Math.max(lo, D.amax+1);
+    for(var id=lo; id<=d.id; id++){ if(D.m[id]) continue; var x = DR[id] ? DR[id][1] : (NAV[id] ? NAV[id].arr : (last && last.id===id ? last.arr : (HGAP[id] ? HGAP[id].list : null))); if(x) D.m[id] = x.slice(); else need.push(id); }
+    if(need.length){ try{ for(var pg=0; pg<40; pg++){ var r = await fetch('https://api.opap.gr/draws/v3.0/1100/draw-id/'+need[0]+'/'+need[need.length-1]+'?page='+pg+'&_='+Date.now(), {cache:'no-store'}); if(!r.ok) break; var j = await r.json();
+        (j.content||[]).forEach(function(c){ if(c.drawTime >= D.start && c.winningNumbers && c.winningNumbers.list && c.winningNumbers.list.length===20) D.m[c.drawId] = c.winningNumbers.list.slice(); }); if(j.last || pg >= (j.totalPages||1)-1) break; } }catch(e){} }
+  })().finally(function(){ DAYP[k] = null; });
+  return DAYP[k]; }
+function dayCnt(d){ var A = athDay(d.t), D = DAYS[A.key], c = new Array(81).fill(0), n = 0; if(D) for(var id in D.m){ if(+id > d.id) continue; n++; D.m[id].forEach(function(x){ c[x]++; }); } return {c:c, n:n, hm:A.hm}; }
+var PULL_TXT = {hot:['🔥 Εγώ πάω με τους ζεστούς, Ηρακλή!','🔥 Ό,τι καίει σήμερα, θα κάψει κι άλλο!','🔥 Τα ζεστά τρέχουν — μην τα σταματάς!','🔥 Κέρδισα! Ζεστά νούμερα, ζεστά λεφτά!','🔥 Άσε τα κρύα, Ηρακλή, τα ζεστά πληρώνουν!'],
+  cold:['❄️ Οι κρύοι χρωστάνε, Σπύρο!','❄️ Κέρδισα! Πάμε με αυτά που άργησαν!','❄️ Τα κρύα θα ξυπνήσουν, θα δεις!','❄️ Ό,τι δεν βγήκε σήμερα, έρχεται τώρα!','❄️ Τα ζεστά κουράστηκαν, Σπύρο — σειρά των κρύων!']};
+function pullLine(P){ var u = P.pull; if(!u) return ''; if(!u.n) return '<div class="pull">🕐 Δεν βρέθηκαν ακόμα στοιχεία της ημέρας — κουνήθηκε χωρίς τράβηγμα.</div>';
+  return '<div class="pull">🕐 '+u.hm+' · '+(u.w==='hot' ? '🔥 Κέρδισε ο <b>Σπύρος</b> — το κουτί τράβηξε προς τους <b class="hot">ζεστούς</b>' : '❄️ Κέρδισε ο <b>Ηρακλής</b> — το κουτί τράβηξε προς τους <b class="cold">κρύους</b>')+
+    ' της ημέρας <span class="muted">('+u.n+' κληρώσεις σήμερα · ένταση '+Math.round(100*u.b/PULL_MAX)+'%)</span>'+(u.top && u.top.length ? '<br>'+u.top.map(function(t){ return '<b>'+t[0]+'</b> <span class="muted">('+t[1]+'×)</span>'; }).join(' · ') : '')+'</div>'; }
 $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var last = cur();
   var v = +$('boxN').value || 12, src = last.arr.concat(last.sc||[]);
   for(var i=src.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = src[i]; src[i] = src[j]; src[j] = t; }
+  var DC = dayCnt(last), PW = Math.random() < 0.5 ? 'hot' : 'cold', PS = PW==='hot' ? 1 : -1, PB = PULL_MAX*Math.min(1, DC.n/288), DE = DC.n*0.25, DS = Math.max(1, Math.sqrt(DC.n*0.1875)); if(!DC.n) PB = 0; dayLoad(last);
   var used = {}, moves = [], st = {stay:0, l:0, r:0, u:0, d:0, ul:0, ur:0, dl:0, dr:0}, MV = [['stay',0,0],['l',0,-1],['r',0,1],['u',-1,0],['d',1,0],['ul',-1,-1],['ur',-1,1],['dl',1,-1],['dr',1,1]]; /* 9 θέσεις: μένει + 8 γειτονικές (και διαγώνια) */
   for(var q=0; q<src.length && moves.length<v; q++){ var from = src[q], row = Math.floor((from-1)/10), col = (from-1)%10;
-    var mv = MV.slice(); for(var a=mv.length-1;a>0;a--){ var b = Math.floor(Math.random()*(a+1)), tt = mv[a]; mv[a] = mv[b]; mv[b] = tt; }
-    for(var m=0;m<mv.length;m++){ var r2 = row+mv[m][1], c2 = col+mv[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; used[to] = 1; moves.push([from,to]); st[mv[m][0]]++; break; } }
+    var cand = [], wsum = 0; for(var m=0;m<MV.length;m++){ var r2 = row+MV[m][1], c2 = col+MV[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; var w = Math.exp(PS*PB*(DC.c[to]-DE)/DS); cand.push([MV[m][0], to, w]); wsum += w; }
+    if(!cand.length) continue; var rr = Math.random()*wsum, pk = cand[cand.length-1]; for(var z=0; z<cand.length; z++){ rr -= cand[z][2]; if(rr <= 0){ pk = cand[z]; break; } }
+    used[pk[1]] = 1; moves.push([from, pk[1]]); st[pk[0]]++; }
   busy = true; stageOn(); navUpd(); $('boxGo').disabled = true; shownId = last.id; $('boxRes').innerHTML = ''; $('boxTxt').textContent = 'Οι '+src.length+' μπίλιες της τελευταίας κλήρωσης (μαζί με τη 2η ευκαιρία)…';
   var balls = start();
   setTimeout(function(){ $('boxHd').textContent = '📦 Κουνάμε το κουτάκι…'; bxShakeAnim(); }, 1500);
   setTimeout(function(){
     moves.forEach(function(mm){ var b = balls[mm[0]]; if(!b) return; delete balls[mm[0]]; var p = boxPos(mm[1]); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; b.classList.remove('sc'); b.classList.remove('bn'); b.classList.add(mm[0]!==mm[1] ? 'nw' : 'st'); });
     Object.keys(balls).forEach(function(k){ balls[k].style.opacity = '0'; });
-    PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st}; lsSet('trv_pred', JSON.stringify(PRED)); predText(PRED, false); $('boxPred').disabled = false; predEval();
+    var pn = moves.map(function(mm){ return mm[1]; }).sort(function(a,b){ return PW==='hot' ? DC.c[b]-DC.c[a] : DC.c[a]-DC.c[b]; }).slice(0,4).map(function(x){ return [x, DC.c[x]]; });
+    PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st, pull:{w:PW, n:DC.n, hm:DC.hm, b:PB, top:pn}}; bxSay(PW==='hot' ? $('bxGuyL') : $('bxGuyR'), PULL_TXT[PW][Math.floor(Math.random()*PULL_TXT[PW].length)]); lsSet('trv_pred', JSON.stringify(PRED)); predText(PRED, false); $('boxPred').disabled = false; predEval();
     busy = false; navUpd(); $('boxGo').disabled = false; setTimeout(stageOff, 2200);
   }, 4000);
 });
@@ -286,7 +317,7 @@ var PRED = null; try{ PRED = JSON.parse(lsGet('trv_pred')||'null'); }catch(e){}
 function predText(P, replay){
   out = P.moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
     $('boxHd').textContent = (replay ? '🔮 Η τελευταία πρόβλεψη: ' : '🎲 Οι ')+out.length+' αριθμοί'+(replay?'':' σου')+' (από #'+P.id+' · '+hm(P.t)+')';
-    $('boxTxt').innerHTML = '<span class="ghost">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇ · '+(P.st.ul||0)+'↖ · '+(P.st.ur||0)+'↗ · '+(P.st.dl||0)+'↙ · '+(P.st.dr||0)+'↘  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</span>';
+    $('boxTxt').innerHTML = pullLine(P)+'<span class="ghost">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇ · '+(P.st.ul||0)+'↖ · '+(P.st.ur||0)+'↗ · '+(P.st.dl||0)+'↙ · '+(P.st.dr||0)+'↘  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</span>';
     $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'')+
       '<div class="add">'+(out.length>12 ? '<span class="muted" style="font-size:12px">Το δελτίο ΚΙΝΟ παίρνει έως 12 αριθμούς — διάλεξε «Πόσους» έως 12 για να το παρακολουθήσεις.</span>' :
       '<label class="muted" style="font-size:13px">για <select id="tkN">'+(function(){ var gap = (last && P.id < last.id) ? Math.min(last.id - P.id, 300) : 0, o = '';
@@ -423,7 +454,7 @@ async function navTo(id, dir){ if(busy || !last) return; if(id >= last.id){ view
       try{ var r = await fetch('https://api.opap.gr/draws/v3.0/1100/'+id+'?_='+Date.now(), {cache:'no-store'}); if(!r.ok) throw 0; var c = await r.json(), w = c.winningNumbers||{}; if(!w.list||!w.list.length) throw 0; d = {id:c.drawId, t:c.drawTime, arr:w.list.slice(), sc:(w.secondChance||[]).slice(), b:(w.bonus||[])[0]}; NAV[id] = d; }
       catch(e){ $('boxHd').textContent = 'Δεν βρέθηκε η κλήρωση #'+id; return; } }
     view = d; }
-  out = []; var box = $('boxBox'); start(); predMark(); predEval(); box.style.setProperty('--sx', (dir||0)*30+'px'); box.classList.remove('sl'); void box.offsetWidth; box.classList.add('sl');
+  out = []; var box = $('boxBox'); start(); predMark(); predEval(); dayLoad(cur()); box.style.setProperty('--sx', (dir||0)*30+'px'); box.classList.remove('sl'); void box.offsetWidth; box.classList.add('sl');
   $('boxTxt').textContent = view ? 'Κούνα το κι από εδώ — ή πήγαινε μπρος-πίσω (σύρε το κουτάκι δεξιά/αριστερά).' : 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
 $('navBar').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-nv]'); if(!b || b.disabled) return; var k = b.dataset.nv;
   if(k==='live'){ if(busy || !last) return; view = null; out = []; $('boxRes').innerHTML = ''; placeAnim(); navUpd(); predEval(); return; } navTo(cur().id + (+k), +k>0 ? 1 : -1); });
