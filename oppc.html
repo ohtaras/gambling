@@ -642,7 +642,7 @@ function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $
   if(PRED && D.id > PRED.id){ PRED.moves.forEach(function(m){ PN.push(m[1]); }); }
   else if(TK){ PN = TK.n.slice(); SRC = 'tk'; }
   if(PN.length){ P = {}; PN.forEach(function(x){ P[x] = 1; }); PN.sort(function(a,b){return a-b;}); }
-  var TK2 = (SRC==='pred' && TK && TK.n.slice().sort(function(a,b){return a-b;}).join(',') !== PN.join(',')) ? TK : null;
+  var TKS = tkLoad().map(function(t, ix){ t.ix = ix+1; return t; }).filter(function(t){ return D.id >= t.start && D.id < t.start + t.draws && t.n.length <= 12 && !(SRC==='tk' && TK && t.id===TK.id) && (SRC!=='pred' || t.n.slice().sort(function(a,b){return a-b;}).join(',') !== PN.join(',')); }).slice(0,5);
   var balls = start(), list = D.arr.concat(D.sc||[]), STEP = P ? 430 : 115, D0 = P ? 1900 : 250, hits = [], schits = [], score = {L:0, R:0};
   var lastTalk = {L:0, R:0}, nSc = (D.sc||[]).length, got = {};
   function say(el, txt, force){ var k = el===L ? 'L' : 'R', now = Date.now(); if(!force && now - lastTalk[k] < 1100) return false; lastTalk[k] = now; bxSay(el, txt); return true; }
@@ -689,14 +689,17 @@ function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $
         a = h+' στα '+K+hl+extra+' — '+(win==='L' ? 'εγώ έβαλα '+score.L+', εσύ '+score.R+'!' : 'εσύ '+score.R+', εγώ '+score.L+'…');
         r = pick(win==='L' ? ['Καλά, νίκησες… αλλά τα λεφτά τα χάσαμε μαζί! 😒','Νίκησες. Πάρε ένα μπράβο — λεφτά δεν έχουμε!','Άσ\' το, έτσι σημαδεύω και στη ζωή.','Σήμερα εσύ. Αύριο πάλι από την αρχή, σαν το χρέος!'] : ['Χαχα! Σε διέλυσα! 😎','Μάθε από τον μάστορα!','Γράψ\' το στο ιστορικό, να το βλέπουν τα εγγόνια!','Σημάδι ελεύθερου σκοπευτή! 🎯']); }
       else { a = h+' στα '+K+hl+extra+', ισοπαλία στο σημάδι!'; r = 'Ισοπαλία — όπως κι ο λογαριασμός μας: μηδέν!'; }
-      a = (SRC==='tk' ? '🎫 Δελτίο: ' : '🔮 Πρόβλεψη: ')+a;
+      a = (SRC==='tk' ? '🎫 Δελτίο '+(function(){ var T = tkLoad(); for(var q=0;q<T.length;q++) if(T[q].id===TK.id) return (q+1)+' ('+TK.n.length+' αριθμοί)'; return ''; })()+': ' : '🔮 Πρόβλεψη: ')+a;
       if(SRC==='tk'){ var w0 = tkWinFor(TK, D); if(w0) r = 'Κέρδος '+eur(w0)+'! Επιτέλους ένα χαρούμενο νέο! 🎉'; }
       bxSay(L, a); setTimeout(function(){ bxSay(R, r); }, 1200);
-      if(TK2){ setTimeout(function(){ var set = {}; D.arr.forEach(function(x){ set[x] = 1; }); var hh2 = TK2.n.filter(function(x){ return set[x]; }).sort(function(a,b){ return a-b; }), h2 = hh2.length, w2 = tkWinFor(TK2, D);
-        bxSay(L, '🎫 Και το δελτίο μας: '+h2+' στα '+TK2.n.length+(h2 ? ' ('+hh2.join(', ')+')' : '')+'!'); setTimeout(function(){ bxSay(R, w2 ? 'Κέρδος '+eur(w2)+'! Δεν πάει άσχημα! 💶' : 'Τίποτα κι εκεί… κράτα το για την επόμενη!'); }, 1100); }, 3600); }
+      // όλα τα ενεργά δελτία, ένα-ένα, με αριθμό δελτίου, πόσους έπιασε (και 2η ευκαιρία αν είναι ανοιχτή) και ποιους
+      TKS.forEach(function(t, j){ setTimeout(function(){ var ms = {}, ss = {}, SCm = useSC(); D.arr.forEach(function(x){ ms[x] = 1; }); (D.sc||[]).forEach(function(x){ ss[x] = 1; });
+        var hh = t.n.filter(function(x){ return ms[x]; }).sort(function(a,b){ return a-b; }), sh = SCm ? t.n.filter(function(x){ return ss[x]; }).sort(function(a,b){ return a-b; }) : [], w2 = tkWinFor(t, D);
+        bxSay(j % 2 ? R : L, '🎫 Δελτίο '+t.ix+' ('+t.n.length+' αριθμοί): '+hh.length+(sh.length ? '+'+sh.length : '')+'/'+t.n.length+(hh.length+sh.length ? ' ('+hh.concat(sh).join(', ')+')' : '')+(w2 ? ' 💶 '+eur(w2) : ''));
+      }, 3600 + j*1900); });
     }
   }, END);
-  setTimeout(function(){ if(JACK_UNTIL > Date.now()) return; bxSay(L,''); bxSay(R,''); if(!busy) stageOff(); }, END + (P ? (TK2 ? 8800 : 5600) : 1700));
+  setTimeout(function(){ if(JACK_UNTIL > Date.now()) return; bxSay(L,''); bxSay(R,''); if(!busy) stageOff(); }, END + (P ? 5600 + 1900*TKS.length : 1700));
   setTimeout(function(){ if(JACK){ JACK = false; } }, END + 100);
 }
 
