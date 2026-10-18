@@ -509,7 +509,7 @@ function alogRender(){ var el = $('alog'); if(!el) return; var L = alogLoad(); l
   $('alogList').innerHTML = '<table class="dr">'+rows+'</table><div class="muted" style="font-size:11px;margin-top:4px">Σβήνει αυτόματα στις 00:00.</div>'; }
 function predText(P, replay){
   out = P.moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
-    $('boxHd').textContent = (replay ? '🔮 Η τελευταία πρόβλεψη: ' : '🎲 Οι ')+out.length+' αριθμοί'+(replay?'':' σου')+' για την κλήρωση #'+(P.id+1)+' · '+hm(P.t+300000);
+    $('boxHd').textContent = (replay ? '🔮 Η τελευταία πρόβλεψη: ' : '🎲 Οι ')+out.length+' αριθμοί'+(replay?'':' σου')+' για την κλήρωση των '+hm(P.t+300000)+' · #'+(P.id+1);
     $('boxTxt').innerHTML = pullLine(P)+tplLine(P)+'<span class="ghost">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇ · '+(P.st.ul||0)+'↖ · '+(P.st.ur||0)+'↗ · '+(P.st.dl||0)+'↙ · '+(P.st.dr||0)+'↘  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</span>';
     $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'')+
       '<div class="add">'+(out.length>12 ? '<span class="muted" style="font-size:12px">Το δελτίο ΚΙΝΟ παίρνει έως 12 αριθμούς — διάλεξε «Πόσους» έως 12 για να το παρακολουθήσεις.</span>' :
@@ -526,11 +526,11 @@ async function predEval(){
   else if(NAV[nid]) d = {t:NAV[nid].t, list:NAV[nid].arr, sc:NAV[nid].sc||[], b:NAV[nid].b};
   else if(last && last.id>nid){ try{ var r = await fetch('https://api.opap.gr/draws/v3.0/1100/'+nid+'?_='+Date.now(), {cache:'no-store'}); if(r.ok){ var c = await r.json(), w = c.winningNumbers||{}; if(w.list&&w.list.length){ d = {t:c.drawTime, list:w.list, sc:w.secondChance||[]}; DR[nid] = [d.t, d.list, d.sc]; } } }catch(e){} }
   var chips = function(set, ss){ return nums.map(function(x){ return '<span class="chip'+(set&&set[x]?' hit':(ss&&ss[x]?' sch':''))+'">'+x+'</span>'; }).join(''); };
-  if(!d){ el.innerHTML = '<div class="pe"><b>🔮 Τελευταία πρόβλεψη</b> <span class="muted">(για την #'+(PRED.id+1)+' · '+hm(PRED.t+300000)+')</span><div style="margin:6px 0">'+chips()+'</div>⏳ Περιμένει την κλήρωση <b>#'+nid+'</b> για να αξιολογηθεί.'+histLine(nums)+'</div>'; histFill(nums); return; }
+  if(!d){ el.innerHTML = '<div class="pe"><b>🔮 Τελευταία πρόβλεψη</b> <span class="muted">(για την κλήρωση των '+hm(PRED.t+300000)+' · #'+(PRED.id+1)+')</span><div style="margin:6px 0">'+chips()+'</div>⏳ Περιμένει την κλήρωση <b>#'+nid+'</b> για να αξιολογηθεί.'+histLine(nums)+'</div>'; histFill(nums); return; }
   var SC = useSC(), set = {}, ss = {}; d.list.forEach(function(x){ set[x] = 1; }); if(SC) d.sc.forEach(function(x){ ss[x] = 1; });
   var a = nums.filter(function(x){ return set[x]; }).length, b2 = nums.filter(function(x){ return ss[x]; }).length;
   var KB = useKB(), bh = KB && d.b && nums.indexOf(d.b)>=0, w = K<=12 ? (SC ? scWin(K,a,b2) : (KB ? kbWin(K,a,bh) : ((PAYS[K]||{})[a]||0))) : null, cost = modeCost();
-  el.innerHTML = '<div class="pe"><b>🔮 Τελευταία πρόβλεψη</b> <span class="muted">(για την #'+(PRED.id+1)+' · '+hm(PRED.t+300000)+')</span><div style="margin:6px 0">'+chips(set, ss)+'</div>'+
+  el.innerHTML = '<div class="pe"><b>🔮 Τελευταία πρόβλεψη</b> <span class="muted">(για την κλήρωση των '+hm(PRED.t+300000)+' · #'+(PRED.id+1)+')</span><div style="margin:6px 0">'+chips(set, ss)+'</div>'+
     'Στην κλήρωση <b>#'+nid+' · '+hm(d.t)+'</b>'+(nid-PRED.id>1?' <span class="muted">('+(nid-PRED.id)+'η μετά την πρόβλεψη)</span>':' <span class="muted">(η επόμενη)</span>')+': <b style="font-size:16px">'+a+(b2?'<span style="color:#4ade80">+'+b2+'</span>':'')+'/'+K+'</b>'+
     (w===null ? ' <span class="muted">(πάνω από 12 αριθμούς — χωρίς κέρδη)</span>' : ' · '+(w ? '<span class="win">κέρδος '+eur(w)+'</span>' : '<span class="muted">χωρίς κέρδος</span>')+(bh?' <b style="color:#f87171">🔴 Bonus '+d.b+'!</b>':'')+' <span class="muted">για '+eur(cost)+(SC?' με 2η ευκαιρία':(KB?' με ΚΙΝΟ Bonus':''))+'</span>')+histLine(nums)+'</div>'; histFill(nums);
   if(w) winAdd({p:PRED.id, pt:PRED.t, d:nid, t:d.t, n:nums, h:nums.filter(function(x){ return set[x]; }), s:nums.filter(function(x){ return ss[x]; }), b:bh?d.b:0, w:w, c:cost, m:SC?'sc':(KB?'kb':'')});
