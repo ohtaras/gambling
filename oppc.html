@@ -62,6 +62,8 @@ body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
 @keyframes bxBreath{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.022) scaleX(1.006)}}@keyframes bxBreathH{0%,100%{transform:translateY(0)}50%{transform:translateY(-.85%)}}
 @keyframes bxHeadIdle{0%,100%{transform:rotate(0)}18%{transform:rotate(-2.2deg)}30%{transform:rotate(-2.2deg)}52%{transform:rotate(1.6deg) translateY(.3%)}66%{transform:rotate(1.6deg) translateY(.3%)}84%{transform:rotate(-.6deg)}}
 .bxGuy:hover .pp img{filter:drop-shadow(0 0 6px rgba(253,230,138,.75))}
+#shakeVid{position:absolute;left:50%;top:50%;width:min(100%,calc(var(--vh,100vh)*1.2));aspect-ratio:832/560;transform:translate(-50%,-50%) scale(.96);background:#030f1a;border-radius:18px;z-index:4;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;object-fit:cover;box-shadow:0 0 0 9999px rgba(3,15,26,0)}
+#shakeVid.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .fimg{display:block;width:100%;height:auto;transform-origin:50% 100%;filter:drop-shadow(0 0 1.5px rgba(255,255,255,.5));-webkit-user-select:none;user-select:none}
 #boxFrame{margin:0!important;z-index:3}#bxGuyL .fig{translate:7% 0}#bxGuyR .fig{translate:-29% 0}.bxGuy{z-index:1!important}
 .bxGuy:hover .fimg{filter:drop-shadow(0 0 6px rgba(253,230,138,.7))}
@@ -107,6 +109,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   <div class="mhd"><b>☰ Μενού</b><button id="menuX" aria-label="Κλείσιμο">✕</button></div>
   <section id="mSet"><h3>⚙️ Ρυθμίσεις</h3>
     <div class="mrow" id="mAppRow"><div><b><img src="img/oppc_i192.png" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:-6px;margin-right:6px">Εφαρμογή στο κινητό</b><div class="muted" id="mAppTxt">Βάλ' το στην οθόνη του κινητού σαν εφαρμογή — ανοίγει χωρίς διεύθυνση και μπάρες.</div></div><button class="btn2" id="appInst"><img src="img/oppc_i192.png" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:-6px;margin-right:6px">Εγκατάσταση</button></div><div class="mrow" id="mShakeRow"><div><b>📳 Ενεργοποίηση Shake</b><div class="muted" id="mShakeTxt">Κούνα δυνατά το κινητό και ο Σπύρος με τον Ηρακλή κουνάνε το κουτί!</div></div><button class="btn2" id="shakeOn" >📳 Κούνα το κινητό</button></div>
+    <div class="mrow"><div><b>🎬 Βιντεάκι κουνήματος</b><div class="muted">Ο Σπύρος κι ο Ηρακλής κουνάνε το κουτί σε κανονικό βίντεο.</div></div><button class="btn2" id="mVid">ON</button></div>
     <div class="mrow"><div><b>🤖 Πρόβλεψη: <span id="mAutoLbl">ΑΥΤΟΜΑΤΗ</span></b><div class="muted">ΑΥΤΟΜΑΤΗ: 2 λεπτά μετά από κάθε κλήρωση ο Σπύρος κι ο Ηρακλής κουνάνε μόνοι τους το κουτί και βγάζουν νέα πρόβλεψη. ΧΕΙΡΟΚΙΝΗΤΗ: μόνο όταν πατήσεις πάνω τους.</div></div><button class="btn2" id="mAuto">ON</button></div><div class="mrow"><div><b>🟢 2η ευκαιρία στα δελτία</b><div class="muted">Αξιολόγηση μαζί με τη 2η ευκαιρία (1€/κλήρωση).</div></div><button class="btn2" id="mSc">ΟΧΙ</button></div>
     <div class="mrow"><div><b>🔴 ΚΙΝΟ Bonus στα δελτία</b><div class="muted">Αν ο αριθμός Bonus είναι στους αριθμούς που πέτυχες, πληρώνει ο πίνακας ΚΙΝΟ Bonus (1€/κλήρωση). Δεν παίζεται μαζί με τη 2η ευκαιρία.</div></div><button class="btn2" id="mKb">ΟΧΙ</button></div>
       </section>
@@ -148,7 +151,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
     </div>
     <div class="nav" id="navBar"><button data-nv="-10">⏪ 10</button><button data-nv="-1">◀</button><button data-nv="live" id="navLive" class="lv">🟢 LIVE</button><button data-nv="1">▶</button><button data-nv="10">10 ⏩</button></div>
     <div id="boxHd"></div>
-    <div id="boxWrap" style="display:flex;align-items:center;justify-content:center"><div class="bxGuy" id="bxGuyL"></div><div id="boxFrame" style="position:relative;flex:1;min-width:0;max-width:480px;margin:0 clamp(9px,2.4vw,16px)"><div class="bxHdl bxHdlL"></div><div class="bxHdl bxHdlR"></div><div id="boxBox" style="position:relative;width:100%;aspect-ratio:10/8;background:#1e293b;border:3px solid #a16207;border-radius:10px;overflow:hidden"></div></div><div class="bxGuy bxR" id="bxGuyR"></div></div>
+    <div id="boxWrap" style="display:flex;align-items:center;justify-content:center"><video id="shakeVid" muted playsinline preload="auto" poster="vid/shake1.jpg"><source src="vid/shake1.mp4?v=1" type="video/mp4"><source src="vid/shake1.webm?v=1" type="video/webm"></video><div class="bxGuy" id="bxGuyL"></div><div id="boxFrame" style="position:relative;flex:1;min-width:0;max-width:480px;margin:0 clamp(9px,2.4vw,16px)"><div class="bxHdl bxHdlL"></div><div class="bxHdl bxHdlR"></div><div id="boxBox" style="position:relative;width:100%;aspect-ratio:10/8;background:#1e293b;border:3px solid #a16207;border-radius:10px;overflow:hidden"></div></div><div class="bxGuy bxR" id="bxGuyR"></div></div>
     <div id="boxTxt" class="muted"></div>
     <div id="boxRes"></div>
     <div id="predEval"></div>
@@ -380,7 +383,7 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var 
     var cand = [], wsum = 0; for(var m=0;m<MV.length;m++){ var r2 = row+MV[m][1], c2 = col+MV[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; var w = Math.exp(PS*PB*(DC.c[to]-DE)/DS); cand.push([MV[m][0], to, w]); wsum += w; }
     if(!cand.length) continue; var rr = Math.random()*wsum, pk = cand[cand.length-1]; for(var z=0; z<cand.length; z++){ rr -= cand[z][2]; if(rr <= 0){ pk = cand[z]; break; } }
     used[pk[1]] = 1; moves.push([from, pk[1]]); st[pk[0]]++; }
-  busy = true; stageOn(); navUpd(); $('boxGo').disabled = true; shownId = last.id; $('boxRes').innerHTML = ''; $('boxTxt').textContent = 'Οι '+src.length+' μπίλιες της τελευταίας κλήρωσης (μαζί με τη 2η ευκαιρία)…';
+  busy = true; stageOn(); navUpd(); $('boxGo').disabled = true; shownId = last.id; vidShake(); $('boxRes').innerHTML = ''; $('boxTxt').textContent = 'Οι '+src.length+' μπίλιες της τελευταίας κλήρωσης (μαζί με τη 2η ευκαιρία)…';
   var balls = start();
   setTimeout(function(){ $('boxHd').textContent = '📦 Κουνάμε το κουτάκι…'; bxShakeAnim(); }, 1500);
   setTimeout(function(){
@@ -391,6 +394,11 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var 
     busy = false; navUpd(); $('boxGo').disabled = false; setTimeout(stageOff, 2200);
   }, 4000);
 });
+/* 🎬 Πραγματικό βιντεάκι κουνήματος (AI, Wan 2.2): παίζει πάνω από το κουτί, μετά φαίνονται τα πραγματικά νούμερα */
+var VID_ON = lsGet('trv_vid')!=='0';
+function vidShake(){ var v = $('shakeVid'); if(!v || !VID_ON) return; try{ v.currentTime = 0; }catch(e){}
+  var p = v.play(); var show = function(){ v.classList.add('on'); }; if(p && p.then) p.then(show, function(){}); else show();
+  setTimeout(function(){ v.classList.remove('on'); setTimeout(function(){ try{ v.pause(); }catch(e){} }, 400); }, 3900); }
 var PRED = null; try{ PRED = JSON.parse(lsGet('trv_pred')||'null'); }catch(e){}
 function predText(P, replay){
   out = P.moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
@@ -741,6 +749,7 @@ $('fbForm').addEventListener('submit', async function(e){ e.preventDefault(); va
   $('fbSend').disabled = false; });
 (function(){ function u(){ $('mAuto').textContent = AUTO ? 'ON' : 'OFF'; $('mAuto').style.borderColor = AUTO ? '#22c55e' : ''; $('mAutoLbl').textContent = AUTO ? 'ΑΥΤΟΜΑΤΗ' : 'ΧΕΙΡΟΚΙΝΗΤΗ'; }
   $('mAuto').addEventListener('click', function(){ AUTO = !AUTO; lsSet('trv_auto2', AUTO ? '1' : '0'); if(AUTO && last && PRED && PRED.id >= last.id) AUTOD = last.id; u(); }); u(); })();
+(function(){ function u(){ $('mVid').textContent = VID_ON ? 'ON' : 'OFF'; $('mVid').style.borderColor = VID_ON ? '#22c55e' : ''; } $('mVid').addEventListener('click', function(){ VID_ON = !VID_ON; lsSet('trv_vid', VID_ON?'1':'0'); u(); }); u(); })();
 $('mSc').addEventListener('click', function(){ setMode(useSC() ? '' : 'sc'); modeChanged(); });
 $('mKb').addEventListener('click', function(){ setMode(useKB() ? '' : 'kb'); modeChanged(); });
 /* ---------- 🎬 Σκηνή: στο κινητό, όσο κουνάνε, όλα σβήνουν και ο Σπύρος, ο Ηρακλής και το κουτί έρχονται μπροστά ---------- */
