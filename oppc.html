@@ -201,8 +201,8 @@ function bxSetArms(el, ox, oy){ if(!el) return; var f = el.querySelector('.pup')
   var lean = nx0*7, tx = dx*1.05, ty = dy*0.6 - Math.abs(nx0)*w*0.012;            // κορμός: πάει με το κουτί, γέρνει και «σηκώνεται»
   var hipD = (P.hip[1]-P.neck[1])*sc, nx = hipD*Math.sin(lean*Math.PI/180);
   // κεφάλι με «ελατήριο»: καθυστερεί λίγο και ταλαντεύεται
-  st.hv += ((tx+nx) - st.hx)*180*dt; st.hv *= Math.pow(.02, dt); st.hx += st.hv*dt;
-  var tilt = Math.max(-12, Math.min(12, (st.hx-(tx+nx))*-1.4 + lean*0.7));
+  st.hv += ((tx+nx) - st.hx)*420*dt; st.hv *= Math.pow(.0015, dt); st.hx += st.hv*dt;
+  var tilt = Math.max(-4, Math.min(4, (st.hx-(tx+nx))*-0.5 + lean*0.3));
   var legH = (P.H - P.hip[1])*sc, sk = -Math.atan2(tx, legH)*180/Math.PI, sq = 1 - Math.max(-.04, Math.min(.06, ny0*0.05));
   var T = f.querySelector('.pT'), Hd = f.querySelector('.pH'), Lg = f.querySelector('.pL');
   if(!ox && !oy){ st.hx = 0; st.hv = 0; T.style.transform = Hd.style.transform = Lg.style.transform = ''; return; }
@@ -330,7 +330,15 @@ async function load(){
     if(!busy && isNew && !view){ shownId = d.id; out = []; if(hadPrev) newDrawShow(d); else start(); predMark(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
   }catch(e){ if(!last){ $('lastInfo').textContent = 'Δεν φόρτωσε η κλήρωση — ξαναδοκιμάζω…'; $('boxBox').innerHTML = grid(); } }
 }
-$('boxN').value = lsGet('kbx_n') || '12'; $('boxN').addEventListener('change', function(){ lsSet('kbx_n', this.value); });
+$('boxN').value = lsGet('kbx_n') || '12'; $('boxN').addEventListener('change', function(){ lsSet('kbx_n', this.value); boxNApply(+this.value); });
+/* Αλλαγή «Πόσους» ενώ υπάρχει πρόβλεψη που δεν έχει κριθεί ακόμα: προσαρμόζεται αμέσως.
+   Λιγότεροι → κρατάμε τις πρώτες N κινήσεις (ό,τι θα έβγαζε το ίδιο κούνημα με N). Περισσότεροι → ξανακουνάνε το κουτί. */
+function boxNApply(N){ if(!PRED || !last || PRED.id < last.id || !N) return;
+  if(N < PRED.moves.length){ PRED.moves = PRED.moves.slice(0, N); var st = {stay:0, l:0, r:0, u:0, d:0, ul:0, ur:0, dl:0, dr:0};
+    PRED.moves.forEach(function(m){ var dr = Math.floor((m[1]-1)/10)-Math.floor((m[0]-1)/10), dc = (m[1]-1)%10-(m[0]-1)%10, k = (dr<0?'u':(dr>0?'d':''))+(dc<0?'l':(dc>0?'r':'')); st[k||'stay']++; });
+    PRED.st = st; if(PRED.pull && PRED.pull.top){ var keep = {}; PRED.moves.forEach(function(m){ keep[m[1]] = 1; }); PRED.pull.top = PRED.pull.top.filter(function(t){ return keep[t[0]]; }); }
+    lsSet('trv_pred', JSON.stringify(PRED)); if(!busy){ predShow(); predEval(); } }
+  else if(N > PRED.moves.length && !busy){ $('boxGo').disabled = false; $('boxGo').click(); } }
 /* 🕐 Στοιχεία της ημέρας (00:00–23:55 ώρα Ελλάδας): πόσες φορές βγήκε κάθε αριθμός σήμερα μέχρι την κλήρωση που κουνάμε.
    Σε κάθε κούνημα κερδίζει στην τύχη ο Σπύρος ή ο Ηρακλής και διαλέγει (επίσης στην τύχη) ΖΕΣΤΟΥΣ ή ΚΡΥΟΥΣ· όσο προχωράει η μέρα, τόσο δυναμώνει το τράβηγμα. */
 var DAYS = {}, DAYP = {}, PULL_MAX = 0.8;
