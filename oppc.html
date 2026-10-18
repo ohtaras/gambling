@@ -156,7 +156,7 @@ function dmy(t){ var d = new Date(t); return pad(d.getDate())+'/'+pad(d.getMonth
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 (function(){ var css = document.createElement('style'); css.textContent = '@keyframes bxShake{0%{transform:translate(0,0) rotate(0)}10%{transform:translate(-14px,3px) rotate(-3deg)}20%{transform:translate(14px,-3px) rotate(3deg)}30%{transform:translate(-12px,-4px) rotate(-2deg)}40%{transform:translate(12px,4px) rotate(2deg)}50%{transform:translate(-9px,2px) rotate(-1.5deg)}60%{transform:translate(9px,-2px) rotate(1.5deg)}70%{transform:translate(-6px,3px) rotate(-1deg)}80%{transform:translate(6px,-3px) rotate(1deg)}90%{transform:translate(-3px,0) rotate(0)}100%{transform:translate(0,0) rotate(0)}}.bub{position:absolute;bottom:100%;margin-bottom:6px;left:auto;right:0;background:#fff;color:#111;font-weight:800;font-size:clamp(9.5px,2.6vw,14px);line-height:1.15;padding:5px 7px;border-radius:14px;border:2px solid #111;white-space:normal;width:max-content;max-width:calc(100% + 6px);text-align:center;box-shadow:0 3px 8px rgba(0,0,0,.35);opacity:0;transform:scale(.3) translateY(10px);transform-origin:50% 100%;transition:opacity .2s,transform .25s cubic-bezier(.3,1.6,.5,1);pointer-events:none;z-index:5}.bub:after{content:\'\';position:absolute;top:100%;left:calc(50% - 8px);border:8px solid transparent;border-top-color:#111}.bub:before{content:\'\';position:absolute;top:100%;left:calc(50% - 6px);margin-top:-3px;border:6px solid transparent;border-top-color:#fff;z-index:1}.bub.on{opacity:1;transform:none}.bxR .bub{left:0;right:auto;transform-origin:20% 100%}.bxNm{text-align:center;font-weight:800;font-size:clamp(10px,2.8vw,14px);margin-top:1px;color:inherit;letter-spacing:.3px}.bxGuy{width:21%;max-width:170px;flex:none;position:relative;z-index:2;margin-right:0}.bxGuy.bxR{margin-right:0;margin-left:0}.bxHdl{position:absolute;top:47%;height:24%;width:clamp(9px,2.4vw,16px);box-sizing:border-box;border:clamp(3px,1vw,6px) solid #a16207;box-shadow:0 2px 4px rgba(0,0,0,.4);z-index:1}.bxHdlL{right:100%;border-right:none;border-radius:10px 0 0 10px}.bxHdlR{left:100%;border-left:none;border-radius:0 10px 10px 0}.bxGuy svg{display:block;width:100%;height:auto;overflow:visible}.bxb{position:absolute;width:9%;height:10%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(10px,3vw,15px);color:#111;background:radial-gradient(circle at 35% 30%,#fff7b0,#facc15 55%,#ca8a04);box-shadow:0 2px 4px rgba(0,0,0,.4);transition:left .7s cubic-bezier(.3,1.4,.5,1),top .7s cubic-bezier(.3,1.4,.5,1),opacity .5s,background .4s}.bxb.nw{background:radial-gradient(circle at 35% 30%,#ffffff,#f1f5f9 55%,#94a3b8);color:#111}.bxb.st{background:radial-gradient(circle at 35% 30%,#dbeafe,#3b82f6 55%,#1e3a8a);color:#fff}'; document.head.appendChild(css); })();
-var BXK='#111', BXSK='#eda67c', BXSKS='#c98058';
+var BXK='#3a2418', BXSK='#eda67c', BXSKS='#c98058';
   function bxHand(x,y){ var K=BXK, sk=BXSK, skS=BXSKS; // χέρι που πιάνει την άκρη του κουτιού: παλάμη, 4 δάχτυλα τυλιγμένα, αντίχειρας από πάνω
     return '<g>'+
       '<path d="M'+(x-7)+' '+(y-5)+' Q'+(x-1)+' '+(y-8)+' '+(x+5)+' '+(y-6)+' L'+(x+9)+' '+(y-5)+' Q'+(x+12)+' '+(y-3)+' '+(x+9)+' '+(y-1)+
@@ -166,29 +166,49 @@ var BXK='#111', BXSK='#eda67c', BXSKS='#c98058';
       '<path d="M'+(x-3)+' '+(y-6)+' Q'+(x+2)+' '+(y-12)+' '+(x+8)+' '+(y-10)+'" fill="none" stroke="'+BXK+'" stroke-width="5.2" stroke-linecap="round"/>'+
       '<path d="M'+(x-3)+' '+(y-6)+' Q'+(x+2)+' '+(y-12)+' '+(x+8)+' '+(y-10)+'" fill="none" stroke="'+BXSK+'" stroke-width="2.8" stroke-linecap="round"/>'+
     '</g>'; }
-  function bxLimb(d, sleeve, w){ var K=BXK; return '<path d="'+d+'" fill="none" stroke="'+BXK+'" stroke-width="'+(w+3.6)+'" stroke-linecap="round" stroke-linejoin="round"/><path d="'+d+'" fill="none" stroke="'+sleeve+'" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round"/>'; }
-function bxArmB(sl, ox, oy){ return bxLimb('M52 106 Q68 112 '+(80+ox*.45)+' '+(114+oy*.5)+' Q'+(91+ox*.8)+' '+(117+oy)+' '+(99+ox)+' '+(116+oy), sl, 9)+bxHand(103+ox,116+oy); }
-function bxArmF(sl, ox, oy){ return bxLimb('M58 108 Q62 132 '+(82+ox*.45)+' '+(142+oy*.5)+' Q'+(92+ox*.8)+' '+(146+oy)+' '+(99+ox)+' '+(146+oy), sl, 10)+bxHand(103+ox,146+oy); }
+  function bxLimb(d, sleeve, w, sd){ var o = '<path d="'+d+'" fill="none" stroke="#3a2418" stroke-width="'+(w+2.4)+'" stroke-linecap="round" stroke-linejoin="round"/><path d="'+d+'" fill="none" stroke="'+BXSK+'" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round"/>'+
+      '<path d="'+d+'" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="'+(w*.35)+'" stroke-linecap="round" transform="translate(-.6,-1.2)"/>';
+    if(sd) o += '<path d="'+sd+'" fill="none" stroke="#0d0d10" stroke-width="'+(w+5.2)+'" stroke-linecap="butt"/><path d="'+sd+'" fill="none" stroke="'+sleeve+'" stroke-width="'+(w+3)+'" stroke-linecap="butt"/><path d="'+sd+'" fill="none" stroke="#fff" stroke-opacity=".09" stroke-width="'+(w*.45)+'" stroke-linecap="butt" transform="translate(-1,-.5)"/>';
+    return o; }
+function bxArmB(sl, ox, oy){ return bxLimb('M52 106 Q68 112 '+(80+ox*.45)+' '+(114+oy*.5)+' Q'+(91+ox*.8)+' '+(117+oy)+' '+(99+ox)+' '+(116+oy), sl, 11, 'M50 105 L62 109')+bxHand(103+ox,116+oy); }
+function bxArmF(sl, ox, oy){ return bxLimb('M58 108 Q62 132 '+(82+ox*.45)+' '+(142+oy*.5)+' Q'+(92+ox*.8)+' '+(146+oy)+' '+(99+ox)+' '+(146+oy), sl, 12, 'M58.5 101 L61 117')+bxHand(103+ox,146+oy); }
 function bxSetArms(el, ox, oy){ if(!el) return; var sl = el.dataset.sl; var b = el.querySelector('.aB'), f = el.querySelector('.aF'); if(b) b.innerHTML = bxArmB(sl,ox,oy); if(f) f.innerHTML = bxArmF(sl,ox,oy); }
-function bxBody(shirt, shirtD, jean, neck){ var K = BXK;
-  var h = '';
-  // πίσω πόδι (λίγο πιο σκούρο) και μπροστινό πόδι σε δρασκελιά, γόνατα λίγο λυγισμένα
-  h += '<path d="M40 152 Q36 172 30 196" fill="none" stroke="'+K+'" stroke-width="15" stroke-linecap="round"/><path d="M40 152 Q36 172 30 196" fill="none" stroke="'+jean+'" stroke-width="11" stroke-linecap="round" style="filter:brightness(.78)"/>';
-  h += '<path d="M24 193 Q24 188 32 189 L43 191 Q48 193 47 199 L24 199 Z" fill="#1c1c1c" stroke="'+K+'" stroke-width="2" style="filter:brightness(.8)"/>';
-  h += '<path d="M56 152 Q66 168 64 180 Q63 190 66 196" fill="none" stroke="'+K+'" stroke-width="15" stroke-linecap="round"/><path d="M56 152 Q66 168 64 180 Q63 190 66 196" fill="none" stroke="'+jean+'" stroke-width="11" stroke-linecap="round"/>';
-  h += '<path d="M58 194 Q58 188 66 189 L78 192 Q84 194 83 200 L58 200 Z" fill="#222" stroke="'+K+'" stroke-width="2"/>';
-  // πίσω χέρι (πιο σκούρο, πίσω από τον κορμό)
-  h += '<g class="aB" style="filter:brightness(.72)"></g>';
-  // κορμός σε προφίλ: πλάτη αριστερά, στήθος δεξιά
-  h += '<path d="M33 112 Q34 97 50 95 Q66 95 69 108 Q71 126 68 150 Q66 160 52 160 L40 160 Q31 158 32 146 Z" fill="'+shirt+'" stroke="'+K+'" stroke-width="2.4" stroke-linejoin="round"/>';
-  h += '<path d="M44 96.5 Q52 103 60 96.5" fill="'+shirtD+'" stroke="'+K+'" stroke-width="1.6"/>';
-  h += '<path d="M36 118 Q38 136 36 152" stroke="'+shirtD+'" stroke-width="2.2" fill="none"/>';
-  h += '<path d="M34 150 Q50 155 68 150" stroke="'+K+'" stroke-width="2" fill="none"/>';
+function bxBody(shirt, shirtD, jean, neck, p){ var K = '#0d0d10', h = '';
+  // υλικά (gradient) — «φιγούρα» με απαλή 3D σκίαση
+  h += '<defs>'+
+    '<radialGradient id="'+p+'sh" cx="62%" cy="30%" r="80%"><stop offset="0" stop-color="'+bxMix(shirt,'#ffffff',.22)+'"/><stop offset=".55" stop-color="'+shirt+'"/><stop offset="1" stop-color="'+bxMix(shirt,'#000000',.55)+'"/></radialGradient>'+
+    '<linearGradient id="'+p+'jn" x1="0" x2="1"><stop offset="0" stop-color="'+bxMix(jean,'#000000',.35)+'"/><stop offset=".55" stop-color="'+bxMix(jean,'#ffffff',.18)+'"/><stop offset="1" stop-color="'+bxMix(jean,'#000000',.2)+'"/></linearGradient>'+
+    '<linearGradient id="'+p+'sk" x1="0" x2="1"><stop offset="0" stop-color="#c98058"/><stop offset=".6" stop-color="#f0b48c"/><stop offset="1" stop-color="#d9946b"/></linearGradient>'+
+    '<radialGradient id="'+p+'sd" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>'+
+  '</defs>';
+  h += '<ellipse cx="52" cy="202" rx="34" ry="5" fill="url(#'+p+'sd)"/>';
+  // πόδια: κοντά, «γεμάτα», τζιν με γυρισμένο ρεβέρ
+  var leg = function(d, cuff, dark){ return '<g'+(dark?' style="filter:brightness(.72)"':'')+'><path d="'+d+'" fill="url(#'+p+'jn)" stroke="'+K+'" stroke-width="1.3" stroke-linejoin="round"/>'+cuff+'</g>'; };
+  h += leg('M33 150 Q31 168 27 184 L42 186 Q46 168 47 152 Z', '<path d="M26.5 181 L42.5 183 L42 189 L26 187 Z" fill="'+bxMix(jean,'#ffffff',.3)+'" stroke="'+K+'" stroke-width="1"/><path d="M36 156 Q35 170 33 182" stroke="'+bxMix(jean,'#ffffff',.35)+'" stroke-width=".8" stroke-dasharray="2 1.6" fill="none"/>', true);
+  h += leg('M52 151 Q60 162 60 172 Q60 180 62 185 L77 185 Q75 174 74 166 Q72 154 68 148 Z', '<path d="M61 182 L77.5 182 L78 188.5 L61.5 188.5 Z" fill="'+bxMix(jean,'#ffffff',.3)+'" stroke="'+K+'" stroke-width="1"/><path d="M63 156 Q67 166 68 182" stroke="'+bxMix(jean,'#ffffff',.35)+'" stroke-width=".8" stroke-dasharray="2 1.6" fill="none"/>', false);
+  // παπούτσια τύπου Converse: μαύρο πάνω μέρος, άσπρη σόλα και μύτη, κορδόνια
+  var shoe = function(x, dark){ return '<g'+(dark?' style="filter:brightness(.75)"':'')+'>'+
+    '<path d="M'+(x-1)+' 188 Q'+(x-1)+' 185 '+(x+4)+' 185 L'+(x+14)+' 185 Q'+(x+19)+' 188 '+(x+24)+' 192 Q'+(x+27)+' 194 '+(x+26)+' 197 L'+(x-1)+' 197 Z" fill="#1d1d22" stroke="'+K+'" stroke-width="1.2"/>'+
+    '<path d="M'+(x+17)+' 191 Q'+(x+26)+' 192 '+(x+26.5)+' 197 L'+(x+17)+' 197 Z" fill="#f3f1ea"/>'+
+    '<rect x="'+(x-2)+'" y="196.5" width="'+(x+28-x+1)+'" height="4.5" rx="2" fill="#f3f1ea" stroke="'+K+'" stroke-width="1"/>'+
+    '<path d="M'+(x-2)+' 199 L'+(x+27)+' 199" stroke="#c9c4b8" stroke-width=".8"/>'+
+    '<path d="M'+(x+7)+' 187.5 L'+(x+13)+' 190 M'+(x+9)+' 186.5 L'+(x+14.5)+' 189" stroke="#f3f1ea" stroke-width="1" stroke-linecap="round"/>'+
+    '<circle cx="'+(x+2)+'" cy="191" r="1.6" fill="#f3f1ea"/></g>'; };
+  h += shoe(24, true) + shoe(58, false);
+  // πίσω χέρι
+  h += '<g class="aB" style="filter:brightness(.8)"></g>';
+  // κορμός: στρογγυλό «φιγουράκι» με κοιλίτσα, κοντομάνικο μπλουζάκι
+  h += '<path d="M30 110 Q30 93 47 90.5 Q64 89 71 100 Q77 114 75.5 134 Q74 151 66 157 Q52 162 38 158 Q29.5 153 29.5 138 Z" fill="url(#'+p+'sh)" stroke="'+K+'" stroke-width="1.5" stroke-linejoin="round"/>';
+  h += '<path d="M43.5 91.5 Q51.5 98 60.5 91.5" fill="none" stroke="'+bxMix(shirt,'#ffffff',.18)+'" stroke-width="2.6" stroke-linecap="round"/>';
+  h += '<path d="M40 128 Q47 132 52 129 M58 140 Q63 143 69 140 M36 146 Q40 150 46 149" stroke="#000" stroke-opacity=".45" stroke-width="1.2" fill="none" stroke-linecap="round"/>';
+  h += '<path d="M66 110 Q71 120 70 132" stroke="#fff" stroke-opacity=".12" stroke-width="3" fill="none" stroke-linecap="round"/>';
+  h += '<path d="M31 150 Q50 160 70 152" stroke="'+K+'" stroke-opacity=".6" stroke-width="1.2" fill="none"/>';
   // λαιμός
-  h += '<rect x="44" y="84" width="13" height="14" fill="'+neck+'" stroke="'+K+'" stroke-width="1.8"/>';
-  // μπροστινό χέρι
+  h += '<path d="M43.5 82 L59 82 L59.5 92 Q51.5 97 43.5 92 Z" fill="url(#'+p+'sk)" stroke="'+K+'" stroke-width="1"/><path d="M44 89 Q51.5 93 59 89" stroke="#8a5236" stroke-opacity=".5" stroke-width="1.4" fill="none"/>';
   h += '<g class="aF"></g>';
   return h; }
+function bxMix(a, b, t){ var pa = parseInt(a.slice(1),16), pb = parseInt(b.slice(1),16), r = function(s){ return (pa>>s)&255; }, q = function(s){ return (pb>>s)&255; };
+  var c = function(s){ return Math.round(r(s)+(q(s)-r(s))*t); }; return '#'+((1<<24)+(c(16)<<16)+(c(8)<<8)+c(0)).toString(16).slice(1); }
 function bxGuySvg(who){
   var K='#111', sk='#f2c29b', skS='#d99a72';
   var legs = function(jean){ return '<path d="M34 150 L31 198 L46 198 L49 152 Z M53 152 L56 198 L71 198 L68 150 Z" fill="'+jean+'" stroke="'+K+'" stroke-width="2.2" stroke-linejoin="round"/>'+
@@ -197,17 +217,17 @@ function bxGuySvg(who){
   var h = '';
   if(who==='hood'){
     // ===== Σπύρος — σώμα σε προφίλ, κοιτάει το κουτί, σταθερή στάση «τραβάω»
-    h += bxBody('#17171a', '#0e0e10', '#33507d', '#c98058');
+    h += bxBody('#1b1b1f', '#0e0e10', '#3b5f96', '#c98058', 'bS');
   } else {
     // ===== Ηρακλής — ίδια στάση
-    h += bxBody('#232c3d', '#161c28', '#2f4a73', '#c98058');
+    h += bxBody('#26314a', '#161c28', '#34527f', '#c98058', 'bI');
   }
   return h;
 }
 var BX_HEAD = {hood:'https://ohtaras.github.io/gambling/img/head_spyros.png', beard:'https://ohtaras.github.io/gambling/img/head_iraklis.png'};
 function bxGuy(who, flip){ var cx = flip ? 62 : 50; return '<svg viewBox="-4 0 120 210"><g class="guy"><g'+(flip?' transform="translate(112,0) scale(-1,1)"':'')+'>'+bxGuySvg(who)+'</g><image href="'+BX_HEAD[who]+'" x="'+(cx-35)+'" y="-3" width="70" height="95" preserveAspectRatio="xMidYMax meet"/></g></svg>'; }
 (function(){ try{ $('bxGuyL').innerHTML = bxGuy('hood', false); $('bxGuyR').innerHTML = bxGuy('beard', true);
-  $('bxGuyL').dataset.sl = '#17171a'; $('bxGuyR').dataset.sl = '#232c3d'; bxSetArms($('bxGuyL'),0,0); bxSetArms($('bxGuyR'),0,0); }catch(e){} })();
+  $('bxGuyL').dataset.sl = '#1b1b1f'; $('bxGuyR').dataset.sl = '#26314a'; bxSetArms($('bxGuyL'),0,0); bxSetArms($('bxGuyR'),0,0); }catch(e){} })();
 // Κούνημα: το κουτί πάει δεξιά-αριστερά-πάνω-κάτω, ο ένας σπρώχνει κι ο άλλος τραβάει, μετά σταματάνε
 function bxSay(el, txt){ if(!el) return;  var b = el.querySelector('.bub'); if(!b){ b = document.createElement('div'); b.className = 'bub'; el.appendChild(b); }
   if(txt){ b.textContent = txt; b.classList.remove('on'); void b.offsetWidth; b.classList.add('on'); } else b.classList.remove('on'); }
