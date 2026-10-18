@@ -290,6 +290,10 @@ function dayLoad(d){ if(!d) return Promise.resolve(); var A = athDay(d.t), k = A
 function dayCnt(d){ var A = athDay(d.t), D = DAYS[A.key], c = new Array(81).fill(0), n = 0; if(D) for(var id in D.m){ if(+id > d.id) continue; n++; D.m[id].forEach(function(x){ c[x]++; }); } return {c:c, n:n, hm:A.hm}; }
 var PULL_TXT = {hot:['🔥 Εγώ πάω με τους ζεστούς, Ηρακλή!','🔥 Ό,τι καίει σήμερα, θα κάψει κι άλλο!','🔥 Τα ζεστά τρέχουν — μην τα σταματάς!','🔥 Κέρδισα! Ζεστά νούμερα, ζεστά λεφτά!','🔥 Άσε τα κρύα, Ηρακλή, τα ζεστά πληρώνουν!'],
   cold:['❄️ Οι κρύοι χρωστάνε, Σπύρο!','❄️ Κέρδισα! Πάμε με αυτά που άργησαν!','❄️ Τα κρύα θα ξυπνήσουν, θα δεις!','❄️ Ό,τι δεν βγήκε σήμερα, έρχεται τώρα!','❄️ Τα ζεστά κουράστηκαν, Σπύρο — σειρά των κρύων!']};
+function pullSay(w, DC){ var mx = 0; for(var x=1;x<=80;x++) if(DC.c[x] > DC.c[mx]) mx = x; var c = DC.c[mx], z = DC.n ? (c - DC.n*0.25)/Math.sqrt(DC.n*0.1875) : 0;
+  if(DC.n >= 48 && z >= 2.5 && Math.random() < 0.6){ var H = ['🔥 Το '+mx+' έχει ήδη '+c+' σήμερα! Πάει για ρεκόρ, Ηρακλή!','🔥 '+c+' φορές το '+mx+'! Αυτό δεν σταματάει με τίποτα!','🔥 Το '+mx+' πήρε φωτιά — '+c+' φορές! Μαζί του!'],
+      C = ['❄️ Το '+mx+' έπιασε '+c+', Σπύρο — δεν πάει άλλο!','❄️ '+c+' φορές το '+mx+'; Κουράστηκε, Σπύρο, άσ\' το!','❄️ Το '+mx+' με '+c+' έφτασε στο ταβάνι — πάμε στα κρύα!'], L = w==='hot' ? H : C; return L[Math.floor(Math.random()*L.length)]; }
+  return PULL_TXT[w][Math.floor(Math.random()*PULL_TXT[w].length)]; }
 function pullLine(P){ var u = P.pull; if(!u) return ''; if(!u.n) return '<div class="pull">🕐 Δεν βρέθηκαν ακόμα στοιχεία της ημέρας — κουνήθηκε χωρίς τράβηγμα.</div>';
   return '<div class="pull">🕐 '+u.hm+' · '+(u.w==='hot' ? '🔥 Κέρδισε ο <b>Σπύρος</b> — το κουτί τράβηξε προς τους <b class="hot">ζεστούς</b>' : '❄️ Κέρδισε ο <b>Ηρακλής</b> — το κουτί τράβηξε προς τους <b class="cold">κρύους</b>')+
     ' της ημέρας <span class="muted">('+u.n+' κληρώσεις σήμερα · ένταση '+Math.round(100*u.b/PULL_MAX)+'%)</span>'+(u.top && u.top.length ? '<br>'+u.top.map(function(t){ return '<b>'+t[0]+'</b> <span class="muted">('+t[1]+'×)</span>'; }).join(' · ') : '')+'</div>'; }
@@ -309,7 +313,7 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var 
     moves.forEach(function(mm){ var b = balls[mm[0]]; if(!b) return; delete balls[mm[0]]; var p = boxPos(mm[1]); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; b.classList.remove('sc'); b.classList.remove('bn'); b.classList.add(mm[0]!==mm[1] ? 'nw' : 'st'); });
     Object.keys(balls).forEach(function(k){ balls[k].style.opacity = '0'; });
     var pn = moves.map(function(mm){ return mm[1]; }).sort(function(a,b){ return PW==='hot' ? DC.c[b]-DC.c[a] : DC.c[a]-DC.c[b]; }).slice(0,4).map(function(x){ return [x, DC.c[x]]; });
-    PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st, pull:{w:PW, n:DC.n, hm:DC.hm, b:PB, top:pn}}; bxSay(PW==='hot' ? $('bxGuyL') : $('bxGuyR'), PULL_TXT[PW][Math.floor(Math.random()*PULL_TXT[PW].length)]); lsSet('trv_pred', JSON.stringify(PRED)); predText(PRED, false); $('boxPred').disabled = false; predEval();
+    PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st, pull:{w:PW, n:DC.n, hm:DC.hm, b:PB, top:pn}}; bxSay(PW==='hot' ? $('bxGuyL') : $('bxGuyR'), pullSay(PW, DC)); lsSet('trv_pred', JSON.stringify(PRED)); predText(PRED, false); $('boxPred').disabled = false; predEval();
     busy = false; navUpd(); $('boxGo').disabled = false; setTimeout(stageOff, 2200);
   }, 4000);
 });
