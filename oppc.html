@@ -110,6 +110,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   <div class="mhd"><b>☰ Μενού</b><button id="menuX" aria-label="Κλείσιμο">✕</button></div>
   <section id="mSet"><h3>⚙️ Ρυθμίσεις</h3>
     <div class="mrow" id="mAppRow"><div><b><img src="img/oppc_i192.png" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:-6px;margin-right:6px">Εφαρμογή στο κινητό</b><div class="muted" id="mAppTxt">Βάλ' το στην οθόνη του κινητού σαν εφαρμογή — ανοίγει χωρίς διεύθυνση και μπάρες.</div></div><button class="btn2" id="appInst"><img src="img/oppc_i192.png" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:-6px;margin-right:6px">Εγκατάσταση</button></div><div class="mrow" id="mShakeRow"><div><b>📳 Ενεργοποίηση Shake</b><div class="muted" id="mShakeTxt">Κούνα δυνατά το κινητό και ο Σπύρος με τον Ηρακλή κουνάνε το κουτί!</div></div><button class="btn2" id="shakeOn" >📳 Κούνα το κινητό</button></div>
+    <div class="mrow"><div><b>💬 Ατάκες αναμονής</b><div class="muted">Μέχρι την κλήρωση ο Σπύρος κι ο Ηρακλής κουβεντιάζουν για τα νούμερα της πρόβλεψης.</div></div><button class="btn2" id="mWt">ON</button></div>
     <div class="mrow"><div><b>📋 Ίδιος «τρόπος» με χθες</b><div class="muted">Η πρόβλεψη μοιάζει με τη χθεσινή κλήρωση της ίδιας ώρας: ίδιες επαναλήψεις, μονά/ζυγά, χαμηλά/ψηλά, ζεστά.</div></div><button class="btn2" id="mTpl">ON</button></div>
     <div class="mrow"><div><b>🎬 Βιντεάκι κουνήματος</b><div class="muted">Ο Σπύρος κι ο Ηρακλής κουνάνε το κουτί σε κανονικό βίντεο.</div></div><button class="btn2" id="mVid">ON</button></div>
     <div class="mrow"><div><b>🤖 Πρόβλεψη: <span id="mAutoLbl">ΑΥΤΟΜΑΤΗ</span></b><div class="muted">ΑΥΤΟΜΑΤΗ: 2 λεπτά μετά από κάθε κλήρωση ο Σπύρος κι ο Ηρακλής κουνάνε μόνοι τους το κουτί και βγάζουν νέα πρόβλεψη. ΧΕΙΡΟΚΙΝΗΤΗ: μόνο όταν πατήσεις πάνω τους.</div></div><button class="btn2" id="mAuto">ON</button></div><div class="mrow"><div><b>🟢 2η ευκαιρία στα δελτία</b><div class="muted">Αξιολόγηση μαζί με τη 2η ευκαιρία (1€/κλήρωση).</div></div><button class="btn2" id="mSc">ΟΧΙ</button></div>
@@ -444,6 +445,49 @@ function vidPlay(name, ms){ var v = $('shakeVid'); if(!v || !VID_ON) return fals
   var p = v.play(); var show = function(){ v.classList.add('on'); }; if(p && p.then) p.then(show, function(){}); else show();
   clearTimeout(v._t); v._t = setTimeout(function(){ v.classList.remove('on'); setTimeout(function(){ try{ v.pause(); }catch(e){} }, 400); }, ms||3900); return true; }
 function vidShake(){ vidPlay('shake', 3900); }
+/* 💬 Ατάκες αναμονής: από την πρόβλεψη μέχρι την κλήρωση, κάθε ~35'' νέα κουβέντα για τα νούμερα που περιμένουν */
+var WT_ON = lsGet('trv_wtalk')!=='0', WT_LAST = 0, WT_BAG = [];
+var WT_LINES = [
+ ['Σε {m} βγαίνει. Το {n} το νιώθω!','Το ίδιο είπες και για το προηγούμενο… και το προ-προηγούμενο!'],
+ ['{k} αριθμοί και {m} για την κλήρωση…','Αρκετός χρόνος για να μετανιώσουμε τους {k}!'],
+ ['Το {n} θα βγει, το βάζω στοίχημα!','Εσύ τα βάζεις όλα στοίχημα, γι\' αυτό είμαστε εδώ!'],
+ ['Κοίτα το {n}, λάμπει!','Λάμπει γιατί το γυάλισες με το μανίκι σου!'],
+ ['Το {hot} έχει βγει {hc} φορές σήμερα!','Και το πορτοφόλι μου έχει αδειάσει άλλες τόσες!'],
+ ['Λες να βγει πρώτο το {n};','Αν βγει πρώτο, κερνάς… ψέματα, κερνάει η τύχη!'],
+ ['{m} ακόμα… δεν αντέχω!','Πάρε μια ανάσα. Μία. Όχι δύο, κοστίζουν!'],
+ ['Αν πιάσουμε {k}/{k}, τι κάνουμε;','Πρώτα λιποθυμάμε, μετά βλέπουμε!'],
+ ['Το {n} και το {n2} είναι αδέρφια!','Ναι, και τα δύο θα μας προδώσουν μαζί!'],
+ ['Έχω καλό προαίσθημα για το {n}.','Το προαίσθημά σου έχει ποσοστό επιτυχίας 0,5%!'],
+ ['Μην κοιτάς το ρολόι, θα αργήσει!','Το ρολόι δεν κοιτάω, την τσέπη μου κοιτάω!'],
+ ['Πέντε λεπτά… σαν αιώνας!','Για εμάς που χάνουμε, κάθε λεπτό είναι αιώνας!'],
+ ['Λέω να προσευχηθώ για το {n}.','Προσευχήσου και για τους άλλους {k1}, χρειάζονται βοήθεια!'],
+ ['Αν βγει το {n}, θα το κάνω τατουάζ!','Αν δεν βγει, θα το κάνεις τατουάζ στον πόνο!'],
+ ['Το κουτί κάνει θόρυβο, κάτι ξέρει!','Ο θόρυβος είναι το στομάχι μου, δεν έφαγα!'],
+ ['Οι πελάτες μάς κοιτάνε!','Χαμογέλα, να φαινόμαστε σίγουροι για το {n}!'],
+ ['Σήμερα το {cold} δεν έχει βγει σχεδόν καθόλου.','Θα βγει μόλις φύγουμε από το μαγαζί, ως συνήθως!'],
+ ['Πόσο είναι η ώρα;','Ώρα για {k} νούμερα και μία καρδιά που χτυπάει!'],
+ ['Το {n} θα μας κάνει πλούσιους!','Το {n} δεν ξέρει καν ότι υπάρχουμε!'],
+ ['Σε {m} θα είμαστε ή χαρούμενοι ή… πάλι εδώ!','Το «πάλι εδώ» μου αρέσει, είναι οικείο!'],
+ ['Ξέρεις τι θα κάνω με τα κέρδη;','Θα ξαναπαίξεις, σε ξέρω!'],
+ ['Δεν αγχώνομαι καθόλου για το {n}.','Γι\' αυτό τρως τα νύχια σου από το πρωί;'],
+ ['Αν δεν βγει τίποτα, φταίει το κουτί.','Όχι, φταίει ο κουνητής. Δηλαδή εσύ!'],
+ ['Μυρίζει κέρδος!','Όχι, μυρίζει το σουβλατζίδικο απέναντι!'],
+ ['Ακόμα {m}… πάω μια βόλτα;','Αν φύγεις, θα βγουν όλα. Μείνε να μη βγει τίποτα!']
+];
+function wtTalk(){ if(!WT_ON || busy || WAIT || document.hidden || !PRED || !last || PRED.id < last.id) return;
+  var nt = NEXT ? NEXT.t : last.t + 300000, ms = nt - Date.now(); if(ms < 20000 || Date.now() - WT_LAST < 32000) return;
+  var v = $('shakeVid'); if(v && v.classList.contains('on')) return;
+  var nums = PRED.moves.map(function(m){ return m[1]; }); if(!nums.length) return; WT_LAST = Date.now();
+  if(!WT_BAG.length){ for(var i=0;i<WT_LINES.length;i++) WT_BAG.push(i); for(var j=WT_BAG.length-1;j>0;j--){ var k = Math.floor(Math.random()*(j+1)), t = WT_BAG[j]; WT_BAG[j] = WT_BAG[k]; WT_BAG[k] = t; } }
+  var DC = dayCnt(last), hot = 1, cold = 1; for(var x=1;x<=80;x++){ if(DC.c[x] > DC.c[hot]) hot = x; if(DC.c[x] < DC.c[cold]) cold = x; }
+  var pick = function(){ return nums[Math.floor(Math.random()*nums.length)]; }, n1 = pick(), n2 = pick(); if(nums.length > 1) while(n2===n1) n2 = pick();
+  var mm = Math.floor(ms/60000), sx = Math.floor(ms/1000)%60, mtxt = mm ? mm+' λεπτ'+(mm===1?'ό':'ά') : sx+'″';
+  var L = WT_LINES[WT_BAG.pop()], f = function(t){ return t.replace(/\{n2\}/g, n2).replace(/\{n\}/g, n1).replace(/\{k1\}/g, nums.length-1).replace(/\{k\}/g, nums.length).replace(/\{m\}/g, mtxt).replace(/\{hot\}/g, hot).replace(/\{hc\}/g, DC.c[hot]).replace(/\{cold\}/g, cold); };
+  if(!DC.n && /\{hot\}|\{cold\}/.test(L[0])) return;
+  var a = Math.random()<.5 ? $('bxGuyL') : $('bxGuyR'), b = a===$('bxGuyL') ? $('bxGuyR') : $('bxGuyL');
+  bxSay(a, f(L[0])); setTimeout(function(){ bxSay(b, f(L[1])); }, 1800); setTimeout(function(){ if(!busy){ bxSay(a, ''); bxSay(b, ''); } }, 7500); }
+setInterval(wtTalk, 4000);
+
 // αναμονή: κάθε ~2,5' που δεν γίνεται τίποτα, ένα μικρό βιντεάκι «ζωής»
 setInterval(function(){ var v = $('shakeVid'); if(!VID_ON || busy || WAIT || document.hidden || (v && v.classList.contains('on'))) return; if(NEXT && NEXT.t - Date.now() < 30000) return; vidPlay('idle', 2100); }, 150000);
 var PRED = null; try{ PRED = JSON.parse(lsGet('trv_pred')||'null'); }catch(e){}
@@ -816,6 +860,7 @@ $('fbForm').addEventListener('submit', async function(e){ e.preventDefault(); va
   $('mAuto').addEventListener('click', function(){ AUTO = !AUTO; lsSet('trv_auto2', AUTO ? '1' : '0'); if(AUTO && last && PRED && PRED.id >= last.id) AUTOD = last.id; u(); }); u(); })();
 (function(){ function u(){ $('mVid').textContent = VID_ON ? 'ON' : 'OFF'; $('mVid').style.borderColor = VID_ON ? '#22c55e' : ''; } $('mVid').addEventListener('click', function(){ VID_ON = !VID_ON; lsSet('trv_vid', VID_ON?'1':'0'); u(); }); u(); })();
 (function(){ function u(){ $('mTpl').textContent = TPL_ON ? 'ON' : 'OFF'; $('mTpl').style.borderColor = TPL_ON ? '#22c55e' : ''; } $('mTpl').addEventListener('click', function(){ TPL_ON = !TPL_ON; lsSet('trv_tpl', TPL_ON?'1':'0'); u(); }); u(); })();
+(function(){ function u(){ $('mWt').textContent = WT_ON ? 'ON' : 'OFF'; $('mWt').style.borderColor = WT_ON ? '#22c55e' : ''; } $('mWt').addEventListener('click', function(){ WT_ON = !WT_ON; lsSet('trv_wtalk', WT_ON?'1':'0'); u(); }); u(); })();
 $('mSc').addEventListener('click', function(){ setMode(useSC() ? '' : 'sc'); modeChanged(); });
 $('mKb').addEventListener('click', function(){ setMode(useKB() ? '' : 'kb'); modeChanged(); });
 /* ---------- 🎬 Σκηνή: στο κινητό, όσο κουνάνε, όλα σβήνουν και ο Σπύρος, ο Ηρακλής και το κουτί έρχονται μπροστά ---------- */
