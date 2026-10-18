@@ -396,9 +396,13 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var 
 });
 /* 🎬 Πραγματικό βιντεάκι κουνήματος (AI, Wan 2.2): παίζει πάνω από το κουτί, μετά φαίνονται τα πραγματικά νούμερα */
 var VID_ON = lsGet('trv_vid')!=='0';
-function vidShake(){ var v = $('shakeVid'); if(!v || !VID_ON) return; try{ v.currentTime = 0; }catch(e){}
+var VIDS = {shake:'shake1', throw:'throw1', win:'win1'}, VCUR = 'shake1';
+function vidPlay(name, ms){ var v = $('shakeVid'); if(!v || !VID_ON) return false; var f = VIDS[name];
+  if(VCUR !== f){ VCUR = f; v.poster = ''; v.innerHTML = '<source src="vid/'+f+'.mp4?v=1" type="video/mp4"><source src="vid/'+f+'.webm?v=1" type="video/webm">'; v.load(); }
+  try{ v.currentTime = 0; }catch(e){}
   var p = v.play(); var show = function(){ v.classList.add('on'); }; if(p && p.then) p.then(show, function(){}); else show();
-  setTimeout(function(){ v.classList.remove('on'); setTimeout(function(){ try{ v.pause(); }catch(e){} }, 400); }, 3900); }
+  clearTimeout(v._t); v._t = setTimeout(function(){ v.classList.remove('on'); setTimeout(function(){ try{ v.pause(); }catch(e){} }, 400); }, ms||3900); return true; }
+function vidShake(){ vidPlay('shake', 3900); }
 var PRED = null; try{ PRED = JSON.parse(lsGet('trv_pred')||'null'); }catch(e){}
 function predText(P, replay){
   out = P.moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
@@ -651,7 +655,7 @@ function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $
   else if(TK){ PN = TK.n.slice(); SRC = 'tk'; }
   if(PN.length){ P = {}; PN.forEach(function(x){ P[x] = 1; }); PN.sort(function(a,b){return a-b;}); }
   var TKS = tkLoad().map(function(t, ix){ t.ix = ix+1; return t; }).filter(function(t){ return D.id >= t.start && D.id < t.start + t.draws && t.n.length <= 12 && !(SRC==='tk' && TK && t.id===TK.id) && (SRC!=='pred' || t.n.slice().sort(function(a,b){return a-b;}).join(',') !== PN.join(',')); }).slice(0,5);
-  var balls = start(), list = D.arr.concat(D.sc||[]), STEP = P ? 430 : 115, D0 = P ? 1900 : 250, hits = [], schits = [], score = {L:0, R:0};
+  var balls = start(), list = D.arr.concat(D.sc||[]), STEP = P ? 430 : 115, D0 = (P ? 1900 : 250) + (vidPlay('throw', 3900) ? 3600 : 0), hits = [], schits = [], score = {L:0, R:0};
   var lastTalk = {L:0, R:0}, nSc = (D.sc||[]).length, got = {};
   function say(el, txt, force){ var k = el===L ? 'L' : 'R', now = Date.now(); if(!force && now - lastTalk[k] < 1100) return false; lastTalk[k] = now; bxSay(el, txt); return true; }
   function other(el){ return el===L ? R : L; }
@@ -698,6 +702,8 @@ function placeAnim(){ var D = cur(); if(!D) return; var box = $('boxBox'), L = $
         r = pick(win==='L' ? ['Καλά, νίκησες… αλλά τα λεφτά τα χάσαμε μαζί! 😒','Νίκησες. Πάρε ένα μπράβο — λεφτά δεν έχουμε!','Άσ\' το, έτσι σημαδεύω και στη ζωή.','Σήμερα εσύ. Αύριο πάλι από την αρχή, σαν το χρέος!'] : ['Χαχα! Σε διέλυσα! 😎','Μάθε από τον μάστορα!','Γράψ\' το στο ιστορικό, να το βλέπουν τα εγγόνια!','Σημάδι ελεύθερου σκοπευτή! 🎯']); }
       else { a = h+' στα '+K+hl+extra+', ισοπαλία στο σημάδι!'; r = 'Ισοπαλία — όπως κι ο λογαριασμός μας: μηδέν!'; }
       a = (SRC==='tk' ? '🎫 Δελτίο '+(function(){ var T = tkLoad(); for(var q=0;q<T.length;q++) if(T[q].id===TK.id) return (q+1)+' ('+TK.n.length+' αριθμοί)'; return ''; })()+': ' : '🔮 Πρόβλεψη: ')+a;
+      var wP = SRC==='pred' ? (K<=12 ? ((PAYS[K]||{})[h]||0) : 0) : tkWinFor(TK, D), wT = TKS.some(function(t){ return tkWinFor(t, D) > 0; });
+      if(!JACK && (wP > 0 || wT)) setTimeout(function(){ vidPlay('win', 3900); }, 600);
       if(SRC==='tk'){ var w0 = tkWinFor(TK, D); if(w0) r = 'Κέρδος '+eur(w0)+'! Επιτέλους ένα χαρούμενο νέο! 🎉'; }
       bxSay(L, a); setTimeout(function(){ bxSay(R, r); }, 1200);
       // όλα τα ενεργά δελτία, ένα-ένα, με αριθμό δελτίου, πόσους έπιασε (και 2η ευκαιρία αν είναι ανοιχτή) και ποιους
