@@ -349,7 +349,7 @@ function boxNApply(N){ if(!PRED || !last || PRED.id < last.id || !N) return;
   else if(N > PRED.moves.length && !busy){ $('boxGo').disabled = false; $('boxGo').click(); } }
 /* 🕐 Στοιχεία της ημέρας (00:00–23:55 ώρα Ελλάδας): πόσες φορές βγήκε κάθε αριθμός σήμερα μέχρι την κλήρωση που κουνάμε.
    Σε κάθε κούνημα κερδίζει στην τύχη ο Σπύρος ή ο Ηρακλής και διαλέγει (επίσης στην τύχη) ΖΕΣΤΟΥΣ ή ΚΡΥΟΥΣ· όσο προχωράει η μέρα, τόσο δυναμώνει το τράβηγμα. */
-var DAYS = {}, DAYP = {}, PULL_MAX = 0.8;
+var DAYS = {}, DAYP = {}, PULL_MAX = 1.6;
 var ATHF = new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Athens', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
 function athDay(t){ var o = {}; ATHF.formatToParts(new Date(t)).forEach(function(p){ o[p.type] = p.value; }); var h = (+o.hour)%24;
   return {key:o.year+'-'+o.month+'-'+o.day, start:t - ((h*60 + (+o.minute))*60 + (+o.second))*1000 - (t%1000), hm:pad(h)+':'+o.minute}; }
@@ -402,14 +402,14 @@ function pullLine(P){ var u = P.pull; if(!u) return ''; if(!u.n) return '<div cl
 $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var last = cur();
   var v = +$('boxN').value || 12, src = last.arr.concat(last.sc||[]);
   for(var i=src.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = src[i]; src[i] = src[j]; src[j] = t; }
-  var DC = dayCnt(last), PW = Math.random() < 0.5 ? 'hot' : 'cold', PWHO = Math.random() < 0.5 ? 'S' : 'I', PS = PW==='hot' ? 1 : -1, PB = PULL_MAX*Math.min(1, DC.n/288), DE = DC.n*0.25, DS = Math.max(1, Math.sqrt(DC.n*0.1875)); if(!DC.n) PB = 0; dayLoad(last);
+  var DC = dayCnt(last), PW = 'hot', PWHO = Math.random() < 0.5 ? 'S' : 'I', PS = PW==='hot' ? 1 : -1, PB = PULL_MAX*Math.max(0.4, Math.min(1, DC.n/60)), DE = DC.n*0.25, DS = Math.max(1, Math.sqrt(DC.n*0.1875)); if(DC.n < 6) PB = 0; var HZ = function(n){ return Math.max(-1.5, Math.min(1.2, (DC.c[n]-DE)/DS)); }; /* καυτά και χλιαρά παίρνουν σχεδόν ίδιο βάρος, τα κρύα λιγότερο */ dayLoad(last);
   var MV = [['stay',0,0],['l',0,-1],['r',0,1],['u',-1,0],['d',1,0],['ul',-1,-1],['ur',-1,1],['dl',1,-1],['dr',1,1]]; /* 9 θέσεις: μένει + 8 γειτονικές (και διαγώνια) */
   function shuf(a){ a = a.slice(); for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   var NM = last.arr.length;
   function shakeAll(){ var S = shuf(last.arr).concat(shuf(last.sc||[]));
     var used = {}, mv = [];
     for(var q=0; q<S.length; q++){ var from = S[q], row = Math.floor((from-1)/10), col = (from-1)%10;
-      var cand = [], wsum = 0; for(var m=0;m<MV.length;m++){ var r2 = row+MV[m][1], c2 = col+MV[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; var w = Math.exp(PS*PB*(DC.c[to]-DE)/DS); cand.push([MV[m][0], to, w]); wsum += w; }
+      var cand = [], wsum = 0; for(var m=0;m<MV.length;m++){ var r2 = row+MV[m][1], c2 = col+MV[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; var w = Math.exp(PB*HZ(to)); cand.push([MV[m][0], to, w]); wsum += w; }
       /* επανάληψη: όπως στην πραγματικότητα, κάθε αριθμός της κλήρωσης ξαναβγαίνει ~25% → το «μένει» ζυγίζει ώστε να είναι ~1 στις 4 */
       var c0 = cand.filter(function(c){ return c[0]==='stay'; })[0]; if(c0 && cand.length > 1){ var k = (cand.length-1)*REP_W; wsum += c0[2]*(k-1); c0[2] *= k; }
       if(!cand.length) continue; var rr = Math.random()*wsum, pk = cand[cand.length-1]; for(var z=0; z<cand.length; z++){ rr -= cand[z][2]; if(rr <= 0){ pk = cand[z]; break; } }
@@ -433,7 +433,7 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var 
       var tot = 0; for(var a1=0;a1<S.length;a1++) for(var b1=a1+1;b1<S.length;b1++) tot += DD(S[a1][1], S[b1][1]); CL.push({S:S, t:tot, k:S.map(function(m){ return m[1]; }).sort(function(x,y){ return x-y; }).join(',')}); });
     // όχι πάντα το πιο σφιχτό: διαλέγουμε τυχαία ανάμεσα σε όλα τα διαφορετικά μάτσα, με λίγο μεγαλύτερη πιθανότητα στα πιο σφιχτά
     var seen = {}, U = CL.filter(function(c){ if(seen[c.k]) return false; seen[c.k] = 1; return true; }), tmin = Math.min.apply(null, U.map(function(c){ return c.t; })), TT = Math.max(2, v*1.5), ws = 0;
-    U.forEach(function(c){ c.w = Math.exp(-(c.t - tmin)/TT); ws += c.w; }); var rr = Math.random()*ws; cb = U[U.length-1]; for(var u=0; u<U.length; u++){ rr -= U[u].w; if(rr <= 0){ cb = U[u]; break; } }
+    U.forEach(function(c){ var hz = 0; c.S.forEach(function(m){ hz += HZ(m[1]); }); c.w = Math.exp(-(c.t - tmin)/TT + PB*0.6*hz); ws += c.w; }); var rr = Math.random()*ws; cb = U[U.length-1]; for(var u=0; u<U.length; u++){ rr -= U[u].w; if(rr <= 0){ cb = U[u]; break; } }
     pickK = cb.S; }
   moves = pickK.map(function(m){ return m[3]==='g' ? [m[0], m[1], 'g'] : [m[0], m[1]]; }); var st = {stay:0, l:0, r:0, u:0, d:0, ul:0, ur:0, dl:0, dr:0}; pickK.forEach(function(m){ st[m[2]]++; });
   var TPLINFO = TPL ? {y:TPL, g:FEAT(nums(best.mv, false)), k:FEAT(moves.filter(function(m){ return m[2]!=='g'; }).map(function(m){ return m[1]; })), gr:GRN.map(function(m){ return m[1]; })} : null;
