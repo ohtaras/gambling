@@ -490,6 +490,19 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
     </div>
   </section>
 
+  <section class="card mt" data-k="k5">
+    <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>⏱️ Πεντάλεπτα: 10 στήλες × 8 με κανόνα ανά ώρα</span><span id="k5Meta"></span></h2>
+    <div class="cbody">
+      <div class="muted" style="margin-bottom:10px">Όπως το 10×8 (10 στήλες των 8 που καλύπτουν και τους 80, <b>5€ ανά κλήρωση</b>), αλλά <b>κάθε πεντάλεπτο της μέρας έχει τον δικό του κανόνα</b>: για τις 288 ώρες (00:00 … 23:55) δοκιμάστηκαν 54 κανόνες (ζεστοί/κρύοι των τελευταίων κληρώσεων, ζεστοί/κρύοι του ίδιου πενταλέπτου τις τελευταίες 7–365 μέρες, τυχαίο, κάθετες) σε όλο το ιστορικό 28/09/2018–31/12/2025 (550.899 κληρώσεις) και κρατήθηκε ο καλύτερος της κάθε ώρας. Οι κανόνες «πάγωσαν» και μετράνε ζωντανά από την κλήρωση <b id="k5StartLbl"></b>.</div>
+      <div class="chips" id="k5Chips"></div>
+      <div class="scroll-x"><table class="ptab" id="k5Table"></table></div>
+      <div style="margin:14px 0 6px"><h3 class="muted" style="font-size:13px;margin:0">Στήλες για την επόμενη κλήρωση <span id="k5NextLbl"></span></h3></div>
+      <div id="k5Next" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px"></div>
+      <h3 class="muted" style="font-size:13px;margin:14px 0 6px">Τελευταίες κληρώσεις</h3>
+      <div class="list" id="k5List" style="max-height:300px"></div>
+      <details style="margin-top:10px"><summary class="muted" style="cursor:pointer">📋 Ο κανόνας κάθε πενταλέπτου</summary><div id="k5Slots" style="font-size:12px;line-height:1.6;margin-top:6px"></div></details>
+    </div>
+  </section>
   <section class="card mt" data-k="k8">
     <h2 class="tg"><span style="color:var(--text);font-weight:600"><span class="chev">▼</span>🎯 10 στήλες × 8 αριθμοί (όλοι οι 80)</span><span id="k8Meta"></span></h2>
     <div class="cbody">
@@ -674,7 +687,7 @@ async function loadHistory(){
   var gaps = 0; for(var j=1;j<histPool.length;j++) if(histPool[j-1].id-histPool[j].id>1) gaps += histPool[j-1].id-histPool[j].id-1;
   $('histInfo').textContent = 'Ιστορικό: '+histPool.length+' κληρώσεις από '+HIST_DAYS+' ημέρες + σήμερα'+
     (failed||gaps ? ' · ⚠️ λείπουν '+gaps+' κληρώσεις'+(failed?' ('+failed+' ημέρες απέτυχαν)':'') : ' · πλήρες, χωρίς κενά');
-  renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); renderLate(); agTick();
+  renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); try{ renderK5(); }catch(e){ console.warn("k5", e); } renderLate(); agTick();
   repairGaps(true); loadArchive();
 }
 
@@ -2383,6 +2396,50 @@ function renderK8(){
   }).join('') || '<span class="muted">Η δοκιμή ξεκινάει με την κλήρωση #'+K8_START+'.</span>';
 }
 
+/* ---------- ⏱️ Πεντάλεπτα: 10×8 με διαφορετικό κανόνα για κάθε πεντάλεπτο της μέρας ---------- */
+var K5_START = 1344173;   // πρώτη ζωντανή κλήρωση
+var K5_RULES = ["hot|W1|inter", "hot|W1|chunk", "cold|W1|inter", "cold|W1|chunk", "hot|W5|inter", "hot|W5|chunk", "cold|W5|inter", "cold|W5|chunk", "hot|W10|inter", "hot|W10|chunk", "cold|W10|inter", "cold|W10|chunk", "hot|W20|inter", "hot|W20|chunk", "cold|W20|inter", "cold|W20|chunk", "hot|W50|inter", "hot|W50|chunk", "cold|W50|inter", "cold|W50|chunk", "hot|W100|inter", "hot|W100|chunk", "cold|W100|inter", "cold|W100|chunk", "hot|W288|inter", "hot|W288|chunk", "cold|W288|inter", "cold|W288|chunk", "hot|W1000|inter", "hot|W1000|chunk", "cold|W1000|inter", "cold|W1000|chunk", "hot|S7|inter", "hot|S7|chunk", "cold|S7|inter", "cold|S7|chunk", "hot|S14|inter", "hot|S14|chunk", "cold|S14|inter", "cold|S14|chunk", "hot|S30|inter", "hot|S30|chunk", "cold|S30|inter", "cold|S30|chunk", "hot|S90|inter", "hot|S90|chunk", "cold|S90|inter", "cold|S90|chunk", "hot|S365|inter", "hot|S365|chunk", "cold|S365|inter", "cold|S365|chunk", "rnd||inter", "digit||chunk"], K5_BEST = [13, 48, 15, 34, 26, 43, 43, 16, 21, 4, 49, 44, 29, 47, 48, 23, 21, 35, 41, 5, 33, 32, 34, 32, 48, 38, 1, 1, 18, 47, 10, 12, 44, 32, 21, 49, 15, 5, 17, 49, 8, 17, 38, 43, 41, 10, 10, 35, 34, 43, 15, 46, 28, 31, 7, 7, 33, 17, 20, 41, 22, 24, 36, 18, 7, 11, 22, 25, 30, 20, 5, 33, 42, 21, 17, 20, 35, 19, 52, 47, 42, 16, 34, 51, 28, 51, 21, 21, 21, 13, 22, 36, 30, 48, 35, 7, 15, 29, 31, 5, 20, 37, 49, 44, 31, 43, 45, 16, 10, 12, 33, 42, 12, 19, 33, 9, 16, 41, 10, 3, 3, 22, 27, 52, 33, 26, 7, 0, 7, 38, 27, 41, 40, 23, 19, 23, 20, 45, 3, 36, 35, 39, 35, 23, 35, 12, 44, 23, 14, 13, 12, 6, 12, 8, 29, 42, 47, 44, 8, 39, 8, 42, 28, 15, 37, 30, 23, 13, 44, 3, 28, 49, 32, 36, 37, 15, 34, 21, 49, 41, 46, 26, 10, 38, 23, 44, 27, 31, 5, 1, 23, 40, 26, 9, 6, 23, 37, 23, 41, 20, 11, 29, 38, 0, 50, 8, 41, 18, 10, 5, 14, 33, 17, 45, 35, 46, 20, 40, 5, 4, 46, 10, 33, 17, 38, 13, 44, 15, 33, 42, 12, 37, 24, 49, 22, 19, 36, 8, 3, 41, 38, 22, 45, 0, 25, 19, 35, 36, 28, 13, 48, 12, 10, 4, 0, 13, 30, 24, 1, 40, 32, 48, 35, 12, 36, 4, 42, 36, 20, 51, 33, 35, 11, 12, 11, 26, 52, 6, 11, 37, 8, 16, 48, 30, 32, 35, 7, 46], K5_TR = [113.4, 298.8, 335.9, 317.1, 299.0, 128.1, 345.8, 310.5, 349.1, 311.5, 117.0, 349.8, 334.7, 331.9, 128.4, 309.8, 98.4, 316.7, 102.2, 297.7, 314.6, 99.1, 110.7, 352.1, 314.3, 94.9, 310.6, 98.0, 113.8, 313.1, 85.5, 348.7, 313.0, 293.1, 117.0, 296.6, 303.3, 319.3, 299.1, 346.9, 297.6, 318.5, 128.7, 117.6, 331.2, 328.6, 338.9, 118.2, 100.8, 615.5, 344.0, 116.0, 298.7, 311.3, 96.8, 317.7, 349.1, 318.6, 319.9, 320.4, 291.3, 307.8, 311.6, 99.5, 313.8, 303.9, 315.1, 336.3, 347.8, 314.3, 315.1, 312.2, 318.2, 330.6, 311.0, 300.9, 331.5, 93.1, 312.6, 320.1, 97.0, 341.4, 116.6, 320.2, 296.3, 100.8, 311.0, 298.9, 328.4, 353.1, 347.7, 308.7, 334.4, 327.9, 318.9, 345.4, 157.6, 219.9, 168.4, 152.7, 142.6, 226.7, 151.5, 147.8, 149.6, 154.0, 173.9, 224.6, 140.6, 133.4, 177.3, 179.7, 128.8, 134.0, 139.5, 183.1, 131.4, 134.8, 118.3, 176.9, 124.6, 140.1, 122.4, 136.9, 132.0, 129.5, 139.6, 177.0, 166.7, 118.3, 124.5, 187.4, 186.3, 126.9, 127.5, 133.4, 128.0, 129.2, 129.9, 136.3, 120.5, 127.1, 132.7, 132.5, 244.4, 172.0, 124.5, 134.6, 119.4, 122.1, 128.4, 132.7, 135.1, 130.3, 132.8, 130.0, 176.7, 129.3, 130.7, 109.9, 189.8, 182.1, 129.6, 135.3, 126.2, 183.0, 128.9, 180.7, 118.8, 180.4, 126.0, 126.2, 129.1, 127.9, 195.7, 129.2, 133.1, 124.8, 173.2, 183.8, 198.4, 132.5, 134.2, 172.2, 128.8, 179.5, 171.6, 181.3, 128.0, 126.6, 135.8, 167.8, 180.8, 174.4, 180.7, 126.7, 177.5, 230.6, 131.2, 135.0, 174.8, 140.7, 127.3, 179.6, 122.2, 202.3, 133.1, 170.1, 123.2, 174.5, 177.5, 129.5, 183.1, 133.4, 131.9, 189.1, 173.4, 127.3, 131.4, 123.9, 128.2, 117.2, 127.7, 128.9, 121.9, 133.8, 133.0, 128.8, 130.2, 178.1, 131.5, 123.6, 180.5, 166.8, 139.6, 127.8, 118.8, 166.8, 168.0, 125.4, 128.3, 127.0, 164.0, 120.4, 124.7, 170.9, 127.6, 127.6, 178.0, 135.8, 141.2, 129.6, 175.1, 173.3, 130.1, 125.9, 176.4, 123.7, 136.7, 171.8, 134.4, 118.7, 173.5, 119.5, 172.3, 78.7, 116.9, 176.4, 136.1, 125.8, 174.3, 127.0, 140.8, 175.6, 124.3, 183.3, 127.3, 133.5, 134.2, 141.9, 132.1, 123.4, 180.2, 232.5, 175.2, 128.6, 127.8, 125.8];
+var K5_BT = {train:160.0, test:66.8, rnd:68.4, n:84042};
+function k5Name(r){ var p = r.split('|'); if(p[0]==='rnd') return 'Τυχαίο μοίρασμα'; if(p[0]==='digit') return 'Κάθετες στήλες δελτίου';
+  var w = p[1][0]==='W' ? (p[1]==='W1' ? 'προηγούμενη κλήρωση' : 'τελ. '+p[1].slice(1)+' κληρώσεις') : 'ίδιο πεντάλεπτο, τελ. '+p[1].slice(1)+' μέρες';
+  return (p[0]==='hot' ? '🔥 Ζεστοί' : '❄️ Κρύοι')+' · '+w+' · '+(p[2]==='inter' ? 'εναλλάξ' : 'μαζεμένοι'); }
+function k5Slot(t){ return Math.floor((minsOf(t)+0.5)/5) % 288; }
+var K5_MAP = null, K5_MAPK = '';
+function k5Nums(id){ var d = K5_MAP && K5_MAP.get(id); if(d) return d;
+  if(ARCH){ var lo = 0, hi = ARCH.n-1; while(lo<=hi){ var m = (lo+hi)>>1, v = ARCH.id[m]; if(v===id) return Array.prototype.slice.call(ARCH.nums.subarray(m*20, m*20+20)); if(v<id) lo = m+1; else hi = m-1; } }
+  return null; }
+function k5Parts(id, rule){ var p = rule.split('|'), n, g = [];
+  if(p[0]==='digit'){ for(var c=1;c<=10;c++){ var a=[]; for(n=1;n<=80;n++) if((n%10||10)===c) a.push(n); g.push(a); } return g; }
+  var order = [];
+  if(p[0]==='rnd'){ var s = id * 2654435761 >>> 0; var rnd = function(){ s=(s+0x6D2B79F5)>>>0; var t=s; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return ((t^(t>>>14))>>>0)/4294967296; };
+    for(n=1;n<=80;n++) order.push(n); for(var q=79;q>0;q--){ var j=Math.floor(rnd()*(q+1)); var x=order[q]; order[q]=order[j]; order[j]=x; } }
+  else { var cnt = new Array(81).fill(0), k = +p[1].slice(1), add = function(a){ if(a) a.forEach(function(x){ cnt[x]++; }); };
+    if(p[1][0]==='W'){ for(var i=1;i<=k;i++) add(k5Nums(id-i)); } else { for(var d2=1;d2<=k;d2++) add(k5Nums(id-288*d2)); }
+    for(n=1;n<=80;n++) order.push(n); order.sort(function(a,b){ var ka = p[0]==='hot' ? -cnt[a] : cnt[a], kb = p[0]==='hot' ? -cnt[b] : cnt[b]; return ka-kb || a-b; }); }
+  for(var c2=0;c2<10;c2++){ var grp=[]; for(var j2=0;j2<8;j2++) grp.push(p[2]==='chunk' ? order[c2*8+j2] : order[c2+10*j2]); g.push(grp); }
+  return g; }
+function k5Pct(v){ return v.toFixed(1).replace('.',',')+'%'; }
+function renderK5(){
+  var card = document.querySelector && document.querySelector('.card[data-k="k5"]');
+  if(card && card.classList.contains('collapsed')) return;
+  var pool = today.concat(histPool), key = pool.length+':'+lastId+':'+(ARCH?ARCH.n:0);
+  if(K5_MAPK !== key){ K5_MAP = new Map(); pool.forEach(function(d){ K5_MAP.set(d.id, d.arr); }); K5_MAPK = key; }
+  var seen = {}, live = pool.filter(function(d){ if(d.id < K5_START || seen[d.id]) return false; seen[d.id] = 1; return true; }).sort(function(a,b){ return a.id-b.id; });
+  var st = live[0]; $('k5StartLbl').textContent = st && st.id===K5_START ? dateOf(st.t).split('-').reverse().join('/')+' '+hm(st.t)+' (#'+K5_START+')' : '#'+K5_START;
+  var won = 0, n = 0, h = [0,0,0,0,0,0,0,0,0], best = 0, rows = [];
+  live.forEach(function(d){ var rule = K5_RULES[K5_BEST[k5Slot(d.t)]], w = 0, hs = k5Parts(d.id, rule).map(function(gp){ var x = gp.filter(function(v){ return d.set.has(v); }).length; h[x]++; w += K8_PAY[x]; return x; });
+    won += w; n++; if(w > best) best = w; rows.push({d:d, w:w, hs:hs, rule:rule}); });
+  var cost = n*5, rtp = cost ? won/cost*100 : 0;
+  $('k5Meta').textContent = n ? n+' κληρώσεις' : 'ξεκινάει';
+  $('k5Chips').innerHTML = chip('Ιστορικό: ο καλύτερος κάθε ώρας, εκ των υστέρων', K5_BT.train.toFixed(0)+'%') + chip('Τίμιος έλεγχος στο 2026 ('+K5_BT.n.toLocaleString('el-GR')+' κληρώσεις)', k5Pct(K5_BT.test)) + chip('Τυχαίο μοίρασμα 2026', k5Pct(K5_BT.rnd)) + chip('Θεωρία', '≈69%');
+  $('k5Table').innerHTML = '<tr><th>Ζωντανά</th><th>Κληρώσεις</th><th>Κόστος → Κέρδη</th><th>Απόδοση</th><th>5/8 · 6/8 · 7/8 · 8/8</th><th>Καλύτερη κλήρωση</th></tr><tr><td>Κανόνας ανά πεντάλεπτο</td><td>'+n+'</td><td style="white-space:nowrap">'+eur(cost)+' → '+eur(won)+'</td><td><b style="color:'+(n?(rtp>=100?'var(--hit)':'var(--miss)'):'var(--muted)')+'">'+(n?k5Pct(rtp):'—')+'</b></td><td>'+h[5]+' · '+h[6]+' · <b>'+h[7]+'</b> · <b>'+h[8]+'</b></td><td>'+(best?eur(best):'—')+'</td></tr>';
+  var nid = lastId+1, nt = expectedTime(), ns = k5Slot(nt), nr = K5_RULES[K5_BEST[ns]];
+  $('k5NextLbl').innerHTML = '· '+hm(nt)+' (#'+nid+') · <b>'+k5Name(nr)+'</b> <span class="muted">(ιστορικό αυτής της ώρας: '+k5Pct(K5_TR[ns])+')</span>';
+  $('k5Next').innerHTML = k5Parts(nid, nr).map(function(g,ci){ return '<div class="row" style="cursor:default;grid-template-columns:28px 1fr"><div class="t"><b>'+(ci+1)+'</b></div><div class="n">'+g.slice().sort(function(a,b){return a-b;}).map(function(x){return '<i>'+x+'</i>';}).join('')+'</div></div>'; }).join('');
+  $('k5List').innerHTML = rows.slice(-15).reverse().map(function(x){ return '<div class="row" style="cursor:default"><div class="t">'+hm(x.d.t)+'<small>'+(x.w?'<b style="color:var(--hit)">'+eur(x.w)+'</b>':'0€')+'</small></div><div class="n" style="font-size:12px">'+k5Name(x.rule)+'<br>επιτυχίες ανά στήλη: '+x.hs.map(function(v){ return v>=5?'<b style="color:var(--hit)">'+v+'</b>':v; }).join(' · ')+'</div></div>'; }).join('') || '<span class="muted">Η ζωντανή μέτρηση ξεκινάει με την κλήρωση #'+K5_START+'.</span>';
+  if(!$('k5Slots').innerHTML) $('k5Slots').innerHTML = K5_BEST.map(function(b,i){ return '<div><b>'+hmMin(i*5)+'</b> · '+k5Name(K5_RULES[b])+' <span class="muted">· ιστορικό '+k5Pct(K5_TR[i])+'</span></div>'; }).join('');
+}
+
 /* ---------- 🔒 Κλείδωμα: μια οποιαδήποτε κλήρωση γίνεται η «πρώτη της μέρας» ---------- */
 var ANCHOR = +(lsGet('kl_anchor')||0) || 0, anchorWas = !!ANCHOR;
 function anchorLbl(){ var d = today.concat(histPool).filter(function(x){ return x.id===ANCHOR; })[0]; return d ? hm(d.t)+' '+d.d.split('-').reverse().slice(0,2).join('/') : '#'+ANCHOR; }
@@ -2398,7 +2455,7 @@ function applyAnchor(){
 }
 function updTtLock(){ var b = $('ttLock'); if(!b) return; var g = $('ttGoLock'); if(g){ g.style.display = ANCHOR && ANCHOR!==lastId ? '' : 'none'; g.title = ANCHOR ? 'Πήγαινε στην κλειδωμένη αρχή ('+anchorLbl()+')' : ''; } var on = ANCHOR && ANCHOR===lastId; b.textContent = ANCHOR ? (on ? '🔓 Ξεκλείδωμα' : '🔒 Αρχή εδώ') : '🔒 Αρχή εδώ'; b.style.background = ANCHOR ? '#f59e0b' : ''; b.style.color = ANCHOR ? '#1a1300' : ''; b.title = ANCHOR ? 'Κλειδωμένη αρχή: '+anchorLbl()+' — πάτα για '+(on?'ξεκλείδωμα':'μετακίνηση εδώ') : 'Κλείδωσε αυτή την κλήρωση ως πρώτη της «μέρας»'; }
 function setAnchor(id){ ANCHOR = id||0; lsSet('kl_anchor', String(ANCHOR)); if(ANCHOR) anchorWas = true; viewId = null; renderAll(); }
-function renderAll(){ applyAnchor(); updTtLock(); renderMan(); renderLate(); renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); try{ boxIdle(); }catch(e){} agTick(); }
+function renderAll(){ applyAnchor(); updTtLock(); renderMan(); renderLate(); renderBoard(); renderList(); renderStats(); renderPos(); renderSim(); renderFwd(); renderGef(); renderRally(); renderAlc(); renderMy(); renderK8(); try{ renderK5(); }catch(e){ console.warn("k5", e); } try{ boxIdle(); }catch(e){} agTick(); }
 
 /* ---------- Countdown ---------- */
 function tick(){
@@ -2534,7 +2591,7 @@ $('posBody').addEventListener('click',function(e){ var r=e.target.closest('tr[da
 var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-k]'));
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); if(!on && c.dataset.k==='sim') renderSim(); if(!on && c.dataset.k==='fwd') renderFwd(); if(!on && c.dataset.k==='gef') renderGef(); if(!on && c.dataset.k==='rally') renderRally(); if(!on && c.dataset.k==='alc') renderAlc(); if(!on && c.dataset.k==='k8') renderK8(); if(!on && c.dataset.k==='man') renderMan(); if(!on && c.dataset.k==='late') renderLate(); }
+function setCollapsed(c,on){ c.classList.toggle('collapsed',on); lsSet('kl_col_'+c.dataset.k, on?'1':'0'); if(!on && c.dataset.k==='sim') renderSim(); if(!on && c.dataset.k==='fwd') renderFwd(); if(!on && c.dataset.k==='gef') renderGef(); if(!on && c.dataset.k==='rally') renderRally(); if(!on && c.dataset.k==='alc') renderAlc(); if(!on && c.dataset.k==='k8') renderK8(); if(!on && c.dataset.k==='k5') renderK5(); if(!on && c.dataset.k==='man') renderMan(); if(!on && c.dataset.k==='late') renderLate(); }
 function updAllBtn(){
   var allClosed = cards.every(function(c){return c.classList.contains('collapsed');});
   $('btnAll').textContent = allClosed ? '▸ Άνοιγμα όλων' : '▾ Κλείσιμο όλων';
@@ -2670,7 +2727,7 @@ $('boxRes').addEventListener('click', function(e){ var t = e.target; if(!boxOut.
   if(t.id==='boxToMan'){ manPick = boxOut.slice(); manSave(); renderMan(); var c = document.querySelector('.card[data-k="man"]'); if(c){ cards.forEach(function(x){ if(x!==c && winOpen(x)) setWin(x, false, false); }); setWin(c, true, true); } }
 });
 /* ---------- Γραμμή εργασιών: κάθε κάρτα ανοιγοκλείνει σαν παράθυρο ---------- */
-var TB = {board:['🎱','Κλήρωση'], today:['📋','Σήμερα'], my:['🎫','Δελτία'], rally:['🏁','Ράλι'], stats:['📊','Στατιστ.'], pos:['🔢','Θέσεις'], sim:['🎲','Προσομ.'], fwd:['🧪','Κανόνες'], gef:['🌉','Γέφυρα'], alc:['⚗️','Αλχημεία'], k8:['🎯','10×8'], man:['🕹️','Χειροκ.'], box:['📦','Κουτάκι'], late:['⏰','Καθυστ.']};
+var TB = {board:['🎱','Κλήρωση'], today:['📋','Σήμερα'], my:['🎫','Δελτία'], rally:['🏁','Ράλι'], stats:['📊','Στατιστ.'], pos:['🔢','Θέσεις'], sim:['🎲','Προσομ.'], fwd:['🧪','Κανόνες'], gef:['🌉','Γέφυρα'], alc:['⚗️','Αλχημεία'], k8:['🎯','10×8'], k5:['⏱️','Πεντάλ.'], man:['🕹️','Χειροκ.'], box:['📦','Κουτάκι'], late:['⏰','Καθυστ.']};
 function winOpen(c){ return !c.classList.contains('win-off'); }
 function setWin(c, on, scroll){
   c.classList.toggle('win-off', !on); lsSet('kl_win_'+c.dataset.k, on?'1':'0');
