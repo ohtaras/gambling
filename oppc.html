@@ -97,7 +97,7 @@ body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
 table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}table.dr td{padding:4px 3px;border-top:1px solid #1f2a44}
 .win{color:#4ade80;font-weight:800}
 .alog{margin-top:10px;background:#0f172a;border:1px solid #23304d;border-radius:12px;padding:8px 10px;font-size:13px}.alog summary{cursor:pointer;line-height:1.5}.alog table{width:100%;margin-top:6px}.alog td{padding:3px 4px;border-top:1px solid #1e293b;font-size:12.5px}
-.pull{font-size:13px;line-height:1.5;margin:4px 0}.bxInfo{margin:2px 0;font-size:12px}.bxInfo>summary{cursor:pointer;opacity:.45;list-style:none;display:inline-block;padding:1px 6px;border-radius:8px;font-size:11px}.bxInfo>summary::-webkit-details-marker{display:none}.bxInfo[open]>summary{opacity:.8}body.fs .bxInfo{display:none}
+.pull{font-size:13px;line-height:1.5;margin:4px 0}.bxInfo{margin:2px 0;font-size:12px}.mSel{position:absolute;width:10%;height:12.5%;box-sizing:border-box;border:3px solid #22c55e;border-radius:9px;background:rgba(34,197,94,.35);pointer-events:none;z-index:4;display:flex;align-items:center;justify-content:center}.mSel.mFix{border-color:#60a5fa;background:rgba(96,165,250,.35)}.mSel span{font-weight:800;color:#fff;font-size:clamp(10px,3vw,15px);text-shadow:0 1px 2px #000}body.fs #manBar{display:none!important}.bxInfo>summary{cursor:pointer;opacity:.45;list-style:none;display:inline-block;padding:1px 6px;border-radius:8px;font-size:11px}.bxInfo>summary::-webkit-details-marker{display:none}.bxInfo[open]>summary{opacity:.8}body.fs .bxInfo{display:none}
 .ph{margin-top:8px;padding-top:8px;border-top:1px dashed #334155;font-size:13px;line-height:1.5}
 .wins{margin-top:12px;border-color:#a16207!important;background:linear-gradient(180deg,#1c1606,#111827)!important}.wins h3{margin:0 0 8px;font-size:17px;color:#fde047;display:flex;justify-content:space-between;align-items:center}.wins h3 button{background:none;border:0;color:#475569;font-size:13px;cursor:pointer;opacity:.35}.wins h3 button:hover{opacity:1}.wrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 10px;border-radius:10px;background:#0f172a;border:1px solid #3f3a1a;margin-top:6px;font-size:14px}.wrow .wamt{margin-left:auto;font-size:20px;font-weight:900;color:#4ade80;white-space:nowrap}.wrow .wn .chip{min-width:24px;height:24px;font-size:12px}.wrow.new{animation:wglow 1.2s ease-in-out 4}@keyframes wglow{50%{box-shadow:0 0 0 3px #facc15}}body.fs.hw #boxFrame{max-width:min(980px,calc(100vh - 360px))!important}body.fs .wins .wrow:nth-child(n+5){display:none}
 
@@ -113,6 +113,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
     <div class="mrow"><div><b>💬 Ατάκες αναμονής</b><div class="muted">Μέχρι την κλήρωση ο Σπύρος κι ο Ηρακλής κουβεντιάζουν για τα νούμερα της πρόβλεψης.</div></div><button class="btn2" id="mWt">ON</button></div>
     <div class="mrow"><div><b>📋 Ίδιος «τρόπος» με χθες</b><div class="muted">Η πρόβλεψη μοιάζει με τη χθεσινή κλήρωση της ίδιας ώρας: ίδιες επαναλήψεις, μονά/ζυγά, χαμηλά/ψηλά, ζεστά.</div></div><button class="btn2" id="mTpl">ON</button></div>
     <div class="mrow"><div><b>🧲 Μάτσο (κοντινοί αριθμοί)</b><div class="muted">Από τις θέσεις του κουνήματος κρατάει αριθμούς κοντά μεταξύ τους στο ταμπλό, κάθε φορά σε άλλο σημείο.</div></div><button class="btn2" id="mClu">ON</button></div>
+    <div class="mrow"><div><b>✋ Χειροκίνητη (δική μου στήλη)</b><div class="muted">Δεν κουνάνε το κουτί: διαλέγεις μόνος σου τους αριθμούς πάνω στο ταμπλό και τους παρακολουθείς στην επόμενη κλήρωση.</div></div><button class="btn2" id="mMan">OFF</button></div>
     <div class="mrow"><div><b>🎬 Βιντεάκι κουνήματος</b><div class="muted">Ο Σπύρος κι ο Ηρακλής κουνάνε το κουτί σε κανονικό βίντεο.</div></div><button class="btn2" id="mVid">ON</button></div>
     <div class="mrow"><div><b>🤖 Πρόβλεψη: <span id="mAutoLbl">ΑΥΤΟΜΑΤΗ</span></b><div class="muted">ΑΥΤΟΜΑΤΗ: 2 λεπτά μετά από κάθε κλήρωση ο Σπύρος κι ο Ηρακλής κουνάνε μόνοι τους το κουτί και βγάζουν νέα πρόβλεψη. ΧΕΙΡΟΚΙΝΗΤΗ: μόνο όταν πατήσεις πάνω τους.</div></div><button class="btn2" id="mAuto">ON</button></div><div class="mrow"><div><b>🟢 2η ευκαιρία στα δελτία</b><div class="muted">Αξιολόγηση μαζί με τη 2η ευκαιρία (1€/κλήρωση).</div></div><button class="btn2" id="mSc">ΟΧΙ</button></div>
     <div class="mrow"><div><b>🔴 ΚΙΝΟ Bonus στα δελτία</b><div class="muted">Αν ο αριθμός Bonus είναι στους αριθμούς που πέτυχες, πληρώνει ο πίνακας ΚΙΝΟ Bonus (1€/κλήρωση). Δεν παίζεται μαζί με τη 2η ευκαιρία.</div></div><button class="btn2" id="mKb">ΟΧΙ</button></div>
@@ -153,6 +154,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
       <button class="btn" id="boxGo" disabled style="display:none">📦 Κούνα το!</button><div class="tapHint">👆 Πάτα πάνω στον <b>Σπύρο</b> ή στον <b>Ηρακλή</b> για να κουνήσουν το κουτί!</div><button class="btn2" id="boxPred" disabled title="Δείξε ξανά τους αριθμούς του τελευταίου κουνήματος">🔮 Δείτε την τελευταία πρόβλεψη</button>
       <label class="muted" style="font-size:14px">Πόσους: <select id="boxN"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option selected>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option></select></label>
     </div>
+    <div id="manBar" style="display:none;text-align:center;margin:6px 0"><span class="muted" style="font-size:14px">✋ Πάτα πάνω στους αριθμούς του ταμπλό (έως 12) · επιλεγμένοι: <b id="manCnt">0</b></span><div style="margin-top:6px"><button class="btn" id="manGo" disabled>✅ Αυτή είναι η στήλη μου</button> <button class="btn2" id="manClr">🗑️ Καθαρισμός</button></div></div>
     <div class="nav" id="navBar"><button data-nv="-10">⏪ 10</button><button data-nv="-1">◀</button><button data-nv="live" id="navLive" class="lv">🟢 LIVE</button><button data-nv="1">▶</button><button data-nv="10">10 ⏩</button></div>
     <div id="boxHd"></div>
     <div id="boxWrap" style="display:flex;align-items:center;justify-content:center"><video id="shakeVid" muted playsinline preload="auto" poster="vid/shake1.jpg"><source src="vid/shake1.mp4?v=1" type="video/mp4"><source src="vid/shake1.webm?v=1" type="video/webm"></video><div class="bxGuy" id="bxGuyL"></div><div id="boxFrame" style="position:relative;flex:1;min-width:0;max-width:480px;margin:0 clamp(9px,2.4vw,16px)"><div class="bxHdl bxHdlL"></div><div class="bxHdl bxHdlR"></div><div id="boxBox" style="position:relative;width:100%;aspect-ratio:10/8;background:#1e293b;border:3px solid #a16207;border-radius:10px;overflow:hidden"></div></div><div class="bxGuy bxR" id="bxGuyR"></div></div>
@@ -325,7 +327,7 @@ function start(){ var box = $('boxBox'); box.innerHTML = grid(); var balls = {},
   var ago = view && window.__lastId ? (window.__lastId - last.id) : 0;
   navUpd();
   $('boxHd').innerHTML = (view ? '⏪ Κλήρωση #'+last.id+' · '+dmy(last.t)+' '+hm(last.t)+'<div class="muted" style="font-size:12px;font-weight:400">πριν '+ago+' '+(ago===1?'κλήρωση':'κληρώσεις')+'</div>' : '🟢 LIVE · Τελευταία κλήρωση #'+last.id+' · '+dmy(last.t)+' '+hm(last.t))+'<div class="muted" style="font-size:12px;font-weight:400;margin-top:2px">🟡 20 αριθμοί'+(last.b?' · 🔴 ΚΙΝΟ Bonus: <b style="color:#f87171">'+last.b+'</b>':'')+((last.sc||[]).length?' · 🟢 2η ευκαιρία: <b style="color:#4ade80">'+last.sc.join(' ')+'</b>':'')+'</div>';
-  return balls; }
+  try{ manRender(); }catch(e){} return balls; }
 async function load(){
   try{
     var r = await fetch(API+'?_='+Date.now(), {cache:'no-store'}); if(!r.ok) throw new Error(r.status);
@@ -335,13 +337,13 @@ async function load(){
     var hadPrev = !!last, isNew = !last || last.id!==d.id; last = d; window.__lastId = d.id; NAV[d.id] = d; navUpd(); $('boxGo').disabled = false; if(isNew) tkCheck();
     $('lastInfo').textContent = 'Τελευταία κλήρωση #'+d.id+' · '+hm(d.t);
     if(isNew){ predEval(); setTimeout(alogRender, 1500); dayLoad(d); dayLoad({id:d.id-287, t:d.t-86400000+300000}); }
-    if(!busy && isNew && !view){ shownId = d.id; out = []; if(hadPrev) newDrawShow(d); else start(); predMark(); $('boxTxt').textContent = 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
+    if(!busy && isNew && !view){ shownId = d.id; out = []; if(hadPrev) newDrawShow(d); else start(); predMark(); $('boxTxt').textContent = MAN_ON ? '✋ Διάλεξε τους αριθμούς σου στο ταμπλό' : 'Πάτα «📦 Κούνα το!»'; $('boxRes').innerHTML = ''; }
   }catch(e){ if(!last){ $('lastInfo').textContent = 'Δεν φόρτωσε η κλήρωση — ξαναδοκιμάζω…'; $('boxBox').innerHTML = grid(); } }
 }
 $('boxN').value = lsGet('kbx_n') || '12'; $('boxN').addEventListener('change', function(){ lsSet('kbx_n', this.value); boxNApply(+this.value); });
 /* Αλλαγή «Πόσους» ενώ υπάρχει πρόβλεψη που δεν έχει κριθεί ακόμα: προσαρμόζεται αμέσως.
    Λιγότεροι → κρατάμε τις πρώτες N κινήσεις (ό,τι θα έβγαζε το ίδιο κούνημα με N). Περισσότεροι → ξανακουνάνε το κουτί. */
-function boxNApply(N){ if(!PRED || !last || PRED.id < last.id || !N) return;
+function boxNApply(N){ if(MAN_ON || (PRED && PRED.man)) return; if(!PRED || !last || PRED.id < last.id || !N) return;
   if(N < PRED.moves.length){ PRED.moves = PRED.moves.slice(0, N); var st = {stay:0, l:0, r:0, u:0, d:0, ul:0, ur:0, dl:0, dr:0};
     PRED.moves.forEach(function(m){ var dr = Math.floor((m[1]-1)/10)-Math.floor((m[0]-1)/10), dc = (m[1]-1)%10-(m[0]-1)%10, k = (dr<0?'u':(dr>0?'d':''))+(dc<0?'l':(dc>0?'r':'')); st[k||'stay']++; });
     PRED.st = st; if(PRED.pull && PRED.pull.top){ var keep = {}; PRED.moves.forEach(function(m){ keep[m[1]] = 1; }); PRED.pull.top = PRED.pull.top.filter(function(t){ return keep[t[0]]; }); }
@@ -378,6 +380,7 @@ function pullSay(w, DC){ var mx = 0; for(var x=1;x<=80;x++) if(DC.c[x] > DC.c[mx
   return PULL_TXT[w][Math.floor(Math.random()*PULL_TXT[w].length)]; }
 var TPL_ON = lsGet('trv_tpl')!=='0';
 var CLU_ON = lsGet('trv_clu')!=='0';
+var MAN_ON = lsGet('trv_man')==='1', MANSEL = [];
 /* βάρος επαναλήψεων: ~40% των μπιλιών μένουν στη θέση τους (επανάληψη από την τελευταία κλήρωση), και ο «τρόπος» της χθεσινής ζητάει τουλάχιστον 35% */
 var REP_W = 2/3, REP_MIN = 0.35;
 function drawNums(id){ for(var k in DAYS){ var m = DAYS[k].m; if(m && m[id]) return m[id]; } if(DR[id]) return DR[id][1]; if(NAV[id]) return NAV[id].arr; if(last && last.id===id) return last.arr; return null; }
@@ -399,7 +402,7 @@ function tplLine(P){ var u = P.tpl; if(!u) return ''; var y = u.y, k = u.k, pc =
 function pullLine(P){ var u = P.pull; if(!u) return ''; if(!u.n) return '<div class="pull">🕐 Δεν βρέθηκαν ακόμα στοιχεία της ημέρας — κουνήθηκε χωρίς τράβηγμα.</div>';
   return '<div class="pull">🕐 '+u.hm+' · '+(u.w==='hot' ? '🔥' : '❄️')+' Κέρδισε ο <b>'+((u.who||(u.w==='hot'?'S':'I'))==='S' ? 'Σπύρος' : 'Ηρακλής')+'</b> — το κουτί τράβηξε προς τους '+(u.w==='hot' ? '<b class="hot">ζεστούς</b>' : '<b class="cold">κρύους</b>')+
     ' της ημέρας <span class="muted">('+u.n+' κληρώσεις σήμερα · ένταση '+Math.round(100*u.b/PULL_MAX)+'%)</span>'+(u.top && u.top.length ? '<br>'+u.top.map(function(t){ return '<b>'+t[0]+'</b> <span class="muted">('+t[1]+'×)</span>'; }).join(' · ') : '')+'</div>'; }
-$('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; var last = cur();
+$('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; if(MAN_ON){ manNudge(); return; } var last = cur();
   var v = +$('boxN').value || 12, src = last.arr.concat(last.sc||[]);
   for(var i=src.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = src[i]; src[i] = src[j]; src[j] = t; }
   var DC = dayCnt(last), PW = 'hot', PWHO = Math.random() < 0.5 ? 'S' : 'I', PS = PW==='hot' ? 1 : -1, PB = PULL_MAX*Math.max(0.4, Math.min(1, DC.n/60)), DE = DC.n*0.25, DS = Math.max(1, Math.sqrt(DC.n*0.1875)); if(DC.n < 6) PB = 0; var HZ = function(n){ return Math.max(-1.5, Math.min(1.2, (DC.c[n]-DE)/DS)); }; /* καυτά και χλιαρά παίρνουν σχεδόν ίδιο βάρος, τα κρύα λιγότερο */ dayLoad(last);
@@ -508,7 +511,7 @@ function wtPre(){ // μετά την κλήρωση, μέχρι να κουνή�
   var a = Math.random()<.5 ? $('bxGuyL') : $('bxGuyR'), b = a===$('bxGuyL') ? $('bxGuyR') : $('bxGuyL');
   bxSay(a, f(L[0])); if(L[1]) setTimeout(function(){ bxSay(b, f(L[1])); }, 1800); setTimeout(function(){ if(!busy){ bxSay(a, ''); bxSay(b, ''); } }, 8000); }
 function wtTalk(){ if(!WT_ON || busy || WAIT || document.hidden || !last) return;
-  if(!PRED || PRED.id < last.id){ if(Date.now() - WT_LAST < 14000) return; var vv = $('shakeVid'); if(vv && vv.classList.contains('on')) return; if(Date.now() - (window.SCENE_END||0) < 7000) return; WT_LAST = Date.now(); wtPre(); return; }
+  if(!PRED || PRED.id < last.id){ if(Date.now() - WT_LAST < 14000) return; var vv = $('shakeVid'); if(vv && vv.classList.contains('on')) return; if(Date.now() - (window.SCENE_END||0) < 7000) return; WT_LAST = Date.now(); if(MAN_ON){ if(Math.random() < 0.35) manNudge(); return; } wtPre(); return; }
   var nt = NEXT ? NEXT.t : last.t + 300000, ms = nt - Date.now(); if(ms < 20000 || Date.now() - WT_LAST < 15000) return;
   var v = $('shakeVid'); if(v && v.classList.contains('on')) return;
   var nums = PRED.moves.map(function(m){ return m[1]; }); if(!nums.length) return; WT_LAST = Date.now();
@@ -544,8 +547,8 @@ function alogRender(){ var el = $('alog'); if(!el) return; var L = alogLoad(); l
   $('alogList').innerHTML = '<table class="dr">'+rows+'</table><div class="muted" style="font-size:11px;margin-top:4px">Σβήνει αυτόματα στις 00:00.</div>'; }
 function predText(P, replay){
   out = P.moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
-    $('boxHd').textContent = (replay ? '🔮 Η τελευταία πρόβλεψη: ' : '🎲 Οι ')+out.length+' αριθμοί'+(replay?'':' σου')+' για την κλήρωση των '+hm(P.t+300000)+' · #'+(P.id+1);
-    $('boxTxt').innerHTML = '<details class="bxInfo"><summary>ℹ️ Λεπτομέρειες</summary>'+pullLine(P)+tplLine(P)+'<div class="pull">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇ · '+(P.st.ul||0)+'↖ · '+(P.st.ur||0)+'↗ · '+(P.st.dl||0)+'↙ · '+(P.st.dr||0)+'↘  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</div></details>';
+    $('boxHd').textContent = P.man ? '✋ Η στήλη σου: '+out.length+' αριθμοί για την κλήρωση των '+hm(P.t+300000)+' · #'+(P.id+1) : (replay ? '🔮 Η τελευταία πρόβλεψη: ' : '🎲 Οι ')+out.length+' αριθμοί'+(replay?'':' σου')+' για την κλήρωση των '+hm(P.t+300000)+' · #'+(P.id+1);
+    $('boxTxt').innerHTML = P.man ? '' : '<details class="bxInfo"><summary>ℹ️ Λεπτομέρειες</summary>'+pullLine(P)+tplLine(P)+'<div class="pull">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇ · '+(P.st.ul||0)+'↖ · '+(P.st.ur||0)+'↗ · '+(P.st.dl||0)+'↙ · '+(P.st.dr||0)+'↘  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</div></details>';
     $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'')+
       '<div class="add">'+(out.length>12 ? '<span class="muted" style="font-size:12px">Το δελτίο ΚΙΝΟ παίρνει έως 12 αριθμούς — διάλεξε «Πόσους» έως 12 για να το παρακολουθήσεις.</span>' :
       '<label class="muted" style="font-size:13px">για <select id="tkN">'+(function(){ var gap = (last && P.id < last.id) ? Math.min(last.id - P.id, 300) : 0, o = '';
@@ -706,7 +709,7 @@ tkRender();
 function cdTick(){ var nt = NEXT ? NEXT.t : (last ? last.t + 300000 : 0); if(!nt) return;
   var ms = nt - Date.now(), w = $('pbar'), st0 = last ? last.t : nt - 300000, tot = Math.max(60000, nt - st0);
   /* 🤖 2 λεπτά μετά από κάθε κλήρωση ο Σπύρος κι ο Ηρακλής κουνάνε μόνοι τους το κουτί → νέα πρόβλεψη (αν δεν έχει ήδη γίνει από αυτή την κλήρωση) */
-  if(AUTO && last && AUTOD !== last.id && (!PRED || PRED.id < last.id) && Date.now() - last.t >= 120000 && !busy && !WAIT && (!NEXT || NEXT.id <= last.id || NEXT.t - Date.now() > 15000)){
+  if(!MAN_ON && AUTO && last && AUTOD !== last.id && (!PRED || PRED.id < last.id) && Date.now() - last.t >= 120000 && !busy && !WAIT && (!NEXT || NEXT.id <= last.id || NEXT.t - Date.now() > 15000)){
     AUTOD = last.id; if(view){ view = null; out = []; start(); navUpd(); } $('boxGo').disabled = false; AUTONOW = true; $('boxGo').click(); AUTONOW = false; }
   if(ms > 0){ $('pbI').style.width = Math.min(100, Math.max(0, 100*(1 - ms/tot))).toFixed(2)+'%'; w.classList.remove('now'); var m = Math.floor(ms/60000), sx = Math.floor(ms/1000)%60; w.title = 'Επόμενη κλήρωση σε '+m+':'+(sx<10?'0':'')+sx; }
   else { w.classList.add('now'); w.title = 'Η κλήρωση γίνεται τώρα'; if(ms < -10000 && !WAIT && !view && !busy && !document.hidden && last && NEXT && NEXT.id > last.id && WAITED !== NEXT.id){ WAITED = NEXT.id; waitStart(); } if(Date.now() - cdPoll > 2000){ cdPoll = Date.now(); load(); } } }
@@ -894,6 +897,24 @@ $('fbForm').addEventListener('submit', async function(e){ e.preventDefault(); va
 (function(){ function u(){ $('mAuto').textContent = AUTO ? 'ON' : 'OFF'; $('mAuto').style.borderColor = AUTO ? '#22c55e' : ''; $('mAutoLbl').textContent = AUTO ? 'ΑΥΤΟΜΑΤΗ' : 'ΧΕΙΡΟΚΙΝΗΤΗ'; }
   $('mAuto').addEventListener('click', function(){ AUTO = !AUTO; lsSet('trv_auto2', AUTO ? '1' : '0'); if(AUTO && last && PRED && PRED.id >= last.id) AUTOD = last.id; u(); }); u(); })();
 (function(){ function u(){ $('mVid').textContent = VID_ON ? 'ON' : 'OFF'; $('mVid').style.borderColor = VID_ON ? '#22c55e' : ''; } $('mVid').addEventListener('click', function(){ VID_ON = !VID_ON; lsSet('trv_vid', VID_ON?'1':'0'); u(); }); u(); })();
+/* ✋ Χειροκίνητη λειτουργία: ο χρήστης διαλέγει τη δική του στήλη πάνω στο ταμπλό */
+var MAN_SAY = ['Σήμερα διαλέγεις εσύ! Πάτα τους αριθμούς σου στο ταμπλό!','Εμείς ξεκουραζόμαστε, εσύ διαλέγεις!','Δική σου η στήλη, δική σου και η δόξα!','Πάτα τα νούμερα που νιώθεις και μετά «Αυτή είναι η στήλη μου»!'];
+function manNudge(){ var a = Math.random()<.5 ? $('bxGuyL') : $('bxGuyR'); bxSay(a, MAN_SAY[Math.floor(Math.random()*MAN_SAY.length)]); setTimeout(function(){ if(!busy) bxSay(a, ''); }, 4500); }
+function manRender(){ var box = $('boxBox'); if(!box) return; Array.prototype.forEach.call(box.querySelectorAll('.mSel'), function(e){ e.remove(); });
+  var SH = MANSEL, fx = false; if(MAN_ON && !SH.length && PRED && PRED.man && last && PRED.id === last.id && !view){ SH = PRED.moves.map(function(m){ return m[1]; }); fx = true; }
+  if(MAN_ON) SH.forEach(function(n){ var r = Math.floor((n-1)/10), c = (n-1)%10, e = document.createElement('div'); e.className = 'mSel'+(fx ? ' mFix' : ''); e.style.left = (c*10)+'%'; e.style.top = (r*12.5)+'%'; e.innerHTML = '<span>'+n+'</span>'; box.appendChild(e); });
+  if($('manCnt')) $('manCnt').textContent = MANSEL.length; if($('manGo')) $('manGo').disabled = !MANSEL.length || !last; }
+function manUI(){ $('manBar').style.display = MAN_ON ? '' : 'none'; var th = document.querySelector('.tapHint'); if(th) th.innerHTML = MAN_ON ? '✋ <b>Χειροκίνητη:</b> διάλεξε τη δική σου στήλη πάνω στο ταμπλό' : '👆 Πάτα πάνω στον <b>Σπύρο</b> ή στον <b>Ηρακλή</b> για να κουνήσουν το κουτί!';
+  var nl = $('boxN') && $('boxN').parentNode; if(nl) nl.style.display = MAN_ON ? 'none' : ''; $('boxBox').style.cursor = MAN_ON ? 'pointer' : ''; manRender(); }
+$('boxBox').addEventListener('click', function(ev){ if(!MAN_ON || busy || view) return; var r = this.getBoundingClientRect(), c = Math.floor((ev.clientX - r.left)/r.width*10), w = Math.floor((ev.clientY - r.top)/r.height*8);
+  if(c<0||c>9||w<0||w>7) return; var n = w*10+c+1, i = MANSEL.indexOf(n); if(i >= 0) MANSEL.splice(i,1); else if(MANSEL.length < 12) MANSEL.push(n); else { bxSay($('bxGuyR'), 'Ως 12 αριθμούς παίρνει το δελτίο!'); setTimeout(function(){ bxSay($('bxGuyR'), ''); }, 3000); } manRender(); });
+$('manClr').addEventListener('click', function(){ MANSEL = []; manRender(); });
+$('manGo').addEventListener('click', function(){ if(!MAN_ON || busy || !last || !MANSEL.length) return; if(view){ view = null; out = []; start(); navUpd(); }
+  var k = MANSEL.length, nums = MANSEL.slice().sort(function(a,b){ return a-b; });
+  PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:nums.map(function(n){ return [n, n]; }), st:{stay:k, l:0, r:0, u:0, d:0, ul:0, ur:0, dl:0, dr:0}, man:true};
+  lsSet('trv_pred', JSON.stringify(PRED)); MANSEL = []; WT_LAST = Date.now() - 15000 + 6000; predText(PRED, false); $('boxPred').disabled = false; predEval(); manRender();
+  var a = Math.random()<.5 ? $('bxGuyL') : $('bxGuyR'); bxSay(a, ['Καλή στήλη! Τώρα περιμένουμε την κλήρωση!','Τα κρατάμε! Σημείωσέ τα και στο δελτίο σου!','Αυτά είναι! Καλή τύχη!'][Math.floor(Math.random()*3)]); setTimeout(function(){ if(!busy) bxSay(a, ''); }, 5000); });
+(function(){ function u(){ $('mMan').textContent = MAN_ON ? 'ON' : 'OFF'; $('mMan').style.borderColor = MAN_ON ? '#22c55e' : ''; manUI(); } $('mMan').addEventListener('click', function(){ MAN_ON = !MAN_ON; MANSEL = []; lsSet('trv_man', MAN_ON?'1':'0'); u(); }); u(); })();
 (function(){ function u(){ $('mClu').textContent = CLU_ON ? 'ON' : 'OFF'; $('mClu').style.borderColor = CLU_ON ? '#22c55e' : ''; } $('mClu').addEventListener('click', function(){ CLU_ON = !CLU_ON; lsSet('trv_clu', CLU_ON?'1':'0'); u(); }); u(); })();
 (function(){ function u(){ $('mTpl').textContent = TPL_ON ? 'ON' : 'OFF'; $('mTpl').style.borderColor = TPL_ON ? '#22c55e' : ''; } $('mTpl').addEventListener('click', function(){ TPL_ON = !TPL_ON; lsSet('trv_tpl', TPL_ON?'1':'0'); u(); }); u(); })();
 (function(){ function u(){ $('mWt').textContent = WT_ON ? 'ON' : 'OFF'; $('mWt').style.borderColor = WT_ON ? '#22c55e' : ''; } $('mWt').addEventListener('click', function(){ WT_ON = !WT_ON; lsSet('trv_wtalk', WT_ON?'1':'0'); u(); }); u(); })();
