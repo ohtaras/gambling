@@ -22,6 +22,9 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:5px 4px;b
 <div class="muted">Δοκιμαστική σελίδα · <b>ψεύτικα χρήματα</b> · 1 στήλη των 0,50€ σε κάθε κλήρωση</div>
 <div class="card warn">Σε κάθε κλήρωση η σελίδα κοιτάει <b>1.350 στρατηγικές</b> (στήλες 1–12 αριθμών με κόκκινους/πορτοκαλί/μπλε των 3 τελευταίων κληρώσεων, σε 3 σειρές επιλογής) και <b>παίζει «ψεύτικα» αυτή που πάει καλύτερα σήμερα μέχρι εκείνη τη στιγμή</b>. Το αποτέλεσμα μετριέται τίμια: η επιλογή γίνεται πάντα <b>πριν</b> από την κλήρωση που παίζει.</div>
 <div class="card"><h2>🎯 Για την επόμενη κλήρωση <span id="nxLbl" class="muted"></span></h2><div id="nx">⏳ Φόρτωση σημερινών κληρώσεων…</div></div>
+<div class="card" style="border-color:#8b5cf6"><h2>4️⃣ Τετράδες: οι καλύτερες για την επόμενη κλήρωση <span id="nx4Lbl" class="muted"></span></h2><div id="nx4"></div>
+<h2 style="margin-top:14px">📒 Αν έπαιζες σήμερα κάθε φορά την καλύτερη τετράδα</h2><div class="kpi" id="kpi4"></div><div class="scroll" style="margin-top:10px"><table id="log4"></table></div>
+<h2 style="margin-top:14px">🏆 Όλες οι στρατηγικές τετράδων σήμερα <span class="muted" style="font-weight:400">(εκ των υστέρων)</span></h2><div class="scroll"><table id="top4"></table></div></div>
 <div class="card"><h2>📒 Αν ακολουθούσες σήμερα κάθε φορά την καλύτερη</h2><div class="kpi" id="kpi"></div><div class="scroll" style="margin-top:10px"><table id="log"></table></div></div>
 <div class="card"><h2>🏆 Οι καλύτερες στρατηγικές της σημερινής μέρας <span class="muted" style="font-weight:400">(εκ των υστέρων)</span></h2><div class="scroll"><table id="top"></table></div>
 <div class="muted" style="font-size:12px;margin-top:6px">Αυτός ο πίνακας κοιτάει προς τα πίσω: δείχνει ποια θα ήταν η καλύτερη αν την ήξερες από το πρωί. Το «📒» από πάνω είναι αυτό που θα γινόταν στην πράξη.</div></div>
@@ -55,13 +58,15 @@ function run(){
   var today=fmtD.format(new Date()); var T=DR.filter(function(d){ return fmtD.format(new Date(d.t))===today; });
   var i0=DR.indexOf(T[0]); if(i0<3) i0=3;
   var net=STR.map(function(){ return 0; }), pl=STR.map(function(){ return 0; }), won=STR.map(function(){ return 0; });
-  var log=[], st=0, wn=0, plays=0, wins=0, bestW=0;
+  var log=[], st=0, wn=0, plays=0, wins=0, bestW=0, hit=STR.map(function(){ return 0; }), log4=[], st4=0, wn4=0, pl4=0, ws4=0;
   for(var i=i0;i<DR.length;i++){
     // επιλογή ΠΡΙΝ από την κλήρωση i: καλύτερος με δεδομένα μέχρι i-1
     var C=classes(i-1), bi=-1; for(var s=0;s<STR.length;s++){ if(pl[s]<10) continue; if(bi<0||net[s]>net[bi]||(net[s]===net[bi]&&won[s]>won[bi])) bi=s; }
     if(bi>=0 && i-1>=i0){ var col=colOf(STR[bi],C); if(col){ var h=col.filter(function(x){ return DR[i].set.has(x); }).length, p=PAYS[STR[bi].K][h]||0; st+=0.5; wn+=p; plays++; if(p>0) wins++; if(p>bestW) bestW=p; log.push({d:DR[i],s:STR[bi],col:col,C:C,h:h,p:p}); } }
+    var b4=-1; for(var s4=0;s4<STR.length;s4++){ if(STR[s4].K!==4||pl[s4]<10) continue; if(b4<0||net[s4]>net[b4]||(net[s4]===net[b4]&&hit[s4]>hit[b4])) b4=s4; }
+    if(b4>=0){ var col4=colOf(STR[b4],C); if(col4){ var h4=col4.filter(function(x){ return DR[i].set.has(x); }).length, p4=PAYS[4][h4]||0; st4+=0.5; wn4+=p4; pl4++; if(p4>0) ws4++; log4.push({d:DR[i],s:STR[b4],col:col4,C:C,h:h4,p:p4}); } }
     // ενημέρωση όλων των στρατηγικών με την κλήρωση i (στήλη από i-1)
-    if(i-1>=i0-0) for(var s2=0;s2<STR.length;s2++){ var c2=colOf(STR[s2],C); if(!c2) continue; var h2=0; for(var q=0;q<c2.length;q++) if(DR[i].set.has(c2[q])) h2++; var p2=PAYS[STR[s2].K][h2]||0; pl[s2]++; won[s2]+=p2; net[s2]+=p2-0.5; }
+    if(i-1>=i0-0) for(var s2=0;s2<STR.length;s2++){ var c2=colOf(STR[s2],C); if(!c2) continue; var h2=0; for(var q=0;q<c2.length;q++) if(DR[i].set.has(c2[q])) h2++; var p2=PAYS[STR[s2].K][h2]||0; if(p2>0) hit[s2]++; pl[s2]++; won[s2]+=p2; net[s2]+=p2-0.5; }
   }
   // επόμενη
   var L=DR.length-1, Cn=classes(L), bn=-1; for(var s3=0;s3<STR.length;s3++){ if(pl[s3]<10) continue; if(bn<0||net[s3]>net[bn]||(net[s3]===net[bn]&&won[s3]>won[bn])) bn=s3; }
@@ -72,6 +77,12 @@ function run(){
   $('log').innerHTML='<tr><th>Κλήρωση</th><th>Στρατηγική που έπαιξε</th><th>Αποτέλεσμα</th></tr>'+log.slice(-30).reverse().map(function(x){ return '<tr><td>'+hm(x.d.t)+'<br><span class="muted">#'+x.d.id+'</span></td><td>'+sname(x.s)+chips(x.col,x.C,x.d.set)+'</td><td><b>'+x.h+'/'+x.s.K+'</b><br>'+(x.p?'<b class="pos">'+eur(x.p)+'</b>':'<span class="muted">0€</span>')+'</td></tr>'; }).join('');
   var idx=STR.map(function(_,k){ return k; }).filter(function(k){ return pl[k]>=10; }).sort(function(a,b){ return net[b]-net[a]; }).slice(0,10);
   $('top').innerHTML='<tr><th>#</th><th>Στρατηγική</th><th>Παιχνίδια</th><th>Ποντ. → Κέρδη</th><th>Καθαρά</th></tr>'+idx.map(function(k,j){ return '<tr><td>'+(j+1)+'</td><td>'+sname(STR[k])+'</td><td>'+pl[k]+'</td><td>'+eur(pl[k]*0.5)+' → '+eur(won[k])+'</td><td class="'+(net[k]>=0?'pos':'neg')+'"><b>'+(net[k]>=0?'+':'')+eur(net[k])+'</b></td></tr>'; }).join('');
+  var I4=STR.map(function(_,k){ return k; }).filter(function(k){ return STR[k].K===4 && pl[k]>=10; }).sort(function(a,b){ return net[b]-net[a] || hit[b]-hit[a]; });
+  $('nx4Lbl').textContent='· '+hm(DR[L].t+300000)+' (#'+(DR[L].id+1)+')';
+  $('nx4').innerHTML = I4.length ? I4.slice(0,3).map(function(k,j){ var c4=colOf(STR[k],Cn); return '<div style="margin:8px 0;padding-bottom:6px;border-bottom:1px solid var(--line)">'+['🥇','🥈','🥉'][j]+' '+sname(STR[k])+'<div class="muted" style="font-size:13px">σήμερα: '+pl[k]+' παιχνίδια · κέρδισε κάτι '+hit[k]+' φορές ('+Math.round(100*hit[k]/pl[k])+'%) · '+eur(pl[k]*0.5)+' → '+eur(won[k])+' ('+(won[k]/(pl[k]*0.5)*100).toFixed(0)+'%)</div>'+(c4?chips(c4,Cn):'<span class="muted">δεν υπάρχουν αρκετοί αριθμοί αυτού του χρώματος τώρα</span>')+'</div>'; }).join('')+'<div class="muted" style="font-size:12px">Τετράδα: 2/4 = 0,50€ · 3/4 = 2€ · 4/4 = 50€ (με 0,50€). Κάθε τετράδα κερδίζει κάτι κατά μέσο όρο 1 στις 4 κληρώσεις.</div>' : '<span class="muted">Χρειάζονται τουλάχιστον 13 κληρώσεις της μέρας.</span>';
+  var n4=wn4-st4; $('kpi4').innerHTML='<div>Παιχνίδια<b>'+pl4+'</b></div><div>Ποντάρισμα<b>'+eur(st4)+'</b></div><div>Κέρδη<b>'+eur(wn4)+'</b></div><div>Καθαρά<b class="'+(n4>=0?'pos':'neg')+'">'+(n4>=0?'+':'')+eur(n4)+'</b></div><div>Απόδοση<b>'+(st4?(wn4/st4*100).toFixed(1).replace('.',','):'—')+'%</b></div><div>Κέρδισε κάτι<b>'+ws4+' φορές'+(pl4?' ('+Math.round(100*ws4/pl4)+'%)':'')+'</b></div>';
+  $('log4').innerHTML='<tr><th>Κλήρωση</th><th>Τετράδα που έπαιξε</th><th>Αποτέλεσμα</th></tr>'+log4.slice(-15).reverse().map(function(x){ return '<tr><td>'+hm(x.d.t)+'<br><span class="muted">#'+x.d.id+'</span></td><td>'+sname(x.s)+chips(x.col,x.C,x.d.set)+'</td><td><b>'+x.h+'/4</b><br>'+(x.p?'<b class="pos">'+eur(x.p)+'</b>':'<span class="muted">0€</span>')+'</td></tr>'; }).join('');
+  $('top4').innerHTML='<tr><th>#</th><th>Στρατηγική</th><th>Κέρδισε κάτι</th><th>Ποντ. → Κέρδη</th><th>Καθαρά</th></tr>'+I4.slice(0,15).map(function(k,j){ return '<tr><td>'+(j+1)+'</td><td>'+sname(STR[k])+'</td><td>'+hit[k]+'/'+pl[k]+' ('+Math.round(100*hit[k]/pl[k])+'%)</td><td>'+eur(pl[k]*0.5)+' → '+eur(won[k])+'</td><td class="'+(net[k]>=0?'pos':'neg')+'"><b>'+(net[k]>=0?'+':'')+eur(net[k])+'</b></td></tr>'; }).join('');
   $('foot').textContent='Σημερινές κληρώσεις: '+T.length+' · τελευταία '+hm(DR[L].t)+' (#'+DR[L].id+') · ανανέωση κάθε 30″';
 }
 async function load(){
