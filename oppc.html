@@ -418,7 +418,7 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; if(M
   function shakeAll(){ var S = shuf(last.arr).concat(shuf(last.sc||[]));
     var used = {}, mv = [];
     for(var q=0; q<S.length; q++){ var from = S[q], row = Math.floor((from-1)/10), col = (from-1)%10;
-      var cand = [], wsum = 0; for(var m=0;m<MV.length;m++){ var r2 = row+MV[m][1], c2 = col+MV[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; var w = Math.exp(PB*HZ(to)); cand.push([MV[m][0], to, w]); wsum += w; }
+      var cand = [], wsum = 0; for(var m=0;m<MV.length;m++){ var r2 = row+MV[m][1], c2 = col+MV[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; var w = q >= NM ? 1 : Math.exp(PB*HZ(to));  /* τα πράσινα (2η ευκαιρία) δεν επηρεάζονται από τη θερμοκρασία */ cand.push([MV[m][0], to, w]); wsum += w; }
       /* επανάληψη: όπως στην πραγματικότητα, κάθε αριθμός της κλήρωσης ξαναβγαίνει ~25% → το «μένει» ζυγίζει ώστε να είναι ~1 στις 4 */
       var c0 = cand.filter(function(c){ return c[0]==='stay'; })[0]; if(c0 && cand.length > 1){ var k = (cand.length-1)*REP_W; wsum += c0[2]*(k-1); c0[2] *= k; }
       if(!cand.length) continue; var rr = Math.random()*wsum, pk = cand[cand.length-1]; for(var z=0; z<cand.length; z++){ rr -= cand[z][2]; if(rr <= 0){ pk = cand[z]; break; } }
@@ -948,7 +948,7 @@ function heatStrip(){ var el = $('heatStrip'), d = cur(); if(!el) return; if(!d 
   var H = legHeat(d); if(!H){ el.innerHTML = ''; return; } var tot = {hh:0,hw:0,hc:0,hb:0}; for(var n=1;n<=80;n++) tot[H(n).k]++;
   var f = function(k, ic){ var e = (tot[k]/4).toFixed(1).replace('.',','); return '<span title="'+tot[k]+' από τους 80 είναι τώρα αυτού του χρώματος · με 25% αναμένεται να βγουν '+e+' στην επόμενη κλήρωση">'+ic+'<b>'+tot[k]+'</b><i>→'+e+'</i></span>'; };
   el.innerHTML = '<span class="hsT">80:</span>'+f('hh','🔴')+f('hw','🟠')+f('hc','🔵')+(tot.hb ? f('hb','🟣') : ''); }
-function heatBalls(){ try{ heatGrid(); heatStrip(); }catch(e){} var H = legHeat(cur()); Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb'), function(b){ b.classList.remove('hh','hw','hc','hb'); if(!H || !HEAT_ON) return; var v = +b.textContent; if(v >= 1 && v <= 80) b.classList.add(H(v).k); }); }
+function heatBalls(){ try{ heatGrid(); heatStrip(); }catch(e){} var H = legHeat(cur()); Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb'), function(b){ b.classList.remove('hh','hw','hc','hb'); if(!H || !HEAT_ON || b.classList.contains('sc')) return; var v = +b.textContent; if(v >= 1 && v <= 80) b.classList.add(H(v).k); }); }
 var HEAT_ON = lsGet('trv_heatb')!=='0'; setInterval(function(){ try{ heatBalls(); }catch(e){} }, 1500);
 function legChips(L, A, H){ return '<div class="legNums">'+L.n.map(function(v){ var h = H ? H(v) : null; return '<span class="'+(A && A[v] ? 'on ' : '')+(h ? h.k : '')+'"'+(h ? ' title="'+h.t+'"' : '')+'>'+v+'</span>'; }).join('')+'</div>'; }
 function legKeyLine(H){ return H ? (HEAT_B === '3' ? '<div class="legKey">Στις 5 τελευταίες κληρώσεις: <span class="hh">καυτός</span> 3+ φορές · <span class="hw">χλιαρός</span> 2 φορές · <span class="hc">κρύος</span> 0–1 · <span class="hb">καμένος</span> βγήκε και στις 4 τελευταίες στη σειρά</div>' : '<div class="legKey"><span class="hh">καυτός</span> ≥33% σήμερα · <span class="hw">χλιαρός</span> 25–33% · <span class="hc">κρύος</span> &lt;25%</div>') : '<div class="legKey muted">Τα χρώματα καυτός/χλιαρός/κρύος εμφανίζονται μετά τις πρώτες 10 κληρώσεις της ημέρας.</div>'; }
