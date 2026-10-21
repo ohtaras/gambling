@@ -117,6 +117,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
     <div class="mrow"><div><b>📜 Στήλες-θρύλοι</b><div class="muted">Οι στήλες (3άρι έως 12άρι) που έχουν βγει ολόκληρες τις περισσότερες φορές σε όλο το ιστορικό, με υπενθύμιση όταν βγαίνουν αρκετά νούμερά τους.</div></div><button class="btn2" id="mLeg">ON</button></div>
     <div class="mrow"><div><b>9️⃣ 9άδα της ημέρας</b><div class="muted">Σε κάθε κλήρωση βρίσκει την 9άδα που έπιασε τα περισσότερα 5+ στις σημερινές κληρώσεις, χωρίς κανένα 8/9 ή 9/9, με καυτά/χλιαρά/κρύα.</div></div><button class="btn2" id="mNine">ON</button></div>
     <div class="mrow"><div><b>🌡️ Καυτός / χλιαρός / κρύος</b><div class="muted">Χρωματιστή γραμμή κάτω από τα νούμερα του κουτιού και των στηλών-θρύλων. Μέτρηση: στις 5 τελευταίες κληρώσεις (με «καμένους» όσους βγήκαν 4 στη σειρά) ή σε όλη τη σημερινή μέρα.</div></div><div style="display:flex;gap:4px"><button class="btn2" id="mHeatB">5 ΚΛΗΡ.</button><button class="btn2" id="mHeat">ON</button></div></div>
+    <div class="mrow"><div><b>🟢 Πράσινα στη θερμοκρασία</b><div class="muted">Αν μετράνε και οι 3 αριθμοί της 2ης ευκαιρίας στο καυτός/χλιαρός/κρύος/καμένος (μπίλιες, στήλες-θρύλοι, ταινία, κούνημα). Εξ ορισμού δεν μετράνε.</div></div><button class="btn2" id="mHeatSc">OFF</button></div>
     <div class="mrow"><div><b>🎬 Βιντεάκι κουνήματος</b><div class="muted">Ο Σπύρος κι ο Ηρακλής κουνάνε το κουτί σε κανονικό βίντεο.</div></div><button class="btn2" id="mVid">ON</button></div>
     <div class="mrow"><div><b>🤖 Πρόβλεψη: <span id="mAutoLbl">ΑΥΤΟΜΑΤΗ</span></b><div class="muted">ΑΥΤΟΜΑΤΗ: 2 λεπτά μετά από κάθε κλήρωση ο Σπύρος κι ο Ηρακλής κουνάνε μόνοι τους το κουτί και βγάζουν νέα πρόβλεψη. ΧΕΙΡΟΚΙΝΗΤΗ: μόνο όταν πατήσεις πάνω τους.</div></div><button class="btn2" id="mAuto">ON</button></div><div class="mrow"><div><b>🟢 2η ευκαιρία στα δελτία</b><div class="muted">Αξιολόγηση μαζί με τη 2η ευκαιρία (1€/κλήρωση).</div></div><button class="btn2" id="mSc">ΟΧΙ</button></div>
     <div class="mrow"><div><b>🔴 ΚΙΝΟ Bonus στα δελτία</b><div class="muted">Αν ο αριθμός Bonus είναι στους αριθμούς που πέτυχες, πληρώνει ο πίνακας ΚΙΝΟ Bonus (1€/κλήρωση). Δεν παίζεται μαζί με τη 2η ευκαιρία.</div></div><button class="btn2" id="mKb">ΟΧΙ</button></div>
@@ -376,6 +377,8 @@ function dayLoad(d){ if(!d) return Promise.resolve(); var A = athDay(d.t), k = A
         (j.content||[]).forEach(function(c){ if(c.drawTime < D.start) D.no[c.drawId] = 1; if(c.drawTime >= D.start && c.winningNumbers && c.winningNumbers.list && c.winningNumbers.list.length===20) { D.m[c.drawId] = c.winningNumbers.list.slice(); D.s = D.s || {}; D.s[c.drawId] = (c.winningNumbers.secondChance||[]).slice(); } }); if(j.last || pg >= (j.totalPages||1)-1) break; } }catch(e){} }
   })().finally(function(){ DAYP[k] = null; });
   return DAYP[k]; }
+var HEAT_SC = lsGet('trv_heatsc')==='1';   /* πράσινα 2ης ευκαιρίας στη θερμοκρασία: OFF εξ ορισμού */
+function dayCntH(d){ var r = dayCnt(d); if(!HEAT_SC) return r; var A = athDay(d.t), D = DAYS[A.key]; if(D && D.s) for(var id in D.s){ if(+id > d.id) continue; (D.s[id]||[]).forEach(function(x){ r.c[x]++; }); } return r; }
 function dayCnt(d){ var A = athDay(d.t), D = DAYS[A.key], c = new Array(81).fill(0), n = 0; if(D) for(var id in D.m){ if(+id > d.id) continue; n++; D.m[id].forEach(function(x){ c[x]++; }); } return {c:c, n:n, hm:A.hm}; }
 var PULL_TXT = {hot:['🔥 Πάμε με τους ζεστούς — τα κρύα τα αφήνουμε για το μνημόσυνο!','🔥 Ό,τι καίει σήμερα, θα κάψει κι άλλο — όπως τα λεφτά μας!','🔥 Ζεστά νούμερα, σαν τον λογαριασμό της ΔΕΗ!','🔥 Κέρδισα! Ζεστά νούμερα, κρύος ιδρώτας!','🔥 Άσε τα κρύα, πεθαμένα είναι!'],
   cold:['❄️ Οι κρύοι χρωστάνε — σαν όλους μας!','❄️ Κέρδισα! Πάμε με όσα άργησαν, σαν τη σύνταξη!','❄️ Τα κρύα θα ξυπνήσουν… κάποτε, σαν τον ΕΦΚΑ!','❄️ Ό,τι δεν βγήκε σήμερα, θα βγει αύριο. Ή μεθαύριο. Ή στην κηδεία μας!','❄️ Τα ζεστά καήκαν — σειρά των κρύων, κρύα σαν τα πόδια της πεθεράς!']};
@@ -410,7 +413,7 @@ function pullLine(P){ var u = P.pull; if(!u) return ''; if(!u.n) return '<div cl
 $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; if(MAN_ON){ manNudge(); return; } var last = cur();
   var v = +$('boxN').value || 12, src = last.arr.concat(last.sc||[]);
   for(var i=src.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = src[i]; src[i] = src[j]; src[j] = t; }
-  var DC = dayCnt(last), PW = 'hot', PWHO = Math.random() < 0.5 ? 'S' : 'I', PS = PW==='hot' ? 1 : -1, PB = PULL_MAX*Math.max(0.4, Math.min(1, DC.n/60)), DE = DC.n*0.25, DS = Math.max(1, Math.sqrt(DC.n*0.1875)); if(DC.n < 6) PB = 0; var HZ = function(n){ return Math.max(-1.5, Math.min(1.2, (DC.c[n]-DE)/DS)); };
+  var DC = dayCntH(last), PW = 'hot', PWHO = Math.random() < 0.5 ? 'S' : 'I', PS = PW==='hot' ? 1 : -1, PB = PULL_MAX*Math.max(0.4, Math.min(1, DC.n/60)), DE = DC.n*0.25, DS = Math.max(1, Math.sqrt(DC.n*0.1875)); if(DC.n < 6) PB = 0; var HZ = function(n){ return Math.max(-1.5, Math.min(1.2, (DC.c[n]-DE)/DS)); };
   if(HEAT_B === '3'){ var HQ = heat5(last); if(HQ){ PB = PULL_MAX; HZ = function(n){ var k = HQ(n); return k === 'hh' ? 1.2 : (k === 'hw' ? 0.8 : -1); }; } }  /* 🌡️ 5 τελευταίες κληρώσεις: καυτός (3+) > χλιαρός (2) > κρύος (0–1) · ο καμένος (4 στη σειρά) αποφεύγεται όπως ο κρύος */ /* καυτά και χλιαρά παίρνουν σχεδόν ίδιο βάρος, τα κρύα λιγότερο */ dayLoad(last);
   var MV = [['stay',0,0],['l',0,-1],['r',0,1],['u',-1,0],['d',1,0],['ul',-1,-1],['ur',-1,1],['dl',1,-1],['dr',1,1]]; /* 9 θέσεις: μένει + 8 γειτονικές (και διαγώνια) */
   function shuf(a){ a = a.slice(); for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
@@ -418,7 +421,7 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; if(M
   function shakeAll(){ var S = shuf(last.arr).concat(shuf(last.sc||[]));
     var used = {}, mv = [];
     for(var q=0; q<S.length; q++){ var from = S[q], row = Math.floor((from-1)/10), col = (from-1)%10;
-      var cand = [], wsum = 0; for(var m=0;m<MV.length;m++){ var r2 = row+MV[m][1], c2 = col+MV[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; var w = q >= NM ? 1 : Math.exp(PB*HZ(to));  /* τα πράσινα (2η ευκαιρία) δεν επηρεάζονται από τη θερμοκρασία */ cand.push([MV[m][0], to, w]); wsum += w; }
+      var cand = [], wsum = 0; for(var m=0;m<MV.length;m++){ var r2 = row+MV[m][1], c2 = col+MV[m][2]; if(r2<0||r2>7||c2<0||c2>9) continue; var to = r2*10+c2+1; if(used[to]) continue; var w = (q >= NM && !HEAT_SC) ? 1 : Math.exp(PB*HZ(to));  /* τα πράσινα (2η ευκαιρία) δεν επηρεάζονται από τη θερμοκρασία */ cand.push([MV[m][0], to, w]); wsum += w; }
       /* επανάληψη: όπως στην πραγματικότητα, κάθε αριθμός της κλήρωσης ξαναβγαίνει ~25% → το «μένει» ζυγίζει ώστε να είναι ~1 στις 4 */
       var c0 = cand.filter(function(c){ return c[0]==='stay'; })[0]; if(c0 && cand.length > 1){ var k = (cand.length-1)*REP_W; wsum += c0[2]*(k-1); c0[2] *= k; }
       if(!cand.length) continue; var rr = Math.random()*wsum, pk = cand[cand.length-1]; for(var z=0; z<cand.length; z++){ rr -= cand[z][2]; if(rr <= 0){ pk = cand[z]; break; } }
@@ -935,12 +938,12 @@ function legHit(L, d){ var X = {}; try{ X = JSON.parse(lsGet('trv_leg_x')||'{}')
 var LEG_OPEN = false;
 var HEAT_B = lsGet('trv_heat')==='day' ? 'day' : '3';
 /* 🌡️ 5 τελευταίες κληρώσεις: 3+ καυτός · 2 χλιαρός · 0–1 κρύος · καμένος = βγήκε και στις 4 τελευταίες στη σειρά (μόλις λείψει μία, ξαναγυρνάει στις κανονικές) */
-function heat5(LS){ if(!LS) return null; var L5 = [0,1,2,3,4].map(function(k){ return drawNums(LS.id-k); }); if(L5.some(function(a){ return !a; })) return null;
+function heat5(LS){ if(!LS) return null; var L5 = [0,1,2,3,4].map(function(k){ var a = drawNums(LS.id-k); if(a && HEAT_SC){ var g = drawSc(LS.id-k); if(g && g.length) a = a.concat(g); } return a; }); if(L5.some(function(a){ return !a; })) return null;
   var c = new Array(81).fill(0), b = new Array(81).fill(0); L5.forEach(function(a, k){ a.forEach(function(x){ c[x]++; if(k < 4) b[x]++; }); });
   var f = function(v){ return b[v] === 4 ? 'hb' : (c[v] >= 3 ? 'hh' : (c[v] === 2 ? 'hw' : 'hc')); }; f.c = c; return f; }
 function legHeat(R0){ var LS = R0 || last; if(!LS) return null;
   if(HEAT_B === '3'){ var HQ = heat5(LS); if(!HQ) return null; return function(v){ var k = HQ(v), c = HQ.c[v]; return {k:k, t: v+': βγήκε σε '+c+' από τις 5 τελευταίες κληρώσεις'+(k==='hb' ? ' · 🔥 ΚΑΜΕΝΟΣ: βγήκε στις 4 τελευταίες στη σειρά' : '')}; }; }
-  var DC = dayCnt(LS); if(DC.n < 10) return null; return function(v){ var r = DC.c[v]/DC.n; return {k: r >= 1/3 ? 'hh' : (r >= 0.25 ? 'hw' : 'hc'), t: v+': '+DC.c[v]+' φορές σε '+DC.n+' κληρώσεις σήμερα ('+Math.round(100*r)+'%)'}; }; }
+  var DC = dayCntH(LS); if(DC.n < 10) return null; return function(v){ var r = DC.c[v]/DC.n; return {k: r >= 1/3 ? 'hh' : (r >= 0.25 ? 'hw' : 'hc'), t: v+': '+DC.c[v]+' φορές σε '+DC.n+' κληρώσεις σήμερα ('+Math.round(100*r)+'%)'}; }; }
 var HEAT_GRID = lsGet('trv_heatgrid')==='1';
 function heatGrid(){ var H = HEAT_GRID ? legHeat(cur()) : null, b = $('heatGridBtn'); if(b) b.classList.toggle('on', HEAT_GRID);
   Array.prototype.forEach.call(document.querySelectorAll('#boxBox .gc'), function(g){ g.classList.remove('hh','hw','hc','hb'); if(H){ var x = H(+g.dataset.n); g.classList.add(x.k); g.title = x.t; } else g.title = ''; }); }
@@ -948,7 +951,7 @@ function heatStrip(){ var el = $('heatStrip'), d = cur(); if(!el) return; if(!d 
   var H = legHeat(d); if(!H){ el.innerHTML = ''; return; } var tot = {hh:0,hw:0,hc:0,hb:0}; for(var n=1;n<=80;n++) tot[H(n).k]++;
   var f = function(k, ic){ var e = (tot[k]/4).toFixed(1).replace('.',','); return '<span title="'+tot[k]+' από τους 80 είναι τώρα αυτού του χρώματος · με 25% αναμένεται να βγουν '+e+' στην επόμενη κλήρωση">'+ic+'<b>'+tot[k]+'</b><i>→'+e+'</i></span>'; };
   el.innerHTML = '<span class="hsT">80:</span>'+f('hh','🔴')+f('hw','🟠')+f('hc','🔵')+(tot.hb ? f('hb','🟣') : ''); }
-function heatBalls(){ try{ heatGrid(); heatStrip(); }catch(e){} var H = legHeat(cur()); Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb'), function(b){ b.classList.remove('hh','hw','hc','hb'); if(!H || !HEAT_ON || b.classList.contains('sc')) return; var v = +b.textContent; if(v >= 1 && v <= 80) b.classList.add(H(v).k); }); }
+function heatBalls(){ try{ heatGrid(); heatStrip(); }catch(e){} var H = legHeat(cur()); Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb'), function(b){ b.classList.remove('hh','hw','hc','hb'); if(!H || !HEAT_ON || (b.classList.contains('sc') && !HEAT_SC)) return; var v = +b.textContent; if(v >= 1 && v <= 80) b.classList.add(H(v).k); }); }
 var HEAT_ON = lsGet('trv_heatb')!=='0'; setInterval(function(){ try{ heatBalls(); }catch(e){} }, 1500);
 function legChips(L, A, H){ return '<div class="legNums">'+L.n.map(function(v){ var h = H ? H(v) : null; return '<span class="'+(A && A[v] ? 'on ' : '')+(h ? h.k : '')+'"'+(h ? ' title="'+h.t+'"' : '')+'>'+v+'</span>'; }).join('')+'</div>'; }
 function legKeyLine(H){ return H ? (HEAT_B === '3' ? '<div class="legKey">Στις 5 τελευταίες κληρώσεις: <span class="hh">καυτός</span> 3+ φορές · <span class="hw">χλιαρός</span> 2 φορές · <span class="hc">κρύος</span> 0–1 · <span class="hb">καμένος</span> βγήκε και στις 4 τελευταίες στη σειρά</div>' : '<div class="legKey"><span class="hh">καυτός</span> ≥33% σήμερα · <span class="hw">χλιαρός</span> 25–33% · <span class="hc">κρύος</span> &lt;25%</div>') : '<div class="legKey muted">Τα χρώματα καυτός/χλιαρός/κρύος εμφανίζονται μετά τις πρώτες 10 κληρώσεις της ημέρας.</div>'; }
@@ -984,6 +987,7 @@ $('legBox').addEventListener('toggle', function(e){ if(e.target.classList && e.t
 $('legBox').addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('.legAdd'); if(!b || !last) return; var T = tkLoad(); if(T.length>=5){ alert('Έχεις ήδη 5 δελτία (το όριο). Σβήσε ένα για να βάλεις καινούργιο.'); return; }
   var nums = b.dataset.n.split('-').map(Number), st = (NEXT && NEXT.id > last.id) ? NEXT.id : last.id+1;
   T.unshift({id:Date.now(), n:nums, start:st, draws:+($('legN') ? $('legN').value : 5) || 5}); tkSave(T); b.textContent = '✓ Μπήκε στα δελτία'; b.disabled = true; tkRender(); tkCheck(); });
+(function(){ function u(){ $('mHeatSc').textContent = HEAT_SC ? 'ON' : 'OFF'; $('mHeatSc').style.borderColor = HEAT_SC ? '#22c55e' : ''; } $('mHeatSc').addEventListener('click', function(){ HEAT_SC = !HEAT_SC; lsSet('trv_heatsc', HEAT_SC?'1':'0'); u(); heatBalls(); try{ legCheck(last, false); }catch(e){} NINE_C.id = 0; }); u(); })();
 (function(){ function u(){ $('mHeat').textContent = HEAT_ON ? 'ON' : 'OFF'; $('mHeat').style.borderColor = HEAT_ON ? '#22c55e' : ''; $('mHeatB').textContent = HEAT_B === '3' ? '5 ΚΛΗΡ.' : 'ΜΕΡΑ'; }
   $('mHeat').addEventListener('click', function(){ HEAT_ON = !HEAT_ON; lsSet('trv_heatb', HEAT_ON?'1':'0'); u(); heatBalls(); });
   $('mHeatB').addEventListener('click', function(){ HEAT_B = HEAT_B === '3' ? 'day' : '3'; lsSet('trv_heat', HEAT_B); u(); heatBalls(); try{ legCheck(last, false); }catch(e){} }); u(); })();
