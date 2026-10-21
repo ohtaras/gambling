@@ -945,11 +945,9 @@ var HEAT_GRID = lsGet('trv_heatgrid')==='1';
 function heatGrid(){ var H = HEAT_GRID ? legHeat(cur()) : null, b = $('heatGridBtn'); if(b) b.classList.toggle('on', HEAT_GRID);
   Array.prototype.forEach.call(document.querySelectorAll('#boxBox .gc'), function(g){ g.classList.remove('hh','hw','hc','hb'); if(H){ var x = H(+g.dataset.n); g.classList.add(x.k); g.title = x.t; } else g.title = ''; }); }
 function heatStrip(){ var el = $('heatStrip'), d = cur(); if(!el) return; if(!d || !HEAT_ON){ el.innerHTML = ''; return; }
-  var H = legHeat({id:d.id-1, t:d.t-300000}); if(!H){ el.innerHTML = ''; return; }
-  var tot = {hh:0,hw:0,hc:0,hb:0}, got = {hh:0,hw:0,hc:0,hb:0}, S = {}; d.arr.forEach(function(v){ S[v] = 1; });
-  for(var n=1;n<=80;n++){ var k = H(n).k; tot[k]++; if(S[n]) got[k]++; }
-  var f = function(k, ic){ return '<span title="'+tot[k]+' αριθμοί είχαν αυτό το χρώμα πριν την κλήρωση · με 25% αναμένονται '+(tot[k]/4).toFixed(1).replace('.',',')+'">'+ic+'<b>'+got[k]+'</b><i>/'+(tot[k]/4).toFixed(1).replace('.',',')+'</i></span>'; };
-  el.innerHTML = '<span class="hsT">'+hm(d.t)+'</span>'+f('hh','🔴')+f('hw','🟠')+f('hc','🔵')+(tot.hb ? f('hb','🟣') : ''); }
+  var H = legHeat(d); if(!H){ el.innerHTML = ''; return; } var tot = {hh:0,hw:0,hc:0,hb:0}; for(var n=1;n<=80;n++) tot[H(n).k]++;
+  var f = function(k, ic){ var e = (tot[k]/4).toFixed(1).replace('.',','); return '<span title="'+tot[k]+' από τους 80 είναι τώρα αυτού του χρώματος · με 25% αναμένεται να βγουν '+e+' στην επόμενη κλήρωση">'+ic+'<b>'+tot[k]+'</b><i>→'+e+'</i></span>'; };
+  el.innerHTML = '<span class="hsT">80:</span>'+f('hh','🔴')+f('hw','🟠')+f('hc','🔵')+(tot.hb ? f('hb','🟣') : ''); }
 function heatBalls(){ try{ heatGrid(); heatStrip(); }catch(e){} var H = legHeat(cur()); Array.prototype.forEach.call(document.querySelectorAll('#boxBox .bxb'), function(b){ b.classList.remove('hh','hw','hc','hb'); if(!H || !HEAT_ON) return; var v = +b.textContent; if(v >= 1 && v <= 80) b.classList.add(H(v).k); }); }
 var HEAT_ON = lsGet('trv_heatb')!=='0'; setInterval(function(){ try{ heatBalls(); }catch(e){} }, 1500);
 function legChips(L, A, H){ return '<div class="legNums">'+L.n.map(function(v){ var h = H ? H(v) : null; return '<span class="'+(A && A[v] ? 'on ' : '')+(h ? h.k : '')+'"'+(h ? ' title="'+h.t+'"' : '')+'>'+v+'</span>'; }).join('')+'</div>'; }
