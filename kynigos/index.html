@@ -137,6 +137,24 @@ details summary{cursor:pointer;font-weight:600}
     <button id="resetHist" type="button">Μηδένισμα ιστορικού για αυτόν τον γρίφο</button>
   </section>
 
+  <section class="card" aria-label="Μεταφορά προόδου">
+    <details>
+      <summary>Μεταφορά προόδου σε άλλη συσκευή</summary>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+        <p class="meta" style="margin:0">Ο κωδικός περιέχει μόνο <strong>ποια μπλοκ ελέγχθηκαν</strong>, για όλους τους γρίφους. Δεν περιέχει ποτέ κλειδί. Τον στέλνεις όπως θες στην άλλη συσκευή και πατάς εκεί «Εισαγωγή». Η πρόοδος των δύο ενώνεται.</p>
+        <button id="exportBtn" type="button">Εξαγωγή προόδου αυτής της συσκευής</button>
+        <textarea id="exportOut" class="mono" rows="4" readonly hidden style="font:inherit;font-family:var(--f-num);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%;box-sizing:border-box"></textarea>
+        <button id="copyBtn" type="button" hidden>Αντιγραφή κωδικού</button>
+        <div class="field">
+          <label class="label" for="importIn">Κωδικός από άλλη συσκευή</label>
+          <textarea id="importIn" rows="3" spellcheck="false" autocomplete="off" placeholder="KYN1:…" style="font:inherit;font-family:var(--f-num);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%;box-sizing:border-box"></textarea>
+        </div>
+        <button id="importBtn" type="button">Εισαγωγή και ένωση</button>
+        <div id="xferMsg" class="meta" aria-live="polite"></div>
+      </div>
+    </details>
+  </section>
+
   <section class="card" aria-label="Έλεγχος αριθμού">
     <details>
       <summary>Έλεγχος ενός αριθμού με το χέρι</summary>
@@ -488,6 +506,46 @@ function render(){
   const frac=renderHist();
   if(running&&frac>0)$('sOdds').textContent='Πιθανότητα να είχε βρεθεί ως τώρα (όλες οι φορές): 1 στα '+fmtBig(1/frac)+'.';
 }
+/* ---------- Manual transfer of progress (no network) ---------- */
+function chunkSizeFor(n){const half=1n<<BigInt(n-1);let Cs=half/64n;if(Cs>(1n<<16n))Cs=1n<<16n;if(Cs<1n)Cs=1n;return Cs;}
+function mergeRanges(R){
+  R.sort((x,y)=>x[0]<y[0]?-1:x[0]>y[0]?1:0); const o=[];
+  for(const [a,b] of R){ if(o.length&&a<=o[o.length-1][1]+1n){ if(b>o[o.length-1][1])o[o.length-1][1]=b; } else o.push([a,b]); }
+  return o;
+}
+$('exportBtn').addEventListener('click',()=>{
+  if(running)flushSave();
+  const out={v:1,p:{}}; let any=false;
+  for(const p of PUZZLES){const Cs=chunkSizeFor(p.n),R=loadHist(p.n,Cs);if(R.length){any=true;out.p[p.n]={C:Cs.toString(),r:R.map(([a,b])=>[a.toString(),b.toString()])};}}
+  if(!any){$('xferMsg').textContent='Δεν υπάρχει ακόμα πρόοδος σε αυτή τη συσκευή.';$('exportOut').hidden=$('copyBtn').hidden=true;return;}
+  $('exportOut').value='KYN1:'+btoa(JSON.stringify(out)); $('exportOut').hidden=false; $('copyBtn').hidden=false;
+  $('xferMsg').textContent='Έτοιμος ο κωδικός. Αντέγραψέ τον και βάλ\' τον στην άλλη συσκευή.';
+});
+$('copyBtn').addEventListener('click',()=>{
+  const t=$('exportOut');
+  const sel=()=>{t.focus();t.select();$('xferMsg').textContent='Ο κωδικός είναι επιλεγμένος. Πάτα Αντιγραφή από το μενού.';};
+  try{navigator.clipboard.writeText(t.value).then(()=>{$('xferMsg').textContent='Αντιγράφηκε.';},sel);}catch(e){sel();}
+});
+$('importBtn').addEventListener('click',()=>{
+  const msg=$('xferMsg'), raw=$('importIn').value.replace(/\s/g,'');
+  if(running){msg.textContent='Πάτα πρώτα «Διακοπή» και μετά «Εισαγωγή».';return;}
+  if(!raw.startsWith('KYN1:')){msg.textContent='Ο κωδικός πρέπει να ξεκινά με KYN1:. Αντέγραψέ τον ολόκληρο.';return;}
+  try{
+    const o=JSON.parse(atob(raw.slice(5))); const added=[];
+    for(const [n,v] of Object.entries(o.p||{})){
+      const p=PUZZLES.find(x=>x.n===+n); if(!p)continue;
+      const Cs=chunkSizeFor(p.n); if(v.C!==Cs.toString())continue;
+      const max=(1n<<BigInt(p.n-1))/Cs-1n;
+      const inc=v.r.map(([a,b])=>[BigInt(a),BigInt(b)]).filter(([a,b])=>a>=0n&&a<=b&&b<=max);
+      const R=loadHist(p.n,Cs), before=doneChunks(R), M=mergeRanges(R.concat(inc));
+      const gain=doneChunks(M)-before;
+      if(gain>0n){ if(!saveHist({n:p.n,C:Cs,R:M})){msg.textContent='Αυτός ο browser δεν επιτρέπει αποθήκευση.';return;} added.push('#'+p.n+': +'+fmtBig(Number(gain*Cs))+' αριθμοί'); }
+    }
+    msg.textContent=added.length?('Ενώθηκε η πρόοδος. '+added.join(' · ')):'Τίποτα καινούριο: όλα αυτά τα μπλοκ υπήρχαν ήδη εδώ.';
+    $('importIn').value=''; renderHist();
+  }catch(e){msg.textContent='Ο κωδικός δεν διαβάζεται. Αντέγραψέ τον ολόκληρο και ξαναδοκίμασε.';}
+});
+
 $('resetHist').addEventListener('click',()=>{
   const j=puzzleJob(); const b=$('resetHist');
   if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Σίγουρα; Πάτα ξανά για μηδένισμα του #'+j.n;setTimeout(()=>{b.dataset.armed='';b.textContent='Μηδένισμα ιστορικού για αυτόν τον γρίφο';},4000);return;}
