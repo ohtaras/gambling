@@ -460,7 +460,7 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; if(M
     moves.forEach(function(mm){ var b = balls[mm[0]]; if(!b) return; delete balls[mm[0]]; var p = boxPos(mm[1]); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; b.classList.remove('sc'); b.classList.remove('bn'); b.classList.add(mm[2]==='g' ? 'sc' : (mm[0]!==mm[1] ? 'nw' : 'st')); });
     Object.keys(balls).forEach(function(k){ balls[k].style.opacity = '0'; });
     var pn = moves.map(function(mm){ return mm[1]; }).sort(function(a,b){ return PW==='hot' ? DC.c[b]-DC.c[a] : DC.c[a]-DC.c[b]; }).slice(0,4).map(function(x){ return [x, DC.c[x]]; });
-    PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st, mm:MMI, pull:((P5I || MMI) ? null : {w:PW, who:PWHO, n:DC.n, hm:DC.hm, b:PB, top:pn}), tpl:TPLINFO, p5:P5I}; bxSay(PWHO==='S' ? $('bxGuyL') : $('bxGuyR'), MMI ? (MMI.first ? 'Πρώτη μαντεψιά! Από εδώ και πέρα κρατάμε όσα πιάνουμε!' : 'Πιάσαμε '+MMI.h+' στα '+MMI.k+'! Κρατάμε '+MMI.kept.length+' στα τυφλά και αλλάζουμε '+(MMI.K-MMI.kept.length)+'!') : pullSay(PW, DC)); lsSet('trv_pred', JSON.stringify(PRED)); if(AUTOMK){ alogAdd(PRED); AUTOMK = false; } WT_LAST = Date.now() - 15000 + 6000; predText(PRED, false); $('boxPred').disabled = false; predEval();
+    PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st, mm:MMI, pull:((P5I || MMI) ? null : {w:PW, who:PWHO, n:DC.n, hm:DC.hm, b:PB, top:pn}), tpl:TPLINFO, p5:P5I}; bxSay(PWHO==='S' ? $('bxGuyL') : $('bxGuyR'), MMI ? (MMI.first ? 'Πρώτη μαντεψιά! Από εδώ και πέρα κρατάμε όσα πιάνουμε!' : (MMI.solved ? 'ΤΟ ΒΡΗΚΑΜΕ! '+MMI.h+' στα '+MMI.k+'! Κρατάμε την ίδια — και μετά νέο παιχνίδι!' : 'Πιάσαμε '+MMI.h+' στα '+MMI.k+'! Κρατάμε '+MMI.kept.length+' — όσους πιστεύουμε πιο πολύ — και αλλάζουμε '+(MMI.K-MMI.kept.length)+'!')) : pullSay(PW, DC)); lsSet('trv_pred', JSON.stringify(PRED)); if(AUTOMK){ alogAdd(PRED); AUTOMK = false; } WT_LAST = Date.now() - 15000 + 6000; predText(PRED, false); $('boxPred').disabled = false; predEval();
     busy = false; navUpd(); $('boxGo').disabled = false; setTimeout(stageOff, 2200);
   }, 4000);
 });
@@ -561,7 +561,7 @@ function alogRender(){ var el = $('alog'); if(!el) return; var L = alogLoad(); l
 function predText(P, replay){
   out = P.moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
     $('boxHd').textContent = P.man ? '✋ Η στήλη σου: '+out.length+' αριθμοί για την κλήρωση των '+hm(P.t+300000)+' · #'+(P.id+1) : (replay ? '🔮 Η τελευταία πρόβλεψη: ' : '🎲 Οι ')+out.length+' αριθμοί'+(replay?'':' σου')+' για την κλήρωση των '+hm(P.t+300000)+' · #'+(P.id+1);
-    $('boxTxt').innerHTML = P.man ? '' : '<details class="bxInfo"'+((P.p5||P.mm)?' open':'')+'><summary>ℹ️ Λεπτομέρειες</summary>'+(P.p5 ? '<div class="pull">⏱️ Κανόνας πενταλέπτου '+P.p5.hm+': <b>'+P.p5.name+'</b></div>' : '')+(P.mm ? '<div class="pull">🧩 Μάντεμα: '+(P.mm.first ? 'πρώτη πρόβλεψη (τυχαία)' : 'η προηγούμενη πρόβλεψη έπιασε <b>'+P.mm.h+'/'+P.mm.k+'</b> → κρατήθηκαν <b>'+P.mm.kept.length+'</b> στα τυφλά ('+P.mm.kept.join(' ')+') και άλλαξαν '+(P.mm.K-P.mm.kept.length))+'</div>' : '')+pullLine(P)+tplLine(P)+'<div class="pull">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇ · '+(P.st.ul||0)+'↖ · '+(P.st.ur||0)+'↗ · '+(P.st.dl||0)+'↙ · '+(P.st.dr||0)+'↘  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</div></details>';
+    $('boxTxt').innerHTML = P.man ? '' : '<details class="bxInfo"'+((P.p5||P.mm)?' open':'')+'><summary>ℹ️ Λεπτομέρειες</summary>'+(P.p5 ? '<div class="pull">⏱️ Κανόνας πενταλέπτου '+P.p5.hm+': <b>'+P.p5.name+'</b></div>' : '')+(P.mm ? '<div class="pull">🧩 Μάντεμα: '+(P.mm.first ? 'πρώτη πρόβλεψη (τυχαία)' : 'η προηγούμενη πρόβλεψη έπιασε <b>'+P.mm.h+'/'+P.mm.k+'</b> → κρατήθηκαν <b>'+P.mm.kept.length+'</b> ('+P.mm.kept.join(' ')+') και άλλαξαν '+(P.mm.K-P.mm.kept.length)+' · θυμούνται '+(P.mm.rounds||0)+' γύρους'+(P.mm.top && P.mm.top.length ? '<br>η 20άδα που πιστεύουν ότι ψάχνουν: <b>'+P.mm.top.join(' ')+'</b>'+(P.mm.err ? ' <span style="opacity:.7">(δεν ταιριάζει τέλεια με όλους τους γύρους — '+P.mm.err+' «λάθη»)</span>' : ' <span style="opacity:.7">(ταιριάζει με όλους τους γύρους)</span>') : ''))+'</div>' : '')+pullLine(P)+tplLine(P)+'<div class="pull">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇ · '+(P.st.ul||0)+'↖ · '+(P.st.ur||0)+'↗ · '+(P.st.dl||0)+'↙ · '+(P.st.dr||0)+'↘  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</div></details>';
     $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'')+
       '<div class="add">'+(out.length>12 ? '<span class="muted" style="font-size:12px">Το δελτίο ΚΙΝΟ παίρνει έως 12 αριθμούς — διάλεξε «Πόσους» έως 12 για να το παρακολουθήσεις.</span>' :
       '<label class="muted" style="font-size:13px">για <select id="tkN">'+(function(){ var gap = (last && P.id < last.id) ? Math.min(last.id - P.id, 300) : 0, o = '';
@@ -1053,15 +1053,39 @@ function p5Order(id, rule, t){ var p = rule.split('|'), n, order = [];
     if(p[1]==='D0'){ for(var i0=1;i0<=p5Slot(t);i0++) add(p5Nums(id-i0)); } else if(p[1][0]==='W'){ for(var i=1;i<=k;i++) add(p5Nums(id-i)); } else { for(var d2=1;d2<=k;d2++) add(p5Nums(id-288*d2)); }
     for(n=1;n<=80;n++) order.push(n); order.sort(function(a,b){ var ka = p[0]==='hot' ? -cnt[a] : cnt[a], kb = p[0]==='hot' ? -cnt[b] : cnt[b]; return ka-kb || a-b; }); }
   if(p[2]==='chunk') return order; var seq = []; for(var c2=0;c2<10;c2++) for(var j2=0;j2<8;j2++) seq.push(order[c2+10*j2]); return seq; }
-function mmPick(D, K){ if(!D) return null; K = Math.max(1, Math.min(K, 80));
-  var prev = (PRED && PRED.id + 1 === D.id) ? PRED.moves.filter(function(m){ return m[2] !== 'g'; }).map(function(m){ return m[1]; }) : null;
-  var shuf = function(a){ a = a.slice(); for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
-  var h = 0, keep = [], drop = [], tabu = (PRED && PRED.mm && PRED.mm.drop) ? PRED.mm.drop : [];
-  if(prev && prev.length){ var S = {}; D.arr.forEach(function(x){ S[x] = 1; }); h = prev.filter(function(x){ return S[x]; }).length; var sp = shuf(prev); keep = sp.slice(0, Math.min(h, K)); drop = sp.slice(Math.min(h, K)); }
-  var used = {}; keep.forEach(function(x){ used[x] = 1; }); (prev||[]).forEach(function(x){ used[x] = 1; });
-  var pool1 = [], pool2 = []; for(var n=1;n<=80;n++){ if(used[n]) continue; (tabu.indexOf(n) >= 0 ? pool2 : pool1).push(n); }
-  var add = shuf(pool1).concat(shuf(pool2)).slice(0, K - keep.length), nums = keep.concat(add);
-  var r = p5Moves(D, nums); r.info = {h:h, k:prev ? prev.length : 0, kept:keep.slice().sort(function(a,b){ return a-b; }), K:K, first:!prev}; r.drop = drop; return r; }
+/* 🧩 Μάντεμα (Mastermind): θυμούνται ΟΛΕΣ τις προηγούμενες μαντεψιές και πόσα έπιασε η καθεμία, σαν να ψάχνουν πάντα την ίδια κρυφή 20άδα.
+   Σε κάθε γύρο ψάχνουν μια «υποψήφια 20άδα» που να ταιριάζει με όλες τις απαντήσεις (π.χ. 3 στα 9 εδώ, 5 στα 9 εκεί) — όπως στο Mastermind.
+   Η νέα μαντεψιά: κρατάνε από την προηγούμενη όσους πιστεύουν ότι είναι μέσα στη 20άδα και συμπληρώνουν από την υποψήφια. Με K/K «το βρήκαν» → νέο παιχνίδι. */
+function mmHist(){ var H = null; try{ H = JSON.parse(lsGet('trv_mm_hist')||'null'); }catch(e){} return (H && H.r) ? H : {r:[], games:0, S:null}; }
+function mmSolve(R, S0){ var S = {}, inS = [], i, n;
+  if(S0 && S0.length === 20) S0.forEach(function(x){ S[x] = 1; }); else { var a = []; for(n=1;n<=80;n++) a.push(n); for(i=79;i>0;i--){ var j=Math.floor(Math.random()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t; } a.slice(0,20).forEach(function(x){ S[x] = 1; }); }
+  var ov = R.map(function(r){ return r.n.filter(function(x){ return S[x]; }).length; }), mem = new Array(81);
+  for(n=1;n<=80;n++) mem[n] = []; R.forEach(function(r, q){ r.n.forEach(function(x){ mem[x].push(q); }); });
+  var cost = function(){ var c = 0; for(var q=0;q<R.length;q++) c += Math.abs(ov[q]-R[q].h); return c; }, c = cost(), T = 1.5;
+  for(var it=0; it<6000 && c>0; it++){ var ins = [], out = []; for(n=1;n<=80;n++) (S[n]?ins:out).push(n);
+    var a1 = ins[Math.floor(Math.random()*20)], b1 = out[Math.floor(Math.random()*60)], d = 0, dl = {};
+    mem[a1].forEach(function(q){ dl[q] = (dl[q]||0) - 1; }); mem[b1].forEach(function(q){ dl[q] = (dl[q]||0) + 1; });
+    for(var q in dl) d += Math.abs(ov[q]+dl[q]-R[q].h) - Math.abs(ov[q]-R[q].h);
+    if(d <= 0 || Math.random() < Math.exp(-d/T)){ delete S[a1]; S[b1] = 1; for(var q2 in dl) ov[q2] += dl[q2]; c += d; }
+    T = Math.max(0.05, T*0.999); }
+  var out2 = []; for(n=1;n<=80;n++) if(S[n]) out2.push(n); return {S:out2, err:c}; }
+function mmPick(D, K){ if(!D) return null; K = Math.max(1, Math.min(K, 20));
+  var H = mmHist(), prev = (PRED && PRED.id + 1 === D.id) ? PRED.moves.filter(function(m){ return m[2] !== 'g'; }).map(function(m){ return m[1]; }) : null;
+  var Z = {}; D.arr.forEach(function(x){ Z[x] = 1; });
+  var h = prev ? prev.filter(function(x){ return Z[x]; }).length : 0, solved = !!(prev && prev.length && h === prev.length);
+  if(prev && prev.length && !H.r.some(function(x){ return x.id === D.id; })){ H.r.push({id:D.id, n:prev.slice(), h:h}); if(H.r.length > 60) H.r = H.r.slice(-60); }
+  var sol = H.r.length ? mmSolve(H.r, H.S) : {S:null, err:0}, inS = {}; if(sol.S) sol.S.forEach(function(x){ inS[x] = 1; });
+  var shuf = function(a){ a = a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t; } return a; };
+  var keep = [], drop = [];
+  if(prev && prev.length){ var sp = shuf(prev).sort(function(x,y){ return (inS[y]?1:0)-(inS[x]?1:0); }); keep = sp.slice(0, Math.min(h, K)); drop = sp.slice(Math.min(h, K)); }
+  var kp = {}; keep.forEach(function(x){ kp[x] = 1; }); var pv = {}; (prev||[]).forEach(function(x){ pv[x] = 1; });
+  var rest = []; for(var n=1;n<=80;n++) if(!kp[n]) rest.push(n);
+  rest = shuf(rest).sort(function(x,y){ return ((inS[y]?2:0)-(pv[y]?1:0)) - ((inS[x]?2:0)-(pv[x]?1:0)); });
+  var nums = keep.concat(rest.slice(0, K - keep.length));
+  var info = {h:h, k:prev ? prev.length : 0, kept:keep.slice().sort(function(a,b){ return a-b; }), K:K, first:!prev, rounds:H.r.length, top:(sol.S||[]).slice(0,20), err:sol.err, solved:solved};
+  if(solved) H = {r:[], games:(H.games||0)+1, S:null}; else H.S = sol.S;
+  lsSet('trv_mm_hist', JSON.stringify(H));
+  var r = p5Moves(D, nums); r.info = info; r.drop = drop; return r; }
 function p5Moves(D, nums){ var src = D.arr.concat(D.sc||[]), used = {}, RC = function(n){ return [Math.floor((n-1)/10), (n-1)%10]; }, moves = [], st = {stay:0,l:0,r:0,u:0,d:0,ul:0,ur:0,dl:0,dr:0};
   nums.forEach(function(to){ var best = null, bd = 1e9, b = RC(to); src.forEach(function(f){ if(used[f]) return; var a = RC(f), dd = Math.max(Math.abs(a[0]-b[0]), Math.abs(a[1]-b[1])); if(dd < bd){ bd = dd; best = f; } }); if(best===null) best = to; used[best] = 1; moves.push([best, to]);
     var a2 = RC(best), dr = b[0]-a2[0], dc = b[1]-a2[1], kk = (dr<0?'u':(dr>0?'d':''))+(dc<0?'l':(dc>0?'r':'')); st[kk||'stay']++; });
