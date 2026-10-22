@@ -111,7 +111,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   <section id="mSet"><h3>⚙️ Ρυθμίσεις</h3>
     <div class="mrow" id="mAppRow"><div><b><img src="img/oppc_i192.png" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:-6px;margin-right:6px">Εφαρμογή στο κινητό</b><div class="muted" id="mAppTxt">Βάλ' το στην οθόνη του κινητού σαν εφαρμογή — ανοίγει χωρίς διεύθυνση και μπάρες.</div></div><button class="btn2" id="appInst"><img src="img/oppc_i192.png" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:-6px;margin-right:6px">Εγκατάσταση</button></div><div class="mrow" id="mShakeRow"><div><b>📳 Ενεργοποίηση Shake</b><div class="muted" id="mShakeTxt">Κούνα δυνατά το κινητό και ο Σπύρος με τον Ηρακλή κουνάνε το κουτί!</div></div><button class="btn2" id="shakeOn" >📳 Κούνα το κινητό</button></div>
     <div class="mrow"><div><b>💬 Ατάκες αναμονής</b><div class="muted">Μέχρι την κλήρωση ο Σπύρος κι ο Ηρακλής κουβεντιάζουν για τα νούμερα της πρόβλεψης.</div></div><button class="btn2" id="mWt">ON</button></div>
-    <div class="mrow"><div><b>🎯 Τρόπος πρόβλεψης</b><div class="muted"><b>⏱️ Πεντάλεπτο:</b> ο κανόνας της ώρας από το ΚΙΝΟ Live «Πεντάλεπτα». <b>🧩 Μάντεμα:</b> ο Σπύρος και ο Ηρακλής «νομίζουν» ότι μαντεύουν πάντα την ίδια κλήρωση· βλέπουν μόνο πόσα έπιασαν, κρατάνε τόσα από την προηγούμενη πρόβλεψη (χωρίς να ξέρουν ποια) και αλλάζουν τα υπόλοιπα. <b>📦 Κούνημα:</b> το παλιό με θερμοκρασία, μάτσο και «τρόπο».</div></div><select id="mPMode" style="max-width:150px"><option value="p5">⏱️ Πεντάλεπτο</option><option value="mm">🧩 Μάντεμα</option><option value="shake">📦 Κούνημα</option></select></div>
+    <div class="mrow"><div><b>🎯 Τρόπος πρόβλεψης</b><div class="muted"><b>⏱️ Πεντάλεπτο:</b> ο κανόνας της ώρας από το ΚΙΝΟ Live «Πεντάλεπτα». <b>🧩 Μάντεμα:</b> ο Σπύρος και ο Ηρακλής «νομίζουν» ότι μαντεύουν πάντα την ίδια κλήρωση· βλέπουν μόνο πόσα έπιασαν, κρατάνε τόσα από την προηγούμενη πρόβλεψη (χωρίς να ξέρουν ποια) και αλλάζουν τα υπόλοιπα. <b>🧩 Μάντεμα (βλέπουν):</b> το ίδιο, αλλά βλέπουν και ΠΟΙΑ έπιασαν — αυτά τα κρατάνε σίγουρα. <b>📦 Κούνημα:</b> το παλιό με θερμοκρασία, μάτσο και «τρόπο».</div></div><select id="mPMode" style="max-width:150px"><option value="p5">⏱️ Πεντάλεπτο</option><option value="mm">🧩 Μάντεμα (στα τυφλά)</option><option value="mm2">🧩 Μάντεμα (βλέπουν)</option><option value="shake">📦 Κούνημα</option></select></div>
     <div class="mrow"><div><b>📋 Ίδιος «τρόπος» με χθες</b><div class="muted">Η πρόβλεψη μοιάζει με τη χθεσινή κλήρωση της ίδιας ώρας: ίδιες επαναλήψεις, μονά/ζυγά, χαμηλά/ψηλά, ζεστά.</div></div><button class="btn2" id="mTpl">ON</button></div>
     <div class="mrow"><div><b>🧲 Μάτσο (κοντινοί αριθμοί)</b><div class="muted">Από τις θέσεις του κουνήματος κρατάει αριθμούς κοντά μεταξύ τους στο ταμπλό, κάθε φορά σε άλλο σημείο.</div></div><button class="btn2" id="mClu">ON</button></div>
     <div class="mrow"><div><b>✋ Χειροκίνητη (δική μου στήλη)</b><div class="muted">Δεν κουνάνε το κουτί: διαλέγεις μόνος σου τους αριθμούς πάνω στο ταμπλό και τους παρακολουθείς στην επόμενη κλήρωση.</div></div><button class="btn2" id="mMan">OFF</button></div>
@@ -450,7 +450,7 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; if(M
     pickK = cb.S; }
   moves = pickK.map(function(m){ return m[3]==='g' ? [m[0], m[1], 'g'] : [m[0], m[1]]; }); var st = {stay:0, l:0, r:0, u:0, d:0, ul:0, ur:0, dl:0, dr:0}; pickK.forEach(function(m){ st[m[2]]++; });
   var P5I = null, MMI = null; if(P5_ON){ var r5 = p5Pick(last, v); if(r5){ moves = r5.moves; st = r5.st; P5I = r5.info; } else p5Load(); }
-  else if(PMODE === 'mm'){ var rm = mmPick(last, v); if(rm){ moves = rm.moves; st = rm.st; MMI = rm.info; MMI.drop = rm.drop; } }
+  else if(PMODE === 'mm' || PMODE === 'mm2'){ var rm = mmPick(last, v); if(rm){ moves = rm.moves; st = rm.st; MMI = rm.info; MMI.drop = rm.drop; } }
   var TPLINFO = (TPL && !P5I && !MMI) ? {y:TPL, g:FEAT(nums(best.mv, false)), k:FEAT(moves.filter(function(m){ return m[2]!=='g'; }).map(function(m){ return m[1]; })), gr:GRN.map(function(m){ return m[1]; })} : null;
   var AUTOMK0 = AUTONOW; AUTOMK = AUTOMK0;
   busy = true; stageOn(); navUpd(); $('boxGo').disabled = true; shownId = last.id; vidShake(); $('boxRes').innerHTML = ''; $('boxTxt').textContent = 'Οι '+src.length+' μπίλιες της τελευταίας κλήρωσης (μαζί με τη 2η ευκαιρία)…';
@@ -1056,7 +1056,8 @@ function p5Order(id, rule, t){ var p = rule.split('|'), n, order = [];
 /* 🧩 Μάντεμα (Mastermind): θυμούνται ΟΛΕΣ τις προηγούμενες μαντεψιές και πόσα έπιασε η καθεμία, σαν να ψάχνουν πάντα την ίδια κρυφή 20άδα.
    Σε κάθε γύρο ψάχνουν μια «υποψήφια 20άδα» που να ταιριάζει με όλες τις απαντήσεις (π.χ. 3 στα 9 εδώ, 5 στα 9 εκεί) — όπως στο Mastermind.
    Η νέα μαντεψιά: κρατάνε από την προηγούμενη όσους πιστεύουν ότι είναι μέσα στη 20άδα και συμπληρώνουν από την υποψήφια. Με K/K «το βρήκαν» → νέο παιχνίδι. */
-function mmHist(){ var H = null; try{ H = JSON.parse(lsGet('trv_mm_hist')||'null'); }catch(e){} return (H && H.r) ? H : {r:[], games:0, S:null}; }
+function mmKey(){ return PMODE === 'mm2' ? 'trv_mm_hist2' : 'trv_mm_hist'; }
+function mmHist(){ var H = null; try{ H = JSON.parse(lsGet(mmKey())||'null'); }catch(e){} return (H && H.r) ? H : {r:[], games:0, S:null}; }
 function mmSolve(R, S0){ var S = {}, i, n, q;
   /* Κρατάνε την ίδια 20άδα όσο δεν τη διαψεύδουν οι απαντήσεις. Αλλάζουν νούμερα μόνο αν η αλλαγή εξηγεί καλύτερα τις μαντεψιές (λιγότερα «λάθη») — και όσο το δυνατόν λιγότερα. */
   if(S0 && S0.length === 20) S0.forEach(function(x){ S[x] = 1; });
@@ -1079,18 +1080,20 @@ function mmPick(D, K){ if(!D) return null; K = Math.max(1, Math.min(K, 20));
   var H = mmHist(), prev = (PRED && PRED.id + 1 === D.id) ? PRED.moves.filter(function(m){ return m[2] !== 'g'; }).map(function(m){ return m[1]; }) : null;
   var Z = {}; D.arr.forEach(function(x){ Z[x] = 1; });
   var h = prev ? prev.filter(function(x){ return Z[x]; }).length : 0, solved = !!(prev && prev.length && h === prev.length);
-  if(prev && prev.length && !H.r.some(function(x){ return x.id === D.id; })){ H.r.push({id:D.id, n:prev.slice(), h:h}); if(H.r.length > 60) H.r = H.r.slice(-60); }
+  var SEEN = PMODE === 'mm2', hitN = prev ? prev.filter(function(x){ return Z[x]; }) : [];
+  if(prev && prev.length && !H.r.some(function(x){ return x.id === D.id; })){ if(SEEN){ if(hitN.length) H.r.push({id:D.id, n:hitN, h:hitN.length}); var missN = prev.filter(function(x){ return !Z[x]; }); if(missN.length) H.r.push({id:D.id, n:missN, h:0}); } else H.r.push({id:D.id, n:prev.slice(), h:h}); if(H.r.length > 120) H.r = H.r.slice(-120); }
   var sol = H.r.length ? mmSolve(H.r, H.S) : {S:null, err:0}, inS = {}; if(sol.S) sol.S.forEach(function(x){ inS[x] = 1; });
   var shuf = function(a){ a = a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t; } return a; };
   var keep = [], drop = [];
-  if(prev && prev.length){ var sp = shuf(prev).sort(function(x,y){ return (inS[y]?1:0)-(inS[x]?1:0); }); keep = sp.slice(0, Math.min(h, K)); drop = sp.slice(Math.min(h, K)); }
+  if(prev && prev.length && SEEN){ keep = shuf(hitN).slice(0, K); drop = prev.filter(function(x){ return keep.indexOf(x) < 0; }); }
+  else if(prev && prev.length){ var sp = shuf(prev).sort(function(x,y){ return (inS[y]?1:0)-(inS[x]?1:0); }); keep = sp.slice(0, Math.min(h, K)); drop = sp.slice(Math.min(h, K)); }
   var kp = {}; keep.forEach(function(x){ kp[x] = 1; }); var pv = {}; (prev||[]).forEach(function(x){ pv[x] = 1; });
   var rest = []; for(var n=1;n<=80;n++) if(!kp[n]) rest.push(n);
   rest = shuf(rest).sort(function(x,y){ return ((inS[y]?2:0)-(pv[y]?1:0)) - ((inS[x]?2:0)-(pv[x]?1:0)); });
   var nums = keep.concat(rest.slice(0, K - keep.length));
-  var info = {h:h, k:prev ? prev.length : 0, kept:keep.slice().sort(function(a,b){ return a-b; }), K:K, first:!prev, rounds:H.r.length, top:(sol.S||[]).slice(0,20), err:sol.err, chOut:sol.out||[], chIn:sol.inn||[], lastOk:sol.lastOk, lastExp:sol.lastExp, keptS:!!(H.S && sol.out && !sol.out.length), solved:solved};
+  var info = {h:h, k:prev ? prev.length : 0, kept:keep.slice().sort(function(a,b){ return a-b; }), K:K, first:!prev, rounds:H.r.reduce(function(o,x){ o[x.id] = 1; return o; }, {}) && Object.keys(H.r.reduce(function(o,x){ o[x.id] = 1; return o; }, {})).length, top:(sol.S||[]).slice(0,20), err:sol.err, chOut:sol.out||[], chIn:sol.inn||[], lastOk:sol.lastOk, lastExp:sol.lastExp, keptS:!!(H.S && sol.out && !sol.out.length), solved:solved};
   if(solved) H = {r:[], games:(H.games||0)+1, S:null}; else H.S = sol.S;
-  lsSet('trv_mm_hist', JSON.stringify(H));
+  lsSet(mmKey(), JSON.stringify(H));
   var r = p5Moves(D, nums); r.info = info; r.drop = drop; return r; }
 function p5Moves(D, nums){ var src = D.arr.concat(D.sc||[]), used = {}, RC = function(n){ return [Math.floor((n-1)/10), (n-1)%10]; }, moves = [], st = {stay:0,l:0,r:0,u:0,d:0,ul:0,ur:0,dl:0,dr:0};
   nums.forEach(function(to){ var best = null, bd = 1e9, b = RC(to); src.forEach(function(f){ if(used[f]) return; var a = RC(f), dd = Math.max(Math.abs(a[0]-b[0]), Math.abs(a[1]-b[1])); if(dd < bd){ bd = dd; best = f; } }); if(best===null) best = to; used[best] = 1; moves.push([best, to]);
