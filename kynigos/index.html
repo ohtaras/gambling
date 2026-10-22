@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Κυνηγός Κλειδιών</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta http-equiv="Content-Security-Policy" content="connect-src 'none'; form-action 'none'">
+<style>
+/* Layout: one narrow column, phone-first; the live key reads like a lottery ticket number. */
+:root{
+  --bg:#eef2f6; --surface:#ffffff; --ink:#132231; --muted:#5b6b7b; --line:#d5dde6;
+  --accent:#b86a00; --accent-ink:#ffffff; --ok:#1d7a46; --ok-bg:#e3f3ea; --warn:#9a5b00; --warn-bg:#fdf1de;
+  --bad:#b3261e; --bad-bg:#fbe7e5;
+  --f-ui: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --f-num: ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d141b; --surface:#16202b; --ink:#e4ebf2; --muted:#93a3b4; --line:#273544;
+  --accent:#f0a23a; --accent-ink:#1a1206; --ok:#5fd394; --ok-bg:#12301f; --warn:#f0b75e; --warn-bg:#33240c;
+  --bad:#ff8a80; --bad-bg:#3a1714; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d141b; --surface:#16202b; --ink:#e4ebf2; --muted:#93a3b4; --line:#273544;
+  --accent:#f0a23a; --accent-ink:#1a1206; --ok:#5fd394; --ok-bg:#12301f; --warn:#f0b75e; --warn-bg:#33240c;
+  --bad:#ff8a80; --bad-bg:#3a1714; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5}
+.wrap{max-width:640px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+h1{font-size:1.6rem;line-height:1.2;margin:0;text-wrap:balance;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:4px 0 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.privacy{background:var(--ok-bg);border-color:transparent;color:var(--ink)}
+.privacy ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);width:fit-content}
+.pill.ok{color:var(--ok);border-color:var(--ok)}
+.pill.bad{color:var(--bad);border-color:var(--bad)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;flex:1 1 160px;min-width:0}
+select,input[type=text]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%;box-sizing:border-box}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;font-weight:600;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:12px 18px;cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);flex:1 1 auto}
+button:disabled{opacity:.5;cursor:default}
+.meta{font-size:.85rem;color:var(--muted)}
+.mono{font-family:var(--f-num);font-variant-numeric:tabular-nums;overflow-wrap:anywhere;word-break:break-all}
+.ticket{border:2px dashed var(--line);border-radius:10px;padding:14px;text-align:center;display:flex;flex-direction:column;gap:6px}
+.ticket .num{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:clamp(1rem,4.6vw,1.45rem);font-weight:700;letter-spacing:.02em;overflow-wrap:anywhere}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stat{display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat .v{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:700;font-size:1.05rem;overflow-wrap:anywhere}
+.bar{height:6px;border-radius:3px;background:var(--bg);overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:var(--accent)}
+.found{background:var(--ok-bg);border-color:var(--ok)}
+.found h2{margin:0;color:var(--ok);font-size:1.3rem}
+.kv{display:flex;flex-direction:column;gap:2px}
+.kv .mono{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px}
+.alert{background:var(--warn-bg);color:var(--ink);border-radius:8px;padding:10px 12px;font-size:.9rem}
+.alert strong{color:var(--warn)}
+.tag{font-size:.75rem;font-weight:700;padding:2px 8px;border-radius:6px}
+.tag.solved{background:var(--bg);color:var(--muted)}
+.tag.open{background:var(--accent);color:var(--accent-ink)}
+details summary{cursor:pointer;font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>html,body{margin:0}</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <h1>Κυνηγός Κλειδιών</h1>
+    <p class="sub">Ψάχνει το ιδιωτικό κλειδί ενός γρίφου bitcoin δοκιμάζοντας αριθμούς έναν-έναν.</p>
+  </header>
+
+  <section class="card privacy" aria-label="Ιδιωτικότητα">
+    <div class="label">Μένει μόνο στη συσκευή σου</div>
+    <ul>
+      <li>Όλος ο υπολογισμός γίνεται εδώ. Η σελίδα δεν έχει κανέναν κώδικα που να στέλνει δεδομένα.</li>
+      <li>Οι συνδέσεις δικτύου είναι μπλοκαρισμένες από την ίδια τη σελίδα.</li>
+      <li>Αν βρεθεί κλειδί, κρατιέται <strong>μόνο στη μνήμη του browser αυτής της συσκευής</strong>, για να μη χαθεί αν κλείσει η σελίδα. Το σβήνεις με ένα κουμπί.</li>
+      <li><strong>Για απόλυτη σιγουριά:</strong> άνοιξε τη σελίδα και μετά βάλε το κινητό σε <strong>λειτουργία πτήσης</strong>. Συνεχίζει να δουλεύει κανονικά.</li>
+    </ul>
+    <span class="pill" id="netTest">Έλεγχος δικτύου…</span>
+  </section>
+
+  <section class="card" aria-label="Ρυθμίσεις">
+    <div class="field">
+      <label class="label" for="puzzle">Γρίφος</label>
+      <select id="puzzle"></select>
+    </div>
+    <div class="meta" id="puzzleInfo"></div>
+    <div class="row">
+      <div class="field">
+        <label class="label" for="mode">Τρόπος</label>
+        <select id="mode">
+          <option value="seq">Στη σειρά, από την αρχή</option>
+          <option value="rand">Τυχαία σημεία</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="label" for="threads">Πυρήνες</label>
+        <select id="threads"></select>
+      </div>
+    </div>
+    <div class="row">
+      <button class="primary" id="startBtn" type="button">Έναρξη</button>
+      <button id="stopBtn" type="button" disabled>Διακοπή</button>
+    </div>
+  </section>
+
+  <section class="card found" id="foundCard" hidden aria-live="assertive">
+    <h2>Βρέθηκε το κλειδί</h2>
+    <div class="kv"><span class="label">Αριθμός</span><span class="mono" id="fDec"></span></div>
+    <div class="kv"><span class="label">Δεκαεξαδικό</span><span class="mono" id="fHex"></span></div>
+    <div class="kv"><span class="label">WIF (για πορτοφόλι)</span><span class="mono" id="fWif"></span></div>
+    <div class="kv"><span class="label">Διεύθυνση (επιβεβαίωση)</span><span class="mono" id="fAddr"></span></div>
+    <div class="alert" id="fWarn"></div>
+    <div class="meta" id="fSaved"></div>
+    <button id="forgetBtn" type="button">Διαγραφή από τη συσκευή</button>
+  </section>
+
+  <section class="card" aria-label="Πρόοδος">
+    <div class="ticket">
+      <span class="label">Αριθμός που δοκιμάζεται τώρα</span>
+      <span class="num" id="curKey">—</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="label">Ταχύτητα</span><span class="v" id="sRate">—</span></div>
+      <div class="stat"><span class="label">Δοκιμασμένοι</span><span class="v" id="sDone">0</span></div>
+      <div class="stat"><span class="label">Χρόνος</span><span class="v" id="sTime">0 δευτ.</span></div>
+      <div class="stat"><span class="label">Όλο το εύρος θέλει</span><span class="v" id="sEta">—</span></div>
+    </div>
+    <div class="bar" aria-hidden="true"><i id="pBar"></i></div>
+    <div class="meta" id="sOdds">Πάτα «Έναρξη». Ξεκίνα με το #20 για να το δεις να βρίσκει κλειδί σε λίγα δευτερόλεπτα.</div>
+    <div class="alert" id="sHist"></div>
+    <button id="resetHist" type="button">Μηδένισμα ιστορικού για αυτόν τον γρίφο</button>
+  </section>
+
+  <section class="card" aria-label="Έλεγχος αριθμού">
+    <details>
+      <summary>Έλεγχος ενός αριθμού με το χέρι</summary>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+        <div class="field">
+          <label class="label" for="manualKey">Αριθμός-κλειδί (με ή χωρίς τελείες)</label>
+          <input type="text" id="manualKey" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="π.χ. 1.750.000.000.000.000.000.123">
+        </div>
+        <button id="manualBtn" type="button">Υπολόγισε διεύθυνση</button>
+        <div id="manualOut" class="meta"></div>
+      </div>
+    </details>
+  </section>
+
+  <p class="meta">Τρέχει μόνο όσο η σελίδα είναι ανοιχτή και η οθόνη αναμμένη. Στο iPhone, αν κλειδώσει η οθόνη ή αλλάξεις εφαρμογή, σταματά.</p>
+</div>
+
+<script>
+/* ---------- Core: the same code runs in the page and inside the background workers ---------- */
+function CORE(scope){
+  const P=(1n<<256n)-(1n<<32n)-977n;
+  const G=[0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798n,0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8n];
+  function md(a){a%=P;return a<0n?a+P:a;}
+  function inv(a){let lm=1n,hm=0n,low=md(a),high=P;while(low>1n){const r=high/low;const nm=hm-lm*r,nw=high-low*r;hm=lm;lm=nm;high=low;low=nw;}return md(lm);}
+  function padd(p,q){
+    if(!p)return q; if(!q)return p;
+    let l;
+    if(p[0]===q[0]){ if(md(p[1]+q[1])===0n)return null; l=md(3n*p[0]*p[0]*inv(2n*p[1])); }
+    else l=md((q[1]-p[1])*inv(q[0]-p[0]));
+    const x=md(l*l-p[0]-q[0]); return [x,md(l*(p[0]-x)-p[1])];
+  }
+  function pmul(k,p){let r=null;while(k>0n){if(k&1n)r=padd(r,p);p=padd(p,p);k>>=1n;}return r;}
+
+  const SK=new Uint32Array([0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2]);
+  const SW=new Uint32Array(64);
+  function rotr(x,n){return (x>>>n)|(x<<(32-n));}
+  function sha256(msg){
+    const l=msg.length, nb=((l+9+63)>>6), buf=new Uint8Array(nb*64);
+    buf.set(msg); buf[l]=0x80; const bits=l*8;
+    buf[nb*64-4]=(bits>>>24)&255; buf[nb*64-3]=(bits>>>16)&255; buf[nb*64-2]=(bits>>>8)&255; buf[nb*64-1]=bits&255;
+    let h0=0x6a09e667,h1=0xbb67ae85,h2=0x3c6ef372,h3=0xa54ff53a,h4=0x510e527f,h5=0x9b05688c,h6=0x1f83d9ab,h7=0x5be0cd19;
+    const W=SW;
+    for(let o=0;o<buf.length;o+=64){
+      for(let i=0;i<16;i++)W[i]=(buf[o+4*i]<<24)|(buf[o+4*i+1]<<16)|(buf[o+4*i+2]<<8)|buf[o+4*i+3];
+      for(let i=16;i<64;i++){const a=W[i-15],b=W[i-2];W[i]=W[i-16]+(rotr(a,7)^rotr(a,18)^(a>>>3))+W[i-7]+(rotr(b,17)^rotr(b,19)^(b>>>10));}
+      let a=h0,b=h1,c=h2,d=h3,e=h4,f=h5,g=h6,h=h7;
+      for(let i=0;i<64;i++){
+        const t1=(h+(rotr(e,6)^rotr(e,11)^rotr(e,25))+((e&f)^(~e&g))+SK[i]+W[i])|0;
+        const t2=((rotr(a,2)^rotr(a,13)^rotr(a,22))+((a&b)^(a&c)^(b&c)))|0;
+        h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0;
+      }
+      h0=(h0+a)|0;h1=(h1+b)|0;h2=(h2+c)|0;h3=(h3+d)|0;h4=(h4+e)|0;h5=(h5+f)|0;h6=(h6+g)|0;h7=(h7+h)|0;
+    }
+    const out=new Uint8Array(32),H=[h0,h1,h2,h3,h4,h5,h6,h7];
+    for(let i=0;i<8;i++){out[4*i]=H[i]>>>24;out[4*i+1]=(H[i]>>>16)&255;out[4*i+2]=(H[i]>>>8)&255;out[4*i+3]=H[i]&255;}
+    return out;
+  }
+
+  const RL=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,7,4,13,1,10,6,15,3,12,0,9,5,2,14,11,8,3,10,14,4,9,15,8,1,2,7,0,6,13,11,5,12,1,9,11,10,0,8,12,4,13,3,7,15,14,5,6,2,4,0,5,9,7,12,2,10,14,1,3,8,11,6,15,13];
+  const RR=[5,14,7,0,9,2,11,4,13,6,15,8,1,10,3,12,6,11,3,7,0,13,5,10,14,15,8,12,4,9,1,2,15,5,1,3,7,14,6,9,11,8,12,2,10,0,4,13,8,6,4,1,3,11,15,0,5,12,2,13,9,7,10,14,12,15,10,4,1,5,8,7,6,2,13,14,0,3,9,11];
+  const SL=[11,14,15,12,5,8,7,9,11,13,14,15,6,7,9,8,7,6,8,13,11,9,7,15,7,12,15,9,11,7,13,12,11,13,6,7,14,9,13,15,14,8,13,6,5,12,7,5,11,12,14,15,14,15,9,8,9,14,5,6,8,6,5,12,9,15,5,11,6,8,13,12,5,12,13,14,11,8,5,6];
+  const SR=[8,9,9,11,13,15,15,5,7,7,8,11,14,14,12,6,9,13,15,7,12,8,9,11,7,7,12,7,6,15,13,11,9,7,15,11,8,6,6,14,12,13,5,14,13,13,7,5,15,5,8,11,14,14,6,14,6,9,12,9,12,5,15,8,8,5,12,9,12,5,14,6,8,13,6,5,15,13,11,11];
+  const KL=[0,0x5A827999,0x6ED9EBA1,0x8F1BBCDC,0xA953FD4E], KR=[0x50A28BE6,0x5C4DD124,0x6D703EF3,0x7A6D76E9,0];
+  function rotl(x,n){return (x<<n)|(x>>>(32-n));}
+  function rf(j,x,y,z){
+    switch(j>>4){case 0:return x^y^z;case 1:return (x&y)|(~x&z);case 2:return (x|~y)^z;case 3:return (x&z)|(y&~z);default:return x^(y|~z);}
+  }
+  const RX=new Int32Array(16);
+  function ripemd160(msg){
+    const l=msg.length, nb=((l+9+63)>>6), buf=new Uint8Array(nb*64);
+    buf.set(msg); buf[l]=0x80; const bits=l*8;
+    buf[nb*64-8]=bits&255; buf[nb*64-7]=(bits>>>8)&255; buf[nb*64-6]=(bits>>>16)&255; buf[nb*64-5]=(bits>>>24)&255;
+    let h0=0x67452301,h1=0xEFCDAB89|0,h2=0x98BADCFE|0,h3=0x10325476,h4=0xC3D2E1F0|0;
+    for(let o=0;o<buf.length;o+=64){
+      for(let i=0;i<16;i++)RX[i]=buf[o+4*i]|(buf[o+4*i+1]<<8)|(buf[o+4*i+2]<<16)|(buf[o+4*i+3]<<24);
+      let al=h0,bl=h1,cl=h2,dl=h3,el=h4,ar=h0,br=h1,cr=h2,dr=h3,er=h4;
+      for(let j=0;j<80;j++){
+        let t=(rotl((al+rf(j,bl,cl,dl)+RX[RL[j]]+KL[j>>4])|0,SL[j])+el)|0;
+        al=el;el=dl;dl=rotl(cl,10);cl=bl;bl=t;
+        t=(rotl((ar+rf(79-j,br,cr,dr)+RX[RR[j]]+KR[j>>4])|0,SR[j])+er)|0;
+        ar=er;er=dr;dr=rotl(cr,10);cr=br;br=t;
+      }
+      const t=(h1+cl+dr)|0; h1=(h2+dl+er)|0; h2=(h3+el+ar)|0; h3=(h4+al+br)|0; h4=(h0+bl+cr)|0; h0=t;
+    }
+    const out=new Uint8Array(20),H=[h0,h1,h2,h3,h4];
+    for(let i=0;i<5;i++){out[4*i]=H[i]&255;out[4*i+1]=(H[i]>>>8)&255;out[4*i+2]=(H[i]>>>16)&255;out[4*i+3]=(H[i]>>>24)&255;}
+    return out;
+  }
+
+  const B58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  function b58check(payload){
+    const c=sha256(sha256(payload)), b=new Uint8Array(payload.length+4); b.set(payload); b.set(c.subarray(0,4),payload.length);
+    let n=0n; for(const x of b)n=(n<<8n)|BigInt(x);
+    let s=''; while(n>0n){s=B58[Number(n%58n)]+s;n/=58n;}
+    for(const x of b){if(x===0)s='1'+s;else break;}
+    return s;
+  }
+  function b58decodeAddr(a){
+    let n=0n; for(const ch of a){const i=B58.indexOf(ch); if(i<0)throw new Error('bad'); n=n*58n+BigInt(i);}
+    const out=new Uint8Array(25); for(let i=24;i>=0;i--){out[i]=Number(n&255n);n>>=8n;}
+    const c=sha256(sha256(out.subarray(0,21)));
+    for(let i=0;i<4;i++)if(c[i]!==out[21+i])throw new Error('checksum');
+    return out.subarray(1,21);
+  }
+  function toBytes32(x){const o=new Uint8Array(32);for(let i=31;i>=0;i--){o[i]=Number(x&255n);x>>=8n;}return o;}
+  function pubCompressed(pt){const o=new Uint8Array(33);o[0]=(pt[1]&1n)?3:2;o.set(toBytes32(pt[0]),1);return o;}
+  function addrFromKey(k){const pt=pmul(k,G);return b58check(Uint8Array.of(0,...ripemd160(sha256(pubCompressed(pt)))));}
+  function wifFromKey(k){return b58check(Uint8Array.of(0x80,...toBytes32(k),1));}
+
+  const HEX=new Uint8Array(128); for(let i=0;i<10;i++)HEX[48+i]=i; for(let i=0;i<6;i++){HEX[97+i]=10+i;}
+
+  function makeSearcher(cfg){
+    const tgt=cfg.target, B=cfg.batch||256, CHUNK=BigInt(cfg.chunk||1048576);
+    const lo=BigInt(cfg.lo), hi=BigInt(cfg.hi);
+    const D=pmul(BigInt(B),G), Dx=D[0], Dy=D[1];
+    const X=new Array(B), Y=new Array(B), pre=new Array(B), dd=new Array(B), pub=new Uint8Array(33);
+    let base=0n, end=0n, done=false, checked=0;
+    function rnd(){const span=hi-lo+1n,by=new Uint8Array(40);crypto.getRandomValues(by);let r=0n;for(const b of by)r=(r<<8n)|BigInt(b);return lo+r%span;}
+    function seed(s){base=s;let p=pmul(s,G);for(let j=0;j<B;j++){X[j]=p[0];Y[j]=p[1];p=padd(p,G);}}
+    function nextSegment(){
+      if(cfg.mode==='seq'){ if(base===0n){seed(BigInt(cfg.segStart));end=BigInt(cfg.segEnd);} else done=true; }
+      else { const s=rnd(); seed(s); end=s+CHUNK-1n; if(end>hi)end=hi; }
+    }
+    nextSegment();
+    function step(){
+      let found=null;
+      for(let j=0;j<B;j++){
+        if(base+BigInt(j)>end)break;
+        const hx=X[j].toString(16).padStart(64,'0');
+        pub[0]=(Y[j]&1n)?3:2;
+        for(let i=0;i<32;i++)pub[1+i]=(HEX[hx.charCodeAt(2*i)]<<4)|HEX[hx.charCodeAt(2*i+1)];
+        const h=ripemd160(sha256(pub));
+        checked++;
+        if(h[0]===tgt[0]&&h[1]===tgt[1]&&h[2]===tgt[2]&&h[3]===tgt[3]){
+          let eq=true;for(let i=4;i<20;i++)if(h[i]!==tgt[i]){eq=false;break;}
+          if(eq){found=base+BigInt(j);break;}
+        }
+      }
+      if(found!==null){done=true;return found;}
+      base+=BigInt(B);
+      if(base>end){ if(cfg.mode==='seq'){done=true;return null;} nextSegment(); return null; }
+      let acc=1n;
+      for(let j=0;j<B;j++){let d=Dx-X[j];if(d<0n)d+=P;dd[j]=d;acc=acc*d%P;pre[j]=acc;}
+      let iv=inv(acc);
+      for(let j=B-1;j>=0;j--){
+        const ij=j>0?iv*pre[j-1]%P:iv; iv=iv*dd[j]%P;
+        const lam=md((Dy-Y[j])*ij);
+        const x3=md(lam*lam-X[j]-Dx);
+        Y[j]=md(lam*(X[j]-x3)-Y[j]); X[j]=x3;
+      }
+      return null;
+    }
+    return {
+      runFor(ms){const t0=Date.now();while(!done&&Date.now()-t0<ms){const f=step();if(f!==null)return {found:f};}return {found:null};},
+      get checked(){return checked;}, get current(){return base;}, get done(){return done;}
+    };
+  }
+
+  const api={sha256,ripemd160,b58check,b58decodeAddr,addrFromKey,wifFromKey,makeSearcher,pmul,G};
+  if(typeof scope.importScripts==='function'){
+    scope.onmessage=function(e){
+      const s=makeSearcher(e.data); let last=0;
+      while(true){
+        const r=s.runFor(250);
+        if(r.found!==null){scope.postMessage({type:'found',key:r.found.toString(),checked:s.checked-last});return;}
+        scope.postMessage({type:'progress',checked:s.checked-last,current:s.current.toString()}); last=s.checked;
+        if(s.done){scope.postMessage({type:'end'});return;}
+      }
+    };
+  }
+  return api;
+}
+
+/* ---------- Page ---------- */
+const C=CORE(window);
+const PUZZLES=[
+  {n:20,addr:'1HsMJxNiV7TLxmoF6uJNkydxPFDog4NQum',solved:true},
+  {n:21,addr:'14oFNXucftsHiUMY8uctg6N487riuyXs4h',solved:true},
+  {n:22,addr:'1CfZWK1QTQE3eS9qn61dQjV89KDjZzfNcv',solved:true},
+  {n:23,addr:'1L2GM8eE7mJWLdo3HZS6su1832NX2txaac',solved:true},
+  {n:24,addr:'1rSnXMr63jdCuegJFuidJqWxUPV7AtUf7',solved:true},
+  {n:25,addr:'15JhYXn6Mx3oF4Y7PcTAv2wVVAuCFFQNiP',solved:true},
+  {n:26,addr:'1JVnST957hGztonaWK6FougdtjxzHzRMMg',solved:true},
+  {n:27,addr:'128z5d7nN7PkCuX5qoA4Ys6pmxUYnEy86k',solved:true},
+  {n:28,addr:'12jbtzBb54r97TCwW3G1gCFoumpckRAPdY',solved:true},
+  {n:30,addr:'1LHtnpd8nU5VHEMkG2TMYYNUjjLc992bps',solved:true},
+  {n:71,addr:'1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU',solved:false,prize:'7,1 BTC'}
+];
+const $=id=>document.getElementById(id);
+const dots=s=>s.replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const fmtInt=n=>dots(Math.round(n).toString());
+function fmtBig(x){
+  const units=[[1e18,'πεντάκις εκατ.'],[1e15,'τετράκις εκατ.'],[1e12,'τρισεκατ.'],[1e9,'δισεκατ.'],[1e6,'εκατομμύρια']];
+  for(const [v,w] of units) if(x>=v){const q=x/v;return (q>=100?Math.round(q):q.toFixed(1).replace('.',','))+' '+w;}
+  return fmtInt(x);
+}
+function fmtDur(sec){
+  if(!isFinite(sec))return '—';
+  if(sec<60)return Math.max(0,Math.round(sec))+' δευτ.';
+  if(sec<3600)return Math.round(sec/60)+' λεπτά';
+  if(sec<86400)return (sec/3600).toFixed(1).replace('.',',')+' ώρες';
+  if(sec<86400*365)return Math.round(sec/86400)+' μέρες';
+  return fmtBig(sec/(86400*365.25))+' χρόνια';
+}
+
+const hc=navigator.hardwareConcurrency||2;
+[1,2,4,8].filter(t=>t<=Math.max(1,hc)).forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t+(t===1?' πυρήνας':' πυρήνες');$('threads').appendChild(o);});
+$('threads').value=String(Math.min(4,[1,2,4,8].filter(t=>t<=Math.max(1,hc)).pop()));
+
+PUZZLES.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent='#'+p.n+(p.solved?' · λυμένο (για δοκιμή)':' · ΑΛΥΤΟ · '+p.prize);$('puzzle').appendChild(o);});
+function showPuzzle(){
+  const p=PUZZLES[+$('puzzle').value], lo=1n<<BigInt(p.n-1), hi=(1n<<BigInt(p.n))-1n;
+  $('puzzleInfo').innerHTML='';
+  const tag=document.createElement('span');tag.className='tag '+(p.solved?'solved':'open');tag.textContent=p.solved?'Λυμένο':'Άλυτο';
+  const d=document.createElement('div');d.style.cssText='display:flex;flex-direction:column;gap:4px;margin-top:6px';
+  d.innerHTML='<div>Διεύθυνση: <span class="mono"></span></div><div>Εύρος: <span class="mono"></span> έως <span class="mono"></span></div><div>Πλήθος αριθμών: <span class="mono"></span></div>';
+  const m=d.querySelectorAll('.mono');m[0].textContent=p.addr;m[1].textContent=dots(lo.toString());m[2].textContent=dots(hi.toString());m[3].textContent=dots((hi-lo+1n).toString());
+  $('puzzleInfo').append(tag,d);
+}
+$('puzzle').addEventListener('change',showPuzzle); showPuzzle();
+
+/* Network self-test: an empty request that should be refused. */
+(async()=>{
+  try{await fetch('https://example.com/',{method:'GET',mode:'no-cors',cache:'no-store'});
+    $('netTest').textContent='Το δίκτυο δεν μπλοκαρίστηκε. Χρησιμοποίησε λειτουργία πτήσης.';$('netTest').classList.add('bad');}
+  catch(e){$('netTest').textContent='✓ Δίκτυο μπλοκαρισμένο';$('netTest').classList.add('ok');}
+})();
+
+/* ---------- History: blocks fully checked on this device are skipped next time ---------- */
+function puzzleJob(){
+  const p=PUZZLES[+$('puzzle').value], lo=1n<<BigInt(p.n-1), hi=(1n<<BigInt(p.n))-1n, half=hi-lo+1n;
+  let Cs=half/64n; if(Cs>(1n<<16n))Cs=1n<<16n; if(Cs<1n)Cs=1n;
+  return {p,n:p.n,lo,hi,span:half,C:Cs,nChunks:half/Cs,R:loadHist(p.n,Cs),at:histAt(p.n),inflight:new Set()};
+}
+function histKey(n){return 'kynigos.done.'+n;}
+function loadHist(n,Cs){try{const o=JSON.parse(localStorage.getItem(histKey(n))||'null');if(!o||o.C!==Cs.toString())return [];return o.r.map(([a,b])=>[BigInt(a),BigInt(b)]);}catch(e){return [];}}
+function saveHist(j){try{j.at=Date.now();localStorage.setItem(histKey(j.n),JSON.stringify({C:j.C.toString(),at:j.at,r:j.R.map(([a,b])=>[a.toString(),b.toString()])}));return true;}catch(e){return false;}}
+function histAt(n){try{const o=JSON.parse(localStorage.getItem(histKey(n))||'null');return o&&o.at?o.at:null;}catch(e){return null;}}
+const storageOk=(()=>{try{localStorage.setItem('kynigos.t','1');const ok=localStorage.getItem('kynigos.t')==='1';localStorage.removeItem('kynigos.t');return ok;}catch(e){return false;}})();
+function addIdx(R,i){
+  let k=0; while(k<R.length&&R[k][1]<i-1n)k++;
+  if(k<R.length&&R[k][0]<=i+1n){
+    if(R[k][0]<=i&&i<=R[k][1])return;
+    if(i<R[k][0])R[k][0]=i; else R[k][1]=i;
+    if(k+1<R.length&&R[k+1][0]<=R[k][1]+1n){if(R[k+1][1]>R[k][1])R[k][1]=R[k+1][1];R.splice(k+1,1);}
+  } else R.splice(k,0,[i,i]);
+}
+function doneChunks(R){let s=0n;for(const [a,b] of R)s+=b-a+1n;return s;}
+function taken(j,c){if(j.inflight.has(c.toString()))return true;for(const [a,b] of j.R)if(c>=a&&c<=b)return true;return false;}
+function firstFree(j){
+  let c=0n;
+  for(let g=0;g<200000;g++){let moved=false;for(const [a,b] of j.R)if(c>=a&&c<=b){c=b+1n;moved=true;}if(j.inflight.has(c.toString())){c++;moved=true;}if(!moved)break;}
+  return c<j.nChunks?c:null;
+}
+function randBelow(n){const by=new Uint8Array(24);crypto.getRandomValues(by);let r=0n;for(const b of by)r=(r<<8n)|BigInt(b);return r%n;}
+function nextChunk(j,mode,prev){
+  if(mode==='rand'){
+    if(prev!=null&&prev+1n<j.nChunks&&!taken(j,prev+1n))return prev+1n; // keep going from the random point
+    for(let t=0;t<40;t++){const c=randBelow(j.nChunks);if(!taken(j,c))return c;}
+  }
+  return firstFree(j);
+}
+
+let workers=[], fallback=null, running=false, t0=0, total=0, rateWin=[], lastKey='—', wakeLock=null, cur={}, span=1n, uiTimer=null, job=null, saveOk=true, dirty=false, lastSave=0;
+function flushSave(){if(job&&dirty){if(!saveHist(job))saveOk=false;dirty=false;lastSave=Date.now();}}
+function maybeSave(){if(Date.now()-lastSave>2000)flushSave();}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushSave();});
+window.addEventListener('pagehide',flushSave);
+function workerURL(){return URL.createObjectURL(new Blob(['('+CORE.toString()+')(self);'],{type:'text/javascript'}));}
+
+async function start(){
+  job=puzzleJob(); span=job.span;
+  const target=Array.from(C.b58decodeAddr(job.p.addr)), mode=$('mode').value, T=+$('threads').value;
+  $('foundCard').hidden=true; total=0; rateWin=[]; t0=Date.now(); cur={}; running=true; saveOk=true;
+  $('startBtn').disabled=true; $('stopBtn').disabled=false; $('resetHist').disabled=true; $('puzzle').disabled=$('mode').disabled=$('threads').disabled=true;
+  try{wakeLock=await navigator.wakeLock?.request('screen');}catch(e){wakeLock=null;}
+  const cfgFor=c=>{const s=job.lo+c*job.C;return {target,lo:job.lo.toString(),hi:job.hi.toString(),mode:'seq',segStart:s.toString(),segEnd:(s+job.C-1n).toString(),batch:256};};
+  const finishChunk=c=>{job.inflight.delete(c.toString());addIdx(job.R,c);dirty=true;maybeSave();};
+  const take=prev=>{const c=nextChunk(job,mode,prev);if(c!==null)job.inflight.add(c.toString());return c;};
+  let url=null;
+  try{url=workerURL();}catch(e){url=null;}
+  if(url){
+    try{
+      for(let i=0;i<T;i++){
+        const w=new Worker(url); w.chunk=take();
+        if(w.chunk===null){w.terminate();break;}
+        w.onmessage=ev=>{
+          if(!running)return;
+          const m=ev.data; total+=m.checked||0;
+          if(m.current)cur[i]=m.current;
+          if(m.type==='found')return onFound(BigInt(m.key));
+          if(m.type==='end'){
+            const prev=w.chunk; finishChunk(prev); w.chunk=take(prev);
+            if(w.chunk!==null)w.postMessage(cfgFor(w.chunk));
+            else if(job.inflight.size===0)onExhausted();
+          }
+        };
+        w.onerror=()=>{};
+        w.postMessage(cfgFor(w.chunk)); workers.push(w);
+      }
+      if(!workers.length){url=null;}
+    }catch(e){workers.forEach(w=>w.terminate());workers=[];job.inflight.clear();url=null;}
+  }
+  if(!url){ // run in the page itself, in small slices
+    let c=take(); if(c===null)return onExhausted();
+    let s=C.makeSearcher(cfgFor(c)), last=0;
+    const tick=()=>{ if(!running)return;
+      const r=s.runFor(60); total+=s.checked-last; last=s.checked; cur[0]=s.current.toString();
+      if(r.found!==null)return onFound(r.found);
+      if(s.done){finishChunk(c);c=take(c);if(c===null)return onExhausted();s=C.makeSearcher(cfgFor(c));last=0;}
+      fallback=setTimeout(tick,0); };
+    fallback=setTimeout(tick,0);
+  }
+  uiTimer=setInterval(render,250); render();
+}
+function stop(){
+  running=false; workers.forEach(w=>w.terminate()); workers=[]; clearTimeout(fallback); clearInterval(uiTimer);
+  flushSave(); if(job)job.inflight.clear();
+  try{wakeLock?.release();}catch(e){} wakeLock=null;
+  $('startBtn').disabled=false; $('stopBtn').disabled=true; $('resetHist').disabled=false; $('puzzle').disabled=$('mode').disabled=$('threads').disabled=false;
+  render();
+}
+function pct(f){const v=f*100;return v===0?'0':(v<0.01?'<0,01':v.toFixed(2).replace('.',','));}
+function renderHist(){
+  const j=running&&job?job:puzzleJob();
+  const doneKeys=Number(doneChunks(j.R)*j.C), frac=Math.min(1,doneKeys/Number(j.span));
+  $('pBar').style.width=(frac*100)+'%';
+  $('sHist').innerHTML='';
+  const s=document.createElement('span');
+  s.textContent=!storageOk
+    ?'Εδώ που άνοιξες τη σελίδα δεν επιτρέπεται αποθήκευση. Το ιστορικό και τυχόν κλειδί χάνονται όταν κλείσει. Άνοιξε το αρχείο της σελίδας σε Safari ή Chrome.'
+    :doneKeys>0
+    ?'Ιστορικό συσκευής: έχουν ελεγχθεί συνολικά '+fmtBig(doneKeys)+' αριθμοί ('+pct(frac)+'% του εύρους) και παραλείπονται. Τελευταία αποθήκευση: '+(j.at?new Date(j.at).toLocaleString('el-GR'):'—')
+    :'Ιστορικό συσκευής: κενό για αυτόν τον γρίφο. Αποθηκεύεται κάθε λίγα δευτερόλεπτα όσο τρέχει.';
+  $('sHist').append(s);
+  if(!saveOk){const w=document.createElement('div');w.textContent='Το ιστορικό δεν αποθηκεύεται σε αυτόν τον browser (π.χ. ιδιωτική περιήγηση).';$('sHist').append(w);}
+  return frac;
+}
+function render(){
+  const el=(Date.now()-t0)/1000;
+  rateWin.push([Date.now(),total]); while(rateWin.length>1&&Date.now()-rateWin[0][0]>4000)rateWin.shift();
+  const a=rateWin[0],b=rateWin[rateWin.length-1], rate=(b[0]>a[0])?(b[1]-a[1])/((b[0]-a[0])/1000):0;
+  const keys=Object.values(cur); if(keys.length)lastKey=dots(keys[keys.length-1]);
+  $('curKey').textContent=lastKey;
+  $('sRate').textContent=rate?fmtInt(rate)+' /δευτ.':'—';
+  $('sDone').textContent=fmtInt(total);
+  $('sTime').textContent=fmtDur(el);
+  $('sEta').textContent=rate?fmtDur(Number(span)/rate):'—';
+  const frac=renderHist();
+  if(running&&frac>0)$('sOdds').textContent='Πιθανότητα να είχε βρεθεί ως τώρα (όλες οι φορές): 1 στα '+fmtBig(1/frac)+'.';
+}
+$('resetHist').addEventListener('click',()=>{
+  const j=puzzleJob(); const b=$('resetHist');
+  if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Σίγουρα; Πάτα ξανά για μηδένισμα του #'+j.n;setTimeout(()=>{b.dataset.armed='';b.textContent='Μηδένισμα ιστορικού για αυτόν τον γρίφο';},4000);return;}
+  try{localStorage.removeItem(histKey(j.n));}catch(e){}
+  b.dataset.armed='';b.textContent='Μηδένισμα ιστορικού για αυτόν τον γρίφο';renderHist();
+});
+$('puzzle').addEventListener('change',renderHist); renderHist();
+const STORE_KEY='kynigos.found';
+function readSaved(){try{const v=JSON.parse(localStorage.getItem(STORE_KEY)||'null');return v&&v.key&&v.n?v:null;}catch(e){return null;}}
+function writeSaved(n,k){try{localStorage.setItem(STORE_KEY,JSON.stringify({n,key:k.toString(),at:new Date().toISOString()}));return readSaved()!==null;}catch(e){return false;}}
+function forgetSaved(){try{localStorage.removeItem(STORE_KEY);}catch(e){} $('foundCard').hidden=true;}
+function onFound(k){
+  stop();
+  const p=PUZZLES[+$('puzzle').value];
+  const ok=writeSaved(p.n,k);
+  showFound(k,p,ok?'Αποθηκεύτηκε σε αυτή τη συσκευή. Θα εμφανίζεται εδώ κάθε φορά που ανοίγεις τη σελίδα, μέχρι να πατήσεις «Διαγραφή».':'Δεν μπόρεσε να αποθηκευτεί (π.χ. ιδιωτική περιήγηση). Γράψ\' το σε χαρτί πριν κλείσεις τη σελίδα.');
+}
+function showFound(k,p,savedMsg){
+  $('fSaved').textContent=savedMsg;
+  $('fDec').textContent=dots(k.toString());
+  $('fHex').textContent=k.toString(16);
+  $('fWif').textContent=C.wifFromKey(k);
+  const a=C.addrFromKey(k); $('fAddr').textContent=a+(a===p.addr?'  ✓ ταιριάζει':'');
+  $('fWarn').innerHTML=p.solved
+    ?'Αυτός ο γρίφος έχει ήδη λυθεί και το πορτοφόλι είναι άδειο. Ήταν δοκιμή: η διαδικασία δουλεύει.'
+    :'<strong>Μην το γράψεις πουθενά και μην πατήσεις «Αποστολή» σε κανένα πορτοφόλι.</strong> Ακολούθησε τη διαδικασία με Electrum χωρίς internet και ιδιωτική αποστολή. Κλείσε αυτή τη σελίδα μόλις το κρατήσεις σε χαρτί.';
+  $('foundCard').hidden=false; $('foundCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('forgetBtn').addEventListener('click',forgetSaved);
+(()=>{const s=readSaved(); if(!s)return; const p=PUZZLES.find(x=>x.n===s.n); if(!p)return;
+  showFound(BigInt(s.key),p,'Αποθηκευμένο κλειδί από '+new Date(s.at).toLocaleString('el-GR')+'. Βρίσκεται μόνο σε αυτή τη συσκευή.');})();
+function onExhausted(){stop();$('sOdds').textContent='Το εύρος ελέγχθηκε όλο χωρίς αποτέλεσμα.';}
+$('startBtn').addEventListener('click',start);
+$('stopBtn').addEventListener('click',stop);
+$('manualBtn').addEventListener('click',()=>{
+  const raw=$('manualKey').value.replace(/[\s.,]/g,''); const out=$('manualOut'); out.textContent='';
+  if(!/^\d+$/.test(raw)||BigInt(raw)===0n){out.textContent='Γράψε έναν θετικό ακέραιο αριθμό.';return;}
+  const k=BigInt(raw); if(k>=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141n){out.textContent='Ο αριθμός είναι πολύ μεγάλος για κλειδί bitcoin.';return;}
+  const a=C.addrFromKey(k), match=PUZZLES.find(p=>p.addr===a);
+  out.innerHTML='<div class="kv"><span class="label">WIF</span><span class="mono"></span></div><div class="kv" style="margin-top:8px"><span class="label">Διεύθυνση</span><span class="mono"></span></div><p></p>';
+  const m=out.querySelectorAll('.mono'); m[0].textContent=C.wifFromKey(k); m[1].textContent=a;
+  out.querySelector('p').textContent=match?('Αυτό είναι το κλειδί του γρίφου #'+match.n+'!'):'Δεν ταιριάζει με κανέναν γρίφο της λίστας.';
+});
+</script>
+
+</body>
+</html>
