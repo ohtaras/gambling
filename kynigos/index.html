@@ -462,6 +462,9 @@ function showPuzzle(){
   const m=d.querySelectorAll('.mono');m[0].textContent=p.addr;m[1].textContent=dots(lo.toString());m[2].textContent=dots(hi.toString());m[3].textContent=dots((hi-lo+1n).toString());
   $('puzzleInfo').append(tag,d);
 }
+$('puzzle').value=String(PUZZLES.findIndex(p=>p.n===71)); // default: #71
+try{const m=localStorage.getItem('kynigos.mode');if(m==='seq'||m==='rand')$('mode').value=m;}catch(e){}
+$('mode').addEventListener('change',()=>{try{localStorage.setItem('kynigos.mode',$('mode').value);}catch(e){}});
 $('puzzle').addEventListener('change',showPuzzle); showPuzzle();
 
 /* Network self-test: an empty request that should be refused. */
