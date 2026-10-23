@@ -313,10 +313,97 @@ function CORE(scope){
     };
   }
 
-  const api={sha256,ripemd160,b58check,b58decodeAddr,addrFromKey,wifFromKey,makeSearcher,pmul,G};
+  /* ---- Engine v2: center ± offsets share one inversion ("two in one"), fast reduction, allocation-free hashes ---- */
+  const K977=0x1000003D1n, M256=(1n<<256n)-1n;
+  function red(x){x=(x&M256)+(x>>256n)*K977;x=(x&M256)+(x>>256n)*K977;return x>=P?x-P:x;}
+  function sub(a,b){const r=a-b;return r<0n?r+P:r;}
+  const RL8=Uint8Array.from(RL),RR8=Uint8Array.from(RR),SL8=Uint8Array.from(SL),SR8=Uint8Array.from(SR),KL32=Int32Array.from(KL),KR32=Int32Array.from(KR);
+  const W2=new Uint32Array(64), SHO=new Uint32Array(8), RX2=new Int32Array(16), XW=new Uint32Array(8);
+  function shaRipe33(prefix){ // input: prefix byte + 32 bytes of XW (big-endian words); output: 5 RIPEMD words (little-endian ints)
+    const W=W2;
+    W[0]=(prefix<<24)|(XW[0]>>>8);
+    for(let i=1;i<8;i++)W[i]=(XW[i-1]<<24)|(XW[i]>>>8);
+    W[8]=(XW[7]<<24)|0x800000; W[9]=0;W[10]=0;W[11]=0;W[12]=0;W[13]=0;W[14]=0; W[15]=264;
+    for(let i=16;i<64;i++){const a=W[i-15],b=W[i-2];W[i]=W[i-16]+(rotr(a,7)^rotr(a,18)^(a>>>3))+W[i-7]+(rotr(b,17)^rotr(b,19)^(b>>>10));}
+    let a=0x6a09e667,b=0xbb67ae85|0,c=0x3c6ef372,d=0xa54ff53a|0,e=0x510e527f,f=0x9b05688c|0,g=0x1f83d9ab,h=0x5be0cd19;
+    for(let i=0;i<64;i++){
+      const t1=(h+(rotr(e,6)^rotr(e,11)^rotr(e,25))+((e&f)^(~e&g))+SK[i]+W[i])|0;
+      const t2=((rotr(a,2)^rotr(a,13)^rotr(a,22))+((a&b)^(a&c)^(b&c)))|0;
+      h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0;
+    }
+    const s0=(0x6a09e667+a)|0,s1=(0xbb67ae85+b)|0,s2=(0x3c6ef372+c)|0,s3=(0xa54ff53a+d)|0,s4=(0x510e527f+e)|0,s5=(0x9b05688c+f)|0,s6=(0x1f83d9ab+g)|0,s7=(0x5be0cd19+h)|0;
+    const X=RX2, bs=v=>((v>>>24)|((v>>>8)&0xff00)|((v<<8)&0xff0000)|(v<<24));
+    X[0]=bs(s0);X[1]=bs(s1);X[2]=bs(s2);X[3]=bs(s3);X[4]=bs(s4);X[5]=bs(s5);X[6]=bs(s6);X[7]=bs(s7);
+    X[8]=0x80;X[9]=0;X[10]=0;X[11]=0;X[12]=0;X[13]=0;X[14]=256;X[15]=0;
+    let al=0x67452301,bl=0xEFCDAB89|0,cl=0x98BADCFE|0,dl=0x10325476,el=0xC3D2E1F0|0,ar=al,br=bl,cr=cl,dr=dl,er=el;
+    for(let j=0;j<80;j++){
+      const r=j>>4; let fl,fr;
+      if(r===0){fl=bl^cl^dl;fr=br^(cr|~dr);}
+      else if(r===1){fl=(bl&cl)|(~bl&dl);fr=(br&dr)|(cr&~dr);}
+      else if(r===2){fl=(bl|~cl)^dl;fr=(br|~cr)^dr;}
+      else if(r===3){fl=(bl&dl)|(cl&~dl);fr=(br&cr)|(~br&dr);}
+      else {fl=bl^(cl|~dl);fr=br^cr^dr;}
+      let t=(al+fl+X[RL8[j]]+KL32[r])|0; t=(((t<<SL8[j])|(t>>>(32-SL8[j])))+el)|0;
+      al=el;el=dl;dl=(cl<<10)|(cl>>>22);cl=bl;bl=t;
+      t=(ar+fr+X[RR8[j]]+KR32[r])|0; t=(((t<<SR8[j])|(t>>>(32-SR8[j])))+er)|0;
+      ar=er;er=dr;dr=(cr<<10)|(cr>>>22);cr=br;br=t;
+    }
+    SHO[0]=(0xEFCDAB89+cl+dr)|0; SHO[1]=(0x98BADCFE+dl+er)|0; SHO[2]=(0x10325476+el+ar)|0; SHO[3]=(0xC3D2E1F0+al+br)|0; SHO[4]=(0x67452301+bl+cr)|0;
+  }
+  function loadX(x){const hx=x.toString(16).padStart(64,'0');for(let i=0;i<8;i++){let w=0;for(let k=0;k<8;k++)w=(w<<4)|HEX[hx.charCodeAt(8*i+k)];XW[i]=w;}}
+  function makeSearcher2(cfg){
+    if(cfg.mode!=='seq')return makeSearcher(cfg);
+    const tg=cfg.target, T=new Uint32Array(5);
+    for(let i=0;i<5;i++)T[i]=(tg[4*i]|(tg[4*i+1]<<8)|(tg[4*i+2]<<16)|(tg[4*i+3]<<24))>>>0;
+    const hit=()=>SHO[0]===T[0]&&SHO[1]===T[1]&&SHO[2]===T[2]&&SHO[3]===T[3]&&SHO[4]===T[4];
+    const H=(cfg.batch||256)>>1, HB=BigInt(H);
+    const s=BigInt(cfg.segStart), end=BigInt(cfg.segEnd);
+    const TX=new Array(H+1), TY=new Array(H+1), TYn=new Array(H+1);
+    let p=G; for(let j=1;j<=H;j++){TX[j]=p[0];TY[j]=p[1];TYn[j]=P-p[1];p=padd(p,G);}
+    const D=pmul(2n*HB,G), Dx=D[0], Dy=D[1];
+    let c=s+HB-1n, C=pmul(c,G), checked=0, done=false, found=null;
+    const dd=new Array(H+2), pre=new Array(H+2);
+    function step(){
+      if(c-HB+1n>end){done=true;return null;}
+      const cx=C[0], cy=C[1];
+      let acc=1n;
+      for(let j=1;j<=H;j++){const d=sub(TX[j],cx);dd[j]=d;acc=red(acc*d);pre[j]=acc;}
+      { const d=sub(Dx,cx); dd[H+1]=d; acc=red(acc*d); pre[H+1]=acc; }
+      let iv=inv(acc), nC=null;
+      if(c<=end){loadX(cx);shaRipe33((cy&1n)?3:2);checked++;if(hit())found=c;}
+      for(let k=H+1;k>=1;k--){
+        const ik=k>1?red(iv*pre[k-1]):iv; iv=red(iv*dd[k]);
+        if(k===H+1){
+          const lam=red(sub(Dy,cy)*ik), x=sub(sub(red(lam*lam),cx),Dx);
+          nC=[x,sub(red(lam*sub(cx,x)),cy)]; continue;
+        }
+        const kb=BigInt(k);
+        if(c+kb<=end){ // c + k
+          const lam=red(sub(TY[k],cy)*ik), x=sub(sub(red(lam*lam),cx),TX[k]);
+          const y=sub(red(lam*sub(cx,x)),cy);
+          loadX(x);shaRipe33((y&1n)?3:2);checked++;if(hit()&&found===null)found=c+kb;
+        }
+        if(k<H&&c-kb<=end){ // c - k
+          const lam=red(sub(TYn[k],cy)*ik), x=sub(sub(red(lam*lam),cx),TX[k]);
+          const y=sub(red(lam*sub(cx,x)),cy);
+          loadX(x);shaRipe33((y&1n)?3:2);checked++;if(hit()&&found===null)found=c-kb;
+        }
+      }
+      if(found!==null){done=true;return found;}
+      C=nC; c+=2n*HB;
+      if(c-HB+1n>end)done=true;
+      return null;
+    }
+    return {
+      runFor(ms){const t0=Date.now();while(!done&&Date.now()-t0<ms){const f=step();if(f!==null)return {found:f};}return {found:null};},
+      get checked(){return checked;}, get current(){return c;}, get done(){return done;}
+    };
+  }
+
+  const api={sha256,ripemd160,b58check,b58decodeAddr,addrFromKey,wifFromKey,makeSearcher:makeSearcher2,makeSearcherV1:makeSearcher,pmul,G};
   if(typeof scope.importScripts==='function'){
     scope.onmessage=function(e){
-      const s=makeSearcher(e.data); let last=0;
+      const s=makeSearcher2(e.data); let last=0;
       while(true){
         const r=s.runFor(250);
         if(r.found!==null){scope.postMessage({type:'found',key:r.found.toString(),checked:s.checked-last});return;}
