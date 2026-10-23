@@ -448,8 +448,9 @@ function fmtDur(sec){
 }
 
 const hc=navigator.hardwareConcurrency||2;
-[1,2,4,8].filter(t=>t<=Math.max(1,hc)).forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t+(t===1?' πυρήνας':' πυρήνες');$('threads').appendChild(o);});
-$('threads').value=String(Math.min(4,[1,2,4,8].filter(t=>t<=Math.max(1,hc)).pop()));
+const thrOpts=[...new Set([1,2,4,8,16,hc])].filter(t=>t<=Math.max(1,hc)).sort((a,b)=>a-b);
+thrOpts.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t+(t===1?' πυρήνας':' πυρήνες')+(t===hc&&t>1?' (όλοι)':'');$('threads').appendChild(o);});
+$('threads').value=String(hc>=4?hc:thrOpts[thrOpts.length-1]);
 
 PUZZLES.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent='#'+p.n+(p.solved?' · λυμένο (για δοκιμή)':' · ΑΛΥΤΟ · '+p.prize);$('puzzle').appendChild(o);});
 function showPuzzle(){
