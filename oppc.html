@@ -467,7 +467,7 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; if(M
 });
 /* 🎬 Πραγματικό βιντεάκι κουνήματος (AI, Wan 2.2): παίζει πάνω από το κουτί, μετά φαίνονται τα πραγματικά νούμερα */
 var VID_ON = lsGet('trv_vid')!=='0';
-var VIDS = {shake:['shake1','shake2','shake3','shake4','shake5'], throw:['throw1','throw2','throw3','throw4'], win:['win1','win2','win3'], lose:['lose1','lose2','lose3','lose4','lose5'], idle:['idle1','idle2']}, VCUR = 'shake1';
+var VIDS = {shake:['shake1','shake2','shake3','shake4','shake5'], throw:['throw1','throw2','throw3','throw4','throw5'], win:['win1','win2','win3','win4'], lose:['lose1','lose2','lose3','lose4','lose5','lose6'], idle:['idle1','idle2']}, VCUR = 'shake1';
 function vidPlay(name, ms){ var v = $('shakeVid'); if(!v || !VID_ON) return false; var L = VIDS[name]; if(!L || !L.length) return false; var f = L[Math.floor(Math.random()*L.length)];
   if(VCUR !== f){ VCUR = f; v.poster = ''; v.innerHTML = '<source src="vid/'+f+'.mp4?v=1" type="video/mp4"><source src="vid/'+f+'.webm?v=1" type="video/webm">'; v.load(); }
   try{ v.currentTime = 0; }catch(e){} v.onended = function(){ clearTimeout(v._t); v.classList.remove('on'); };
