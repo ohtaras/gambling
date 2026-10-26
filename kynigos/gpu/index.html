@@ -38,7 +38,7 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
 <div class="row"><button id="imp">Εισαγωγή προόδου</button><button id="exp">Εξαγωγή προόδου</button></div>
 <div id="iopanel" style="display:none;flex-direction:column;gap:8px">
 <textarea id="iotext" rows="4" placeholder="Επικόλλησε εδώ το κείμενο KYN1:… από το άλλο πρόγραμμα" style="width:100%;font-family:var(--mono);font-size:.72rem;background:#0f141a;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical"></textarea>
-<div class="row"><button id="ioapply">Εφαρμογή εισαγωγής</button><button id="iocopy">Αντιγραφή</button><span class="note" id="ionote"></span></div>
+<div class="row"><button id="ioapply">Εφαρμογή εισαγωγής</button><button id="iocopy">Αντιγραφή</button><button id="expdl">Κατέβασμα .txt</button><button id="impfile_btn">Φόρτωση αρχείου</button><input id="impfile" type="file" accept=".txt,text/plain" style="display:none"><span class="note" id="ionote"></span></div>
 </div>
 <div class="grid2">
   <div class="field"><span class="label">Από</span><input id="min" inputmode="numeric" value="1180591620717411303424"></div>
@@ -766,5 +766,9 @@ $("imp").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό ε�
 $("exp").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); loadCov(); showPanel(); $("iotext").value=exportKYN1(); $("iotext").focus(); $("iotext").select(); $("ionote").textContent="Αντίγραψε αυτό το κείμενο (κουμπί «Αντιγραφή»)."; };
 $("ioapply").onclick=()=>{ const t=$("iotext").value.trim(); if(!t){$("ionote").textContent="Το πλαίσιο είναι κενό.";return;} doImport(t); };
 $("iocopy").onclick=()=>{ const t=$("iotext"); t.select(); try{navigator.clipboard.writeText(t.value).then(()=>{$("ionote").textContent="Αντιγράφηκε.";},()=>{$("ionote").textContent="Επίλεξε και αντίγραψε χειροκίνητα.";});}catch(e){$("ionote").textContent="Επίλεξε και αντίγραψε χειροκίνητα.";} };
+function dlText(name,text){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000); }
+$("expdl").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); loadCov(); const t=exportKYN1(); dlText("kynigos-proodos.txt",t); $("ionote").textContent="Κατέβηκε το αρχείο kynigos-proodos.txt (" + (t.length>1048576?(t.length/1048576).toFixed(1)+" MB":Math.round(t.length/1024)+" KB") + ")."; };
+$("impfile_btn").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); $("impfile").click(); };
+$("impfile").onchange=(ev)=>{ const f=ev.target.files&&ev.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>{ doImport(String(r.result)); }; r.onerror=()=>{ERR("Δεν διαβάστηκε το αρχείο.");}; r.readAsText(f); ev.target.value=""; };
 init();
 </script></body></html>
