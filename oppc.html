@@ -525,9 +525,10 @@ function wtPre(){ // μετά την κλήρωση, μέχρι να κουνή�
   var a = Math.random()<.5 ? $('bxGuyL') : $('bxGuyR'), b = a===$('bxGuyL') ? $('bxGuyR') : $('bxGuyL');
   bxSay(a, f(L[0])); if(L[1]) setTimeout(function(){ bxSay(b, f(L[1])); }, 1800); setTimeout(function(){ if(!busy){ bxSay(a, ''); bxSay(b, ''); } }, 8000); }
 function wtTalk(){ if(!WT_ON || busy || WAIT || document.hidden || !last) return;
-  if(!PRED || PRED.id < last.id){ if(Date.now() - WT_LAST < 14000) return; var vv = $('shakeVid'); if(vv && vv.classList.contains('on')) return; if(Date.now() - (window.SCENE_END||0) < 7000) return; WT_LAST = Date.now(); if(MAN_ON){ if(Math.random() < 0.35) manNudge(); return; } wtPre(); return; }
+  if(!PRED || PRED.id < last.id){ if(Date.now() - WT_LAST < 14000) return; var vv = $('shakeVid'); if(vv && vv.classList.contains('on')) return; if(Date.now() - (window.SCENE_END||0) < 7000) return; WT_LAST = Date.now(); if(MAN_ON){ if(Math.random() < 0.6) manNudge(); return; } wtPre(); return; }
   var nt = NEXT ? NEXT.t : last.t + 300000, ms = nt - Date.now(); if(ms < 20000 || Date.now() - WT_LAST < 15000) return;
   var v = $('shakeVid'); if(v && v.classList.contains('on')) return;
+  if(PRED.man && MAN_ON && Math.random() < 0.7 && manStat()) return;
   var nums = PRED.moves.map(function(m){ return m[1]; }); if(!nums.length) return; WT_LAST = Date.now();
   if(!WT_BAG.length){ for(var i=0;i<WT_LINES.length;i++) WT_BAG.push(i); for(var j=WT_BAG.length-1;j>0;j--){ var k = Math.floor(Math.random()*(j+1)), t = WT_BAG[j]; WT_BAG[j] = WT_BAG[k]; WT_BAG[k] = t; } }
   var DC = dayCnt(last), hot = 1, cold = 1; for(var x=1;x<=80;x++){ if(DC.c[x] > DC.c[hot]) hot = x; if(DC.c[x] < DC.c[cold]) cold = x; }
@@ -914,8 +915,38 @@ $('fbForm').addEventListener('submit', async function(e){ e.preventDefault(); va
   $('mAuto').addEventListener('click', function(){ AUTO = !AUTO; lsSet('trv_auto2', AUTO ? '1' : '0'); if(AUTO && last && PRED && PRED.id >= last.id) AUTOD = last.id; u(); }); u(); })();
 (function(){ function u(){ $('mVid').textContent = VID_ON ? 'ON' : 'OFF'; $('mVid').style.borderColor = VID_ON ? '#22c55e' : ''; } $('mVid').addEventListener('click', function(){ VID_ON = !VID_ON; lsSet('trv_vid', VID_ON?'1':'0'); u(); }); u(); })();
 /* ✋ Χειροκίνητη λειτουργία: ο χρήστης διαλέγει τη δική του στήλη πάνω στο ταμπλό */
-var MAN_SAY = ['Σήμερα διαλέγεις εσύ! Πάτα τους αριθμούς σου στο ταμπλό!','Εμείς ξεκουραζόμαστε, εσύ διαλέγεις!','Δική σου η στήλη, δική σου και η δόξα!','Πάτα τα νούμερα που νιώθεις — τα κρατάμε αμέσως!'];
-function manNudge(){ var a = Math.random()<.5 ? $('bxGuyL') : $('bxGuyR'); bxSay(a, MAN_SAY[Math.floor(Math.random()*MAN_SAY.length)]); setTimeout(function(){ if(!busy) bxSay(a, ''); }, 4500); }
+var MAN_SAY = [
+ ['Σήμερα διαλέγεις εσύ! Πάτα τους αριθμούς σου στο ταμπλό!','Εμείς ξεκουραζόμαστε, εσύ δουλεύεις!'],
+ ['Δική σου η στήλη, δική σου και η δόξα!','…και η χασούρα, αλλά αυτό δεν το λέμε!'],
+ ['Έλα, πάτα κάνα νούμερο, δεν δαγκώνει!','Το ταμπλό περιμένει, το ίδιο κι εμείς!'],
+ ['Τα γενέθλιά σου; Το τηλέφωνο της πεθεράς;','Όλα κάνουν — πάτα τα στο ταμπλό!'],
+ ['Εσύ έχεις το ένστικτο, εμείς τα μπαλάκια!','Ας δούμε ποιος είναι ο μάγος σήμερα!'],
+ ['Λένε ότι τα καλά νούμερα τα διαλέγει το χέρι, όχι το μυαλό!','Εμείς που κουνάμε κουτιά τι να πούμε…'],
+ ['Μην το σκέφτεσαι πολύ — η κληρωτίδα δεν σκέφτεται καθόλου!','Γι\' αυτό τα πάει τόσο καλά!'],
+ ['Στη χειροκίνητη ο αρχηγός είσαι εσύ!','Εμείς είμαστε απλώς η μπάντα!'],
+ ['Βάλε 4 με 6 νούμερα, να έχουμε και κανένα θέαμα!','Και μετά δελτίο και στυλό, εννοείται!']];
+var MAN_REACT = {
+ hh:['Το {n}! Καυτό — βγήκε {c} στις 5 τελευταίες!','Το {n} καίει, φόρα γάντια!','Μπράβο, το {n} είναι σε φόρμα!'],
+ hb:['Το {n} είναι ΚΑΜΕΝΟ — 4 στη σειρά! Θα αντέξει κι άλλη;','Το {n}; Αυτό δεν σταματάει με τίποτα!'],
+ hw:['Το {n}, χλιαρό — ούτε κρύο ούτε ζέστη!','Το {n} ζεσταίνει τις μηχανές του!','Χλιαρό το {n}, σαν καφές που ξέχασες!'],
+ hc:['Το {n}; Κρύο σαν τον Γενάρη!','Το {n} κοιμάται — εσύ θα το ξυπνήσεις!','Θαρραλέο! Το {n} είναι παγωμένο!','Το {n} έχει να βγει {g} κληρώσεις — λες να είναι η ώρα του;']};
+function manSay2(a, t1, t2){ var A = a || (Math.random()<.5 ? $('bxGuyL') : $('bxGuyR')), B = A===$('bxGuyL') ? $('bxGuyR') : $('bxGuyL'); bxSay(A, t1); if(t2) setTimeout(function(){ if(!busy) bxSay(B, t2); }, 1800); setTimeout(function(){ if(!busy){ bxSay(A, ''); bxSay(B, ''); } }, t2 ? 7500 : 4500); WT_LAST = Date.now(); }
+function manNudge(){ var L = MAN_SAY[Math.floor(Math.random()*MAN_SAY.length)]; manSay2(null, L[0], L[1]); }
+function manGap(n){ var d = cur(); if(!d) return null; for(var k=0;k<200;k++){ var a = drawNums(d.id-k); if(!a) return null; if(a.indexOf(n) >= 0) return k; } return 200; }
+function manReact(n){ try{ var H = legHeat(cur()); if(!H || Math.random() < 0.35) return; var k = H(n).k, HQ = heat5(cur()), c = HQ ? HQ.c[n] : 0, g = manGap(n), L = MAN_REACT[k] || MAN_REACT.hc;
+  var t = L[Math.floor(Math.random()*L.length)]; if(t.indexOf('{g}') >= 0 && !(g > 4)) t = L[0];
+  manSay2(null, t.replace(/\{n\}/g, n).replace('{c}', c).replace('{g}', g == null ? 'πολλές' : g)); }catch(e){} }
+function manStat(){ try{ var d = cur(); if(!d || !PRED || !PRED.man) return false; var nums = PRED.moves.map(function(m){ return m[1]; }), K = nums.length; if(!K) return false;
+  var H = legHeat(d), tot = {hh:0,hw:0,hc:0,hb:0}; if(H) nums.forEach(function(x){ tot[H(x).k]++; });
+  var DC = dayCnt(d), best = nums.slice().sort(function(a,b){ return DC.c[b]-DC.c[a]; }), gaps = nums.map(function(x){ return [x, manGap(x)]; }).filter(function(v){ return v[1] != null; }).sort(function(a,b){ return b[1]-a[1]; });
+  var P = PAYS[K], top = P ? Math.max.apply(null, Object.keys(P).map(Number)) : 0, pTop = top ? stC(20,top)*stC(60,K-top)/stC(80,K) : 0, pAny = stAny(K);
+  var opts = [];
+  if(H) var pl = function(v, a1, a2){ return v+' '+(v===1 ? a1 : a2); }; opts.push(['Η στήλη σου: '+pl(tot.hh+tot.hb,'καυτό','καυτά')+', '+pl(tot.hw,'χλιαρό','χλιαρά')+', '+pl(tot.hc,'κρύο','κρύα')+'!', tot.hc === K ? 'Όλα κρύα! Ή μεγάλη ιδέα ή μεγάλη τρέλα!' : (tot.hc === 0 ? 'Καθόλου κρύο! Ζεστή στήλη, καυτά όνειρα!' : 'Ωραία ανάμειξη — κάτι για όλους!')]);
+  if(DC.n >= 10) opts.push(['Το '+best[0]+' έχει βγει '+DC.c[best[0]]+' φορές σήμερα σε '+DC.n+' κληρώσεις!', 'Ο πρωταθλητής της στήλης σου!']);
+  if(gaps.length && gaps[0][1] >= 6) opts.push(['Το '+gaps[0][0]+' έχει να βγει '+gaps[0][1]+' κληρώσεις!', ['Λες να το ξυπνήσουμε;','Κάπου θα έχει πάει διακοπές!','Το ψάχνουμε με φακό!'][Math.floor(Math.random()*3)]]);
+  if(pTop) opts.push(['Με '+K+' νούμερα, το '+top+'/'+K+' έρχεται 1 στις '+Math.round(1/pTop).toLocaleString('el-GR')+' κληρώσεις!', 'Και κάποιος θα το πιάσει — γιατί όχι εσύ;']);
+  if(pAny) opts.push(['Η στήλη σου πληρώνει κάτι 1 στις '+(1/pAny).toFixed(1).replace('.',',')+' κληρώσεις!', 'Δελτίο και στυλό, να μη χαθεί!']);
+  if(!opts.length) return false; var o = opts[Math.floor(Math.random()*opts.length)]; manSay2(null, o[0], o[1]); return true; }catch(e){ return false; } }
 function manRender(){ var box = $('boxBox'); if(!box) return; Array.prototype.forEach.call(box.querySelectorAll('.mSel'), function(e){ e.remove(); });
   var SH = MANSEL, fx = false; if(MAN_ON && !SH.length && PRED && PRED.man && cur() && PRED.id === cur().id){ SH = PRED.moves.map(function(m){ return m[1]; }); fx = true; }
   if(MAN_ON) SH.forEach(function(n){ var r = Math.floor((n-1)/10), c = (n-1)%10, e = document.createElement('div'); e.className = 'mSel'+(fx ? ' mFix' : ''); e.style.left = (c*10)+'%'; e.style.top = (r*12.5)+'%'; e.innerHTML = '<span>'+n+'</span>'; box.appendChild(e); });
@@ -924,7 +955,7 @@ function manUI(){ $('manBar').style.display = MAN_ON ? '' : 'none'; var th = doc
   var nl = $('boxN') && $('boxN').parentNode; if(nl) nl.style.display = MAN_ON ? 'none' : ''; $('boxBox').style.cursor = MAN_ON ? 'pointer' : ''; manRender(); }
 $('boxBox').addEventListener('click', function(ev){ if(!MAN_ON || busy || !cur()) return; var r = this.getBoundingClientRect(), c = Math.floor((ev.clientX - r.left)/r.width*10), w = Math.floor((ev.clientY - r.top)/r.height*8);
   if(c<0||c>9||w<0||w>7) return; var n = w*10+c+1, i = MANSEL.indexOf(n); if(!MANSEL.length && PRED && PRED.man && cur() && PRED.id === cur().id){ MANSEL = PRED.moves.map(function(m){ return m[1]; }); i = MANSEL.indexOf(n); }
-  if(i >= 0) MANSEL.splice(i,1); else if(MANSEL.length < 12) MANSEL.push(n); else { bxSay($('bxGuyR'), 'Ως 12 αριθμούς παίρνει το δελτίο!'); setTimeout(function(){ bxSay($('bxGuyR'), ''); }, 3000); } manRender(); clearTimeout(MAN_TO); MAN_TO = setTimeout(manCommit, 1500); });
+  if(i >= 0) MANSEL.splice(i,1); else if(MANSEL.length < 12){ MANSEL.push(n); manReact(n); } else { bxSay($('bxGuyR'), 'Ως 12 αριθμούς παίρνει το δελτίο!'); setTimeout(function(){ bxSay($('bxGuyR'), ''); }, 3000); } manRender(); clearTimeout(MAN_TO); MAN_TO = setTimeout(manCommit, 1500); });
 setInterval(function(){ var on = MAN_ON && !busy && Date.now() > MAN_PEEK; document.body.classList.toggle('manHide', on); var pk = $('manPeek'); if(pk) pk.textContent = on ? '👁️ Δες την κλήρωση' : '🙈 Κρύψε την κλήρωση'; }, 500);
 $('manPeek').addEventListener('click', function(){ MAN_PEEK = (Date.now() > MAN_PEEK) ? Date.now() + 600000 : 0; });
 $('heatGridBtn').addEventListener('click', function(e){ e.stopPropagation(); HEAT_GRID = !HEAT_GRID; lsSet('trv_heatgrid', HEAT_GRID?'1':'0'); heatGrid(); });
@@ -936,7 +967,7 @@ function manCommit(){ var D = cur(); if(!MAN_ON || busy || !D) return; if(!MANSE
   var k = MANSEL.length, nums = MANSEL.slice().sort(function(a,b){ return a-b; });
   PRED = {id:D.id, t:D.t, sc:(D.sc||[]).slice(), moves:nums.map(function(n){ return [n, n]; }), st:{stay:k, l:0, r:0, u:0, d:0, ul:0, ur:0, dl:0, dr:0}, man:true};
   lsSet('trv_pred', JSON.stringify(PRED)); lsSet('trv_man_last', nums.join(',')); MANSEL = []; WT_LAST = Date.now() - 15000 + 6000; predText(PRED, false); $('boxPred').disabled = false; predEval(); manRender();
-  if(MAN_SAID === D.id) return; MAN_SAID = D.id; var a = Math.random()<.5 ? $('bxGuyL') : $('bxGuyR'); bxSay(a, view ? 'Για να δούμε τι θα έπιανε στην επόμενη κλήρωση!' : ['Καλή στήλη! Τώρα περιμένουμε την κλήρωση!','Τα κρατάμε! Σημείωσέ τα και στο δελτίο σου!','Αυτά είναι! Καλή τύχη!'][Math.floor(Math.random()*3)]); setTimeout(function(){ if(!busy) bxSay(a, ''); }, 5000); }
+  if(MAN_SAID === D.id) return; MAN_SAID = D.id; if(Date.now() - WT_LAST < 4000) return; var a = Math.random()<.5 ? $('bxGuyL') : $('bxGuyR'); bxSay(a, view ? 'Για να δούμε τι θα έπιανε στην επόμενη κλήρωση!' : ['Καλή στήλη! Τώρα περιμένουμε την κλήρωση!','Τα κρατάμε! Σημείωσέ τα και στο δελτίο σου!','Αυτά είναι! Καλή τύχη!'][Math.floor(Math.random()*3)]); setTimeout(function(){ if(!busy) bxSay(a, ''); }, 5000); }
 (function(){ function u(){ $('manBtn').classList.toggle('on', MAN_ON); manUI(); } $('manBtn').addEventListener('click', function(e){ e.stopPropagation(); if(busy) return; MAN_ON = !MAN_ON; MANSEL = []; lsSet('trv_man', MAN_ON?'1':'0'); u(); }); u(); })();
 /* 📜 Στήλες-θρύλοι: οι στήλες που έχουν βγει ολόκληρες τις περισσότερες φορές (ιστορικό 28/09/2018 – 19/10/2026, 639.793 κληρώσεις) */
 var LEG = [{"k": 3, "n": [34, 36, 63], "c": 9298, "l": "19/10/2026 05:55", "th": 3, "i": 1, "of": 1}, {"k": 4, "n": [38, 41, 67, 80], "c": 2187, "l": "18/10/2026 19:55", "th": 4, "i": 1, "of": 1}, {"k": 5, "n": [23, 46, 62, 63, 64], "c": 535, "l": "10/10/2026 05:30", "th": 3, "i": 1, "of": 1}, {"k": 6, "n": [1, 16, 17, 26, 45, 68], "c": 143, "l": "15/08/2026 16:30", "th": 3, "i": 1, "of": 1}, {"k": 7, "n": [9, 13, 21, 29, 45, 46, 50], "c": 45, "l": "18/09/2026 17:45", "th": 4, "i": 1, "of": 1}, {"k": 8, "n": [8, 20, 21, 23, 29, 33, 46, 55], "c": 19, "l": "05/06/2026 04:05", "th": 4, "i": 1, "of": 4}, {"k": 8, "n": [7, 13, 27, 32, 34, 42, 46, 50], "c": 19, "l": "28/08/2026 03:05", "th": 4, "i": 2, "of": 4}, {"k": 8, "n": [2, 5, 20, 22, 31, 54, 63, 73], "c": 19, "l": "07/06/2026 20:45", "th": 4, "i": 3, "of": 4}, {"k": 8, "n": [1, 6, 8, 39, 42, 58, 70, 80], "c": 19, "l": "09/05/2026 13:55", "th": 4, "i": 4, "of": 4}, {"k": 9, "n": [4, 21, 27, 31, 35, 49, 74, 78, 80], "c": 10, "l": "16/07/2026 15:40", "th": 5, "i": 1, "of": 1}, {"k": 10, "n": [15, 16, 18, 20, 31, 37, 40, 45, 47, 50], "c": 6, "l": "26/11/2024 02:25", "th": 5, "i": 1, "of": 9}, {"k": 10, "n": [9, 18, 29, 42, 44, 45, 46, 54, 64, 74], "c": 6, "l": "15/10/2024 04:35", "th": 5, "i": 2, "of": 9}, {"k": 10, "n": [9, 14, 19, 25, 27, 29, 39, 47, 48, 58], "c": 6, "l": "05/02/2026 13:40", "th": 5, "i": 3, "of": 9}, {"k": 10, "n": [6, 20, 31, 35, 39, 43, 54, 55, 58, 80], "c": 6, "l": "22/03/2026 02:55", "th": 5, "i": 4, "of": 9}, {"k": 10, "n": [5, 13, 18, 35, 37, 39, 42, 47, 72, 74], "c": 6, "l": "15/09/2025 01:40", "th": 5, "i": 5, "of": 9}, {"k": 10, "n": [2, 6, 31, 36, 41, 48, 57, 60, 71, 73], "c": 6, "l": "26/07/2026 05:55", "th": 5, "i": 6, "of": 9}, {"k": 10, "n": [1, 20, 37, 42, 44, 46, 51, 56, 65, 68], "c": 6, "l": "17/08/2026 12:00", "th": 5, "i": 7, "of": 9}, {"k": 10, "n": [1, 6, 27, 31, 36, 41, 50, 64, 69, 74], "c": 6, "l": "24/11/2024 13:30", "th": 5, "i": 8, "of": 9}, {"k": 10, "n": [1, 4, 7, 29, 35, 50, 52, 54, 64, 70], "c": 6, "l": "18/08/2025 02:40", "th": 5, "i": 9, "of": 9}, {"k": 11, "n": [5, 8, 10, 28, 38, 51, 55, 56, 59, 61, 74], "c": 5, "l": "08/11/2024 00:00", "th": 5, "i": 1, "of": 2}, {"k": 11, "n": [2, 6, 31, 36, 41, 48, 57, 60, 71, 73, 74], "c": 5, "l": "26/07/2026 05:55", "th": 5, "i": 2, "of": 2}, {"k": 12, "n": [5, 8, 10, 28, 38, 47, 51, 55, 56, 59, 61, 74], "c": 4, "l": "24/11/2022 13:30", "th": 5, "i": 1, "of": 1}], LEG_ON = lsGet('trv_leg')!=='0';
