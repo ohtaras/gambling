@@ -34,7 +34,7 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
   <div class="stat"><div class="v" id="gpu">—</div><div class="k">GPU</div></div>
 </div>
 <div class="row"><button class="primary" id="go" disabled>Έλεγχος…</button><button id="save" disabled>Αποθήκευση κλειδιού</button></div>
-<div class="row"><span class="label" style="align-self:center">CPU νήματα:</span><input id="threads" inputmode="numeric" value="8" style="width:72px"><span class="note">GPU + CPU τρέχουν μαζί· η ταχύτητα αθροίζεται.</span></div>
+<div class="row"><span class="label" style="align-self:center">CPU νήματα:</span><input id="threads" inputmode="numeric" value="8" style="width:72px"><span class="label" style="align-self:center">Τυχαία αφετηρία κάθε:</span><select id="jump"><option value="0">ποτέ (σειριακά)</option><option value="3600">1 ώρα</option><option value="7200" selected>2 ώρες</option><option value="21600">6 ώρες</option><option value="86400">1 μέρα</option></select></div><div class="row"><span class="note">GPU + CPU μαζί· η ταχύτητα αθροίζεται. Κάθε τόσο ξεκινά από νέο τυχαίο σημείο (η πρόοδος μένει μικρή).</span></div>
 <div class="row"><button id="imp">Εισαγωγή προόδου</button><button id="exp">Εξαγωγή προόδου</button></div>
 <div id="iopanel" style="display:none;flex-direction:column;gap:8px">
 <textarea id="iotext" rows="4" placeholder="Επικόλλησε εδώ το κείμενο KYN1:… από το άλλο πρόγραμμα" style="width:100%;font-family:var(--mono);font-size:.72rem;background:#0f141a;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical"></textarea>
@@ -598,6 +598,7 @@ const BATCH=2048, GAP_MS=4, SAVE_MS=15000, SAVE_CAP=600000;
 let CHUNK=65536n;              // keys per chunk (matches other program's C)
 let device,scantestPipe,scanPipe,bg,scanBg,inBuf,outBuf,rdBuf,keysCPU,paramsBuf,foundBuf,foundRd;
 let cpuWorkers=[], inflight=new Set(), uiTimer=null, lastKey="", gpuChunk=null;
+let jumpMs=0, nextJump=0;
 const WINDOW=65536, L_T=64;
 let running=false,recovering=false,total=0n,winKey=null,rangeMin=0n,rangeMax=0n,targ=null,rateN=0,rateT=0;
 let scanned=[],scannedChunks=0n,imported=[],importedChunks=0n,lsKey="",lastSave=0,numChunks=0n,cursor=0n;
@@ -688,7 +689,8 @@ function doImport(txt){ const p=parseKYN1(txt); if(!p){ERR("Δεν διαβάσ�
 function exportKYN1(){ const ranges=scanned.concat(imported).map(iv=>[iv[0],iv[1]]); ranges.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0); const m=[]; for(const iv of ranges){ if(m.length&&iv[0]<=m[m.length-1][1]){ if(iv[1]>m[m.length-1][1])m[m.length-1][1]=iv[1]; } else m.push([iv[0],iv[1]]); } const r=m.map(x=>[x[0].toString(),x[1].toString()]); return "KYN1:"+btoa(JSON.stringify({v:1,p:{"71":{C:CHUNK.toString(),r:r}}})); }
 function updateTotals(){ const tot=(scannedChunks+importedChunks)*CHUNK; $("total").textContent=dots(tot.toString()); }
 
-function claimChunk(){ while(cursor<numChunks){ const e=coveredEndAt(cursor); if(e===null){ const c=cursor; inflight.add(c.toString()); cursor=cursor+1n; return c; } cursor = (e>cursor)?e:(cursor+1n); } return null; }
+function randChunk(){ return (numChunks>0n)?randIdx(numChunks):0n; }
+function claimChunk(){ let steps=0n; while(steps<numChunks){ if(cursor>=numChunks)cursor=0n; const e=coveredEndAt(cursor); if(e===null){ const c=cursor; inflight.add(c.toString()); cursor=cursor+1n; return c; } const jmp=(e>cursor)?(e-cursor):1n; cursor=(e>cursor)?e:(cursor+1n); steps+=jmp; } return null; }
 function finishChunk(idx){ inflight.delete(idx.toString()); scanned.push([idx,idx+1n]); recalcScanned(); const now=performance.now(); if(now-lastSave>SAVE_MS){saveCov();lastSave=now;} }
 function cfgFor(cBig){ const s0=rangeMin+cBig*CHUNK; let e0=s0+CHUNK-1n; if(e0>rangeMax)e0=rangeMax; return {target:Array.from(targ),lo:rangeMin.toString(),hi:rangeMax.toString(),mode:"seq",segStart:s0.toString(),segEnd:e0.toString(),batch:256}; }
 function startWorkers(T){
@@ -729,6 +731,7 @@ function render(){
   const now=performance.now();
   if(now-rateT>=400){ $("rate").textContent=dots(String(Math.max(0,Math.round(rateN/((now-rateT)/1000))))); rateN=0; rateT=now; }
   updateTotals();
+  if(jumpMs>0 && now>=nextJump){ cursor=randChunk(); nextJump=now+jumpMs; }
   if(lastKey) show(lastKey,"");
   if(!errSticky) INFO('<span class="ok">Σάρωση CPU+GPU — chunks: '+dots((scannedChunks+importedChunks).toString())+' (χωρίς επανάληψη)</span>');
 }
@@ -749,7 +752,9 @@ $("go").onclick=()=>{
   if(!parseRange()){ERR("Έλεγξε εύρος/διεύθυνση.");return;}
   lsKey=lsBase(); loadImported(); loadCov(); lsKey=lsBase();
   numChunks=(rangeMax-rangeMin+1n+CHUNK-1n)/CHUNK;
-  inflight=new Set(); gpuChunk=null; cursor=0n;
+  inflight=new Set(); gpuChunk=null;
+  jumpMs=(parseInt($("jump").value)||0)*1000; nextJump=performance.now()+jumpMs;
+  cursor=randChunk();
   $("found").className="found";$("save").disabled=true;winKey=null;errSticky=false;
   running=true;$("go").textContent="Στοπ";$("go").classList.add("on");rateN=0;rateT=performance.now();lastSave=performance.now();lastKey="";updateTotals();
   let T=parseInt($("threads").value)||0; if(T<0)T=0; if(T>64)T=64;
