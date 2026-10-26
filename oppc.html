@@ -758,8 +758,8 @@ tkRender();
 function cdTick(){ var nt = NEXT ? NEXT.t : (last ? last.t + 300000 : 0); if(!nt) return;
   var ms = nt - Date.now(), w = $('pbar'), st0 = last ? last.t : nt - 300000, tot = Math.max(60000, nt - st0);
   /* 🤖 2 λεπτά μετά από κάθε κλήρωση ο Σπύρος κι ο Ηρακλής κουνάνε μόνοι τους το κουτί → νέα πρόβλεψη (αν δεν έχει ήδη γίνει από αυτή την κλήρωση) */
-  if(!MAN_ON && AUTO && last && AUTOD !== last.id && (!PRED || PRED.id < last.id) && Date.now() - last.t >= 120000 && !busy && !WAIT && (!NEXT || NEXT.id <= last.id || NEXT.t - Date.now() > 15000)){
-    AUTOD = last.id; if(view){ view = null; out = []; start(); navUpd(); } $('boxGo').disabled = false; AUTONOW = true; $('boxGo').click(); AUTONOW = false; }
+  if(!MAN_ON && AUTO && !view && last && AUTOD !== last.id && (!PRED || PRED.id < last.id) && Date.now() - last.t >= 120000 && !busy && !WAIT && (!NEXT || NEXT.id <= last.id || NEXT.t - Date.now() > 15000)){
+    AUTOD = last.id; $('boxGo').disabled = false; AUTONOW = true; $('boxGo').click(); AUTONOW = false; }
   if(ms > 0){ $('pbI').style.width = Math.min(100, Math.max(0, 100*(1 - ms/tot))).toFixed(2)+'%'; w.classList.remove('now'); var m = Math.floor(ms/60000), sx = Math.floor(ms/1000)%60; w.title = 'Επόμενη κλήρωση σε '+m+':'+(sx<10?'0':'')+sx; }
   else { w.classList.add('now'); w.title = 'Η κλήρωση γίνεται τώρα'; if(ms < -10000 && !WAIT && !view && !busy && !document.hidden && last && NEXT && NEXT.id > last.id && WAITED !== NEXT.id){ WAITED = NEXT.id; waitStart(); } if(Date.now() - cdPoll > 2000){ cdPoll = Date.now(); load(); } } }
 setInterval(cdTick, 1000);
