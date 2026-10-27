@@ -656,22 +656,30 @@ async function init(){
   $("notifyMsg").onchange=()=>{try{localStorage.setItem("kyn_msg",$("notifyMsg").value);}catch(e){}};
   $("testEmail").onclick=()=>{ $("notifyNote").textContent="Στέλνω δοκιμαστικό…"; sendMail("Δοκιμή ειδοποίησης — Κυνηγός").then(res=>{$("notifyNote").textContent=(res.ok?"Εστάλη! Αν είσαι γραμμένος στο κανάλι από την εφαρμογή ntfy, θα το δεις τώρα. ":"Πρόβλημα. ")+"["+res.info+"]";}); };
   if(gpu){
-    for(let i=0;i<TESTS.length;i++)limbs16Into(BigInt("0x"+TESTS[i][0]),keysCPU,i*16);
-    const out=await dispatch(TESTS.length);
-    let ok=true;for(let i=0;i<TESTS.length;i++)if(hx(out.slice(i*20,i*20+20))!==TESTS[i][1])ok=false;
-    if(!ok){ERR("Αυτο-έλεγχος απέτυχε — μη το εμπιστεύεσαι.",true);return;}
-    errSticky=false;
-    INFO('<span class="ok">Αυτο-έλεγχος OK — έτοιμο CPU+GPU.</span>');
-    $("go").disabled=false;$("go").textContent="Έναρξη";
-  } else {
-    // No WebGPU: run CPU-only
-    errSticky=false; $("gpu").textContent="μόνο CPU";
-    if(!cpuSelfTest()){ ERR("Ο αυτο-έλεγχος CPU απέτυχε — μη το εμπιστεύεσαι.",true); return; }
-    INFO('<span class="ok">Αυτο-έλεγχος OK — αυτός ο υπολογιστής δεν έχει GPU (WebGPU), τρέχει μόνο με CPU.</span>');
-    $("go").disabled=false;$("go").textContent="Έναρξη";
+    INFO('<span>Έλεγχος GPU…</span>');
+    let gok=false;
+    try{
+      for(let i=0;i<TESTS.length;i++)limbs16Into(BigInt("0x"+TESTS[i][0]),keysCPU,i*16);
+      const out=await Promise.race([ dispatch(TESTS.length), new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),9000)) ]);
+      let ok=true;for(let i=0;i<TESTS.length;i++)if(hx(out.slice(i*20,i*20+20))!==TESTS[i][1])ok=false;
+      gok=ok;
+    }catch(e){ gok=false; }
+    if(gok){
+      gpuOK=true; errSticky=false;
+      INFO('<span class="ok">Αυτο-έλεγχος OK — έτοιμο CPU+GPU.</span>');
+      $("go").disabled=false;$("go").textContent="Έναρξη"; return;
+    }
+    // GPU failed/too slow on this device -> fall back to CPU
+    gpuOK=false;
   }
+  // CPU-only path (no WebGPU, or GPU self-test did not pass here)
+  errSticky=false; $("gpu").textContent="μόνο CPU";
+  if(!cpuSelfTest()){ ERR("Ο αυτο-έλεγχος CPU απέτυχε — μη το εμπιστεύεσαι.",true); return; }
+  INFO('<span class="ok">Αυτο-έλεγχος OK — τρέχει με CPU'+(gpu?" (η GPU δεν δούλεψε εδώ)":"")+'.</span>');
+  $("go").disabled=false;$("go").textContent="Έναρξη";
 }
 async function recover(){
+  if(!gpuOK)return;
   if(recovering)return; recovering=true; const wasRunning=running; running=false; $("go").disabled=true;
   INFO('<span>Η GPU επανεκκίνησε — συνεχίζω αυτόματα…</span>');
   let ok=false; try{ ok=await setupDevice(); }catch(e){ ok=false; }
