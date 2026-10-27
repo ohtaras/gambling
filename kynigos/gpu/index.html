@@ -597,7 +597,7 @@ function workerURL(){return URL.createObjectURL(new Blob(['('+CORE.toString()+')
 const BATCH=2048, GAP_MS=4, SAVE_MS=15000, SAVE_CAP=600000;
 let CHUNK=65536n;              // keys per chunk (matches other program's C)
 let device,scantestPipe,scanPipe,bg,scanBg,inBuf,outBuf,rdBuf,keysCPU,paramsBuf,foundBuf,foundRd;
-let cpuWorkers=[], inflight=new Set(), uiTimer=null, lastKey="", gpuChunk=null;
+let cpuWorkers=[], inflight=new Set(), uiTimer=null, lastKey="", gpuChunk=null, gpuOK=false;
 let jumpMs=0, nextJump=0;
 const WINDOW=65536, L_T=64;
 let running=false,recovering=false,total=0n,winKey=null,rangeMin=0n,rangeMax=0n,targ=null,rateN=0,rateT=0;
@@ -628,15 +628,32 @@ async function setupDevice(){
   keysCPU=new Uint32Array(64*16);
   return true;
 }
+function cpuSelfTest(){
+  try{ const C=CORE(window); const k=(1n<<70n)+123n; const t=Array.from(C.b58decodeAddr(C.addrFromKey(k)));
+    const sc=C.makeSearcher({target:t,lo:(1n<<70n).toString(),hi:((1n<<71n)-1n).toString(),mode:"seq",segStart:(1n<<70n).toString(),segEnd:((1n<<70n)+255n).toString(),batch:256});
+    let r,g=0; do{ r=sc.runFor(100); g++; }while(r.found===null && !sc.done && g<50);
+    return r.found!==null && r.found===k;
+  }catch(e){ return false; }
+}
 async function init(){
-  if(!(await setupDevice()))return;
-  for(let i=0;i<TESTS.length;i++)limbs16Into(BigInt("0x"+TESTS[i][0]),keysCPU,i*16);
-  const out=await dispatch(TESTS.length);
-  let ok=true;for(let i=0;i<TESTS.length;i++)if(hx(out.slice(i*20,i*20+20))!==TESTS[i][1])ok=false;
-  if(!ok){ERR("Αυτο-έλεγχος απέτυχε — μη το εμπιστεύεσαι.",true);return;}
-  INFO('<span class="ok">Αυτο-έλεγχος OK — secp256k1 σωστό στη GPU· έτοιμο CPU+GPU.</span>');
+  let gpu=false; try{ gpu=await setupDevice(); }catch(e){ gpu=false; }
+  gpuOK=gpu;
   try{ $("threads").value=String(navigator.hardwareConcurrency||8); }catch(e){}
-  $("go").disabled=false;$("go").textContent="Έναρξη";
+  if(gpu){
+    for(let i=0;i<TESTS.length;i++)limbs16Into(BigInt("0x"+TESTS[i][0]),keysCPU,i*16);
+    const out=await dispatch(TESTS.length);
+    let ok=true;for(let i=0;i<TESTS.length;i++)if(hx(out.slice(i*20,i*20+20))!==TESTS[i][1])ok=false;
+    if(!ok){ERR("Αυτο-έλεγχος απέτυχε — μη το εμπιστεύεσαι.",true);return;}
+    errSticky=false;
+    INFO('<span class="ok">Αυτο-έλεγχος OK — έτοιμο CPU+GPU.</span>');
+    $("go").disabled=false;$("go").textContent="Έναρξη";
+  } else {
+    // No WebGPU: run CPU-only
+    errSticky=false; $("gpu").textContent="μόνο CPU";
+    if(!cpuSelfTest()){ ERR("Ο αυτο-έλεγχος CPU απέτυχε — μη το εμπιστεύεσαι.",true); return; }
+    INFO('<span class="ok">Αυτο-έλεγχος OK — αυτός ο υπολογιστής δεν έχει GPU (WebGPU), τρέχει μόνο με CPU.</span>');
+    $("go").disabled=false;$("go").textContent="Έναρξη";
+  }
 }
 async function recover(){
   if(recovering)return; recovering=true; const wasRunning=running; running=false; $("go").disabled=true;
@@ -733,7 +750,7 @@ function render(){
   updateTotals();
   if(jumpMs>0 && now>=nextJump){ cursor=randChunk(); nextJump=now+jumpMs; }
   if(lastKey) show(lastKey,"");
-  if(!errSticky) INFO('<span class="ok">Σάρωση CPU+GPU — chunks: '+dots((scannedChunks+importedChunks).toString())+' (χωρίς επανάληψη)</span>');
+  if(!errSticky) INFO('<span class="ok">Σάρωση '+(gpuOK?"CPU+GPU":"μόνο CPU")+' — chunks: '+dots((scannedChunks+importedChunks).toString())+' (χωρίς επανάληψη)</span>');
 }
 function stopAll(){
   running=false; $("go").textContent="Έναρξη"; $("go").classList.remove("on");
@@ -758,8 +775,9 @@ $("go").onclick=()=>{
   $("found").className="found";$("save").disabled=true;winKey=null;errSticky=false;
   running=true;$("go").textContent="Στοπ";$("go").classList.add("on");rateN=0;rateT=performance.now();lastSave=performance.now();lastKey="";updateTotals();
   let T=parseInt($("threads").value)||0; if(T<0)T=0; if(T>64)T=64;
+  if(!gpuOK && T<1){ running=false;$("go").textContent="Έναρξη";$("go").classList.remove("on"); ERR("Χωρίς GPU χρειάζονται CPU νήματα — βάλε τουλάχιστον 1.",true); return; }
   startWorkers(T);
-  gpuLoop();
+  if(gpuOK) gpuLoop();
   uiTimer=setInterval(render,250);
 };
 $("save").onclick=()=>{if(!winKey)return;const txt="Private key (dec): "+winKey.toString()+"\nPrivate key (hex): "+winKey.toString(16).padStart(64,"0")+"\nTarget: "+$("target").value.trim()+"\n";const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));a.download="FOUND_KEY.txt";a.click();};
