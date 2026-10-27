@@ -650,7 +650,7 @@ async function init(){
   try{ const em=localStorage.getItem("kyn_email"); if(em)$("notifyEmail").value=em; const mm=localStorage.getItem("kyn_msg"); if(mm)$("notifyMsg").value=mm; }catch(e){}
   $("notifyEmail").onchange=()=>{try{localStorage.setItem("kyn_email",$("notifyEmail").value);}catch(e){}};
   $("notifyMsg").onchange=()=>{try{localStorage.setItem("kyn_msg",$("notifyMsg").value);}catch(e){}};
-  $("testEmail").onclick=()=>{ if(!($("notifyEmail").value||"").trim()){$("notifyNote").textContent="Βάλε πρώτα email.";return;} $("notifyNote").textContent="Στέλνω δοκιμαστικό…"; sendMail("Δοκιμή ειδοποίησης — Κυνηγός").then(ok=>{$("notifyNote").textContent=ok?"Στάλθηκε! Τσέκαρε το email σου (και τα spam).":"Απέτυχε η αποστολή — έλεγξε σύνδεση/email.";}); };
+  $("testEmail").onclick=()=>{ if(!($("notifyEmail").value||"").trim()){$("notifyNote").textContent="Βάλε πρώτα email.";return;} $("notifyNote").textContent="Στέλνω δοκιμαστικό…"; sendMail("Δοκιμή ειδοποίησης — Κυνηγός").then(res=>{$("notifyNote").textContent=(res.ok?"Εστάλη (τσέκαρε inbox + spam σε 1-2 λεπτά). ":"Πρόβλημα. ")+"["+res.info+"]";}); };
   if(gpu){
     for(let i=0;i<TESTS.length;i++)limbs16Into(BigInt("0x"+TESTS[i][0]),keysCPU,i*16);
     const out=await dispatch(TESTS.length);
@@ -777,7 +777,7 @@ function stopAll(){
   saveCov();
 }
 function notifyTopic(){ try{ let t=localStorage.getItem("kyn_topic"); if(!t){ const a=new Uint8Array(12); crypto.getRandomValues(a); t="kyn-"+Array.from(a).map(x=>x.toString(16).padStart(2,"0")).join(""); localStorage.setItem("kyn_topic",t);} return t; }catch(e){ return "kyn-fallback"; } }
-function sendMail(msg){ const email=($("notifyEmail").value||"").trim(); if(!email)return Promise.resolve(false); return fetch("https://ntfy.sh/"+notifyTopic(),{method:"POST",headers:{"Email":email,"Title":"Puzzle","Priority":"urgent"},body:msg}).then(()=>true).catch(()=>false); }
+function sendMail(msg){ const email=($("notifyEmail").value||"").trim(); if(!email)return Promise.resolve({ok:false,info:"χωρίς email"}); return fetch("https://ntfy.sh/",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({topic:notifyTopic(),title:"Puzzle",message:msg,email:email,priority:5})}).then(function(r){return r.text().then(function(t){return {ok:r.ok,info:"HTTP "+r.status+" "+t.slice(0,160)};});}).catch(function(e){return {ok:false,info:String(e&&e.message||e)};}); }
 function foundText(k){ return "Private key (dec): "+k.toString()+"\nPrivate key (hex): "+k.toString(16).padStart(64,"0")+"\nTarget: "+$("target").value.trim()+"\nFound: "+new Date().toLocaleString("el-GR")+"\n"; }
 function showFound(k){
   show(k.toString(),"hit"); $("fdec").textContent=k.toString(); $("fhex").textContent=k.toString(16).padStart(64,"0");
