@@ -642,6 +642,7 @@ async function init(){
   let gpu=false; try{ gpu=await setupDevice(); }catch(e){ gpu=false; }
   gpuOK=gpu;
   try{ $("threads").value=String(navigator.hardwareConcurrency||8); }catch(e){}
+  try{ const fd=localStorage.getItem("kyn_found_dec"); if(fd){ winKey=BigInt(fd); showFound(winKey); } }catch(e){}
   try{ const w=localStorage.getItem("kyn_watts"); if(w)$("watts").value=w; const e=localStorage.getItem("kyn_eur"); if(e)$("eur").value=e; }catch(e){}
   $("watts").onchange=()=>{try{localStorage.setItem("kyn_watts",$("watts").value);}catch(e){}};
   $("eur").onchange=()=>{try{localStorage.setItem("kyn_eur",$("eur").value);}catch(e){}};
@@ -770,10 +771,18 @@ function stopAll(){
   if(gpuChunk!==null){ inflight.delete(gpuChunk.toString()); gpuChunk=null; }
   saveCov();
 }
-function onFoundKey(k){
-  winKey=k; stopAll(); saveImported();
+function foundText(k){ return "Private key (dec): "+k.toString()+"\nPrivate key (hex): "+k.toString(16).padStart(64,"0")+"\nTarget: "+$("target").value.trim()+"\nFound: "+new Date().toLocaleString("el-GR")+"\n"; }
+function showFound(k){
   show(k.toString(),"hit"); $("fdec").textContent=k.toString(); $("fhex").textContent=k.toString(16).padStart(64,"0");
   $("found").className="found show"; $("save").disabled=false;
+  try{ document.title="🎉 ΒΡΕΘΗΚΕ ΚΛΕΙΔΙ"; }catch(e){}
+}
+function onFoundKey(k){
+  winKey=k; stopAll(); saveImported();
+  const txt=foundText(k);
+  try{ localStorage.setItem("kyn_found_dec",k.toString()); localStorage.setItem("kyn_found_hex",k.toString(16).padStart(64,"0")); localStorage.setItem("kyn_found_txt",txt); }catch(e){}
+  showFound(k);
+  try{ dlText("FOUND_KEY.txt",txt); }catch(e){}   // auto-download, no click needed
 }
 $("go").onclick=()=>{
   if(running){ stopAll(); return; }
