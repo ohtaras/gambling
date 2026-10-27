@@ -12,7 +12,7 @@ h1{font-size:1.3rem;margin:0}.sub{color:var(--muted);margin:4px 0 0;line-height:
 .cells{display:grid;grid-template-columns:repeat(22,1fr);gap:3px}
 .cell{aspect-ratio:3/4.6;border-radius:5px;background:var(--cell);display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:var(--mono);font-weight:700;font-size:clamp(.7rem,2.7vw,1.6rem);color:#8fb4ab;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),inset 0 -6px 10px rgba(0,0,0,.4)}
 .cell.hit{color:var(--win);text-shadow:0 0 14px rgba(47,212,138,.8)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
 .stat .v{font-family:var(--mono);font-size:1.1rem;font-weight:700;font-variant-numeric:tabular-nums}
 .stat .k{color:var(--muted);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
@@ -32,6 +32,7 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
   <div class="stat"><div class="v" id="rate">0</div><div class="k">κλειδιά/δλ</div></div>
   <div class="stat"><div class="v" id="total">0</div><div class="k">σύνολο</div></div>
   <div class="stat"><div class="v" id="gpu">—</div><div class="k">GPU</div></div>
+  <div class="stat"><div class="v" id="time">0δ</div><div class="k">χρόνος</div></div>
 </div>
 <div class="row"><button class="primary" id="go" disabled>Έλεγχος…</button><button id="save" disabled>Αποθήκευση κλειδιού</button></div>
 <div class="row"><span class="label" style="align-self:center">CPU νήματα:</span><input id="threads" inputmode="numeric" value="8" style="width:72px"><span class="label" style="align-self:center">Τυχαία αφετηρία κάθε:</span><select id="jump"><option value="0">ποτέ (σειριακά)</option><option value="3600">1 ώρα</option><option value="7200" selected>2 ώρες</option><option value="21600">6 ώρες</option><option value="86400">1 μέρα</option></select></div><div class="row"><span class="note">GPU + CPU μαζί· η ταχύτητα αθροίζεται. Κάθε τόσο ξεκινά από νέο τυχαίο σημείο (η πρόοδος μένει μικρή).</span></div>
@@ -598,7 +599,7 @@ const BATCH=2048, GAP_MS=4, SAVE_MS=15000, SAVE_CAP=600000;
 let CHUNK=65536n;              // keys per chunk (matches other program's C)
 let device,scantestPipe,scanPipe,bg,scanBg,inBuf,outBuf,rdBuf,keysCPU,paramsBuf,foundBuf,foundRd;
 let cpuWorkers=[], inflight=new Set(), uiTimer=null, lastKey="", gpuChunk=null, gpuOK=false;
-let jumpMs=0, nextJump=0;
+let jumpMs=0, nextJump=0, elapsedBase=0, runStart=0;
 const WINDOW=65536, L_T=64;
 let running=false,recovering=false,total=0n,winKey=null,rangeMin=0n,rangeMax=0n,targ=null,rateN=0,rateT=0;
 let scanned=[],scannedChunks=0n,imported=[],importedChunks=0n,lsKey="",lastSave=0,numChunks=0n,cursor=0n;
@@ -696,7 +697,7 @@ function recalcScanned(){ scanned.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0); const
 function loadCov(){ scanned=[]; scannedChunks=0n; try{ const raw=localStorage.getItem(lsKey); if(raw){ const o=JSON.parse(raw);
   if(Array.isArray(o)){ const idxs=o.map(x=>BigInt(x)).sort((a,b)=>a<b?-1:a>b?1:0); let i=0; while(i<idxs.length){ let j=i; while(j+1<idxs.length&&idxs[j+1]===idxs[j]+1n)j++; scanned.push([idxs[i],idxs[j]+1n]); i=j+1; } recalcScanned(); }
   else if(o&&o.r){ for(const [a,b] of o.r) scanned.push([BigInt(a),BigInt(b)]); recalcScanned(); } } }catch(e){} }
-function saveCov(){ try{localStorage.setItem(lsKey,JSON.stringify({r:scanned.map(iv=>[iv[0].toString(),iv[1].toString()])}));}catch(e){} }
+function saveCov(){ try{localStorage.setItem(lsKey,JSON.stringify({r:scanned.map(iv=>[iv[0].toString(),iv[1].toString()])}));}catch(e){} try{localStorage.setItem(lsKey+":t",String(Math.round(elapsedNow())));}catch(e){} }
 function impStoreKey(){ return lsKey+":imp"; }
 function recalcImported(){ imported.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0); const m=[]; for(const iv of imported){ if(m.length&&iv[0]<=m[m.length-1][1]){ if(iv[1]>m[m.length-1][1]) m[m.length-1][1]=iv[1]; } else m.push([iv[0],iv[1]]); } imported=m; let t=0n; for(const iv of imported)t+=(iv[1]-iv[0]); importedChunks=t; }
 function loadImported(){ imported=[];importedChunks=0n; try{const raw=localStorage.getItem(impStoreKey()); if(raw){const o=JSON.parse(raw); if(o.C)CHUNK=BigInt(o.C); for(const [s,e] of o.r) imported.push([BigInt(s),BigInt(e)]); recalcImported();}}catch(e){} }
@@ -743,16 +744,20 @@ async function gpuLoop(){
     setTimeout(gpuLoop,GAP_MS);
   }catch(e){ const m=(e&&e.message)||String(e); if(/lost|device/i.test(m)){ recover(); } else { running=false; stopAll(); ERR("σφάλμα: "+m,true); } }
 }
+function fmtDur(ms){ let s=Math.floor(ms/1000); const d=Math.floor(s/86400); s-=d*86400; const h=Math.floor(s/3600); s-=h*3600; const m=Math.floor(s/60); s-=m*60; if(d>0)return d+"μ "+h+"ω "+m+"λ"; if(h>0)return h+"ω "+m+"λ "+s+"δ"; if(m>0)return m+"λ "+s+"δ"; return s+"δ"; }
+function elapsedNow(){ return elapsedBase + (performance.now()-runStart); }
 function render(){
   if(!running)return;
   const now=performance.now();
   if(now-rateT>=400){ $("rate").textContent=dots(String(Math.max(0,Math.round(rateN/((now-rateT)/1000))))); rateN=0; rateT=now; }
   updateTotals();
+  $("time").textContent=fmtDur(elapsedNow());
   if(jumpMs>0 && now>=nextJump){ cursor=randChunk(); nextJump=now+jumpMs; }
   if(lastKey) show(lastKey,"");
   if(!errSticky) INFO('<span class="ok">Σάρωση '+(gpuOK?"CPU+GPU":"μόνο CPU")+' — chunks: '+dots((scannedChunks+importedChunks).toString())+' (χωρίς επανάληψη)</span>');
 }
 function stopAll(){
+  elapsedBase=elapsedNow(); runStart=performance.now();
   running=false; $("go").textContent="Έναρξη"; $("go").classList.remove("on");
   for(const w of cpuWorkers){ try{w.terminate();}catch(e){} } cpuWorkers=[];
   if(uiTimer){clearInterval(uiTimer);uiTimer=null;}
@@ -773,7 +778,8 @@ $("go").onclick=()=>{
   jumpMs=(parseInt($("jump").value)||0)*1000; nextJump=performance.now()+jumpMs;
   cursor=randChunk();
   $("found").className="found";$("save").disabled=true;winKey=null;errSticky=false;
-  running=true;$("go").textContent="Στοπ";$("go").classList.add("on");rateN=0;rateT=performance.now();lastSave=performance.now();lastKey="";updateTotals();
+  try{ elapsedBase=parseInt(localStorage.getItem(lsKey+":t"))||0; }catch(e){ elapsedBase=0; } runStart=performance.now();
+  running=true;$("go").textContent="Στοπ";$("go").classList.add("on");rateN=0;rateT=performance.now();lastSave=performance.now();lastKey="";updateTotals();$("time").textContent=fmtDur(elapsedBase);
   let T=parseInt($("threads").value)||0; if(T<0)T=0; if(T>64)T=64;
   if(!gpuOK && T<1){ running=false;$("go").textContent="Έναρξη";$("go").classList.remove("on"); ERR("Χωρίς GPU χρειάζονται CPU νήματα — βάλε τουλάχιστον 1.",true); return; }
   startWorkers(T);
