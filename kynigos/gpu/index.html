@@ -33,9 +33,11 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
   <div class="stat"><div class="v" id="total">0</div><div class="k">σύνολο</div></div>
   <div class="stat"><div class="v" id="gpu">—</div><div class="k">GPU</div></div>
   <div class="stat"><div class="v" id="time">0δ</div><div class="k">χρόνος</div></div>
+  <div class="stat"><div class="v" id="cost">€0,00</div><div class="k">κόστος ρεύματος</div></div>
 </div>
 <div class="row"><button class="primary" id="go" disabled>Έλεγχος…</button><button id="save" disabled>Αποθήκευση κλειδιού</button></div>
-<div class="row"><span class="label" style="align-self:center">CPU νήματα:</span><input id="threads" inputmode="numeric" value="8" style="width:72px"><span class="label" style="align-self:center">Τυχαία αφετηρία κάθε:</span><select id="jump"><option value="0">ποτέ (σειριακά)</option><option value="3600">1 ώρα</option><option value="7200" selected>2 ώρες</option><option value="21600">6 ώρες</option><option value="86400">1 μέρα</option></select></div><div class="row"><span class="note">GPU + CPU μαζί· η ταχύτητα αθροίζεται. Κάθε τόσο ξεκινά από νέο τυχαίο σημείο (η πρόοδος μένει μικρή).</span></div>
+<div class="row"><span class="label" style="align-self:center">CPU νήματα:</span><input id="threads" inputmode="numeric" value="8" style="width:72px"><span class="label" style="align-self:center">Τυχαία αφετηρία κάθε:</span><select id="jump"><option value="0">ποτέ (σειριακά)</option><option value="3600">1 ώρα</option><option value="7200" selected>2 ώρες</option><option value="21600">6 ώρες</option><option value="86400">1 μέρα</option></select></div>
+<div class="row"><span class="label" style="align-self:center">Ισχύς (W):</span><input id="watts" inputmode="decimal" value="35" style="width:70px"><span class="label" style="align-self:center">Τιμή (€/kWh):</span><input id="eur" inputmode="decimal" value="0.22" style="width:80px"><span class="note">Βάλε τα W του υπολογιστή σου σε πλήρη λειτουργία και την τιμή ρεύματος.</span></div><div class="row"><span class="note">GPU + CPU μαζί· η ταχύτητα αθροίζεται. Κάθε τόσο ξεκινά από νέο τυχαίο σημείο (η πρόοδος μένει μικρή).</span></div>
 <div class="row"><button id="imp">Εισαγωγή προόδου</button><button id="exp">Εξαγωγή προόδου</button></div>
 <div id="iopanel" style="display:none;flex-direction:column;gap:8px">
 <textarea id="iotext" rows="4" placeholder="Επικόλλησε εδώ το κείμενο KYN1:… από το άλλο πρόγραμμα" style="width:100%;font-family:var(--mono);font-size:.72rem;background:#0f141a;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical"></textarea>
@@ -640,6 +642,9 @@ async function init(){
   let gpu=false; try{ gpu=await setupDevice(); }catch(e){ gpu=false; }
   gpuOK=gpu;
   try{ $("threads").value=String(navigator.hardwareConcurrency||8); }catch(e){}
+  try{ const w=localStorage.getItem("kyn_watts"); if(w)$("watts").value=w; const e=localStorage.getItem("kyn_eur"); if(e)$("eur").value=e; }catch(e){}
+  $("watts").onchange=()=>{try{localStorage.setItem("kyn_watts",$("watts").value);}catch(e){}};
+  $("eur").onchange=()=>{try{localStorage.setItem("kyn_eur",$("eur").value);}catch(e){}};
   if(gpu){
     for(let i=0;i<TESTS.length;i++)limbs16Into(BigInt("0x"+TESTS[i][0]),keysCPU,i*16);
     const out=await dispatch(TESTS.length);
@@ -752,6 +757,7 @@ function render(){
   if(now-rateT>=400){ $("rate").textContent=dots(String(Math.max(0,Math.round(rateN/((now-rateT)/1000))))); rateN=0; rateT=now; }
   updateTotals();
   $("time").textContent=fmtDur(elapsedNow());
+  { const w=parseFloat(($("watts").value||"").replace(",","."))||0, pr=parseFloat(($("eur").value||"").replace(",","."))||0; const c=(w/1000)*(elapsedNow()/3600000)*pr; $("cost").textContent="€"+c.toFixed(2).replace(".",","); }
   if(jumpMs>0 && now>=nextJump){ cursor=randChunk(); nextJump=now+jumpMs; }
   if(lastKey) show(lastKey,"");
   if(!errSticky) INFO('<span class="ok">Σάρωση '+(gpuOK?"CPU+GPU":"μόνο CPU")+' — chunks: '+dots((scannedChunks+importedChunks).toString())+' (χωρίς επανάληψη)</span>');
