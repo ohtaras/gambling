@@ -1,6 +1,6 @@
 <!doctype html><html lang="el"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' blob:; worker-src blob:; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' blob:; worker-src blob:; style-src 'unsafe-inline'; connect-src https://ntfy.sh; img-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Κυνηγός GPU</title>
 <style>
 :root{color-scheme:dark;--bg:#0b0f14;--panel:#121a22;--line:#26303c;--cell:#141b24;--ink:#e7edf2;--muted:#8fa0ad;--ok:#2fd48a;--bad:#e5484d;--glow:#3fe0bf;--win:#2fd48a;--accent:#1f8f7c;--mono:ui-monospace,SFMono-Regular,Menlo,monospace;--ui:system-ui,-apple-system,sans-serif}
@@ -37,7 +37,8 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
 </div>
 <div class="row"><button class="primary" id="go" disabled>Έλεγχος…</button><button id="save" disabled>Αποθήκευση κλειδιού</button></div>
 <div class="row"><span class="label" style="align-self:center">CPU νήματα:</span><input id="threads" inputmode="numeric" value="8" style="width:72px"><span class="label" style="align-self:center">Τυχαία αφετηρία κάθε:</span><select id="jump"><option value="0">ποτέ (σειριακά)</option><option value="3600">1 ώρα</option><option value="7200" selected>2 ώρες</option><option value="21600">6 ώρες</option><option value="86400">1 μέρα</option></select></div>
-<div class="row"><span class="label" style="align-self:center">Ισχύς (W):</span><input id="watts" inputmode="decimal" value="35" style="width:70px"><span class="label" style="align-self:center">Τιμή (€/kWh):</span><input id="eur" inputmode="decimal" value="0.22" style="width:80px"><span class="note">Βάλε τα W του υπολογιστή σου σε πλήρη λειτουργία και την τιμή ρεύματος.</span></div><div class="row"><span class="note">GPU + CPU μαζί· η ταχύτητα αθροίζεται. Κάθε τόσο ξεκινά από νέο τυχαίο σημείο (η πρόοδος μένει μικρή).</span></div>
+<div class="row"><span class="label" style="align-self:center">Ισχύς (W):</span><input id="watts" inputmode="decimal" value="35" style="width:70px"><span class="label" style="align-self:center">Τιμή (€/kWh):</span><input id="eur" inputmode="decimal" value="0.22" style="width:80px"><span class="note">Βάλε τα W του υπολογιστή σου σε πλήρη λειτουργία και την τιμή ρεύματος.</span></div>
+<div class="row"><span class="label" style="align-self:center">Email ειδοποίησης:</span><input id="notifyEmail" inputmode="email" placeholder="(προαιρετικό)" style="flex:1;min-width:160px"><button id="testEmail">Δοκιμή</button></div><div class="row"><span class="label" style="align-self:center">Μήνυμα:</span><input id="notifyMsg" value="Ο αγνοούμενος βρέθηκε" style="flex:1;min-width:160px"><span class="note" id="notifyNote">Στέλνεται ΜΟΝΟ αυτό το μήνυμα όταν βρεθεί — ποτέ το κλειδί.</span></div><div class="row"><span class="note">GPU + CPU μαζί· η ταχύτητα αθροίζεται. Κάθε τόσο ξεκινά από νέο τυχαίο σημείο (η πρόοδος μένει μικρή).</span></div>
 <div class="row"><button id="imp">Εισαγωγή προόδου</button><button id="exp">Εξαγωγή προόδου</button></div>
 <div id="iopanel" style="display:none;flex-direction:column;gap:8px">
 <textarea id="iotext" rows="4" placeholder="Επικόλλησε εδώ το κείμενο KYN1:… από το άλλο πρόγραμμα" style="width:100%;font-family:var(--mono);font-size:.72rem;background:#0f141a;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical"></textarea>
@@ -51,7 +52,7 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
 <div class="mono" id="status">—</div>
 <div class="found" id="found"><div class="label" style="color:var(--win)">🎉 ΒΡΕΘΗΚΕ ΚΛΕΙΔΙ</div><div>Κλειδί (δεκαδικό):</div><div class="m" id="fdec"></div><div>Κλειδί (hex):</div><div class="m" id="fhex"></div></div>
 <p class="note warn">Ταχύτητα ~95K κλειδιά/δλ στο M2. Το εύρος 2⁷⁰ έχει 1,18×10²¹ κλειδιά, άρα μια πλήρης σάρωση θα έπαιρνε εκατοντάδες εκατομμύρια χρόνια. Είναι για το θέαμα και το πείραμα — όχι ρεαλιστικός τρόπος να κερδίσεις.</p>
-<p class="note">Απομόνωση: αυστηρό Content-Security-Policy (connect-src none) — καμία δικτυακή σύνδεση. Για μέγιστη ασφάλεια, κατέβασέ το και άνοιξέ το χωρίς ίντερνετ.</p>
+<p class="note">Ασφάλεια: η σελίδα επιτρέπει <b>μία μόνο</b> εξερχόμενη σύνδεση — προς την υπηρεσία ειδοποίησης (ntfy) — και στέλνει <b>μόνο το μήνυμα «βρέθηκε»</b>, ποτέ το κλειδί. Αν δεν βάλεις email, δεν στέλνεται τίποτα. Το ιδιωτικό κλειδί μένει πάντα τοπικά στη συσκευή σου.</p>
 </div>
 <script id="wgsl" type="text/wgsl">
 alias Fe = array<u32,16>;
@@ -646,6 +647,10 @@ async function init(){
   try{ const w=localStorage.getItem("kyn_watts"); if(w)$("watts").value=w; const e=localStorage.getItem("kyn_eur"); if(e)$("eur").value=e; }catch(e){}
   $("watts").onchange=()=>{try{localStorage.setItem("kyn_watts",$("watts").value);}catch(e){}};
   $("eur").onchange=()=>{try{localStorage.setItem("kyn_eur",$("eur").value);}catch(e){}};
+  try{ const em=localStorage.getItem("kyn_email"); if(em)$("notifyEmail").value=em; const mm=localStorage.getItem("kyn_msg"); if(mm)$("notifyMsg").value=mm; }catch(e){}
+  $("notifyEmail").onchange=()=>{try{localStorage.setItem("kyn_email",$("notifyEmail").value);}catch(e){}};
+  $("notifyMsg").onchange=()=>{try{localStorage.setItem("kyn_msg",$("notifyMsg").value);}catch(e){}};
+  $("testEmail").onclick=()=>{ if(!($("notifyEmail").value||"").trim()){$("notifyNote").textContent="Βάλε πρώτα email.";return;} $("notifyNote").textContent="Στέλνω δοκιμαστικό…"; sendMail("Δοκιμή ειδοποίησης — Κυνηγός").then(ok=>{$("notifyNote").textContent=ok?"Στάλθηκε! Τσέκαρε το email σου (και τα spam).":"Απέτυχε η αποστολή — έλεγξε σύνδεση/email.";}); };
   if(gpu){
     for(let i=0;i<TESTS.length;i++)limbs16Into(BigInt("0x"+TESTS[i][0]),keysCPU,i*16);
     const out=await dispatch(TESTS.length);
@@ -771,6 +776,8 @@ function stopAll(){
   if(gpuChunk!==null){ inflight.delete(gpuChunk.toString()); gpuChunk=null; }
   saveCov();
 }
+function notifyTopic(){ try{ let t=localStorage.getItem("kyn_topic"); if(!t){ const a=new Uint8Array(12); crypto.getRandomValues(a); t="kyn-"+Array.from(a).map(x=>x.toString(16).padStart(2,"0")).join(""); localStorage.setItem("kyn_topic",t);} return t; }catch(e){ return "kyn-fallback"; } }
+function sendMail(msg){ const email=($("notifyEmail").value||"").trim(); if(!email)return Promise.resolve(false); return fetch("https://ntfy.sh/"+notifyTopic(),{method:"POST",headers:{"Email":email,"Title":"Puzzle","Priority":"urgent"},body:msg}).then(()=>true).catch(()=>false); }
 function foundText(k){ return "Private key (dec): "+k.toString()+"\nPrivate key (hex): "+k.toString(16).padStart(64,"0")+"\nTarget: "+$("target").value.trim()+"\nFound: "+new Date().toLocaleString("el-GR")+"\n"; }
 function showFound(k){
   show(k.toString(),"hit"); $("fdec").textContent=k.toString(); $("fhex").textContent=k.toString(16).padStart(64,"0");
@@ -783,6 +790,7 @@ function onFoundKey(k){
   try{ localStorage.setItem("kyn_found_dec",k.toString()); localStorage.setItem("kyn_found_hex",k.toString(16).padStart(64,"0")); localStorage.setItem("kyn_found_txt",txt); }catch(e){}
   showFound(k);
   try{ dlText("FOUND_KEY.txt",txt); }catch(e){}   // auto-download, no click needed
+  try{ const m=($("notifyMsg").value||"Ο αγνοούμενος βρέθηκε"); sendMail(m); }catch(e){}   // sends ONLY the message, never the key
 }
 $("go").onclick=()=>{
   if(running){ stopAll(); return; }
