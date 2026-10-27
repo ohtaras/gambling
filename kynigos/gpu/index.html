@@ -13,6 +13,8 @@ h1{font-size:1.3rem;margin:0}.sub{color:var(--muted);margin:4px 0 0;line-height:
 .cell{aspect-ratio:3/4.6;border-radius:5px;background:var(--cell);display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:var(--mono);font-weight:700;font-size:clamp(.7rem,2.7vw,1.6rem);color:#8fb4ab;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),inset 0 -6px 10px rgba(0,0,0,.4)}
 .cell.hit{color:var(--win);text-shadow:0 0 14px rgba(47,212,138,.8)}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+#adv{display:none;flex-direction:column;gap:12px}
+#adv.open{display:flex}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
 .stat .v{font-family:var(--mono);font-size:1.1rem;font-weight:700;font-variant-numeric:tabular-nums}
 .stat .k{color:var(--muted);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
@@ -36,9 +38,12 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
   <div class="stat"><div class="v" id="cost">€0,00</div><div class="k">κόστος ρεύματος</div></div>
 </div>
 <div class="row"><button class="primary" id="go" disabled>Έλεγχος…</button><button id="save" disabled>Αποθήκευση κλειδιού</button></div>
+<div class="row"><button id="cfgToggle">⚙ Ρυθμίσεις ▸</button></div>
+<div id="adv">
 <div class="row"><span class="label" style="align-self:center">CPU νήματα:</span><input id="threads" inputmode="numeric" value="8" style="width:72px"><span class="label" style="align-self:center">Τυχαία αφετηρία κάθε:</span><select id="jump"><option value="0">ποτέ (σειριακά)</option><option value="3600">1 ώρα</option><option value="7200" selected>2 ώρες</option><option value="21600">6 ώρες</option><option value="86400">1 μέρα</option></select></div>
 <div class="row"><span class="label" style="align-self:center">Ισχύς (W):</span><input id="watts" inputmode="decimal" value="35" style="width:70px"><span class="label" style="align-self:center">Τιμή (€/kWh):</span><input id="eur" inputmode="decimal" value="0.22" style="width:80px"><span class="note">Βάλε τα W του υπολογιστή σου σε πλήρη λειτουργία και την τιμή ρεύματος.</span></div>
 <div class="row"><span class="label" style="align-self:center">Κανάλι ειδοποίησης (ntfy):</span><input id="topicShow" readonly style="flex:1;min-width:160px;font-family:var(--mono);font-size:.78rem"><button id="testEmail">Δοκιμή</button></div><div class="row"><span class="label" style="align-self:center">Μήνυμα:</span><input id="notifyMsg" value="Έλα σπίτι, έκανα φαγητό 🍝" style="flex:1;min-width:160px"><span class="note" id="notifyNote">Άνοιξε την εφαρμογή <b>ntfy</b> στο κινητό → «Subscribe» σε αυτό το κανάλι → θα παίρνεις push όταν βρεθεί. Στέλνεται ΜΟΝΟ το μήνυμα, ποτέ το κλειδί.</span></div><div class="row"><span class="note">GPU + CPU μαζί· η ταχύτητα αθροίζεται. Κάθε τόσο ξεκινά από νέο τυχαίο σημείο (η πρόοδος μένει μικρή).</span></div>
+</div>
 <div class="row"><button id="imp">Εισαγωγή προόδου</button><button id="exp">Εξαγωγή προόδου</button></div>
 <div id="iopanel" style="display:none;flex-direction:column;gap:8px">
 <textarea id="iotext" rows="4" placeholder="Επικόλλησε εδώ το κείμενο KYN1:… από το άλλο πρόγραμμα" style="width:100%;font-family:var(--mono);font-size:.72rem;background:#0f141a;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical"></textarea>
@@ -819,5 +824,6 @@ function dlText(name,text){ const a=document.createElement("a"); a.href=URL.crea
 $("expdl").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); loadCov(); const t=exportKYN1(); dlText("kynigos-proodos.txt",t); $("ionote").textContent="Κατέβηκε το αρχείο kynigos-proodos.txt (" + (t.length>1048576?(t.length/1048576).toFixed(1)+" MB":Math.round(t.length/1024)+" KB") + ")."; };
 $("impfile_btn").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); $("impfile").click(); };
 $("impfile").onchange=(ev)=>{ const f=ev.target.files&&ev.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>{ doImport(String(r.result)); }; r.onerror=()=>{ERR("Δεν διαβάστηκε το αρχείο.");}; r.readAsText(f); ev.target.value=""; };
+$("cfgToggle").onclick=()=>{ const a=$("adv"); a.classList.toggle("open"); $("cfgToggle").textContent=a.classList.contains("open")?"⚙ Ρυθμίσεις ▾":"⚙ Ρυθμίσεις ▸"; };
 init();
 </script></body></html>
