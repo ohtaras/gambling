@@ -28,7 +28,7 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
 .found{display:none;background:rgba(47,212,138,.1);border:1px solid var(--win);border-radius:12px;padding:16px;gap:10px;flex-direction:column}.found.show{display:flex}.found .m{font-family:var(--mono);word-break:break-all;color:var(--win);user-select:all}
 .warn{border-left:3px solid var(--accent);padding-left:12px}
 </style></head><body><div class="wrap">
-<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[v27.10-4]</span></p></header>
+<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[v7 IDB ✓]</span></p><div id="savst" style="font:12px/1.4 monospace;color:#5a7">💾 —</div></header>
 <div class="panel"><div class="cells" id="cells" aria-hidden="true"></div></div>
 <div class="stats">
   <div class="stat"><div class="v" id="rate">0</div><div class="k">κλειδιά/δλ</div></div>
@@ -717,10 +717,19 @@ function inRanges(ranges,idx){ let lo=0,hi=ranges.length-1; while(lo<=hi){const 
 function coveredEndAt(idx){ let e=inRanges(imported,idx); if(e!==null)return e; e=inRanges(scanned,idx); if(e!==null)return e; if(inflight.has(idx.toString()))return idx+1n; return null; }
 function lsBase(){ return "cov:"+rangeMin+":"+rangeMax+":"+CHUNK+":"+$("target").value.trim(); }
 function recalcScanned(){ scanned.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0); const m=[]; for(const iv of scanned){ if(m.length&&iv[0]<=m[m.length-1][1]){ if(iv[1]>m[m.length-1][1])m[m.length-1][1]=iv[1]; } else m.push([iv[0],iv[1]]); } scanned=m; let t=0n; for(const iv of scanned)t+=(iv[1]-iv[0]); scannedChunks=t; }
-function loadCov(){ scanned=[]; scannedChunks=0n; try{ const raw=localStorage.getItem(lsKey); if(raw){ const o=JSON.parse(raw);
-  if(Array.isArray(o)){ const idxs=o.map(x=>BigInt(x)).sort((a,b)=>a<b?-1:a>b?1:0); let i=0; while(i<idxs.length){ let j=i; while(j+1<idxs.length&&idxs[j+1]===idxs[j]+1n)j++; scanned.push([idxs[i],idxs[j]+1n]); i=j+1; } recalcScanned(); }
-  else if(o&&o.r){ for(const [a,b] of o.r) scanned.push([BigInt(a),BigInt(b)]); recalcScanned(); } } }catch(e){} }
-function saveCov(){ try{localStorage.setItem(lsKey,JSON.stringify({r:scanned.map(iv=>[iv[0].toString(),iv[1].toString()])}));}catch(e){} try{localStorage.setItem(lsKey+":t",String(Math.round(elapsedNow())));}catch(e){} }
+let _idb=null;
+function idbOpen(){ return new Promise((res,rej)=>{ if(_idb)return res(_idb); try{ const r=indexedDB.open("kyn-store",1); r.onupgradeneeded=()=>{ try{r.result.createObjectStore("kv");}catch(e){} }; r.onsuccess=()=>{_idb=r.result;res(_idb);}; r.onerror=()=>rej(r.error); }catch(e){ rej(e); } }); }
+function idbGet(k){ return idbOpen().then(db=>new Promise((res,rej)=>{ const q=db.transaction("kv","readonly").objectStore("kv").get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); })); }
+function idbSet(k,v){ return idbOpen().then(db=>new Promise((res,rej)=>{ const tx=db.transaction("kv","readwrite"); tx.objectStore("kv").put(v,k); tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error); })); }
+function covStatus(){ try{ idbGet("cov:"+lsKey).then(o=>{ const el=document.getElementById("savst"); if(!el)return; let n=0n; if(o&&o.r)for(const a of o.r)n+=(BigInt(a[1])-BigInt(a[0])); el.textContent="💾 αποθηκευμένη πρόοδος: "+dots(n.toString())+" chunks"+(window.__saveErr?(" ⚠ "+window.__saveErr):""); }); }catch(e){} }
+async function loadCov(){ scanned=[]; scannedChunks=0n;
+  let o=null; try{ o=await idbGet("cov:"+lsKey); }catch(e){}
+  if(!o){ try{ const raw=localStorage.getItem(lsKey); if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)){ const idxs=p.map(x=>BigInt(x)).sort((a,b)=>a<b?-1:a>b?1:0); const rr=[]; let i=0; while(i<idxs.length){ let j=i; while(j+1<idxs.length&&idxs[j+1]===idxs[j]+1n)j++; rr.push([idxs[i].toString(),(idxs[j]+1n).toString()]); i=j+1; } o={r:rr}; } else o=p; } }catch(e){} }
+  if(o&&o.r){ for(const [a,b] of o.r) scanned.push([BigInt(a),BigInt(b)]); recalcScanned(); }
+  try{ localStorage.removeItem(lsKey); }catch(e){}  // free the old oversized localStorage copy
+  covStatus();
+}
+function saveCov(){ const data={r:scanned.map(iv=>[iv[0].toString(),iv[1].toString()])}; idbSet("cov:"+lsKey,data).then(function(){window.__saveErr="";covStatus();},function(e){window.__saveErr=String(e&&e.message||e);covStatus();}); try{localStorage.setItem(lsKey+":t",String(Math.round(elapsedNow())));}catch(e){} }
 function impStoreKey(){ return lsKey+":imp"; }
 function recalcImported(){ imported.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0); const m=[]; for(const iv of imported){ if(m.length&&iv[0]<=m[m.length-1][1]){ if(iv[1]>m[m.length-1][1]) m[m.length-1][1]=iv[1]; } else m.push([iv[0],iv[1]]); } imported=m; let t=0n; for(const iv of imported)t+=(iv[1]-iv[0]); importedChunks=t; }
 function loadImported(){ imported=[];importedChunks=0n; try{const raw=localStorage.getItem(impStoreKey()); if(raw){const o=JSON.parse(raw); if(o.C)CHUNK=BigInt(o.C); for(const [s,e] of o.r) imported.push([BigInt(s),BigInt(e)]); recalcImported();}}catch(e){} }
@@ -804,10 +813,10 @@ function onFoundKey(k){
   try{ dlText("FOUND_KEY.txt",txt); }catch(e){}   // auto-download, no click needed
   try{ const m=($("notifyMsg").value||"Έλα σπίτι, έκανα φαγητό 🍝"); sendMail(m); }catch(e){}   // sends ONLY the message, never the key
 }
-$("go").onclick=()=>{
+$("go").onclick=async ()=>{
   if(running){ stopAll(); return; }
   if(!parseRange()){ERR("Έλεγξε εύρος/διεύθυνση.");return;}
-  lsKey=lsBase(); loadImported(); lsKey=lsBase(); loadCov();
+  lsKey=lsBase(); loadImported(); lsKey=lsBase(); await loadCov();
   numChunks=(rangeMax-rangeMin+1n+CHUNK-1n)/CHUNK;
   inflight=new Set(); gpuChunk=null;
   jumpMs=(parseInt($("jump").value)||0)*1000; nextJump=performance.now()+jumpMs;
@@ -831,7 +840,7 @@ $("save").onclick=()=>{if(!winKey)return;const txt="Private key (dec): "+winKey.
 function setLsKey(){ lsKey=lsBase(); }
 function showPanel(){ $("iopanel").style.display="flex"; }
 $("imp").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); showPanel(); $("iotext").value=""; $("iotext").focus(); $("ionote").textContent="Επικόλλησε το KYN1 και πάτα «Εφαρμογή εισαγωγής»."; };
-$("exp").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); loadCov(); showPanel(); $("iotext").value=exportKYN1(); $("iotext").focus(); $("iotext").select(); $("ionote").textContent="Αντίγραψε αυτό το κείμενο (κουμπί «Αντιγραφή»)."; };
+$("exp").onclick=async ()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); await loadCov(); showPanel(); $("iotext").value=exportKYN1(); $("iotext").focus(); $("iotext").select(); $("ionote").textContent="Αντίγραψε αυτό το κείμενο (κουμπί «Αντιγραφή»)."; };
 $("ioapply").onclick=()=>{ const t=$("iotext").value.trim(); if(!t){$("ionote").textContent="Το πλαίσιο είναι κενό.";return;} doImport(t); };
 $("iocopy").onclick=()=>{ const t=$("iotext"); t.select(); try{navigator.clipboard.writeText(t.value).then(()=>{$("ionote").textContent="Αντιγράφηκε.";},()=>{$("ionote").textContent="Επίλεξε και αντίγραψε χειροκίνητα.";});}catch(e){$("ionote").textContent="Επίλεξε και αντίγραψε χειροκίνητα.";} };
 function dlText(name,text){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000); }
