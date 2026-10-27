@@ -603,7 +603,7 @@ function CORE(scope){
 }
 function workerURL(){return URL.createObjectURL(new Blob(['('+CORE.toString()+')(self);'],{type:'text/javascript'}));}
 
-const BATCH=2048, GAP_MS=4, SAVE_MS=15000, SAVE_CAP=600000;
+const BATCH=2048, GAP_MS=4, SAVE_MS=2000, SAVE_CAP=600000;
 let CHUNK=65536n;              // keys per chunk (matches other program's C)
 let device,scantestPipe,scanPipe,bg,scanBg,inBuf,outBuf,rdBuf,keysCPU,paramsBuf,foundBuf,foundRd;
 let cpuWorkers=[], inflight=new Set(), uiTimer=null, lastKey="", gpuChunk=null, gpuOK=false;
@@ -821,6 +821,12 @@ $("go").onclick=()=>{
   if(gpuOK) gpuLoop();
   uiTimer=setInterval(render,250);
 };
+function flushSave(){ try{ if(lsKey && (scanned.length||imported.length)){ saveCov(); } }catch(e){} }
+try{
+  document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="hidden") flushSave(); });
+  window.addEventListener("pagehide",flushSave);
+  window.addEventListener("beforeunload",flushSave);
+}catch(e){}
 $("save").onclick=()=>{if(!winKey)return;const txt="Private key (dec): "+winKey.toString()+"\nPrivate key (hex): "+winKey.toString(16).padStart(64,"0")+"\nTarget: "+$("target").value.trim()+"\n";const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));a.download="FOUND_KEY.txt";a.click();};
 function setLsKey(){ lsKey=lsBase(); }
 function showPanel(){ $("iopanel").style.display="flex"; }
