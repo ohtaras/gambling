@@ -28,7 +28,7 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
 .found{display:none;background:rgba(47,212,138,.1);border:1px solid var(--win);border-radius:12px;padding:16px;gap:10px;flex-direction:column}.found.show{display:flex}.found .m{font-family:var(--mono);word-break:break-all;color:var(--win);user-select:all}
 .warn{border-left:3px solid var(--accent);padding-left:12px}
 </style></head><body><div class="wrap">
-<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[v27.10-2]</span></p></header>
+<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[v27.10-3]</span></p></header>
 <div class="panel"><div class="cells" id="cells" aria-hidden="true"></div></div>
 <div class="stats">
   <div class="stat"><div class="v" id="rate">0</div><div class="k">κλειδιά/δλ</div></div>
@@ -807,7 +807,7 @@ function onFoundKey(k){
 $("go").onclick=()=>{
   if(running){ stopAll(); return; }
   if(!parseRange()){ERR("Έλεγξε εύρος/διεύθυνση.");return;}
-  loadImported(); lsKey=lsBase(); loadCov();
+  lsKey=lsBase(); loadImported(); lsKey=lsBase(); loadCov();
   numChunks=(rangeMax-rangeMin+1n+CHUNK-1n)/CHUNK;
   inflight=new Set(); gpuChunk=null;
   jumpMs=(parseInt($("jump").value)||0)*1000; nextJump=performance.now()+jumpMs;
