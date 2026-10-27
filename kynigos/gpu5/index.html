@@ -1,0 +1,846 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' blob:; worker-src blob:; style-src 'unsafe-inline'; connect-src https://ntfy.sh; img-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Κυνηγός GPU</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0f14;--panel:#121a22;--line:#26303c;--cell:#141b24;--ink:#e7edf2;--muted:#8fa0ad;--ok:#2fd48a;--bad:#e5484d;--glow:#3fe0bf;--win:#2fd48a;--accent:#1f8f7c;--mono:ui-monospace,SFMono-Regular,Menlo,monospace;--ui:system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);padding:22px max(16px,env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));font-size:15px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1{font-size:1.3rem;margin:0}.sub{color:var(--muted);margin:4px 0 0;line-height:1.5}
+.label{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.panel{background:#0c1016;border:1px solid #26303c;border-radius:16px;padding:18px 12px;box-shadow:inset 0 0 60px rgba(0,0,0,.55)}
+.cells{display:grid;grid-template-columns:repeat(22,1fr);gap:3px}
+.cell{aspect-ratio:3/4.6;border-radius:5px;background:var(--cell);display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:var(--mono);font-weight:700;font-size:clamp(.7rem,2.7vw,1.6rem);color:#8fb4ab;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),inset 0 -6px 10px rgba(0,0,0,.4)}
+.cell.hit{color:var(--win);text-shadow:0 0 14px rgba(47,212,138,.8)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+#adv{display:none;flex-direction:column;gap:12px}
+#adv.open{display:flex}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.stat .v{font-family:var(--mono);font-size:1.1rem;font-weight:700;font-variant-numeric:tabular-nums}
+.stat .k{color:var(--muted);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;background:#182029;color:var(--ink);padding:14px 16px;cursor:pointer;font-weight:700}button:disabled{opacity:.45}
+.primary{background:var(--accent);border-color:var(--accent);color:#eafff9;flex:1;min-width:150px}.primary.on{background:#c0392b;border-color:#c0392b;color:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:470px){.grid2{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px}input{background:#0f141a;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:11px 12px;font-family:var(--mono);min-width:0;width:100%}input.bad{border-color:var(--bad)}
+.mono{font-family:var(--mono);font-size:.8rem;word-break:break-all;white-space:pre-wrap;line-height:1.5}
+.note{color:var(--muted);font-size:.8rem;line-height:1.55}.ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
+.found{display:none;background:rgba(47,212,138,.1);border:1px solid var(--win);border-radius:12px;padding:16px;gap:10px;flex-direction:column}.found.show{display:flex}.found .m{font-family:var(--mono);word-break:break-all;color:var(--win);user-select:all}
+.warn{border-left:3px solid var(--accent);padding-left:12px}
+</style></head><body><div class="wrap">
+<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[DIAGNOSE v6]</span></p><div id="dbg" style="font:11px/1.4 monospace;background:#111;color:#6f6;padding:6px 8px;border-radius:6px;margin:6px 0;white-space:pre-wrap;word-break:break-all"></div></header>
+<div class="panel"><div class="cells" id="cells" aria-hidden="true"></div></div>
+<div class="stats">
+  <div class="stat"><div class="v" id="rate">0</div><div class="k">κλειδιά/δλ</div></div>
+  <div class="stat"><div class="v" id="total">0</div><div class="k">σύνολο</div></div>
+  <div class="stat"><div class="v" id="gpu">—</div><div class="k">GPU</div></div>
+  <div class="stat"><div class="v" id="time">0δ</div><div class="k">χρόνος</div></div>
+  <div class="stat"><div class="v" id="cost">€0,00</div><div class="k">κόστος ρεύματος</div></div>
+</div>
+<div class="row"><button class="primary" id="go" disabled>Έλεγχος…</button><button id="save" disabled>Αποθήκευση κλειδιού</button></div>
+<div class="row"><button id="cfgToggle">⚙ Ρυθμίσεις ▸</button></div>
+<div id="adv">
+<div class="row"><span class="label" style="align-self:center">CPU νήματα:</span><input id="threads" inputmode="numeric" value="8" style="width:72px"><span class="label" style="align-self:center">Τυχαία αφετηρία κάθε:</span><select id="jump"><option value="0">ποτέ (σειριακά)</option><option value="3600">1 ώρα</option><option value="7200" selected>2 ώρες</option><option value="21600">6 ώρες</option><option value="86400">1 μέρα</option></select></div>
+<div class="row"><span class="label" style="align-self:center">Ισχύς (W):</span><input id="watts" inputmode="decimal" value="35" style="width:70px"><span class="label" style="align-self:center">Τιμή (€/kWh):</span><input id="eur" inputmode="decimal" value="0.22" style="width:80px"><span class="note">Βάλε τα W του υπολογιστή σου σε πλήρη λειτουργία και την τιμή ρεύματος.</span></div>
+<div class="row"><span class="label" style="align-self:center">Κανάλι ειδοποίησης (ntfy):</span><input id="topicShow" readonly style="flex:1;min-width:160px;font-family:var(--mono);font-size:.78rem"><button id="testEmail">Δοκιμή</button></div><div class="row"><span class="label" style="align-self:center">Μήνυμα:</span><input id="notifyMsg" value="Έλα σπίτι, έκανα φαγητό 🍝" style="flex:1;min-width:160px"><span class="note" id="notifyNote">Άνοιξε την εφαρμογή <b>ntfy</b> στο κινητό → «Subscribe» σε αυτό το κανάλι → θα παίρνεις push όταν βρεθεί. Στέλνεται ΜΟΝΟ το μήνυμα, ποτέ το κλειδί.</span></div><div class="row"><span class="note">GPU + CPU μαζί· η ταχύτητα αθροίζεται. Κάθε τόσο ξεκινά από νέο τυχαίο σημείο (η πρόοδος μένει μικρή).</span></div>
+</div>
+<div class="row"><button id="imp">Εισαγωγή προόδου</button><button id="exp">Εξαγωγή προόδου</button></div>
+<div id="iopanel" style="display:none;flex-direction:column;gap:8px">
+<textarea id="iotext" rows="4" placeholder="Επικόλλησε εδώ το κείμενο KYN1:… από το άλλο πρόγραμμα" style="width:100%;font-family:var(--mono);font-size:.72rem;background:#0f141a;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical"></textarea>
+<div class="row"><button id="ioapply">Εφαρμογή εισαγωγής</button><button id="iocopy">Αντιγραφή</button><button id="expdl">Κατέβασμα .txt</button><button id="impfile_btn">Φόρτωση αρχείου</button><input id="impfile" type="file" accept=".txt,text/plain" style="display:none"><span class="note" id="ionote"></span></div>
+</div>
+<div class="grid2">
+  <div class="field"><span class="label">Από</span><input id="min" inputmode="numeric" value="1180591620717411303424"></div>
+  <div class="field"><span class="label">Έως</span><input id="max" inputmode="numeric" value="2361183241434822606847"></div>
+</div>
+<div class="field"><span class="label">Διεύθυνση στόχος</span><input id="target" value="1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU"></div>
+<div class="mono" id="status">—</div>
+<div class="found" id="found"><div class="label" style="color:var(--win)">🎉 ΒΡΕΘΗΚΕ ΚΛΕΙΔΙ</div><div>Κλειδί (δεκαδικό):</div><div class="m" id="fdec"></div><div>Κλειδί (hex):</div><div class="m" id="fhex"></div></div>
+<p class="note warn">Ταχύτητα ~95K κλειδιά/δλ στο M2. Το εύρος 2⁷⁰ έχει 1,18×10²¹ κλειδιά, άρα μια πλήρης σάρωση θα έπαιρνε εκατοντάδες εκατομμύρια χρόνια. Είναι για το θέαμα και το πείραμα — όχι ρεαλιστικός τρόπος να κερδίσεις.</p>
+<p class="note">Ασφάλεια: η σελίδα επιτρέπει <b>μία μόνο</b> εξερχόμενη σύνδεση — προς την υπηρεσία ειδοποίησης (ntfy) — και στέλνει <b>μόνο το μήνυμα «βρέθηκε»</b>, ποτέ το κλειδί. Αν δεν βάλεις email, δεν στέλνεται τίποτα. Το ιδιωτικό κλειδί μένει πάντα τοπικά στη συσκευή σου.</p>
+</div>
+<script id="wgsl" type="text/wgsl">
+alias Fe = array<u32,16>;
+struct Pt { X:Fe, Y:Fe, Z:Fe };
+
+const PP : Fe = Fe(0xfc2fu,0xffffu,0xfffeu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu);
+const GX : Fe = Fe(0x1798u,0x16f8u,0x815bu,0x59f2u,0x28d9u,0x2dceu,0xfcdbu,0x29bu,0xb07u,0xce87u,0x6295u,0x55a0u,0xbbacu,0xf9dcu,0x667eu,0x79beu);
+const GY : Fe = Fe(0xd4b8u,0xfb10u,0xd08fu,0x9c47u,0x5419u,0xa685u,0xb448u,0xfd17u,0x8a8u,0xe11u,0xfbfcu,0x5da4u,0xc465u,0x26a3u,0xda77u,0x483au);
+const PEc : Fe = Fe(0xfc2du,0xffffu,0xfffeu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu,0xffffu);
+const KC = array<u32,3>(0x3d1u,0u,1u);
+
+const K = array<u32,64>(0x428a2f98u,0x71374491u,0xb5c0fbcfu,0xe9b5dba5u,0x3956c25bu,0x59f111f1u,0x923f82a4u,0xab1c5ed5u,0xd807aa98u,0x12835b01u,0x243185beu,0x550c7dc3u,0x72be5d74u,0x80deb1feu,0x9bdc06a7u,0xc19bf174u,0xe49b69c1u,0xefbe4786u,0xfc19dc6u,0x240ca1ccu,0x2de92c6fu,0x4a7484aau,0x5cb0a9dcu,0x76f988dau,0x983e5152u,0xa831c66du,0xb00327c8u,0xbf597fc7u,0xc6e00bf3u,0xd5a79147u,0x6ca6351u,0x14292967u,0x27b70a85u,0x2e1b2138u,0x4d2c6dfcu,0x53380d13u,0x650a7354u,0x766a0abbu,0x81c2c92eu,0x92722c85u,0xa2bfe8a1u,0xa81a664bu,0xc24b8b70u,0xc76c51a3u,0xd192e819u,0xd6990624u,0xf40e3585u,0x106aa070u,0x19a4c116u,0x1e376c08u,0x2748774cu,0x34b0bcb5u,0x391c0cb3u,0x4ed8aa4au,0x5b9cca4fu,0x682e6ff3u,0x748f82eeu,0x78a5636fu,0x84c87814u,0x8cc70208u,0x90befffau,0xa4506cebu,0xbef9a3f7u,0xc67178f2u);
+const KK = array<u32,5>(0x0u,0x5a827999u,0x6ed9eba1u,0x8f1bbcdcu,0xa953fd4eu);
+const KKP = array<u32,5>(0x50a28be6u,0x5c4dd124u,0x6d703ef3u,0x7a6d76e9u,0x0u);
+const RR = array<u32,80>(0u,1u,2u,3u,4u,5u,6u,7u,8u,9u,10u,11u,12u,13u,14u,15u,7u,4u,13u,1u,10u,6u,15u,3u,12u,0u,9u,5u,2u,14u,11u,8u,3u,10u,14u,4u,9u,15u,8u,1u,2u,7u,0u,6u,13u,11u,5u,12u,1u,9u,11u,10u,0u,8u,12u,4u,13u,3u,7u,15u,14u,5u,6u,2u,4u,0u,5u,9u,7u,12u,2u,10u,14u,1u,3u,8u,11u,6u,15u,13u);
+const RP = array<u32,80>(5u,14u,7u,0u,9u,2u,11u,4u,13u,6u,15u,8u,1u,10u,3u,12u,6u,11u,3u,7u,0u,13u,5u,10u,14u,15u,8u,12u,4u,9u,1u,2u,15u,5u,1u,3u,7u,14u,6u,9u,11u,8u,12u,2u,10u,0u,4u,13u,8u,6u,4u,1u,3u,11u,15u,0u,5u,12u,2u,13u,9u,7u,10u,14u,12u,15u,10u,4u,1u,5u,8u,7u,6u,2u,13u,14u,0u,3u,9u,11u);
+const SS = array<u32,80>(11u,14u,15u,12u,5u,8u,7u,9u,11u,13u,14u,15u,6u,7u,9u,8u,7u,6u,8u,13u,11u,9u,7u,15u,7u,12u,15u,9u,11u,7u,13u,12u,11u,13u,6u,7u,14u,9u,13u,15u,14u,8u,13u,6u,5u,12u,7u,5u,11u,12u,14u,15u,14u,15u,9u,8u,9u,14u,5u,6u,8u,6u,5u,12u,9u,15u,5u,11u,6u,8u,13u,12u,5u,12u,13u,14u,11u,8u,5u,6u);
+const SP = array<u32,80>(8u,9u,9u,11u,13u,15u,15u,5u,7u,7u,8u,11u,14u,14u,12u,6u,9u,13u,15u,7u,12u,8u,9u,11u,7u,7u,12u,7u,6u,15u,13u,11u,9u,7u,15u,11u,8u,6u,6u,14u,12u,13u,5u,14u,13u,13u,7u,5u,15u,5u,8u,11u,14u,14u,6u,14u,6u,9u,12u,9u,12u,5u,15u,8u,8u,5u,12u,9u,12u,5u,14u,6u,8u,13u,6u,5u,15u,13u,11u,11u);
+
+@group(0) @binding(0) var<storage, read> keysIn : array<u32>;
+@group(0) @binding(1) var<storage, read_write> outp : array<u32>;
+@group(0) @binding(2) var<storage, read> params : array<u32>;
+@group(0) @binding(3) var<storage, read_write> found : array<u32>;
+
+fn zeroFe()->Fe { var z:Fe; for(var i=0u;i<16u;i++){z[i]=0u;} return z; }
+fn oneFe()->Fe { var z=zeroFe(); z[0]=1u; return z; }
+fn isZeroFe(a:Fe)->bool { for(var i=0u;i<16u;i++){ if(a[i]!=0u){return false;} } return true; }
+fn eqFe(a:Fe,b:Fe)->bool { for(var i=0u;i<16u;i++){ if(a[i]!=b[i]){return false;} } return true; }
+fn geP(a:Fe)->bool { var i:i32=15; loop { if(i<0){break;} if(a[u32(i)]>PP[u32(i)]){return true;} if(a[u32(i)]<PP[u32(i)]){return false;} i=i-1; } return true; }
+
+fn fsub(a:Fe,b:Fe)->Fe {
+  var r:Fe; var br:u32=0u;
+  for(var i=0u;i<16u;i++){ let s2 = i32(a[i]) - i32(b[i]) - i32(br); if(s2<0){ r[i]=u32(s2+0x10000); br=1u; } else { r[i]=u32(s2); br=0u; } }
+  if(br==1u){ var c:u32=0u; for(var i=0u;i<16u;i++){ let s3=r[i]+PP[i]+c; r[i]=s3&0xffffu; c=s3>>16u; } }
+  return r;
+}
+fn freduce(t: array<u32,32>)->Fe {
+  var arr=t;
+  for(var ph=0u;ph<2u;ph++){
+    var hi: array<u32,16>;
+    for(var i=0u;i<16u;i++){ hi[i]=arr[16u+i]; arr[16u+i]=0u; }
+    for(var i=0u;i<16u;i++){
+      if(hi[i]==0u){ continue; }
+      var carry:u32=0u;
+      for(var j=0u;j<3u;j++){ let cur=arr[i+j]+hi[i]*KC[j]+carry; arr[i+j]=cur&0xffffu; carry=cur>>16u; }
+      var k=i+3u;
+      loop { if(carry==0u || k>=32u){break;} let cur=arr[k]+carry; arr[k]=cur&0xffffu; carry=cur>>16u; k=k+1u; }
+    }
+  }
+  var r:Fe; for(var i=0u;i<16u;i++){ r[i]=arr[i]; }
+  if(geP(r)){ r=fsub(r,PP); }
+  return r;
+}
+fn fadd(a:Fe,b:Fe)->Fe {
+  var t: array<u32,32>; for(var i=0u;i<32u;i++){t[i]=0u;}
+  var c:u32=0u;
+  for(var i=0u;i<16u;i++){ let s2=a[i]+b[i]+c; t[i]=s2&0xffffu; c=s2>>16u; }
+  t[16]=c;
+  return freduce(t);
+}
+fn fmul(a:Fe,b:Fe)->Fe {
+  var t: array<u32,32>; for(var i=0u;i<32u;i++){t[i]=0u;}
+  for(var i=0u;i<16u;i++){
+    var carry:u32=0u;
+    for(var j=0u;j<16u;j++){
+      let prod=a[i]*b[j];
+      let lo=prod&0xffffu; let hi=prod>>16u;
+      let s2=t[i+j]+lo+(carry&0xffffu);
+      t[i+j]=s2&0xffffu;
+      carry=hi+(s2>>16u)+(carry>>16u);
+    }
+    t[i+16u]=t[i+16u]+carry;
+  }
+  return freduce(t);
+}
+fn fsqr(a:Fe)->Fe { return fmul(a,a); }
+fn finv(a:Fe)->Fe {
+  var result=oneFe(); var base=a;
+  for(var i=0u;i<256u;i++){
+    let bit=(PEc[i>>4u]>>(i&15u))&1u;
+    if(bit==1u){ result=fmul(result,base); }
+    base=fsqr(base);
+  }
+  return result;
+}
+fn jdouble(p:Pt)->Pt {
+  if(isZeroFe(p.Z)){ return p; }
+  let YY=fsqr(p.Y);
+  let x2=fadd(p.X,p.X); let x4=fadd(x2,x2);
+  let S=fmul(x4,YY);
+  let xx=fsqr(p.X); let M=fadd(fadd(xx,xx),xx);
+  let X3=fsub(fsqr(M), fadd(S,S));
+  var e8=fadd(fsqr(YY),fsqr(YY)); e8=fadd(e8,e8); e8=fadd(e8,e8);
+  let Y3=fsub(fmul(M,fsub(S,X3)), e8);
+  let Z3=fmul(fadd(p.Y,p.Y), p.Z);
+  return Pt(X3,Y3,Z3);
+}
+fn jadd(p:Pt,q:Pt)->Pt {
+  if(isZeroFe(p.Z)){ return q; }
+  if(isZeroFe(q.Z)){ return p; }
+  let z1z1=fsqr(p.Z); let z2z2=fsqr(q.Z);
+  let U1=fmul(p.X,z2z2); let U2=fmul(q.X,z1z1);
+  let S1=fmul(fmul(p.Y,q.Z),z2z2); let S2=fmul(fmul(q.Y,p.Z),z1z1);
+  if(eqFe(U1,U2)){ if(eqFe(S1,S2)){ return jdouble(p); } else { return Pt(oneFe(),oneFe(),zeroFe()); } }
+  let H=fsub(U2,U1); let R=fsub(S2,S1);
+  let HH=fsqr(H); let HHH=fmul(H,HH); let U1HH=fmul(U1,HH);
+  let X3=fsub(fsub(fsqr(R),HHH), fadd(U1HH,U1HH));
+  let Y3=fsub(fmul(R,fsub(U1HH,X3)), fmul(S1,HHH));
+  let Z3=fmul(fmul(p.Z,q.Z),H);
+  return Pt(X3,Y3,Z3);
+}
+fn scalarmul(k:Fe)->Pt {
+  var R=Pt(oneFe(),oneFe(),zeroFe());
+  let G=Pt(GX,GY,oneFe());
+  var i:i32=255;
+  loop {
+    if(i<0){break;}
+    R=jdouble(R);
+    let bit=(k[u32(i)>>4u]>>(u32(i)&15u))&1u;
+    if(bit==1u){ R=jadd(R,G); }
+    i=i-1;
+  }
+  return R;
+}
+
+fn rotr(x:u32,n:u32)->u32 { return (x>>n)|(x<<(32u-n)); }
+fn rotl(x:u32,n:u32)->u32 { return (x<<n)|(x>>(32u-n)); }
+fn bswap(x:u32)->u32 { return ((x&0xffu)<<24u)|((x&0xff00u)<<8u)|((x>>8u)&0xff00u)|((x>>24u)&0xffu); }
+fn ff(j:u32,x:u32,y:u32,z:u32)->u32{
+  if(j<16u){return x^y^z;}
+  if(j<32u){return (x&y)|((~x)&z);}
+  if(j<48u){return (x|(~y))^z;}
+  if(j<64u){return (x&z)|(y&(~z));}
+  return x^(y|(~z));
+}
+// hash160 of a 33-byte msg given as 9 big-endian-packed words (w[8]=last byte<<24). Returns 5 words (ripemd state).
+fn hash160(w9: array<u32,9>)->array<u32,5> {
+  var W: array<u32,64>;
+  for(var i=0u;i<8u;i++){ W[i]=w9[i]; }
+  W[8]=(w9[8] & 0xff000000u) | 0x00800000u;
+  for(var i=9u;i<14u;i++){ W[i]=0u; }
+  W[14]=0u; W[15]=0x108u;
+  for(var i=16u;i<64u;i++){
+    let s0=rotr(W[i-15u],7u)^rotr(W[i-15u],18u)^(W[i-15u]>>3u);
+    let s1=rotr(W[i-2u],17u)^rotr(W[i-2u],19u)^(W[i-2u]>>10u);
+    W[i]=W[i-16u]+s0+W[i-7u]+s1;
+  }
+  var a=0x6a09e667u; var b=0xbb67ae85u; var c=0x3c6ef372u; var d=0xa54ff53au;
+  var e=0x510e527fu; var f=0x9b05688cu; var g=0x1f83d9abu; var h=0x5be0cd19u;
+  for(var i=0u;i<64u;i++){
+    let S1=rotr(e,6u)^rotr(e,11u)^rotr(e,25u); let ch=(e&f)^((~e)&g);
+    let t1=h+S1+ch+K[i]+W[i];
+    let S0=rotr(a,2u)^rotr(a,13u)^rotr(a,22u); let mj=(a&b)^(a&c)^(b&c);
+    let t2=S0+mj;
+    h=g; g=f; f=e; e=d+t1; d=c; c=b; b=a; a=t1+t2;
+  }
+  let H0=0x6a09e667u+a; let H1=0xbb67ae85u+b; let H2=0x3c6ef372u+c; let H3=0xa54ff53au+d;
+  let H4=0x510e527fu+e; let H5=0x9b05688cu+f; let H6=0x1f83d9abu+g; let H7=0x5be0cd19u+h;
+  var X: array<u32,16>;
+  X[0]=bswap(H0);X[1]=bswap(H1);X[2]=bswap(H2);X[3]=bswap(H3);X[4]=bswap(H4);X[5]=bswap(H5);X[6]=bswap(H6);X[7]=bswap(H7);
+  X[8]=0x80u;X[9]=0u;X[10]=0u;X[11]=0u;X[12]=0u;X[13]=0u;X[14]=0x100u;X[15]=0u;
+  let i0=0x67452301u; let i1=0xefcdab89u; let i2=0x98badcfeu; let i3=0x10325476u; let i4=0xc3d2e1f0u;
+  var a1=i0; var b1=i1; var c1=i2; var d1=i3; var e1=i4;
+  var a2=i0; var b2=i1; var c2=i2; var d2=i3; var e2=i4;
+  for(var j=0u;j<80u;j++){
+    var t = a1 + ff(j,b1,c1,d1) + X[RR[j]] + KK[j/16u]; t = rotl(t,SS[j]) + e1;
+    a1=e1; e1=d1; d1=rotl(c1,10u); c1=b1; b1=t;
+    var tp = a2 + ff(79u-j,b2,c2,d2) + X[RP[j]] + KKP[j/16u]; tp = rotl(tp,SP[j]) + e2;
+    a2=e2; e2=d2; d2=rotl(c2,10u); c2=b2; b2=tp;
+  }
+  return array<u32,5>(i1+c1+d2, i2+d1+e2, i3+e1+a2, i4+a1+b2, i0+b1+c2);
+}
+
+// key (16 limbs) -> hash160 (5 words)
+fn keyHash160(k:Fe)->array<u32,5> {
+  let Rj=scalarmul(k);
+  let zinv=finv(Rj.Z);
+  let z2=fsqr(zinv); let z3=fmul(z2,zinv);
+  let x=fmul(Rj.X,z2); let y=fmul(Rj.Y,z3);
+  // build 33 bytes: prefix + x big-endian
+  var bytes: array<u32,33>;
+  bytes[0]=select(0x02u,0x03u,(y[0]&1u)==1u);
+  for(var m=0u;m<16u;m++){ bytes[1u+2u*m]=(x[15u-m]>>8u)&0xffu; bytes[2u+2u*m]=x[15u-m]&0xffu; }
+  var w9: array<u32,9>;
+  for(var i=0u;i<8u;i++){ w9[i]=(bytes[4u*i]<<24u)|(bytes[4u*i+1u]<<16u)|(bytes[4u*i+2u]<<8u)|bytes[4u*i+3u]; }
+  w9[8]=bytes[32]<<24u;
+  return hash160(w9);
+}
+
+@compute @workgroup_size(64)
+fn dump(@builtin(global_invocation_id) gid: vec3<u32>){
+  let idx=gid.x;
+  let n=arrayLength(&outp)/5u;
+  if(idx>=n){ return; }
+  var k:Fe;
+  for(var i=0u;i<16u;i++){ k[i]=keysIn[idx*16u+i]; }
+  let hh=keyHash160(k);
+  for(var i=0u;i<5u;i++){ outp[idx*5u+i]=hh[i]; }
+}
+
+fn f2(a:Fe)->Fe { return fadd(a,a); }
+fn addU32(a:Fe, v:u32)->Fe {
+  var r=a; var carry=v;
+  for(var i=0u;i<16u;i++){ let t=r[i]+(carry&0xffffu); r[i]=t&0xffffu; carry=(carry>>16u)+(t>>16u); if(carry==0u){ break; } }
+  return r;
+}
+fn jAddG(P:Pt)->Pt {
+  if(isZeroFe(P.Z)){ return Pt(GX,GY,oneFe()); }
+  let Z1Z1=fsqr(P.Z);
+  let U2=fmul(GX,Z1Z1);
+  let S2=fmul(fmul(GY,P.Z),Z1Z1);
+  let H=fsub(U2,P.X);
+  if(isZeroFe(H)){ return jdouble(P); }
+  let HH=fsqr(H);
+  let I=f2(f2(HH));
+  let J=fmul(H,I);
+  let r=f2(fsub(S2,P.Y));
+  let V=fmul(P.X,I);
+  let X3=fsub(fsub(fsqr(r),J),f2(V));
+  let Y3=fsub(fmul(r,fsub(V,X3)), f2(fmul(P.Y,J)));
+  let Z3=fmul(f2(P.Z),H);
+  return Pt(X3,Y3,Z3);
+}
+fn h160xy(x:Fe, y:Fe)->array<u32,5>{
+  var bytes: array<u32,33>;
+  bytes[0]=select(0x02u,0x03u,(y[0]&1u)==1u);
+  for(var m=0u;m<16u;m++){ bytes[1u+2u*m]=(x[15u-m]>>8u)&0xffu; bytes[2u+2u*m]=x[15u-m]&0xffu; }
+  var w9: array<u32,9>;
+  for(var i=0u;i<8u;i++){ w9[i]=(bytes[4u*i]<<24u)|(bytes[4u*i+1u]<<16u)|(bytes[4u*i+2u]<<8u)|bytes[4u*i+3u]; }
+  w9[8]=bytes[32]<<24u;
+  return hash160(w9);
+}
+
+@compute @workgroup_size(1)
+fn scantest(@builtin(global_invocation_id) gid: vec3<u32>){
+  if(gid.x!=0u){ return; }
+  var cnt=arrayLength(&outp)/5u; if(cnt>16u){ cnt=16u; }
+  var start:Fe; for(var i=0u;i<16u;i++){ start[i]=keysIn[i]; }
+  var P=scalarmul(start);
+  var Xs:array<Fe,16>; var Ys:array<Fe,16>; var Zs:array<Fe,16>;
+  for(var j=0u;j<cnt;j++){ Xs[j]=P.X; Ys[j]=P.Y; Zs[j]=P.Z; P=jAddG(P); }
+  var pre:array<Fe,16>; var acc=oneFe();
+  for(var j=0u;j<cnt;j++){ pre[j]=acc; acc=fmul(acc,Zs[j]); }
+  var iv=finv(acc);
+  for(var jj=0u;jj<cnt;jj++){
+    let j=cnt-1u-jj;
+    let invj=fmul(iv,pre[j]); iv=fmul(iv,Zs[j]);
+    let z2=fsqr(invj); let z3=fmul(z2,invj);
+    let x=fmul(Xs[j],z2); let y=fmul(Ys[j],z3);
+    let hh=h160xy(x,y);
+    for(var t=0u;t<5u;t++){ outp[j*5u+t]=hh[t]; }
+  }
+}
+
+@compute @workgroup_size(64)
+fn scan(@builtin(global_invocation_id) gid: vec3<u32>){
+  let tid=gid.x;
+  if(tid>=params[22]){ return; }
+  let L=params[21];
+  var start:Fe; for(var i=0u;i<16u;i++){ start[i]=params[i]; }
+  start=addU32(start, tid*L);
+  var P=scalarmul(start);
+  var done=0u;
+  loop {
+    if(done>=L){ break; }
+    var bc=16u; if(L-done<bc){ bc=L-done; }
+    var Xs:array<Fe,16>; var Ys:array<Fe,16>; var Zs:array<Fe,16>;
+    for(var j=0u;j<bc;j++){ Xs[j]=P.X; Ys[j]=P.Y; Zs[j]=P.Z; P=jAddG(P); }
+    var pre:array<Fe,16>; var acc=oneFe();
+    for(var j=0u;j<bc;j++){ pre[j]=acc; acc=fmul(acc,Zs[j]); }
+    var iv=finv(acc);
+    for(var jj=0u;jj<bc;jj++){
+      let j=bc-1u-jj;
+      let invj=fmul(iv,pre[j]); iv=fmul(iv,Zs[j]);
+      let z2=fsqr(invj); let z3=fmul(z2,invj);
+      let x=fmul(Xs[j],z2); let y=fmul(Ys[j],z3);
+      let hh=h160xy(x,y);
+      if(hh[0]==params[16] && hh[1]==params[17] && hh[2]==params[18] && hh[3]==params[19] && hh[4]==params[20]){
+        found[0]=tid*L+done+j+1u;
+      }
+    }
+    done=done+bc;
+  }
+}
+
+</script>
+<script>
+const TESTS=[["0000000000000000000000000000000000000000000000000000000000000001","751e76e8199196d454941c45d1b3a323f1433bd6"],["0000000000000000000000000000000000000000000000000000000000000002","06afd46bcdfd22ef94ac122aa11f241244a37ecc"],["0000000000000000000000000000000000000000000000000000000000000003","7dd65592d0ab2fe0d0257d571abf032cd9db93dc"]];
+const $=id=>document.getElementById(id);
+let errSticky=false;
+function ERR(m,sticky){ if(errSticky&&!sticky)return; $("status").innerHTML='<span class="bad">'+m+'</span>'; if(sticky)errSticky=true; }
+function INFO(m){ if(!errSticky) $("status").innerHTML=m; }
+addEventListener("unhandledrejection",e=>{const m=(e.reason&&e.reason.message)||String(e.reason); if(/lost|device/i.test(m)){recover();} else ERR("σφάλμα: "+m);});
+addEventListener("error",e=>ERR("σφάλμα: "+e.message));
+const B58="123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+function b58dec(s){let num=0n;for(const ch of s){const i=B58.indexOf(ch);if(i<0)return null;num=num*58n+BigInt(i);}let by=[];while(num>0n){by.unshift(Number(num&0xffn));num>>=8n;}for(const ch of s){if(ch==="1")by.unshift(0);else break;}return by;}
+function targetBytes(addr){const b=b58dec(addr);if(!b||b.length!==25)return null;return b.slice(1,21);}
+function limbs16Into(x,arr,off){let v=x;for(let i=0;i<16;i++){arr[off+i]=Number(v&0xffffn);v>>=16n;}}
+const dots=s=>s.replace(/\B(?=(\d{3})+(?!\d))/g,".");
+const hx=u8=>Array.from(u8).map(x=>x.toString(16).padStart(2,"0")).join("");
+function show(str,cls){str=str.padStart(22,"0").slice(-22);for(let i=0;i<22;i++){cellEls[i].textContent=str[i];cellEls[i].className="cell"+(cls?" "+cls:"");}}
+const cellEls=[];for(let i=0;i<22;i++){const d=document.createElement("div");d.className="cell";d.textContent="0";$("cells").appendChild(d);cellEls.push(d);}
+/* ---- CPU engine (ported verbatim from your Κυνηγός) ---- */
+function CORE(scope){
+  const P=(1n<<256n)-(1n<<32n)-977n;
+  const G=[0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798n,0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8n];
+  function md(a){a%=P;return a<0n?a+P:a;}
+  function inv(a){let lm=1n,hm=0n,low=md(a),high=P;while(low>1n){const r=high/low;const nm=hm-lm*r,nw=high-low*r;hm=lm;lm=nm;high=low;low=nw;}return md(lm);}
+  function padd(p,q){
+    if(!p)return q; if(!q)return p;
+    let l;
+    if(p[0]===q[0]){ if(md(p[1]+q[1])===0n)return null; l=md(3n*p[0]*p[0]*inv(2n*p[1])); }
+    else l=md((q[1]-p[1])*inv(q[0]-p[0]));
+    const x=md(l*l-p[0]-q[0]); return [x,md(l*(p[0]-x)-p[1])];
+  }
+  function pmul(k,p){let r=null;while(k>0n){if(k&1n)r=padd(r,p);p=padd(p,p);k>>=1n;}return r;}
+
+  const SK=new Uint32Array([0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2]);
+  const SW=new Uint32Array(64);
+  function rotr(x,n){return (x>>>n)|(x<<(32-n));}
+  function sha256(msg){
+    const l=msg.length, nb=((l+9+63)>>6), buf=new Uint8Array(nb*64);
+    buf.set(msg); buf[l]=0x80; const bits=l*8;
+    buf[nb*64-4]=(bits>>>24)&255; buf[nb*64-3]=(bits>>>16)&255; buf[nb*64-2]=(bits>>>8)&255; buf[nb*64-1]=bits&255;
+    let h0=0x6a09e667,h1=0xbb67ae85,h2=0x3c6ef372,h3=0xa54ff53a,h4=0x510e527f,h5=0x9b05688c,h6=0x1f83d9ab,h7=0x5be0cd19;
+    const W=SW;
+    for(let o=0;o<buf.length;o+=64){
+      for(let i=0;i<16;i++)W[i]=(buf[o+4*i]<<24)|(buf[o+4*i+1]<<16)|(buf[o+4*i+2]<<8)|buf[o+4*i+3];
+      for(let i=16;i<64;i++){const a=W[i-15],b=W[i-2];W[i]=W[i-16]+(rotr(a,7)^rotr(a,18)^(a>>>3))+W[i-7]+(rotr(b,17)^rotr(b,19)^(b>>>10));}
+      let a=h0,b=h1,c=h2,d=h3,e=h4,f=h5,g=h6,h=h7;
+      for(let i=0;i<64;i++){
+        const t1=(h+(rotr(e,6)^rotr(e,11)^rotr(e,25))+((e&f)^(~e&g))+SK[i]+W[i])|0;
+        const t2=((rotr(a,2)^rotr(a,13)^rotr(a,22))+((a&b)^(a&c)^(b&c)))|0;
+        h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0;
+      }
+      h0=(h0+a)|0;h1=(h1+b)|0;h2=(h2+c)|0;h3=(h3+d)|0;h4=(h4+e)|0;h5=(h5+f)|0;h6=(h6+g)|0;h7=(h7+h)|0;
+    }
+    const out=new Uint8Array(32),H=[h0,h1,h2,h3,h4,h5,h6,h7];
+    for(let i=0;i<8;i++){out[4*i]=H[i]>>>24;out[4*i+1]=(H[i]>>>16)&255;out[4*i+2]=(H[i]>>>8)&255;out[4*i+3]=H[i]&255;}
+    return out;
+  }
+
+  const RL=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,7,4,13,1,10,6,15,3,12,0,9,5,2,14,11,8,3,10,14,4,9,15,8,1,2,7,0,6,13,11,5,12,1,9,11,10,0,8,12,4,13,3,7,15,14,5,6,2,4,0,5,9,7,12,2,10,14,1,3,8,11,6,15,13];
+  const RR=[5,14,7,0,9,2,11,4,13,6,15,8,1,10,3,12,6,11,3,7,0,13,5,10,14,15,8,12,4,9,1,2,15,5,1,3,7,14,6,9,11,8,12,2,10,0,4,13,8,6,4,1,3,11,15,0,5,12,2,13,9,7,10,14,12,15,10,4,1,5,8,7,6,2,13,14,0,3,9,11];
+  const SL=[11,14,15,12,5,8,7,9,11,13,14,15,6,7,9,8,7,6,8,13,11,9,7,15,7,12,15,9,11,7,13,12,11,13,6,7,14,9,13,15,14,8,13,6,5,12,7,5,11,12,14,15,14,15,9,8,9,14,5,6,8,6,5,12,9,15,5,11,6,8,13,12,5,12,13,14,11,8,5,6];
+  const SR=[8,9,9,11,13,15,15,5,7,7,8,11,14,14,12,6,9,13,15,7,12,8,9,11,7,7,12,7,6,15,13,11,9,7,15,11,8,6,6,14,12,13,5,14,13,13,7,5,15,5,8,11,14,14,6,14,6,9,12,9,12,5,15,8,8,5,12,9,12,5,14,6,8,13,6,5,15,13,11,11];
+  const KL=[0,0x5A827999,0x6ED9EBA1,0x8F1BBCDC,0xA953FD4E], KR=[0x50A28BE6,0x5C4DD124,0x6D703EF3,0x7A6D76E9,0];
+  function rotl(x,n){return (x<<n)|(x>>>(32-n));}
+  function rf(j,x,y,z){
+    switch(j>>4){case 0:return x^y^z;case 1:return (x&y)|(~x&z);case 2:return (x|~y)^z;case 3:return (x&z)|(y&~z);default:return x^(y|~z);}
+  }
+  const RX=new Int32Array(16);
+  function ripemd160(msg){
+    const l=msg.length, nb=((l+9+63)>>6), buf=new Uint8Array(nb*64);
+    buf.set(msg); buf[l]=0x80; const bits=l*8;
+    buf[nb*64-8]=bits&255; buf[nb*64-7]=(bits>>>8)&255; buf[nb*64-6]=(bits>>>16)&255; buf[nb*64-5]=(bits>>>24)&255;
+    let h0=0x67452301,h1=0xEFCDAB89|0,h2=0x98BADCFE|0,h3=0x10325476,h4=0xC3D2E1F0|0;
+    for(let o=0;o<buf.length;o+=64){
+      for(let i=0;i<16;i++)RX[i]=buf[o+4*i]|(buf[o+4*i+1]<<8)|(buf[o+4*i+2]<<16)|(buf[o+4*i+3]<<24);
+      let al=h0,bl=h1,cl=h2,dl=h3,el=h4,ar=h0,br=h1,cr=h2,dr=h3,er=h4;
+      for(let j=0;j<80;j++){
+        let t=(rotl((al+rf(j,bl,cl,dl)+RX[RL[j]]+KL[j>>4])|0,SL[j])+el)|0;
+        al=el;el=dl;dl=rotl(cl,10);cl=bl;bl=t;
+        t=(rotl((ar+rf(79-j,br,cr,dr)+RX[RR[j]]+KR[j>>4])|0,SR[j])+er)|0;
+        ar=er;er=dr;dr=rotl(cr,10);cr=br;br=t;
+      }
+      const t=(h1+cl+dr)|0; h1=(h2+dl+er)|0; h2=(h3+el+ar)|0; h3=(h4+al+br)|0; h4=(h0+bl+cr)|0; h0=t;
+    }
+    const out=new Uint8Array(20),H=[h0,h1,h2,h3,h4];
+    for(let i=0;i<5;i++){out[4*i]=H[i]&255;out[4*i+1]=(H[i]>>>8)&255;out[4*i+2]=(H[i]>>>16)&255;out[4*i+3]=(H[i]>>>24)&255;}
+    return out;
+  }
+
+  const B58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  function b58check(payload){
+    const c=sha256(sha256(payload)), b=new Uint8Array(payload.length+4); b.set(payload); b.set(c.subarray(0,4),payload.length);
+    let n=0n; for(const x of b)n=(n<<8n)|BigInt(x);
+    let s=''; while(n>0n){s=B58[Number(n%58n)]+s;n/=58n;}
+    for(const x of b){if(x===0)s='1'+s;else break;}
+    return s;
+  }
+  function b58decodeAddr(a){
+    let n=0n; for(const ch of a){const i=B58.indexOf(ch); if(i<0)throw new Error('bad'); n=n*58n+BigInt(i);}
+    const out=new Uint8Array(25); for(let i=24;i>=0;i--){out[i]=Number(n&255n);n>>=8n;}
+    const c=sha256(sha256(out.subarray(0,21)));
+    for(let i=0;i<4;i++)if(c[i]!==out[21+i])throw new Error('checksum');
+    return out.subarray(1,21);
+  }
+  function toBytes32(x){const o=new Uint8Array(32);for(let i=31;i>=0;i--){o[i]=Number(x&255n);x>>=8n;}return o;}
+  function pubCompressed(pt){const o=new Uint8Array(33);o[0]=(pt[1]&1n)?3:2;o.set(toBytes32(pt[0]),1);return o;}
+  function addrFromKey(k){const pt=pmul(k,G);return b58check(Uint8Array.of(0,...ripemd160(sha256(pubCompressed(pt)))));}
+  function wifFromKey(k){return b58check(Uint8Array.of(0x80,...toBytes32(k),1));}
+
+  const HEX=new Uint8Array(128); for(let i=0;i<10;i++)HEX[48+i]=i; for(let i=0;i<6;i++){HEX[97+i]=10+i;}
+
+  function makeSearcher(cfg){
+    const tgt=cfg.target, B=cfg.batch||256, CHUNK=BigInt(cfg.chunk||1048576);
+    const lo=BigInt(cfg.lo), hi=BigInt(cfg.hi);
+    const D=pmul(BigInt(B),G), Dx=D[0], Dy=D[1];
+    const X=new Array(B), Y=new Array(B), pre=new Array(B), dd=new Array(B), pub=new Uint8Array(33);
+    let base=0n, end=0n, done=false, checked=0;
+    function rnd(){const span=hi-lo+1n,by=new Uint8Array(40);crypto.getRandomValues(by);let r=0n;for(const b of by)r=(r<<8n)|BigInt(b);return lo+r%span;}
+    function seed(s){base=s;let p=pmul(s,G);for(let j=0;j<B;j++){X[j]=p[0];Y[j]=p[1];p=padd(p,G);}}
+    function nextSegment(){
+      if(cfg.mode==='seq'){ if(base===0n){seed(BigInt(cfg.segStart));end=BigInt(cfg.segEnd);} else done=true; }
+      else { const s=rnd(); seed(s); end=s+CHUNK-1n; if(end>hi)end=hi; }
+    }
+    nextSegment();
+    function step(){
+      let found=null;
+      for(let j=0;j<B;j++){
+        if(base+BigInt(j)>end)break;
+        const hx=X[j].toString(16).padStart(64,'0');
+        pub[0]=(Y[j]&1n)?3:2;
+        for(let i=0;i<32;i++)pub[1+i]=(HEX[hx.charCodeAt(2*i)]<<4)|HEX[hx.charCodeAt(2*i+1)];
+        const h=ripemd160(sha256(pub));
+        checked++;
+        if(h[0]===tgt[0]&&h[1]===tgt[1]&&h[2]===tgt[2]&&h[3]===tgt[3]){
+          let eq=true;for(let i=4;i<20;i++)if(h[i]!==tgt[i]){eq=false;break;}
+          if(eq){found=base+BigInt(j);break;}
+        }
+      }
+      if(found!==null){done=true;return found;}
+      base+=BigInt(B);
+      if(base>end){ if(cfg.mode==='seq'){done=true;return null;} nextSegment(); return null; }
+      let acc=1n;
+      for(let j=0;j<B;j++){let d=Dx-X[j];if(d<0n)d+=P;dd[j]=d;acc=acc*d%P;pre[j]=acc;}
+      let iv=inv(acc);
+      for(let j=B-1;j>=0;j--){
+        const ij=j>0?iv*pre[j-1]%P:iv; iv=iv*dd[j]%P;
+        const lam=md((Dy-Y[j])*ij);
+        const x3=md(lam*lam-X[j]-Dx);
+        Y[j]=md(lam*(X[j]-x3)-Y[j]); X[j]=x3;
+      }
+      return null;
+    }
+    return {
+      runFor(ms){const t0=Date.now();while(!done&&Date.now()-t0<ms){const f=step();if(f!==null)return {found:f};}return {found:null};},
+      get checked(){return checked;}, get current(){return base;}, get done(){return done;}
+    };
+  }
+
+  /* ---- Engine v2: center ± offsets share one inversion ("two in one"), fast reduction, allocation-free hashes ---- */
+  const K977=0x1000003D1n, M256=(1n<<256n)-1n;
+  function red(x){x=(x&M256)+(x>>256n)*K977;x=(x&M256)+(x>>256n)*K977;return x>=P?x-P:x;}
+  function sub(a,b){const r=a-b;return r<0n?r+P:r;}
+  const RL8=Uint8Array.from(RL),RR8=Uint8Array.from(RR),SL8=Uint8Array.from(SL),SR8=Uint8Array.from(SR),KL32=Int32Array.from(KL),KR32=Int32Array.from(KR);
+  const W2=new Uint32Array(64), SHO=new Uint32Array(8), RX2=new Int32Array(16), XW=new Uint32Array(8);
+  function shaRipe33(prefix){ // input: prefix byte + 32 bytes of XW (big-endian words); output: 5 RIPEMD words (little-endian ints)
+    const W=W2;
+    W[0]=(prefix<<24)|(XW[0]>>>8);
+    for(let i=1;i<8;i++)W[i]=(XW[i-1]<<24)|(XW[i]>>>8);
+    W[8]=(XW[7]<<24)|0x800000; W[9]=0;W[10]=0;W[11]=0;W[12]=0;W[13]=0;W[14]=0; W[15]=264;
+    for(let i=16;i<64;i++){const a=W[i-15],b=W[i-2];W[i]=W[i-16]+(rotr(a,7)^rotr(a,18)^(a>>>3))+W[i-7]+(rotr(b,17)^rotr(b,19)^(b>>>10));}
+    let a=0x6a09e667,b=0xbb67ae85|0,c=0x3c6ef372,d=0xa54ff53a|0,e=0x510e527f,f=0x9b05688c|0,g=0x1f83d9ab,h=0x5be0cd19;
+    for(let i=0;i<64;i++){
+      const t1=(h+(rotr(e,6)^rotr(e,11)^rotr(e,25))+((e&f)^(~e&g))+SK[i]+W[i])|0;
+      const t2=((rotr(a,2)^rotr(a,13)^rotr(a,22))+((a&b)^(a&c)^(b&c)))|0;
+      h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0;
+    }
+    const s0=(0x6a09e667+a)|0,s1=(0xbb67ae85+b)|0,s2=(0x3c6ef372+c)|0,s3=(0xa54ff53a+d)|0,s4=(0x510e527f+e)|0,s5=(0x9b05688c+f)|0,s6=(0x1f83d9ab+g)|0,s7=(0x5be0cd19+h)|0;
+    const X=RX2, bs=v=>((v>>>24)|((v>>>8)&0xff00)|((v<<8)&0xff0000)|(v<<24));
+    X[0]=bs(s0);X[1]=bs(s1);X[2]=bs(s2);X[3]=bs(s3);X[4]=bs(s4);X[5]=bs(s5);X[6]=bs(s6);X[7]=bs(s7);
+    X[8]=0x80;X[9]=0;X[10]=0;X[11]=0;X[12]=0;X[13]=0;X[14]=256;X[15]=0;
+    let al=0x67452301,bl=0xEFCDAB89|0,cl=0x98BADCFE|0,dl=0x10325476,el=0xC3D2E1F0|0,ar=al,br=bl,cr=cl,dr=dl,er=el;
+    for(let j=0;j<80;j++){
+      const r=j>>4; let fl,fr;
+      if(r===0){fl=bl^cl^dl;fr=br^(cr|~dr);}
+      else if(r===1){fl=(bl&cl)|(~bl&dl);fr=(br&dr)|(cr&~dr);}
+      else if(r===2){fl=(bl|~cl)^dl;fr=(br|~cr)^dr;}
+      else if(r===3){fl=(bl&dl)|(cl&~dl);fr=(br&cr)|(~br&dr);}
+      else {fl=bl^(cl|~dl);fr=br^cr^dr;}
+      let t=(al+fl+X[RL8[j]]+KL32[r])|0; t=(((t<<SL8[j])|(t>>>(32-SL8[j])))+el)|0;
+      al=el;el=dl;dl=(cl<<10)|(cl>>>22);cl=bl;bl=t;
+      t=(ar+fr+X[RR8[j]]+KR32[r])|0; t=(((t<<SR8[j])|(t>>>(32-SR8[j])))+er)|0;
+      ar=er;er=dr;dr=(cr<<10)|(cr>>>22);cr=br;br=t;
+    }
+    SHO[0]=(0xEFCDAB89+cl+dr)|0; SHO[1]=(0x98BADCFE+dl+er)|0; SHO[2]=(0x10325476+el+ar)|0; SHO[3]=(0xC3D2E1F0+al+br)|0; SHO[4]=(0x67452301+bl+cr)|0;
+  }
+  function loadX(x){const hx=x.toString(16).padStart(64,'0');for(let i=0;i<8;i++){let w=0;for(let k=0;k<8;k++)w=(w<<4)|HEX[hx.charCodeAt(8*i+k)];XW[i]=w;}}
+  function makeSearcher2(cfg){
+    if(cfg.mode!=='seq')return makeSearcher(cfg);
+    const tg=cfg.target, T=new Uint32Array(5);
+    for(let i=0;i<5;i++)T[i]=(tg[4*i]|(tg[4*i+1]<<8)|(tg[4*i+2]<<16)|(tg[4*i+3]<<24))>>>0;
+    const hit=()=>SHO[0]===T[0]&&SHO[1]===T[1]&&SHO[2]===T[2]&&SHO[3]===T[3]&&SHO[4]===T[4];
+    const H=(cfg.batch||256)>>1, HB=BigInt(H);
+    const s=BigInt(cfg.segStart), end=BigInt(cfg.segEnd);
+    const TX=new Array(H+1), TY=new Array(H+1), TYn=new Array(H+1);
+    let p=G; for(let j=1;j<=H;j++){TX[j]=p[0];TY[j]=p[1];TYn[j]=P-p[1];p=padd(p,G);}
+    const D=pmul(2n*HB,G), Dx=D[0], Dy=D[1];
+    let c=s+HB-1n, C=pmul(c,G), checked=0, done=false, found=null;
+    const dd=new Array(H+2), pre=new Array(H+2);
+    function step(){
+      if(c-HB+1n>end){done=true;return null;}
+      const cx=C[0], cy=C[1];
+      let acc=1n;
+      for(let j=1;j<=H;j++){const d=sub(TX[j],cx);dd[j]=d;acc=red(acc*d);pre[j]=acc;}
+      { const d=sub(Dx,cx); dd[H+1]=d; acc=red(acc*d); pre[H+1]=acc; }
+      let iv=inv(acc), nC=null;
+      if(c<=end){loadX(cx);shaRipe33((cy&1n)?3:2);checked++;if(hit())found=c;}
+      for(let k=H+1;k>=1;k--){
+        const ik=k>1?red(iv*pre[k-1]):iv; iv=red(iv*dd[k]);
+        if(k===H+1){
+          const lam=red(sub(Dy,cy)*ik), x=sub(sub(red(lam*lam),cx),Dx);
+          nC=[x,sub(red(lam*sub(cx,x)),cy)]; continue;
+        }
+        const kb=BigInt(k);
+        if(c+kb<=end){ // c + k
+          const lam=red(sub(TY[k],cy)*ik), x=sub(sub(red(lam*lam),cx),TX[k]);
+          const y=sub(red(lam*sub(cx,x)),cy);
+          loadX(x);shaRipe33((y&1n)?3:2);checked++;if(hit()&&found===null)found=c+kb;
+        }
+        if(k<H&&c-kb<=end){ // c - k
+          const lam=red(sub(TYn[k],cy)*ik), x=sub(sub(red(lam*lam),cx),TX[k]);
+          const y=sub(red(lam*sub(cx,x)),cy);
+          loadX(x);shaRipe33((y&1n)?3:2);checked++;if(hit()&&found===null)found=c-kb;
+        }
+      }
+      if(found!==null){done=true;return found;}
+      C=nC; c+=2n*HB;
+      if(c-HB+1n>end)done=true;
+      return null;
+    }
+    return {
+      runFor(ms){const t0=Date.now();while(!done&&Date.now()-t0<ms){const f=step();if(f!==null)return {found:f};}return {found:null};},
+      get checked(){return checked;}, get current(){return c;}, get done(){return done;}
+    };
+  }
+
+  const api={sha256,ripemd160,b58check,b58decodeAddr,addrFromKey,wifFromKey,makeSearcher:makeSearcher2,makeSearcherV1:makeSearcher,pmul,G};
+  if(typeof scope.importScripts==='function'){
+    scope.onmessage=function(e){
+      const s=makeSearcher2(e.data); let last=0;
+      while(true){
+        const r=s.runFor(250);
+        if(r.found!==null){scope.postMessage({type:'found',key:r.found.toString(),checked:s.checked-last});return;}
+        scope.postMessage({type:'progress',checked:s.checked-last,current:s.current.toString()}); last=s.checked;
+        if(s.done){scope.postMessage({type:'end'});return;}
+      }
+    };
+  }
+  return api;
+}
+function workerURL(){return URL.createObjectURL(new Blob(['('+CORE.toString()+')(self);'],{type:'text/javascript'}));}
+
+const BATCH=2048, GAP_MS=4, SAVE_MS=2000, SAVE_CAP=600000;
+let CHUNK=65536n;              // keys per chunk (matches other program's C)
+let device,scantestPipe,scanPipe,bg,scanBg,inBuf,outBuf,rdBuf,keysCPU,paramsBuf,foundBuf,foundRd;
+let cpuWorkers=[], inflight=new Set(), uiTimer=null, lastKey="", gpuChunk=null, gpuOK=false;
+let jumpMs=0, nextJump=0, elapsedBase=0, runStart=0;
+const WINDOW=65536, L_T=64;
+let running=false,recovering=false,total=0n,winKey=null,rangeMin=0n,rangeMax=0n,targ=null,rateN=0,rateT=0;
+let scanned=[],scannedChunks=0n,imported=[],importedChunks=0n,lsKey="",lastSave=0,numChunks=0n,cursor=0n;
+let active=[],ptr=0; const POOL=12; const NSUB=Math.ceil(Number(65536n/BigInt(BATCH)));
+
+async function setupDevice(){
+  if(!navigator.gpu){ERR("Δεν υποστηρίζεται WebGPU.",true);return false;}
+  const ad=await navigator.gpu.requestAdapter({powerPreference:"high-performance"});
+  if(!ad){ERR("Δεν βρέθηκε GPU.",true);return false;}
+  device=await ad.requestDevice();
+  device.lost.then(info=>{ if(info.reason==="destroyed")return; recover(); });
+  device.onuncapturederror=e=>{ const m=e.error.message; if(/lost|device/i.test(m)){recover();} else ERR("GPU: "+m,true); };
+  $("gpu").textContent=(ad.info&&ad.info.architecture)||"GPU";
+  const mod=device.createShaderModule({code:$("wgsl").textContent});
+  const ci=await mod.getCompilationInfo();const errs=ci.messages.filter(m=>m.type==="error");
+  if(errs.length){ERR("shader: "+errs.map(m=>"γρ."+m.lineNum+" "+m.message).join(" | "),true);return false;}
+  scantestPipe=device.createComputePipeline({layout:"auto",compute:{module:mod,entryPoint:"scantest"}});
+  scanPipe=device.createComputePipeline({layout:"auto",compute:{module:mod,entryPoint:"scan"}});
+  inBuf=device.createBuffer({size:64*16*4,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST});
+  outBuf=device.createBuffer({size:64*20,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_SRC});
+  rdBuf=device.createBuffer({size:64*20,usage:GPUBufferUsage.COPY_DST|GPUBufferUsage.MAP_READ});
+  bg=device.createBindGroup({layout:scantestPipe.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:inBuf}},{binding:1,resource:{buffer:outBuf}}]});
+  paramsBuf=device.createBuffer({size:24*4,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST});
+  foundBuf=device.createBuffer({size:4,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST|GPUBufferUsage.COPY_SRC});
+  foundRd=device.createBuffer({size:4,usage:GPUBufferUsage.COPY_DST|GPUBufferUsage.MAP_READ});
+  scanBg=device.createBindGroup({layout:scanPipe.getBindGroupLayout(0),entries:[{binding:2,resource:{buffer:paramsBuf}},{binding:3,resource:{buffer:foundBuf}}]});
+  keysCPU=new Uint32Array(64*16);
+  return true;
+}
+function cpuSelfTest(){
+  try{ const C=CORE(window); const k=(1n<<70n)+123n; const t=Array.from(C.b58decodeAddr(C.addrFromKey(k)));
+    const sc=C.makeSearcher({target:t,lo:(1n<<70n).toString(),hi:((1n<<71n)-1n).toString(),mode:"seq",segStart:(1n<<70n).toString(),segEnd:((1n<<70n)+255n).toString(),batch:256});
+    let r,g=0; do{ r=sc.runFor(100); g++; }while(r.found===null && !sc.done && g<50);
+    return r.found!==null && r.found===k;
+  }catch(e){ return false; }
+}
+async function init(){
+  let gpu=false; try{ gpu=await setupDevice(); }catch(e){ gpu=false; }
+  gpuOK=gpu;
+  try{ $("threads").value=String(navigator.hardwareConcurrency||8); }catch(e){}
+  try{ const fd=localStorage.getItem("kyn_found_dec"); if(fd){ winKey=BigInt(fd); showFound(winKey); } }catch(e){}
+  try{ const w=localStorage.getItem("kyn_watts"); if(w)$("watts").value=w; const e=localStorage.getItem("kyn_eur"); if(e)$("eur").value=e; }catch(e){}
+  $("watts").onchange=()=>{try{localStorage.setItem("kyn_watts",$("watts").value);}catch(e){}};
+  $("eur").onchange=()=>{try{localStorage.setItem("kyn_eur",$("eur").value);}catch(e){}};
+  try{ $("topicShow").value=notifyTopic(); const mm=localStorage.getItem("kyn_msg"); if(mm)$("notifyMsg").value=mm; }catch(e){}
+  $("notifyMsg").onchange=()=>{try{localStorage.setItem("kyn_msg",$("notifyMsg").value);}catch(e){}};
+  $("testEmail").onclick=()=>{ $("notifyNote").textContent="Στέλνω δοκιμαστικό…"; sendMail("Δοκιμή ειδοποίησης — Κυνηγός").then(res=>{$("notifyNote").textContent=(res.ok?"Εστάλη! Αν είσαι γραμμένος στο κανάλι από την εφαρμογή ntfy, θα το δεις τώρα. ":"Πρόβλημα. ")+"["+res.info+"]";}); };
+  if(gpu){
+    INFO('<span>Έλεγχος GPU…</span>');
+    let gok=false;
+    try{
+      for(let i=0;i<TESTS.length;i++)limbs16Into(BigInt("0x"+TESTS[i][0]),keysCPU,i*16);
+      const out=await Promise.race([ dispatch(TESTS.length), new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),9000)) ]);
+      let ok=true;for(let i=0;i<TESTS.length;i++)if(hx(out.slice(i*20,i*20+20))!==TESTS[i][1])ok=false;
+      gok=ok;
+    }catch(e){ gok=false; }
+    if(gok){
+      gpuOK=true; errSticky=false;
+      INFO('<span class="ok">Αυτο-έλεγχος OK — έτοιμο CPU+GPU.</span>');
+      $("go").disabled=false;$("go").textContent="Έναρξη"; return;
+    }
+    // GPU failed/too slow on this device -> fall back to CPU
+    gpuOK=false;
+  }
+  // CPU-only path (no WebGPU, or GPU self-test did not pass here)
+  errSticky=false; $("gpu").textContent="μόνο CPU";
+  if(!cpuSelfTest()){ ERR("Ο αυτο-έλεγχος CPU απέτυχε — μη το εμπιστεύεσαι.",true); return; }
+  INFO('<span class="ok">Αυτο-έλεγχος OK — τρέχει με CPU'+(gpu?" (η GPU δεν δούλεψε εδώ)":"")+'.</span>');
+  $("go").disabled=false;$("go").textContent="Έναρξη";
+}
+async function recover(){
+  if(!gpuOK)return;
+  if(recovering)return; recovering=true; const wasRunning=running; running=false; $("go").disabled=true;
+  INFO('<span>Η GPU επανεκκίνησε — συνεχίζω αυτόματα…</span>');
+  let ok=false; try{ ok=await setupDevice(); }catch(e){ ok=false; }
+  recovering=false; $("go").disabled=false;
+  if(!ok){ ERR("Δεν μπόρεσα να ξαναφτιάξω τη GPU. Ξανάνοιξε τη σελίδα.",true); return; }
+  if(gpuChunk!==null){ inflight.delete(gpuChunk.toString()); gpuChunk=null; }
+  if(wasRunning){ running=true;$("go").textContent="Στοπ";$("go").classList.add("on"); gpuLoop(); } else INFO('<span class="ok">Έτοιμο.</span>');
+}
+async function dispatch(count){
+  device.queue.writeBuffer(inBuf,0,keysCPU,0,count*16);
+  const enc=device.createCommandEncoder();const p=enc.beginComputePass();p.setPipeline(scantestPipe);p.setBindGroup(0,bg);p.dispatchWorkgroups(Math.ceil(count/64));p.end();
+  enc.copyBufferToBuffer(outBuf,0,rdBuf,0,count*20);device.queue.submit([enc.finish()]);
+  await rdBuf.mapAsync(GPUMapMode.READ);const o=new Uint8Array(rdBuf.getMappedRange().slice(0,count*20));rdBuf.unmap();return o;
+}
+async function scanWindow(baseBig,wlen){
+  const numThreads=Math.ceil(wlen/L_T);
+  const p=new Uint32Array(24); limbs16Into(baseBig,p,0);
+  for(let i=0;i<5;i++)p[16+i]=((targ[4*i]|(targ[4*i+1]<<8)|(targ[4*i+2]<<16)|(targ[4*i+3]<<24))>>>0);
+  p[21]=L_T; p[22]=numThreads;
+  device.queue.writeBuffer(paramsBuf,0,p);
+  device.queue.writeBuffer(foundBuf,0,new Uint32Array([0]));
+  const enc=device.createCommandEncoder();const pass=enc.beginComputePass();pass.setPipeline(scanPipe);pass.setBindGroup(0,scanBg);pass.dispatchWorkgroups(Math.ceil(numThreads/64));pass.end();
+  enc.copyBufferToBuffer(foundBuf,0,foundRd,0,4);device.queue.submit([enc.finish()]);
+  await foundRd.mapAsync(GPUMapMode.READ);const fv=new Uint32Array(foundRd.getMappedRange().slice(0))[0];foundRd.unmap();
+  return fv;
+}
+function parseRange(){
+  const a=BigInt(($("min").value||"").replace(/[^0-9]/g,"")||"0"),b=BigInt(($("max").value||"").replace(/[^0-9]/g,"")||"0");
+  const t=targetBytes($("target").value.trim());
+  $("target").classList.toggle("bad",!t);$("min").classList.toggle("bad",!(b>=a));$("max").classList.toggle("bad",!(b>=a));
+  if(!t||b<a)return false;rangeMin=a;rangeMax=b;targ=t;return true;
+}
+function randIdx(n){const bits=n.toString(2).length;const bytes=Math.ceil(bits/8);while(true){const by=new Uint8Array(bytes);crypto.getRandomValues(by);let r=0n;for(const x of by)r=(r<<8n)|BigInt(x);r&=((1n<<BigInt(bytes*8))-1n);if(r<n)return r;}}
+function inRanges(ranges,idx){ let lo=0,hi=ranges.length-1; while(lo<=hi){const m=(lo+hi)>>1;const iv=ranges[m]; if(iv[1]<=idx)lo=m+1; else if(iv[0]>idx)hi=m-1; else return iv[1];} return null; }
+function coveredEndAt(idx){ let e=inRanges(imported,idx); if(e!==null)return e; e=inRanges(scanned,idx); if(e!==null)return e; if(inflight.has(idx.toString()))return idx+1n; return null; }
+function lsBase(){ return "cov:"+rangeMin+":"+rangeMax+":"+CHUNK+":"+$("target").value.trim(); }
+function recalcScanned(){ scanned.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0); const m=[]; for(const iv of scanned){ if(m.length&&iv[0]<=m[m.length-1][1]){ if(iv[1]>m[m.length-1][1])m[m.length-1][1]=iv[1]; } else m.push([iv[0],iv[1]]); } scanned=m; let t=0n; for(const iv of scanned)t+=(iv[1]-iv[0]); scannedChunks=t; }
+function loadCov(){ scanned=[]; scannedChunks=0n; try{ const raw=localStorage.getItem(lsKey); if(raw){ const o=JSON.parse(raw);
+  if(Array.isArray(o)){ const idxs=o.map(x=>BigInt(x)).sort((a,b)=>a<b?-1:a>b?1:0); let i=0; while(i<idxs.length){ let j=i; while(j+1<idxs.length&&idxs[j+1]===idxs[j]+1n)j++; scanned.push([idxs[i],idxs[j]+1n]); i=j+1; } recalcScanned(); }
+  else if(o&&o.r){ for(const [a,b] of o.r) scanned.push([BigInt(a),BigInt(b)]); recalcScanned(); } } }catch(e){} }
+function dcount(raw){ try{ const o=JSON.parse(raw); if(o&&o.r){ let t=0n; for(const a of o.r) t+=(BigInt(a[1])-BigInt(a[0])); return t.toString()+"/"+o.r.length+"r"; } }catch(e){} return "0"; }
+function DBG(){ try{ const el=document.getElementById("dbg"); if(!el)return; let memC=0n; for(const iv of scanned) memC+=(iv[1]-iv[0]); const raw=localStorage.getItem(lsKey); const impRaw=localStorage.getItem(lsKey+":imp");
+  el.textContent = "loadKey="+lsKey.slice(4,70)+" || saveKey="+String(window.__saveKey||"-").slice(4,70)+" || MEMscan="+memC.toString()+" || STOREDscan="+(raw?dcount(raw):"none")+" || STOREDimp="+(impRaw?dcount(impRaw):"none")+" || run="+running+" || err="+(window.__saveErr||"-"); }catch(e){} }
+function saveCov(){ window.__saveKey=lsKey; try{localStorage.setItem(lsKey,JSON.stringify({r:scanned.map(iv=>[iv[0].toString(),iv[1].toString()])})); window.__saveErr="";}catch(e){ window.__saveErr=String(e&&e.message||e); } try{localStorage.setItem(lsKey+":t",String(Math.round(elapsedNow())));}catch(e){} DBG(); }
+function impStoreKey(){ return lsKey+":imp"; }
+function recalcImported(){ imported.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0); const m=[]; for(const iv of imported){ if(m.length&&iv[0]<=m[m.length-1][1]){ if(iv[1]>m[m.length-1][1]) m[m.length-1][1]=iv[1]; } else m.push([iv[0],iv[1]]); } imported=m; let t=0n; for(const iv of imported)t+=(iv[1]-iv[0]); importedChunks=t; }
+function loadImported(){ imported=[];importedChunks=0n; try{const raw=localStorage.getItem(impStoreKey()); if(raw){const o=JSON.parse(raw); if(o.C)CHUNK=BigInt(o.C); for(const [s,e] of o.r) imported.push([BigInt(s),BigInt(e)]); recalcImported();}}catch(e){} }
+function saveImported(){ try{localStorage.setItem(impStoreKey(), JSON.stringify({C:CHUNK.toString(),r:imported.map(iv=>[iv[0].toString(),iv[1].toString()])}));}catch(e){} }
+function parseKYN1(txt){ txt=txt.trim(); const b64=txt.replace(/^KYN1:/,""); let j; try{ j=JSON.parse(atob(b64)); }catch(e){ try{ j=JSON.parse(txt); }catch(e2){ return null; } } if(!j||!j.p||!j.p["71"]||!j.p["71"].r) return null; const C=BigInt(j.p["71"].C||"65536"); const ivs=[]; for(const [a,b] of j.p["71"].r){ const A=BigInt(a),B=BigInt(b); if(B>A) ivs.push([A,B]); } return {C,ivs}; }
+function doImport(txt){ const p=parseKYN1(txt); if(!p){ERR("Δεν διαβάστηκε (περίμενα κείμενο KYN1 για το #71).");return;} CHUNK=p.C; lsKey=lsBase(); loadImported(); imported=imported.concat(p.ivs); recalcImported(); saveImported(); numChunks=(rangeMax-rangeMin+1n+CHUNK-1n)/CHUNK; cursor=0n; INFO('<span class="ok">Εισαγωγή OK — '+dots((importedChunks*CHUNK).toString())+' αριθμοί ήδη ελεγμένοι ('+dots(importedChunks.toString())+' chunks), εξαιρούνται.</span>'); updateTotals(); }
+function exportKYN1(){ const ranges=scanned.concat(imported).map(iv=>[iv[0],iv[1]]); ranges.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0); const m=[]; for(const iv of ranges){ if(m.length&&iv[0]<=m[m.length-1][1]){ if(iv[1]>m[m.length-1][1])m[m.length-1][1]=iv[1]; } else m.push([iv[0],iv[1]]); } const r=m.map(x=>[x[0].toString(),x[1].toString()]); return "KYN1:"+btoa(JSON.stringify({v:1,p:{"71":{C:CHUNK.toString(),r:r}}})); }
+function updateTotals(){ const tot=(scannedChunks+importedChunks)*CHUNK; $("total").textContent=dots(tot.toString()); try{DBG();}catch(e){} }
+
+function randChunk(){ return (numChunks>0n)?randIdx(numChunks):0n; }
+function claimChunk(){ let steps=0n; while(steps<numChunks){ if(cursor>=numChunks)cursor=0n; const e=coveredEndAt(cursor); if(e===null){ const c=cursor; inflight.add(c.toString()); cursor=cursor+1n; return c; } const jmp=(e>cursor)?(e-cursor):1n; cursor=(e>cursor)?e:(cursor+1n); steps+=jmp; } return null; }
+function finishChunk(idx){ inflight.delete(idx.toString()); scanned.push([idx,idx+1n]); recalcScanned(); const now=performance.now(); if(now-lastSave>SAVE_MS){saveCov();lastSave=now;} }
+function cfgFor(cBig){ const s0=rangeMin+cBig*CHUNK; let e0=s0+CHUNK-1n; if(e0>rangeMax)e0=rangeMax; return {target:Array.from(targ),lo:rangeMin.toString(),hi:rangeMax.toString(),mode:"seq",segStart:s0.toString(),segEnd:e0.toString(),batch:256}; }
+function startWorkers(T){
+  cpuWorkers=[]; let url; try{url=workerURL();}catch(e){return;}
+  for(let i=0;i<T;i++){
+    let w; try{w=new Worker(url);}catch(e){break;}
+    w.onmessage=ev=>{ if(!running)return; const m=ev.data;
+      if(m.checked){ rateN+=m.checked; }
+      if(m.current){ lastKey=m.current; }
+      if(m.type==="found"){ onFoundKey(BigInt(m.key)); return; }
+      if(m.type==="end"){ finishChunk(w.chunk); const nc=claimChunk(); if(nc!==null){ w.chunk=nc; w.postMessage(cfgFor(nc)); } else { w.idle=true; } }
+    };
+    w.onerror=()=>{};
+    const c=claimChunk(); if(c===null){ w.terminate(); break; } w.chunk=c; w.postMessage(cfgFor(c)); cpuWorkers.push(w);
+  }
+}
+async function gpuLoop(){
+  if(!running)return;
+  try{
+    const c=claimChunk();
+    if(c===null){ setTimeout(()=>{ if(running) gpuLoop(); }, 250); return; }
+    gpuChunk=c;
+    const cb=rangeMin+c*CHUNK; const cEnd=(cb+CHUNK-1n)>rangeMax?rangeMax:(cb+CHUNK-1n);
+    let pos=cb;
+    while(pos<=cEnd){
+      if(!running)return;
+      const rem=cEnd-pos+1n; const wlen=Number(rem<BigInt(WINDOW)?rem:BigInt(WINDOW));
+      const fv=await scanWindow(pos,wlen);
+      if(fv>0){ onFoundKey(pos+BigInt(fv-1)); return; }
+      rateN+=wlen; lastKey=(pos+BigInt(Math.floor(Math.random()*wlen))).toString(); pos+=BigInt(wlen);
+    }
+    finishChunk(c); gpuChunk=null;
+    setTimeout(gpuLoop,GAP_MS);
+  }catch(e){ const m=(e&&e.message)||String(e); if(/lost|device/i.test(m)){ recover(); } else { running=false; stopAll(); ERR("σφάλμα: "+m,true); } }
+}
+function fmtDur(ms){ let s=Math.floor(ms/1000); const d=Math.floor(s/86400); s-=d*86400; const h=Math.floor(s/3600); s-=h*3600; const m=Math.floor(s/60); s-=m*60; if(d>0)return d+"μ "+h+"ω "+m+"λ"; if(h>0)return h+"ω "+m+"λ "+s+"δ"; if(m>0)return m+"λ "+s+"δ"; return s+"δ"; }
+function elapsedNow(){ return elapsedBase + (performance.now()-runStart); }
+function render(){
+  if(!running)return;
+  const now=performance.now();
+  if(now-rateT>=400){ $("rate").textContent=dots(String(Math.max(0,Math.round(rateN/((now-rateT)/1000))))); rateN=0; rateT=now; }
+  updateTotals();
+  $("time").textContent=fmtDur(elapsedNow());
+  { const w=parseFloat(($("watts").value||"").replace(",","."))||0, pr=parseFloat(($("eur").value||"").replace(",","."))||0; const c=(w/1000)*(elapsedNow()/3600000)*pr; $("cost").textContent="€"+c.toFixed(2).replace(".",","); }
+  if(jumpMs>0 && now>=nextJump){ cursor=randChunk(); nextJump=now+jumpMs; }
+  if(lastKey) show(lastKey,"");
+  if(!errSticky) INFO('<span class="ok">Σάρωση '+(gpuOK?"CPU+GPU":"μόνο CPU")+' — chunks: '+dots((scannedChunks+importedChunks).toString())+' (χωρίς επανάληψη)</span>');
+}
+function stopAll(){
+  elapsedBase=elapsedNow(); runStart=performance.now();
+  running=false; $("go").textContent="Έναρξη"; $("go").classList.remove("on");
+  for(const w of cpuWorkers){ try{w.terminate();}catch(e){} } cpuWorkers=[];
+  if(uiTimer){clearInterval(uiTimer);uiTimer=null;}
+  if(gpuChunk!==null){ inflight.delete(gpuChunk.toString()); gpuChunk=null; }
+  saveCov();
+}
+function notifyTopic(){ return "kyn-752a0e7b122ca6c326d0"; }
+function sendMail(msg){ return fetch("https://ntfy.sh/",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({topic:notifyTopic(),title:"Κυνηγός",message:msg,priority:5})}).then(function(r){return r.text().then(function(t){return {ok:r.ok,info:"HTTP "+r.status+" "+t.slice(0,120)};});}).catch(function(e){return {ok:false,info:String(e&&e.message||e)};}); }
+function foundText(k){ return "Private key (dec): "+k.toString()+"\nPrivate key (hex): "+k.toString(16).padStart(64,"0")+"\nTarget: "+$("target").value.trim()+"\nFound: "+new Date().toLocaleString("el-GR")+"\n"; }
+function showFound(k){
+  show(k.toString(),"hit"); $("fdec").textContent=k.toString(); $("fhex").textContent=k.toString(16).padStart(64,"0");
+  $("found").className="found show"; $("save").disabled=false;
+  try{ document.title="🎉 ΒΡΕΘΗΚΕ ΚΛΕΙΔΙ"; }catch(e){}
+}
+function onFoundKey(k){
+  winKey=k; stopAll(); saveImported();
+  const txt=foundText(k);
+  try{ localStorage.setItem("kyn_found_dec",k.toString()); localStorage.setItem("kyn_found_hex",k.toString(16).padStart(64,"0")); localStorage.setItem("kyn_found_txt",txt); }catch(e){}
+  showFound(k);
+  try{ dlText("FOUND_KEY.txt",txt); }catch(e){}   // auto-download, no click needed
+  try{ const m=($("notifyMsg").value||"Έλα σπίτι, έκανα φαγητό 🍝"); sendMail(m); }catch(e){}   // sends ONLY the message, never the key
+}
+$("go").onclick=()=>{
+  if(running){ stopAll(); return; }
+  if(!parseRange()){ERR("Έλεγξε εύρος/διεύθυνση.");return;}
+  lsKey=lsBase(); loadImported(); lsKey=lsBase(); loadCov();
+  numChunks=(rangeMax-rangeMin+1n+CHUNK-1n)/CHUNK;
+  inflight=new Set(); gpuChunk=null;
+  jumpMs=(parseInt($("jump").value)||0)*1000; nextJump=performance.now()+jumpMs;
+  cursor=randChunk();
+  $("found").className="found";$("save").disabled=true;winKey=null;errSticky=false;
+  try{ elapsedBase=parseInt(localStorage.getItem(lsKey+":t"))||0; }catch(e){ elapsedBase=0; } runStart=performance.now();
+  running=true;$("go").textContent="Στοπ";$("go").classList.add("on");rateN=0;rateT=performance.now();lastSave=performance.now();lastKey="";updateTotals();$("time").textContent=fmtDur(elapsedBase);
+  let T=parseInt($("threads").value)||0; if(T<0)T=0; if(T>64)T=64;
+  if(!gpuOK && T<1){ running=false;$("go").textContent="Έναρξη";$("go").classList.remove("on"); ERR("Χωρίς GPU χρειάζονται CPU νήματα — βάλε τουλάχιστον 1.",true); return; }
+  startWorkers(T);
+  if(gpuOK) gpuLoop();
+  uiTimer=setInterval(render,250);
+};
+function flushSave(){ try{ if(lsKey && scanned.length){ saveCov(); } }catch(e){} }
+try{
+  document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="hidden") flushSave(); });
+  window.addEventListener("pagehide",flushSave);
+  window.addEventListener("beforeunload",flushSave);
+}catch(e){}
+$("save").onclick=()=>{if(!winKey)return;const txt="Private key (dec): "+winKey.toString()+"\nPrivate key (hex): "+winKey.toString(16).padStart(64,"0")+"\nTarget: "+$("target").value.trim()+"\n";const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));a.download="FOUND_KEY.txt";a.click();};
+function setLsKey(){ lsKey=lsBase(); }
+function showPanel(){ $("iopanel").style.display="flex"; }
+$("imp").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); showPanel(); $("iotext").value=""; $("iotext").focus(); $("ionote").textContent="Επικόλλησε το KYN1 και πάτα «Εφαρμογή εισαγωγής»."; };
+$("exp").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); loadCov(); showPanel(); $("iotext").value=exportKYN1(); $("iotext").focus(); $("iotext").select(); $("ionote").textContent="Αντίγραψε αυτό το κείμενο (κουμπί «Αντιγραφή»)."; };
+$("ioapply").onclick=()=>{ const t=$("iotext").value.trim(); if(!t){$("ionote").textContent="Το πλαίσιο είναι κενό.";return;} doImport(t); };
+$("iocopy").onclick=()=>{ const t=$("iotext"); t.select(); try{navigator.clipboard.writeText(t.value).then(()=>{$("ionote").textContent="Αντιγράφηκε.";},()=>{$("ionote").textContent="Επίλεξε και αντίγραψε χειροκίνητα.";});}catch(e){$("ionote").textContent="Επίλεξε και αντίγραψε χειροκίνητα.";} };
+function dlText(name,text){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000); }
+$("expdl").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); loadCov(); const t=exportKYN1(); dlText("kynigos-proodos.txt",t); $("ionote").textContent="Κατέβηκε το αρχείο kynigos-proodos.txt (" + (t.length>1048576?(t.length/1048576).toFixed(1)+" MB":Math.round(t.length/1024)+" KB") + ")."; };
+$("impfile_btn").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); $("impfile").click(); };
+$("impfile").onchange=(ev)=>{ const f=ev.target.files&&ev.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>{ doImport(String(r.result)); }; r.onerror=()=>{ERR("Δεν διαβάστηκε το αρχείο.");}; r.readAsText(f); ev.target.value=""; };
+$("cfgToggle").onclick=()=>{ const a=$("adv"); a.classList.toggle("open"); $("cfgToggle").textContent=a.classList.contains("open")?"⚙ Ρυθμίσεις ▾":"⚙ Ρυθμίσεις ▸"; };
+init();
+</script></body></html>
