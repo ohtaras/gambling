@@ -27,8 +27,8 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
 .note{color:var(--muted);font-size:.8rem;line-height:1.55}.ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
 .found{display:none;background:rgba(47,212,138,.1);border:1px solid var(--win);border-radius:12px;padding:16px;gap:10px;flex-direction:column}.found.show{display:flex}.found .m{font-family:var(--mono);word-break:break-all;color:var(--win);user-select:all}
 .warn{border-left:3px solid var(--accent);padding-left:12px}
-</style></head><body><div class="wrap">
-<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[v8 ✓]</span></p><div id="savst" style="font:12px/1.4 monospace;color:#5a7">💾 —</div></header>
+#mx{display:none;position:fixed;inset:0;background:#000;z-index:99999}#mxc{display:block;width:100vw;height:100vh}#matrix{background:#07220f;color:#39ff57;border-color:#1c5}</style></head><body><div class="wrap">
+<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[v9 ✓]</span></p><div id="savst" style="font:12px/1.4 monospace;color:#5a7">💾 —</div></header>
 <div class="panel"><div class="cells" id="cells" aria-hidden="true"></div></div>
 <div class="stats">
   <div class="stat"><div class="v" id="rate">0</div><div class="k">κλειδιά/δλ</div></div>
@@ -37,7 +37,8 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
   <div class="stat"><div class="v" id="time">0δ</div><div class="k">χρόνος</div></div>
   <div class="stat"><div class="v" id="cost">€0,00</div><div class="k">κόστος ρεύματος</div></div>
 </div>
-<div class="row"><button class="primary" id="go" disabled>Έλεγχος…</button><button id="save" disabled>Αποθήκευση κλειδιού</button></div>
+<div class="row"><button class="primary" id="go" disabled>Έλεγχος…</button><button id="save" disabled>Αποθήκευση κλειδιού</button><button id="matrix">🟢 Matrix</button></div>
+<div id="mx"><canvas id="mxc"></canvas></div>
 <div class="row"><button id="cfgToggle">⚙ Ρυθμίσεις ▸</button></div>
 <div id="adv">
 <div class="row"><span class="label" style="align-self:center">CPU νήματα:</span><input id="threads" inputmode="numeric" value="8" style="width:72px"><span class="label" style="align-self:center">Τυχαία αφετηρία κάθε:</span><select id="jump"><option value="0">ποτέ (σειριακά)</option><option value="300" selected>5 λεπτά</option><option value="900">15 λεπτά</option><option value="1800">30 λεπτά</option><option value="3600">1 ώρα</option><option value="7200">2 ώρες</option><option value="21600">6 ώρες</option><option value="86400">1 μέρα</option></select></div>
@@ -848,5 +849,26 @@ $("expdl").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό �
 $("impfile_btn").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); $("impfile").click(); };
 $("impfile").onchange=(ev)=>{ const f=ev.target.files&&ev.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>{ doImport(String(r.result)); }; r.onerror=()=>{ERR("Δεν διαβάστηκε το αρχείο.");}; r.readAsText(f); ev.target.value=""; };
 $("cfgToggle").onclick=()=>{ const a=$("adv"); a.classList.toggle("open"); $("cfgToggle").textContent=a.classList.contains("open")?"⚙ Ρυθμίσεις ▾":"⚙ Ρυθμίσεις ▸"; };
+
+(function(){
+  var btn=document.getElementById("matrix"), mx=document.getElementById("mx"), cv=document.getElementById("mxc");
+  var ctx,cols,drops,fs,raf=null,wake=null,on=false,lastT=0,pool="0123456789";
+  function resize(){ var dpr=window.devicePixelRatio||1; cv.width=Math.floor(innerWidth*dpr); cv.height=Math.floor(innerHeight*dpr); ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); fs=Math.max(14,Math.round(innerWidth/24)); cols=Math.max(1,Math.floor(innerWidth/fs)); drops=[]; for(var i=0;i<cols;i++)drops[i]=Math.floor(Math.random()*-40); ctx.textBaseline="top"; }
+  function frame(t){ if(!on)return; raf=requestAnimationFrame(frame); if(t-lastT<55)return; lastT=t;
+    ctx.fillStyle="rgba(0,0,0,0.16)"; ctx.fillRect(0,0,innerWidth,innerHeight);
+    try{ if(typeof lastKey!=="undefined" && lastKey){ pool=(lastKey.length>=22?lastKey:(lastKey+"0123456789")).slice(0,44); } }catch(e){}
+    ctx.font=fs+"px monospace";
+    for(var i=0;i<cols;i++){ var ch=pool.charAt(Math.floor(Math.random()*pool.length))||"0"; var x=i*fs, y=drops[i]*fs;
+      ctx.fillStyle=(Math.random()<0.04)?"#eafff0":"#39ff57"; ctx.fillText(ch,x,y);
+      if(y>innerHeight && Math.random()>0.975) drops[i]=0; drops[i]++; }
+    try{ var cur=(typeof lastKey!=="undefined"&&lastKey)?lastKey:""; ctx.font=Math.round(fs*0.7)+"px monospace"; ctx.fillStyle="#bfffcf"; ctx.fillText(cur,8,innerHeight-fs-6); ctx.fillStyle="#2f7"; ctx.fillText("άγγιξε για έξοδο",8,6); }catch(e){}
+  }
+  function openMx(){ mx.style.display="block"; on=true; resize(); lastT=0; raf=requestAnimationFrame(frame); try{ if(navigator.wakeLock)navigator.wakeLock.request("screen").then(function(w){wake=w;}).catch(function(){}); }catch(e){} try{ if(mx.requestFullscreen)mx.requestFullscreen().catch(function(){}); }catch(e){} }
+  function closeMx(){ on=false; if(raf)cancelAnimationFrame(raf); raf=null; mx.style.display="none"; try{ if(wake){wake.release();wake=null;} }catch(e){} try{ if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen(); }catch(e){} }
+  if(btn) btn.onclick=openMx;
+  if(mx) mx.addEventListener("click",closeMx);
+  addEventListener("resize",function(){ if(on)resize(); });
+})();
+
 init();
 </script></body></html>
