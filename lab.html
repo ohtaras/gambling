@@ -21,6 +21,7 @@ tr.rnd td:first-child+td{color:#cbd5e1}tr.rnd{background:rgba(148,163,184,.06)}
 .dist{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.dist div{background:#0f172a;border-radius:8px;padding:5px 8px;font-size:13px}.dist b{font-size:16px}
 details>summary{cursor:pointer;color:var(--gold);font-weight:700;margin:4px 0}
 .tabs{display:flex;gap:6px;margin:6px 0}.tabs button{background:#1e293b;color:var(--text);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer}#evNav{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;margin:0;gap:6px;background:rgba(15,23,42,.94);border:1px solid #334155;border-radius:999px;padding:6px 8px;box-shadow:0 8px 24px rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap}#evNav button{font-size:16px;font-weight:800;padding:9px 13px;min-width:46px}#evNav button[data-v="-1"],#evNav button[data-v="1"]{font-size:24px;line-height:1;padding:6px 18px;min-width:60px}.wrap{padding-bottom:96px!important}
+.tkAdd{background:#14532d;color:#fff;border:1px solid #166534;border-radius:8px;padding:4px 8px;font-size:15px;cursor:pointer}.tkAdd:disabled{opacity:.7}
 .tabs button:disabled{opacity:.35;cursor:default}.tabs button.on{background:#a16207;border-color:#facc15}
 </style></head><body><div class="wrap">
 <h1>🧪 Εργαστήριο στρατηγικών · 100 στήλες</h1>
@@ -32,7 +33,8 @@ details>summary{cursor:pointer;color:var(--gold);font-weight:700;margin:4px 0}
 
 
 
-<div class="card"><h2>🎯 Οι 100 στήλες για την επόμενη κλήρωση <span id="nxLbl" class="muted"></span></h2><details id="nxDet"><summary>Άνοιγμα λίστας</summary><div class="scroll"><table id="nx"></table></div></details></div>
+<div class="card"><h2>🎯 Οι 100 στήλες για την επόμενη κλήρωση <span id="nxLbl" class="muted"></span></h2><div class="muted" style="font-size:13px;margin:4px 0">Πάτα <b>➕</b> δίπλα σε μια στήλη για να μπει στα δελτία σου για <select id="tkN" style="background:#1e293b;color:#e5e7eb;border:1px solid #24324d;border-radius:8px;padding:2px 4px;font-weight:700"><option>1</option><option>2</option><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select> κληρώσεις.</div><details id="nxDet"><summary>Άνοιγμα λίστας</summary><div class="scroll"><table id="nx"></table></div></details></div>
+<div class="card" id="tkCard" style="border-color:#16a34a;display:none"><h2>📒 Τα δελτία μου <span class="muted" id="tkLbl"></span></h2><div id="tkList"></div></div>
 <div class="muted" style="font-size:12px;margin-top:12px" id="foot">⏳ Φόρτωση κληρώσεων…</div>
 </div>
 <script>
@@ -225,7 +227,7 @@ function render(picks, ev, log, kp){
   else { $('ev').innerHTML=''; $('evDist').innerHTML='<span class="muted">Περιμένουμε την πρώτη κλήρωση της ημέρας.</span>'; }
   $('nxLbl').textContent='· '+hm(DR[L].t+300000)+' (#'+(DR[L].id+1)+')';
   if(picks){ var order=S.map(function(_,k){ return k; });
-    $('nx').innerHTML='<tr><th>#</th><th>Στρατηγική</th><th>Στήλη</th></tr>'+order.map(function(k,j){ return '<tr'+(isR(k)&&!ALLRND?' class="rnd"':'')+'><td>'+(j+1)+'</td><td>'+nm(k)+'</td><td>'+chips(picks[k],Hn)+'</td></tr>'; }).join(''); }
+    $('nx').innerHTML='<tr><th>#</th><th>Στρατηγική</th><th>Στήλη</th><th></th></tr>'+order.map(function(k,j){ return '<tr'+(isR(k)&&!ALLRND?' class="rnd"':'')+'><td>'+(j+1)+'</td><td>'+nm(k)+'</td><td>'+chips(picks[k],Hn)+'</td><td><button class="tkAdd" data-k="'+k+'" title="Στα δελτία μου">➕</button></td></tr>'; }).join(''); }
 }
 
 function kInfo(){ var C=function(n,k){ if(k<0||k>n) return 0; var r=1; for(var i=1;i<=k;i++) r=r*(n-k+i)/i; return r; }, pw=0; for(var h in PAYS[K]) pw+=C(20,+h)*C(60,K-h)/C(80,K); var top=C(20,K)/C(80,K); $('kInfo').innerHTML='Μια στήλη '+K+(K===1?' αριθμού':' αριθμών')+' πιάνει κατά μέσο όρο <b>'+pc(K/4)+'</b>· κερδίζει κάτι <b>1 στις '+pc(1/pw)+'</b> κληρώσεις· το '+K+'/'+K+' έρχεται 1 στις '+Math.round(1/top).toLocaleString('el-GR')+'.'; }
@@ -233,6 +235,29 @@ function kInfo(){ var C=function(n,k){ if(k<0||k>n) return 0; var r=1; for(var i
 (function(){ var T=$('modeTabs'); Array.prototype.forEach.call(T.children, function(x){ x.classList.toggle('on', x.dataset.m===MODE); }); T.addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b) return; MODE=b.dataset.m; try{ localStorage.setItem('lab_mode', MODE); }catch(_){} Array.prototype.forEach.call(T.children, function(x){ x.classList.toggle('on', x===b); }); if(DR.length) run(); }); })();
 (function(){ var B=$('allRnd'); B.classList.toggle('on', ALLRND); B.addEventListener('click', function(){ ALLRND=!ALLRND; try{ localStorage.setItem('lab_allrnd', ALLRND?'1':'0'); }catch(_){} B.classList.toggle('on', ALLRND); if(DR.length) run(); }); })();
 $('evNav').addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b||!EVS.length) return; var v=b.dataset.v, cur=VI===null?EVS.length-1:VI; if(v==='live') VI=null; else { var n2=Math.max(0, Math.min(EVS.length-1, cur+(+v))); VI = n2>=EVS.length-1 ? null : n2; } render(PICKS, VI===null?EVS[EVS.length-1]:EVS[VI], null, null); });
+/* ---------- 📒 Τα δελτία μου ---------- */
+function tkLoad(){ try{ return JSON.parse(localStorage.getItem('lab_tk')||'[]'); }catch(e){ return []; } }
+function tkSave(T){ try{ localStorage.setItem('lab_tk', JSON.stringify(T)); }catch(e){} }
+var XTRA={}; // κληρώσεις που δεν είναι φορτωμένες (παλιά δελτία)
+async function drawById(id){ var d=DR.find(function(x){ return x.id===id; }); if(d) return d; if(XTRA[id]) return XTRA[id];
+  try{ var c=await (await fetch(API+'/'+id+'?_='+Date.now(),{cache:'no-store'})).json(), W=c.winningNumbers||{}, w=W.list||[]; if(!w.length) return null; return XTRA[id]={id:c.drawId,t:c.drawTime,arr:w.slice(),set:new Set(w),sc:(W.secondChance||[]).slice(),b:(W.bonus||[])[0]}; }catch(e){ return null; } }
+function tkWin(t, d){ var a=0, b=0, bh=false; t.n.forEach(function(x){ if(d.set.has(x)){ a++; if(x===d.b) bh=true; } else if(d.sc && d.sc.indexOf(x)>=0) b++; });
+  var base=PAYS[t.K][a]||0, w=base; if(t.m==='sc' && b>0) w=Math.max(base, SCPAYS[t.K][a+b]||0); if(t.m==='kb' && bh) w=Math.max(base, (KBPAYS[t.K][a]||0)/2); return {h:a, s:b, bh:bh, w:w}; }
+var TKBUSY=false;
+async function tkRender(){ if(TKBUSY) return; TKBUSY=true; try{ var T=tkLoad(), card=$('tkCard'); card.style.display=T.length?'':'none'; if(!T.length){ $('tkList').innerHTML=''; return; }
+  var lastId=DR.length?DR[DR.length-1].id:0, html='', tst=0, twon=0;
+  for(var x=0;x<T.length;x++){ var t=T[x], cost=t.m?1:0.5, rows=[], won=0, played=0;
+    for(var q=0;q<t.draws;q++){ var id=t.start+q; if(id>lastId){ rows.push('<span class="muted">#'+id+' ⏳</span>'); continue; } var d=await drawById(id); if(!d){ rows.push('<span class="muted">#'+id+' ?</span>'); continue; }
+      var r=tkWin(t,d); played++; won+=r.w; rows.push('<span title="'+hm(d.t)+'" style="display:inline-block;margin:2px 4px 2px 0;padding:2px 6px;border-radius:8px;background:'+(r.w?'#14532d':'#1e293b')+'"><b>'+r.h+(t.m==='sc'&&r.s?'<span style=\'color:#4ade80\'>+'+r.s+'</span>':'')+'/'+t.K+'</b>'+(t.m==='kb'&&r.bh?'🔴':'')+(r.w?' '+eur(r.w):'')+'</span>'); }
+    var st=played*cost, nt=won-st; tst+=st; twon+=won; var done=played>=t.draws;
+    html+='<div style="border-bottom:1px solid var(--line);padding:8px 0"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div>'+t.name+' <span class="muted" style="font-size:12px">· '+t.K+' αριθμοί'+(t.m==='sc'?' · 🟢 2η ευκαιρία':(t.m==='kb'?' · 🔴 Bonus':''))+' · #'+t.start+'–#'+(t.start+t.draws-1)+' ('+hm(t.t0)+'–'+hm(t.t0+(t.draws-1)*300000)+')</span></div><button class="tkDel" data-i="'+x+'" title="Διαγραφή" style="background:none;border:none;color:#94a3b8;font-size:16px;cursor:pointer">🗑️</button></div>'+chips(t.n,null,null)+'<div style="font-size:13px">'+rows.join('')+'</div><div style="font-size:13px;margin-top:4px">'+(done?'✅ Ολοκληρώθηκε':'⏳ '+played+'/'+t.draws+' κληρώσεις')+' · πόνταρε '+eur(st)+' → πήρε <b>'+eur(won)+'</b> · <b class="'+(nt>=0?'pos':'neg')+'">'+(nt>=0?'+':'')+eur(nt)+'</b></div></div>';
+  }
+  $('tkLbl').textContent='· '+T.length+(T.length===1?' δελτίο':' δελτία')+' · '+eur(tst)+' → '+eur(twon); $('tkList').innerHTML=html;
+} finally { TKBUSY=false; } }
+$('nx').addEventListener('click', function(e){ var b=e.target.closest('.tkAdd'); if(!b||!PICKS||!DR.length) return; var k=+b.dataset.k, L=DR[DR.length-1], T=tkLoad();
+  T.unshift({n:PICKS[k].slice().sort(function(a,c){return a-c;}), K:K, m:MODE, start:L.id+1, t0:L.t+300000, draws:+$('tkN').value, name:ALLRND?'🎲 Τυχαία '+(k+1):S[k].name}); tkSave(T);
+  b.textContent='✅'; b.disabled=true; tkRender(); });
+$('tkList').addEventListener('click', function(e){ var b=e.target.closest('.tkDel'); if(!b) return; var T=tkLoad(); T.splice(+b.dataset.i,1); tkSave(T); tkRender(); });
 async function fetchDay(ds){ var out=[]; for(var p=0;p<40;p++){ var j=await (await fetch(API+'/draw-date/'+ds+'/'+ds+'?page='+p+'&size=10&_='+Date.now(),{cache:'no-store'})).json(), c=j.content||[];
   c.forEach(function(x){ var W=x.winningNumbers||{}, w=W.list||[]; if(w.length) out.push({id:x.drawId,t:x.drawTime,arr:w.slice(),set:new Set(w),sc:(W.secondChance||[]).slice(),b:(W.bonus||[])[0]}); }); if(!c.length||j.last) break; } return out; }
 async function load(){
@@ -240,7 +265,7 @@ async function load(){
     var now=new Date(), ds=fmtD.format(now), y=fmtD.format(new Date(now.getTime()-86400000));
     if(!DR.length){ var a=await fetchDay(y), b=await fetchDay(ds), m={}; a.concat(b).forEach(function(d){ m[d.id]=d; }); DR=Object.keys(m).map(Number).sort(function(p,q){return p-q;}).map(function(k){ return m[k]; }); }
     else { var j=await (await fetch(API+'/last-result-and-active?_='+Date.now(),{cache:'no-store'})).json(), c=j.last; if(c && c.drawId>DR[DR.length-1].id){ if(c.drawId>DR[DR.length-1].id+1){ DR=[]; return load(); } var W=c.winningNumbers||{}, w=W.list||[]; DR.push({id:c.drawId,t:c.drawTime,arr:w.slice(),set:new Set(w),sc:(W.secondChance||[]).slice(),b:(W.bonus||[])[0]}); } else return; }
-    run();
+    run(); tkRender();
   }catch(e){ $('foot').textContent='Δεν φορτώθηκαν οι κληρώσεις — ξαναδοκιμάζω…'; console.warn(e); }
 }
 load(); setInterval(load, 30000);
