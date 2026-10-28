@@ -30,7 +30,7 @@ details>summary{cursor:pointer;color:var(--gold);font-weight:700;margin:4px 0}
 <div class="card"><h2>🔍 Η τελευταία κλήρωση <span id="evLbl" class="muted"></span></h2><div id="evDist"></div><div class="scroll" style="max-height:420px"><table id="ev"></table></div></div>
 
 <div class="card"><h2>🏆 Βαθμολογία ημέρας <span id="lbLbl" class="muted"></span></h2>
-<div class="tabs" id="lbTabs"><button data-s="net" class="on">Καθαρά €</button><button data-s="avg">Μ.ό. νούμερα</button><button data-s="w">Κέρδισε κάτι</button></div>
+<div class="tabs" id="lbTabs"><span class="muted" style="font-size:13px;align-self:center">Ταξινόμηση:</span><button data-s="net" class="on">Κέρδος €</button><button data-s="avg">Νούμερα</button><button data-s="w">Φορές που κέρδισε</button></div>
 <div id="lbSum" class="dist"></div><div class="scroll"><table id="lb"></table></div>
 <div class="muted" style="font-size:12px;margin-top:6px">Η βαθμολογία κοιτάει προς τα πίσω. Αν η πρώτη θέση είναι στρατηγική, ρίξε μια ματιά πού βρίσκονται οι 🎲 τυχαίες — συνήθως κάπου ανάμεσα.</div></div>
 
@@ -164,10 +164,10 @@ function render(picks, ev, log, kp){
 }
 function renderLB(){ if(!LB) return; var sc=LB.sc, key=function(k){ var s=sc[k]; return LBSORT==='avg' ? (s.pl?s.h/s.pl:0) : (LBSORT==='w' ? s.w : s.won-s.pl*COST()); };
   var order=S.map(function(_,k){ return k; }).sort(function(a,b){ return key(b)-key(a) || sc[b].h-sc[a].h; }), pl=sc[0].pl;
-  $('lbLbl').textContent='· '+pl+' κληρώσεις σήμερα';
+  $('lbLbl').textContent='· κάθε εξάδα έπαιξε '+pl+' κληρώσεις σήμερα';
   var rk=order.filter(function(k){ return S[k].fam==='Τυχαία'; }).map(function(k){ return order.indexOf(k)+1; }), sh=0, sn=0, rh=0, rn=0; order.forEach(function(k){ if(S[k].fam==='Τυχαία'){ rh+=sc[k].h; rn+=sc[k].pl; } else { sh+=sc[k].h; sn+=sc[k].pl; } });
   $('lbSum').innerHTML=pl?'<div>Μ.ό. στρατηγικών<br><b>'+pc(sh/Math.max(1,sn))+'</b></div><div>Μ.ό. 🎲 τυχαίων<br><b>'+pc(rh/Math.max(1,rn))+'</b></div><div>Καλύτερη 🎲 τυχαία<br><b>'+rk[0]+'η θέση</b></div><div>Χειρότερη 🎲 τυχαία<br><b>'+rk[rk.length-1]+'η θέση</b></div>':'';
-  $('lb').innerHTML='<tr><th>#</th><th>Στρατηγική</th><th>Νούμερα</th><th>Κέρδισε</th><th>Ποντ. → Κέρδη</th><th>Καθαρά</th></tr>'+order.map(function(k,j){ var s=sc[k], nt=s.won-s.pl*COST(); return '<tr'+(S[k].fam==='Τυχαία'?' class="rnd"':'')+'><td>'+(j+1)+'</td><td>'+nm(k)+'</td><td>'+s.h+' <span class="muted">('+(s.pl?pc(s.h/s.pl):'—')+')</span></td><td>'+s.w+'</td><td>'+eur(s.pl*COST())+' → '+eur(s.won)+'</td><td class="'+(nt>=0?'pos':'neg')+'"><b>'+(nt>=0?'+':'')+eur(nt)+'</b></td></tr>'; }).join(''); }
+  $('lb').innerHTML='<tr><th>Θέση</th><th>Στρατηγική</th><th>Νούμερα που έπιασε <span class="muted" style="font-weight:400">(ανά κλήρωση)</span></th><th>Φορές που κέρδισε</th><th>Πόνταρε → Πήρε</th><th>Κέρδος / Ζημιά</th></tr>'+order.map(function(k,j){ var s=sc[k], nt=s.won-s.pl*COST(); return '<tr'+(S[k].fam==='Τυχαία'?' class="rnd"':'')+'><td>'+(j+1)+'</td><td>'+nm(k)+'</td><td>'+s.h+' <span class="muted">('+(s.pl?pc(s.h/s.pl):'—')+')</span></td><td>'+s.w+'</td><td>'+eur(s.pl*COST())+' → '+eur(s.won)+'</td><td class="'+(nt>=0?'pos':'neg')+'"><b>'+(nt>=0?'+':'')+eur(nt)+'</b></td></tr>'; }).join(''); }
 (function(){ var T=$('modeTabs'); Array.prototype.forEach.call(T.children, function(x){ x.classList.toggle('on', x.dataset.m===MODE); }); T.addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b) return; MODE=b.dataset.m; try{ localStorage.setItem('lab_mode', MODE); }catch(_){} Array.prototype.forEach.call(T.children, function(x){ x.classList.toggle('on', x===b); }); if(DR.length) run(); }); })();
 $('lbTabs').addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b) return; LBSORT=b.dataset.s; Array.prototype.forEach.call(this.children, function(x){ x.classList.toggle('on', x===b); }); renderLB(); });
 
