@@ -161,6 +161,7 @@ function render(picks, ev, log, kp){
     $('nx').innerHTML='<tr><th>#</th><th>Στρατηγική</th><th>Εξάδα</th></tr>'+order.map(function(k,j){ return '<tr'+(isR(k)&&!ALLRND?' class="rnd"':'')+'><td>'+(j+1)+'</td><td>'+nm(k)+'</td><td>'+chips(picks[k],Hn)+'</td></tr>'; }).join(''); }
 }
 
+(function(){ var T=$('modeTabs'); Array.prototype.forEach.call(T.children, function(x){ x.classList.toggle('on', x.dataset.m===MODE); }); T.addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b) return; MODE=b.dataset.m; try{ localStorage.setItem('lab_mode', MODE); }catch(_){} Array.prototype.forEach.call(T.children, function(x){ x.classList.toggle('on', x===b); }); if(DR.length) run(); }); })();
 (function(){ var B=$('allRnd'); B.classList.toggle('on', ALLRND); B.addEventListener('click', function(){ ALLRND=!ALLRND; try{ localStorage.setItem('lab_allrnd', ALLRND?'1':'0'); }catch(_){} B.classList.toggle('on', ALLRND); if(DR.length) run(); }); })();
 $('evNav').addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b||!EVS.length) return; var v=b.dataset.v, cur=VI===null?EVS.length-1:VI; if(v==='live') VI=null; else { var n2=Math.max(0, Math.min(EVS.length-1, cur+(+v))); VI = n2>=EVS.length-1 ? null : n2; } render(PICKS, VI===null?EVS[EVS.length-1]:EVS[VI], null, null); });
 async function fetchDay(ds){ var out=[]; for(var p=0;p<40;p++){ var j=await (await fetch(API+'/draw-date/'+ds+'/'+ds+'?page='+p+'&size=10&_='+Date.now(),{cache:'no-store'})).json(), c=j.content||[];
