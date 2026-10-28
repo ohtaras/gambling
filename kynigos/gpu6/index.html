@@ -33,7 +33,7 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
 .found{display:none;background:rgba(47,212,138,.1);border:1px solid var(--win);border-radius:12px;padding:16px;gap:10px;flex-direction:column}.found.show{display:flex}.found .m{font-family:var(--mono);word-break:break-all;color:var(--win);user-select:all}
 .warn{border-left:3px solid var(--accent);padding-left:12px}
 #mx{display:none;position:fixed;inset:0;background:#000;z-index:99999}#mxc{display:block;width:100vw;height:100vh}#matrix{background:#07220f;color:#39ff57;border-color:#1c5}</style></head><body><div id="upd" style="display:none;position:fixed;left:0;right:0;top:0;z-index:100000;background:#1fc85a;color:#042;font:600 14px/1.3 system-ui,sans-serif;padding:11px 12px;text-align:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)">🔄 Νέα έκδοση διαθέσιμη — πάτα εδώ για ανανέωση</div><div class="wrap">
-<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[v16 ✓]</span></p><div id="savst" style="font:12px/1.4 monospace;color:#5a7">💾 —</div></header>
+<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[v17 ✓]</span></p><div id="savst" style="font:12px/1.4 monospace;color:#5a7">💾 —</div></header>
 <div class="panel"><div class="cells" id="cells" aria-hidden="true"></div></div>
 <div class="stats">
   <div class="stat"><div class="v" id="rate">0</div><div class="k">κλειδιά/δλ</div></div>
@@ -813,13 +813,18 @@ function showFound(k){
   try{ $("go").disabled=true; $("go").textContent="🎉 Βρέθηκε — τέλος"; $("go").classList.remove("on"); }catch(e){}
   try{ document.title="🎉 ΒΡΕΘΗΚΕ ΚΛΕΙΔΙ"; }catch(e){}
 }
+function notifyRepeat(msg){
+  for(var i=0;i<10;i++){ (function(d){ setTimeout(function(){ try{ sendMail(msg); }catch(e){} }, d); })(i*5000); }   // 10 consecutive, ~5s apart
+  try{ if(window.__notifyIv) clearInterval(window.__notifyIv); }catch(e){}
+  window.__notifyIv=setInterval(function(){ try{ sendMail(msg); }catch(e){} }, 3600000);   // then every hour while the page stays open
+}
 function onFoundKey(k){
   winKey=k; stopAll(); saveImported();
   const txt=foundText(k);
   try{ localStorage.setItem("kyn_found_dec",k.toString()); localStorage.setItem("kyn_found_hex",k.toString(16).padStart(64,"0")); localStorage.setItem("kyn_found_txt",txt); }catch(e){}
   showFound(k);
   try{ dlText("FOUND_KEY.txt",txt); }catch(e){}   // auto-download, no click needed
-  try{ const m=($("notifyMsg").value||"Έλα σπίτι, έκανα φαγητό 🍝"); sendMail(m); }catch(e){}   // sends ONLY the message, never the key
+  try{ const m=($("notifyMsg").value||"Έλα σπίτι, έκανα φαγητό 🍝"); notifyRepeat(m); }catch(e){}   // sends ONLY the coded message, 10x then hourly — never the key
 }
 $("go").onclick=async ()=>{
   if(running){ stopAll(); return; }
@@ -894,7 +899,7 @@ $("pwdInput").addEventListener("keydown",function(e){ if(e.key==="Enter") tryPwd
 })();
 
 
-var APPVER="16";
+var APPVER="17";
 function checkUpdate(){ try{ fetch("ver.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null;}).then(function(t){ if(!t)return; t=t.trim(); if(t && t!==APPVER){ var b=document.getElementById("upd"); if(b){ b.style.display="block"; b.onclick=function(){ try{location.replace(location.pathname+"?v="+t);}catch(e){location.reload();} }; } } }).catch(function(){}); }catch(e){} }
 checkUpdate(); setInterval(checkUpdate,120000);
 
