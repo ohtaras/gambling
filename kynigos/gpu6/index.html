@@ -28,7 +28,7 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
 .found{display:none;background:rgba(47,212,138,.1);border:1px solid var(--win);border-radius:12px;padding:16px;gap:10px;flex-direction:column}.found.show{display:flex}.found .m{font-family:var(--mono);word-break:break-all;color:var(--win);user-select:all}
 .warn{border-left:3px solid var(--accent);padding-left:12px}
 #mx{display:none;position:fixed;inset:0;background:#000;z-index:99999}#mxc{display:block;width:100vw;height:100vh}#matrix{background:#07220f;color:#39ff57;border-color:#1c5}</style></head><body><div class="wrap">
-<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[v9 ✓]</span></p><div id="savst" style="font:12px/1.4 monospace;color:#5a7">💾 —</div></header>
+<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[v10 ✓]</span></p><div id="savst" style="font:12px/1.4 monospace;color:#5a7">💾 —</div></header>
 <div class="panel"><div class="cells" id="cells" aria-hidden="true"></div></div>
 <div class="stats">
   <div class="stat"><div class="v" id="rate">0</div><div class="k">κλειδιά/δλ</div></div>
@@ -861,7 +861,7 @@ $("cfgToggle").onclick=()=>{ const a=$("adv"); a.classList.toggle("open"); $("cf
     for(var i=0;i<cols;i++){ var ch=pool.charAt(Math.floor(Math.random()*pool.length))||"0"; var x=i*fs, y=drops[i]*fs;
       ctx.fillStyle=(Math.random()<0.04)?"#eafff0":"#39ff57"; ctx.fillText(ch,x,y);
       if(y>innerHeight && Math.random()>0.975) drops[i]=0; drops[i]++; }
-    try{ var cur=(typeof lastKey!=="undefined"&&lastKey)?lastKey:""; ctx.font=Math.round(fs*0.7)+"px monospace"; ctx.fillStyle="#bfffcf"; ctx.fillText(cur,8,innerHeight-fs-6); ctx.fillStyle="#2f7"; ctx.fillText("άγγιξε για έξοδο",8,6); }catch(e){}
+    try{ var cur=(typeof lastKey!=="undefined"&&lastKey)?lastKey:""; ctx.font=Math.round(fs*0.7)+"px monospace"; ctx.fillStyle="#bfffcf"; ctx.fillText(cur,8,innerHeight-fs-6); }catch(e){}
   }
   function openMx(){ mx.style.display="block"; on=true; resize(); lastT=0; raf=requestAnimationFrame(frame); try{ if(navigator.wakeLock)navigator.wakeLock.request("screen").then(function(w){wake=w;}).catch(function(){}); }catch(e){} try{ if(mx.requestFullscreen)mx.requestFullscreen().catch(function(){}); }catch(e){} }
   function closeMx(){ on=false; if(raf)cancelAnimationFrame(raf); raf=null; mx.style.display="none"; try{ if(wake){wake.release();wake=null;} }catch(e){} try{ if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen(); }catch(e){} }
