@@ -26,7 +26,7 @@ details>summary{cursor:pointer;color:var(--gold);font-weight:700;margin:4px 0}
 <h1>🧪 Εργαστήριο στρατηγικών · 100 εξάδες</h1>
 <div class="muted">Δοκιμαστική σελίδα · <b>ψεύτικα χρήματα</b> · κάθε εξάδα παίζει σε κάθε κλήρωση</div>
 <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><div class="tabs" id="modeTabs" style="margin-top:8px"><button data-m="">Απλή στήλη 0,50€</button><button data-m="sc">🟢 2η ευκαιρία 1€</button><button data-m="kb">🔴 ΚΙΝΟ Bonus 1€</button></div><div class="tabs" style="margin-top:8px"><button id="allRnd" title="Όλες οι 100 εξάδες εντελώς τυχαίες — χωρίς καμία στρατηγική">🎲 Όλα τυχαία</button></div></div>
-<div class="card warn">Σε κάθε κλήρωση βγαίνουν <b>100 εξάδες, η καθεμία με διαφορετική στρατηγική</b> (φόρμα, κρύα, θερμοκρασία, απουσίες, γείτονες, επαναλήψεις, ίδια ώρα χθες, Mastermind…) και <b>αξιολογούνται στην επόμενη κλήρωση</b>. Οι <b id="nRnd">«🎲 Τυχαία»</b> είναι το μέτρο σύγκρισης: μια στρατηγική αξίζει μόνο αν τις ξεπερνάει σταθερά. Μια εξάδα πιάνει κατά μέσο όρο <b>1,5</b> νούμερα· κερδίζει κάτι (3/6+) <b>1 στις 7,3</b> κληρώσεις. Από πάνω διαλέγεις αν παίζουν <b>απλές στήλες 0,50€</b>, με <b>🟢 2η ευκαιρία</b> ή με <b>🔴 ΚΙΝΟ Bonus</b> (1€ η στήλη).</div>
+<div class="card warn">Σε κάθε κλήρωση βγαίνουν <b>100 εξάδες, η καθεμία με διαφορετική στρατηγική</b> (εκθετική φόρμα, ορμή, «παρέες» αριθμών, Bonus και 2η ευκαιρία, σειρά εξαγωγής, μεταβάσεις, ρυθμός εμφάνισης, γεωμετρία ταμπλό, πρώτοι αριθμοί, ψηφοφορία σημάτων…) και <b>αξιολογούνται στην επόμενη κλήρωση</b>. Για σύγκριση με την καθαρή τύχη πάτα <b>🎲 Όλα τυχαία</b>: μια στρατηγική αξίζει μόνο αν ξεπερνάει σταθερά τις τυχαίες. Μια εξάδα πιάνει κατά μέσο όρο <b>1,5</b> νούμερα· κερδίζει κάτι (3/6+) <b>1 στις 7,3</b> κληρώσεις. Από πάνω διαλέγεις αν παίζουν <b>απλές στήλες 0,50€</b>, με <b>🟢 2η ευκαιρία</b> ή με <b>🔴 ΚΙΝΟ Bonus</b> (1€ η στήλη).</div>
 
 <div class="card"><h2>🔍 <span id="evTtl">Η τελευταία κλήρωση</span> <span id="evLbl" class="muted"></span></h2><div class="tabs" id="evNav"><button data-v="-10">⏪ 10</button><button data-v="-1" title="Προηγούμενη κλήρωση">◀</button><button data-v="live" class="on" title="Τελευταία κλήρωση">🟢</button><button data-v="1" title="Επόμενη κλήρωση">▶</button><button data-v="10">10 ⏩</button></div><div id="evDist"></div><div class="scroll" style="max-height:420px"><table id="ev"></table></div></div>
 
@@ -71,62 +71,121 @@ function inS(s){ return function(n){ return s.has(n); }; }
 /* ---------- οι 100 στρατηγικές ---------- */
 var S=[];
 function add(fam, name, f){ S.push({fam:fam, name:name, f:f}); }
-[5,10,20,30,50,100,200].forEach(function(W){ add('Φόρμα','🔥 Πιο συχνά στις '+W+' τελευταίες', function(c){ var q=c.cnt(W); return c.top(function(n){ return q[n]; }); });
-  add('Κρύα','❄️ Πιο σπάνια στις '+W+' τελευταίες', function(c){ var q=c.cnt(W); return c.top(function(n){ return -q[n]; }); }); });
-add('Φόρμα','🔥 Πιο συχνά σήμερα', function(c){ var q=c.day(); return c.top(function(n){ return q[n]; }); });
-add('Κρύα','❄️ Πιο σπάνια σήμερα', function(c){ var q=c.day(); return c.top(function(n){ return -q[n]; }); });
-[10,30,100].forEach(function(W){ add('Φόρμα','🔥 Συχνά '+W+' · ένα ανά δεκάδα', function(c){ var q=c.cnt(W); return c.top(function(n){ return q[n]; }, null, K, true); });
-  add('Κρύα','❄️ Σπάνια '+W+' · ένα ανά δεκάδα', function(c){ var q=c.cnt(W); return c.top(function(n){ return -q[n]; }, null, K, true); }); });
-// θερμοκρασία 5 κληρώσεων: όλοι οι συνδυασμοί κόκκινα/πορτοκαλί/μπλε που κάνουν 6
-for(var r=0;r<=6;r++) for(var o=0;o<=6-r;o++) (function(r,o,b){ add('Θερμοκρασία', (r?'🔴'+r+' ':'')+(o?'🟠'+o+' ':'')+(b?'🔵'+b:''), function(c){ var H=c.heat(), q=c.cnt(30), lr=c.top(function(n){ return q[n]; }, function(n){ return H[n]==='hh'; }, 80), lo=c.top(function(n){ return q[n]; }, function(n){ return H[n]==='hw'; }, 80), lb=c.top(function(n){ return q[n]; }, function(n){ return H[n]==='hc'; }, 80);
-  lr=lr.filter(function(n){ return H[n]==='hh'; }); lo=lo.filter(function(n){ return H[n]==='hw'; }); lb=lb.filter(function(n){ return H[n]==='hc'; });
-  var out=lr.slice(0,r).concat(lo.slice(0,o), lb.slice(0,b)); if(out.length<K){ var rest=lo.concat(lb,lr).filter(function(n){ return out.indexOf(n)<0; }); out=out.concat(rest.slice(0,K-out.length)); } return out; }); })(r,o,6-r-o);
-add('Απουσίες','⏳ Λείπουν τις περισσότερες κληρώσεις', function(c){ return c.top(function(n){ return c.gap[n]; }); });
-add('Απουσίες','⏳ Λείπουν 4–9 κληρώσεις', function(c){ return c.top(function(n){ return c.gap[n]; }, function(n){ return c.gap[n]>=4&&c.gap[n]<=9; }); });
-add('Απουσίες','⏳ Λείπουν 1–3 κληρώσεις', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return c.gap[n]>=1&&c.gap[n]<=3; }); });
-add('Απουσίες','⏳ Λείπουν 10–20 κληρώσεις', function(c){ return c.top(function(n){ return -c.gap[n]; }, function(n){ return c.gap[n]>=10&&c.gap[n]<=20; }); });
-add('Επανάληψη','🔁 Από την τελευταία · τα πιο συχνά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, inS(c.last)); });
-add('Επανάληψη','🔁 Από την τελευταία · τα πιο σπάνια', function(c){ var q=c.cnt(30); return c.top(function(n){ return -q[n]; }, inS(c.last)); });
-add('Επανάληψη','🔁 Από την τελευταία · μικρά νούμερα', function(c){ return c.top(function(n){ return -n; }, inS(c.last)); });
-add('Επανάληψη','🔁 Από την τελευταία · μεγάλα νούμερα', function(c){ return c.top(function(n){ return n; }, inS(c.last)); });
-add('Επανάληψη','🔁 Και στις 2 τελευταίες', function(c){ var q=c.cnt(30); return c.top(function(n){ return (c.last.has(n)&&c.prev.has(n)?100:0)+q[n]; }); });
-add('Επανάληψη','🔁 Στη μία από τις 2 τελευταίες', function(c){ var q=c.cnt(30); return c.top(function(n){ return ((c.last.has(n)!==c.prev.has(n))?100:0)+q[n]; }); });
-add('Γείτονες','👥 Γείτονες ±1 της τελευταίας', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return !c.last.has(n)&&(c.last.has(n-1)||c.last.has(n+1)); }); });
-add('Γείτονες','👥 Επόμενο (+1) της τελευταίας', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return !c.last.has(n)&&c.last.has(n-1); }); });
-add('Γείτονες','👥 Προηγούμενο (−1) της τελευταίας', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return !c.last.has(n)&&c.last.has(n+1); }); });
-add('Γείτονες','👥 Από πάνω/κάτω στο ταμπλό (±10)', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return !c.last.has(n)&&(c.last.has(n-10)||c.last.has(n+10)); }); });
-add('Μοτίβα','🪞 Καθρέφτης (81−x) της τελευταίας', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return c.last.has(81-n); }); });
-add('Μοτίβα','➕ Μετατόπιση +40 της τελευταίας', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return c.last.has(((n+39)%80)+1); }); });
-add('Μοτίβα','🔢 Ίδια λήγοντα με το πιο συχνό ψηφίο', function(c){ var q=c.cnt(20), d=new Array(10).fill(0); for(var n=1;n<=80;n++) d[n%10]+=q[n]; var best=d.indexOf(Math.max.apply(null,d)); return c.top(function(n){ return q[n]; }, function(n){ return n%10===best; }); });
-add('Μοτίβα','📏 Η πιο «ζεστή» γραμμή του ταμπλό', function(c){ var q=c.cnt(10), row=new Array(8).fill(0); for(var n=1;n<=80;n++) row[Math.floor((n-1)/10)]+=q[n]; var b=row.indexOf(Math.max.apply(null,row)); return c.top(function(n){ return q[n]; }, function(n){ return Math.floor((n-1)/10)===b; }); });
-add('Μοτίβα','📐 Η πιο «κρύα» γραμμή του ταμπλό', function(c){ var q=c.cnt(10), row=new Array(8).fill(0); for(var n=1;n<=80;n++) row[Math.floor((n-1)/10)]+=q[n]; var b=row.indexOf(Math.min.apply(null,row)); return c.top(function(n){ return -q[n]; }, function(n){ return Math.floor((n-1)/10)===b; }); });
-add('Μοτίβα','🔗 Έξι συνεχόμενα με τη μεγαλύτερη φόρμα', function(c){ var q=c.cnt(20), best=1, bv=-1; for(var s=1;s<=75;s++){ var v=0; for(var j=0;j<6;j++) v+=q[s+j]; if(v>bv){ bv=v; best=s; } } return [0,1,2,3,4,5].map(function(j){ return best+j; }); });
-add('Μοτίβα','⚪ Μονά · πιο συχνά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return n%2===1; }); });
-add('Μοτίβα','⚫ Ζυγά · πιο συχνά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return n%2===0; }); });
-add('Μοτίβα','⬇️ Μικρά (1–40) · πιο συχνά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return n<=40; }); });
-add('Μοτίβα','⬆️ Μεγάλα (41–80) · πιο συχνά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return n>40; }); });
-add('Μοτίβα','⚖️ 3 μικρά + 3 μεγάλα · πιο συχνά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return n<=40; }, 3).concat(c.top(function(n){ return q[n]; }, function(n){ return n>40; }, 3)); });
-add('Χθες','🕐 Ίδια ώρα χθες', function(c){ var y=DR[c.i-287], q=c.cnt(30); if(!y) return c.top(function(n){ return q[n]; }); return c.top(function(n){ return q[n]; }, inS(y.set)); });
-add('Χθες','🕐 Γύρω από την ίδια ώρα χθες (±3)', function(c){ var q=new Array(81).fill(0); for(var k=-3;k<=3;k++){ var y=DR[c.i-287+k]; if(y) y.arr.forEach(function(x){ q[x]++; }); } return c.top(function(n){ return q[n]; }); });
-add('Χθες','🔄 Ζεστά χθες, κρύα σήμερα', function(c){ var d=c.day(), y=c.cnt(288); return c.top(function(n){ return (y[n]-d[n])-d[n]*2; }); });
-add('Χθες','📈 Ανεβαίνουν: σήμερα πιο πολύ από χθες', function(c){ var d=c.day(), y=c.cnt(288), nd=Math.max(1,c.i-I0+1); return c.top(function(n){ return d[n]/nd - (y[n]-d[n])/Math.max(1,288-nd); }); });
-add('Σταθερά','📌 1 2 3 4 5 6', function(){ return [1,2,3,4,5,6]; });
-add('Σταθερά','📌 75 76 77 78 79 80', function(){ return [75,76,77,78,79,80]; });
-add('Σταθερά','🎂 «Γενέθλια» (1–31) · πιο συχνά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return n<=31; }); });
-add('Σταθερά','🍀 «Τυχερά» 7 13 17 21 33 77', function(){ return [7,13,17,21,33,77]; });
-// με μνήμη: χρησιμοποιούν τη δική τους προηγούμενη εξάδα (st.prev, st.hits)
-add('Μνήμη','🧩 Mastermind: κράτα όσα έπιασες + φόρμα', function(c, st){ var q=c.cnt(30), keep=(st.prev||[]).filter(function(n){ return c.last.has(n); }); return keep.concat(c.top(function(n){ return q[n]; }, function(n){ return keep.indexOf(n)<0; }, K-keep.length)).slice(0,K); });
-add('Μνήμη','🎯 Κυνηγός: κράτα όσα έπιασες + τυχαία', function(c, st){ var keep=(st.prev||[]).filter(function(n){ return c.last.has(n); }); return keep.concat(c.top(function(){ return 0; }, function(n){ return keep.indexOf(n)<0; }, K-keep.length)).slice(0,K); });
-add('Μνήμη','🔒 Κράτα την ίδια μέχρι να κερδίσει', function(c, st){ if(st.prev && !(st.lastWin)) return st.prev.slice(); var q=c.cnt(30); return c.top(function(n){ return q[n]; }); });
-add('Μνήμη','🔀 Άλλαξε ό,τι δεν βγήκε με κρύα', function(c, st){ var q=c.cnt(30), keep=(st.prev||[]).filter(function(n){ return c.last.has(n); }); return keep.concat(c.top(function(n){ return -q[n]; }, function(n){ return keep.indexOf(n)<0; }, K-keep.length)).slice(0,K); });
-add('Μνήμη','🧑‍🎓 Μαθητής: ό,τι «πληρώνει» σήμερα', function(c){ var d=c.day(), nd=Math.max(1,c.i-I0+1); return c.top(function(n){ return (d[n]+1)/(nd+4) + (c.R()-0.5)*Math.sqrt(0.19/(nd+4)); }); });
-var NRND=100-S.length; for(var k=1;k<=NRND;k++) add('Τυχαία','🎲 Τυχαία '+k, function(c){ return c.top(function(){ return 0; }); });
+/* βοηθητικά για τις νέες στρατηγικές (μνήμη ανά κλήρωση για ταχύτητα) */
+var MEMO={};
+function mm(i, key, fn){ var M=MEMO[i]||(MEMO[i]={}); if(!(key in M)) M[key]=fn(); return M[key]; }
+function rowOf(n){ return Math.floor((n-1)/10); } function colOfN(n){ return (n-1)%10; }
+function ew(i,h){ return mm(i,'ew'+h,function(){ var o=new Array(81).fill(0); for(var k=0;k<6*h&&i-k>=0;k++){ var w=Math.pow(0.5,k/h); DR[i-k].arr.forEach(function(x){ o[x]+=w; }); } return o; }); }
+function cnt(i,a,b){ /* εμφανίσεις στις κληρώσεις i-b+1 .. i-a (a=0 → μέχρι και την i) */ var o=new Array(81).fill(0); for(var k=a;k<b&&i-k>=0;k++) DR[i-k].arr.forEach(function(x){ o[x]++; }); return o; }
+function co(i,set,W,key){ return mm(i,'co'+key+W,function(){ var o=new Array(81).fill(0); for(var k=1;k<=W&&i-k>=0;k++){ var d=DR[i-k], m=0; d.arr.forEach(function(x){ if(set.has(x)) m++; }); if(m) d.arr.forEach(function(x){ if(!set.has(x)) o[x]+=m; }); } return o; }); }
+function bonF(i,W){ return mm(i,'bo'+W,function(){ var o=new Array(81).fill(0); for(var k=0;k<W&&i-k>=0;k++){ var b=DR[i-k].b; if(b) o[b]++; } return o; }); }
+function scF(i,W){ return mm(i,'sc'+W,function(){ var o=new Array(81).fill(0); for(var k=0;k<W&&i-k>=0;k++) (DR[i-k].sc||[]).forEach(function(x){ o[x]++; }); return o; }); }
+function posF(i,W,first,m){ return mm(i,'po'+W+first+m,function(){ var o=new Array(81).fill(0); for(var k=0;k<W&&i-k>=0;k++){ var a=DR[i-k].arr; (first?a.slice(0,m):a.slice(-m)).forEach(function(x){ o[x]++; }); } return o; }); }
+function trans(i,W){ return mm(i,'tr'+W,function(){ var ii=new Array(81).fill(0), iN=new Array(81).fill(0), oi=new Array(81).fill(0), oN=new Array(81).fill(0);
+  for(var k=1;k<W&&i-k>=0;k++){ var A=DR[i-k].set, B=DR[i-k+1].set; for(var n=1;n<=80;n++){ if(A.has(n)){ iN[n]++; if(B.has(n)) ii[n]++; } else { oN[n]++; if(B.has(n)) oi[n]++; } } }
+  return {stick:function(n){ return (ii[n]+1)/(iN[n]+4); }, back:function(n){ return (oi[n]+1)/(oN[n]+4); }}; }); }
+function gapSt(i,W){ return mm(i,'gs'+W,function(){ var L=[]; for(var n=0;n<=80;n++) L.push([]); var last=new Array(81).fill(-1);
+  for(var k=Math.max(0,i-W+1);k<=i;k++) DR[k].arr.forEach(function(x){ if(last[x]>=0) L[x].push(k-last[x]); last[x]=k; });
+  var mean=new Array(81), sd=new Array(81); for(var n2=1;n2<=80;n2++){ var g=L[n2]; if(!g.length){ mean[n2]=W; sd[n2]=W; continue; } var m=g.reduce(function(a,b){return a+b;},0)/g.length; mean[n2]=m; sd[n2]=Math.sqrt(g.reduce(function(a,b){return a+(b-m)*(b-m);},0)/g.length); } return {mean:mean, sd:sd}; }); }
+function minuteF(i){ return mm(i,'mi',function(){ var mi=new Date(DR[i].t+300000).getMinutes(), o=new Array(81).fill(0); for(var k=0;k<=i;k++) if(new Date(DR[k].t).getMinutes()===mi) DR[k].arr.forEach(function(x){ o[x]++; }); return o; }); }
+function isPrime(n){ if(n<2) return false; for(var d=2;d*d<=n;d++) if(n%d===0) return false; return true; }
+var FIBSQ=new Set([1,2,3,4,5,8,9,13,16,21,25,34,36,49,55,64]);
+
+// 1. Εκθετική φόρμα (πρόσφατες κληρώσεις μετράνε περισσότερο)
+[2,4,8,16,32,64].forEach(function(h){ add('Εκθετική','📉 Φόρμα με «μισή ζωή» '+h+' κληρώσεις', function(c){ var e=ew(c.i,h); return c.top(function(n){ return e[n]; }); });
+  add('Εκθετική','🧊 Αντίστροφη φόρμα «μισή ζωή» '+h, function(c){ var e=ew(c.i,h); return c.top(function(n){ return -e[n]; }); }); });
+// 2. Ορμή: ανεβαίνουν / πέφτουν
+[5,10,20,40].forEach(function(w){ add('Ορμή','🚀 Ανεβαίνουν (τελ. '+w+' vs προηγ. '+w+')', function(c){ var a=cnt(c.i,0,w), b=cnt(c.i,w,2*w); return c.top(function(n){ return a[n]-b[n]; }); });
+  add('Ορμή','🪂 Πέφτουν (τελ. '+w+' vs προηγ. '+w+')', function(c){ var a=cnt(c.i,0,w), b=cnt(c.i,w,2*w); return c.top(function(n){ return b[n]-a[n]; }); }); });
+// 3. Παρέες: όσα βγαίνουν μαζί
+[50,150,600].forEach(function(W){ add('Παρέες','🤝 Παρέες της τελευταίας κλήρωσης ('+W+')', function(c){ var o=co(c.i,c.last,W,'L'); return c.top(function(n){ return o[n]; }, function(n){ return !c.last.has(n); }); });
+  add('Παρέες','🤝 Παρέες του πιο συχνού της ημέρας ('+W+')', function(c){ var d=c.day(), h=1; for(var n=2;n<=80;n++) if(d[n]>d[h]) h=n; var o=co(c.i,new Set([h]),W,'H'+h); return [h].concat(c.top(function(n){ return o[n]; }, function(n){ return n!==h; }, 5)); });
+  add('Παρέες','🤝 Παρέες του τελευταίου Bonus ('+W+')', function(c){ var b=DR[c.i].b||1, o=co(c.i,new Set([b]),W,'B'+b); return [b].concat(c.top(function(n){ return o[n]; }, function(n){ return n!==b; }, 5)); }); });
+// 4. Bonus και 2η ευκαιρία
+[20,100,600].forEach(function(W){ add('Bonus','🔴 Πιο συχνά Bonus ('+W+' κληρώσεις)', function(c){ var o=bonF(c.i,W), q=c.cnt(30); return c.top(function(n){ return o[n]*100+q[n]; }); });
+  add('2η ευκαιρία','🟢 Πιο συχνά στη 2η ευκαιρία ('+W+')', function(c){ var o=scF(c.i,W), q=c.cnt(30); return c.top(function(n){ return o[n]*100+q[n]; }); }); });
+add('Bonus','🔴 Τα 3 τελευταία Bonus + η 2η ευκαιρία', function(c){ var s=[]; for(var k=0;k<6&&s.length<3;k++){ var b=DR[c.i-k]&&DR[c.i-k].b; if(b&&s.indexOf(b)<0) s.push(b); } (DR[c.i].sc||[]).forEach(function(x){ if(s.indexOf(x)<0) s.push(x); }); var q=c.cnt(30); return s.slice(0,6).concat(c.top(function(n){ return q[n]; }, function(n){ return s.indexOf(n)<0; }, Math.max(0,6-s.length))).slice(0,6); });
+// 5. Σειρά εξαγωγής
+add('Σειρά','1️⃣ Οι 6 πρώτες μπίλιες της τελευταίας', function(c){ return DR[c.i].arr.slice(0,6); });
+add('Σειρά','🔚 Οι 6 τελευταίες μπίλιες της τελευταίας', function(c){ return DR[c.i].arr.slice(-6); });
+[20,100].forEach(function(W){ add('Σειρά','🥇 Βγαίνουν συχνά πρώτα (5 πρώτες μπίλιες, '+W+')', function(c){ var o=posF(c.i,W,true,5); return c.top(function(n){ return o[n]; }); });
+  add('Σειρά','🐢 Βγαίνουν συχνά τελευταία (5 τελευταίες, '+W+')', function(c){ var o=posF(c.i,W,false,5); return c.top(function(n){ return o[n]; }); }); });
+// 6. Μεταβάσεις
+add('Μεταβάσεις','🧲 «Κολλάνε»: όταν βγουν, ξαναβγαίνουν', function(c){ var T=trans(c.i,300); return c.top(function(n){ return T.stick(n); }, inS(c.last)); });
+add('Μεταβάσεις','↩️ «Επιστρέφουν»: βγαίνουν μετά από απουσία', function(c){ var T=trans(c.i,300); return c.top(function(n){ return T.back(n); }, function(n){ return !c.last.has(n); }); });
+add('Μεταβάσεις','🪃 Δεν κολλάνε: σπάνια ξαναβγαίνουν', function(c){ var T=trans(c.i,300); return c.top(function(n){ return -T.stick(n); }); });
+add('Μεταβάσεις','💤 Αργούν να επιστρέψουν', function(c){ var T=trans(c.i,300); return c.top(function(n){ return -T.back(n); }, function(n){ return !c.last.has(n); }); });
+// 7. Ρυθμός (κανονικότητα εμφανίσεων)
+[100,400].forEach(function(W){ add('Ρυθμός','⏰ «Τους έφτασε η ώρα» (απουσία / μέσο κενό, '+W+')', function(c){ var g=gapSt(c.i,W); return c.top(function(n){ return c.gap[n]/Math.max(1,g.mean[n]); }); }); });
+add('Ρυθμός','🐇 Νωρίτερα από το πρόγραμμά τους', function(c){ var g=gapSt(c.i,400); return c.top(function(n){ return -Math.abs(c.gap[n]-g.mean[n]+1)-(c.gap[n]===0?99:0); }); });
+add('Ρυθμός','🕰️ Οι πιο «τακτικοί» (σταθερό κενό)', function(c){ var g=gapSt(c.i,400); return c.top(function(n){ return -g.sd[n]/Math.max(1,g.mean[n]); }); });
+add('Ρυθμός','🌪️ Οι πιο «άτακτοι» (ακανόνιστο κενό)', function(c){ var g=gapSt(c.i,400); return c.top(function(n){ return g.sd[n]/Math.max(1,g.mean[n]); }); });
+// 8. Γεωμετρία ταμπλό
+add('Ταμπλό','⬇️ Η πιο ζεστή κάθετη στήλη', function(c){ var q=c.cnt(20), s=new Array(10).fill(0); for(var n=1;n<=80;n++) s[colOfN(n)]+=q[n]; var b=s.indexOf(Math.max.apply(null,s)); return c.top(function(n){ return q[n]; }, function(n){ return colOfN(n)===b; }); });
+add('Ταμπλό','⬇️ Η πιο κρύα κάθετη στήλη', function(c){ var q=c.cnt(20), s=new Array(10).fill(0); for(var n=1;n<=80;n++) s[colOfN(n)]+=q[n]; var b=s.indexOf(Math.min.apply(null,s)); return c.top(function(n){ return -q[n]; }, function(n){ return colOfN(n)===b; }); });
+function block(c, hot){ var q=c.cnt(20), best=null, bv=hot?-1:1e9; for(var r=0;r<7;r++) for(var k=0;k<8;k++){ var v=0, cells=[]; for(var dr=0;dr<2;dr++) for(var dc=0;dc<3;dc++){ var n=(r+dr)*10+k+dc+1; cells.push(n); v+=q[n]; } if(hot?v>bv:v<bv){ bv=v; best=cells; } } return best; }
+add('Ταμπλό','🟥 Το πιο ζεστό τετράγωνο 2×3', function(c){ return block(c,true); });
+add('Ταμπλό','🟦 Το πιο κρύο τετράγωνο 2×3', function(c){ return block(c,false); });
+add('Ταμπλό','↘️ Διαγώνιος με τη μεγαλύτερη φόρμα', function(c){ var q=c.cnt(20), best=[], bv=-1; for(var s0=1;s0<=80;s0++){ var cells=[], v=0, n=s0; while(n<=80 && cells.length<6){ cells.push(n); v+=q[n]; if(colOfN(n)===9) break; n+=11; } if(cells.length===6&&v>bv){ bv=v; best=cells; } } return best.length?best:c.top(function(n){ return q[n]; }); });
+add('Ταμπλό','➕ Σταυρός γύρω από το πιο συχνό της ημέρας', function(c){ var d=c.day(), h=1; for(var n=2;n<=80;n++) if(d[n]>d[h]) h=n; var s=[h,h-10,h+10]; if(colOfN(h)>0) s.push(h-1); if(colOfN(h)<9) s.push(h+1); s=s.filter(function(n){ return n>=1&&n<=80; }); var q=c.cnt(30); return s.concat(c.top(function(n){ return q[n]; }, function(n){ return s.indexOf(n)<0; }, 6-s.length)).slice(0,6); });
+add('Ταμπλό','📍 Γωνίες και κέντρο (1 10 35 46 71 80)', function(){ return [1,10,35,46,71,80]; });
+add('Ταμπλό','🔲 Περίμετρος ταμπλό · πιο συχνά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return rowOf(n)===0||rowOf(n)===7||colOfN(n)===0||colOfN(n)===9; }); });
+add('Ταμπλό','🔳 Εσωτερικό ταμπλό · πιο συχνά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return !(rowOf(n)===0||rowOf(n)===7||colOfN(n)===0||colOfN(n)===9); }); });
+add('Ταμπλό','🧭 Ένα από καθεμιά από τις 6 πιο ζεστές γραμμές', function(c){ var q=c.cnt(20), s=[0,1,2,3,4,5,6,7].map(function(r){ var v=0; for(var k=1;k<=10;k++) v+=q[r*10+k]; return [r,v]; }).sort(function(a,b){ return b[1]-a[1]; }).slice(0,6); return s.map(function(x){ return c.top(function(n){ return q[n]; }, function(n){ return rowOf(n)===x[0]; }, 1)[0]; }); });
+add('Ταμπλό','🧊 Ένα από καθεμιά από τις 6 πιο κρύες γραμμές', function(c){ var q=c.cnt(20), s=[0,1,2,3,4,5,6,7].map(function(r){ var v=0; for(var k=1;k<=10;k++) v+=q[r*10+k]; return [r,v]; }).sort(function(a,b){ return a[1]-b[1]; }).slice(0,6); return s.map(function(x){ return c.top(function(n){ return -q[n]; }, function(n){ return rowOf(n)===x[0]; }, 1)[0]; }); });
+add('Ταμπλό','🎚️ Ένα από καθεμιά από τις 6 πιο ζεστές κάθετες', function(c){ var q=c.cnt(20), s=[0,1,2,3,4,5,6,7,8,9].map(function(k){ var v=0; for(var r=0;r<8;r++) v+=q[r*10+k+1]; return [k,v]; }).sort(function(a,b){ return b[1]-a[1]; }).slice(0,6); return s.map(function(x){ return c.top(function(n){ return q[n]; }, function(n){ return colOfN(n)===x[0]; }, 1)[0]; }); });
+// 9. Αριθμοθεωρία
+add('Αριθμοί','🔣 Πρώτοι αριθμοί · πιο συχνοί', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, isPrime); });
+add('Αριθμοί','🔣 Πρώτοι αριθμοί · πιο σπάνιοι', function(c){ var q=c.cnt(30); return c.top(function(n){ return -q[n]; }, isPrime); });
+[3,5,7].forEach(function(m){ add('Αριθμοί','✖️ Πολλαπλάσια του '+m+' · πιο συχνά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return n%m===0; }); }); });
+add('Αριθμοί','➗ Το πιο συχνό άθροισμα ψηφίων', function(c){ var q=c.cnt(20), ds=function(n){ return Math.floor(n/10)+n%10; }, s={}; for(var n=1;n<=80;n++){ s[ds(n)]=(s[ds(n)]||0)+q[n]; } var b=+Object.keys(s).sort(function(a,b2){ return s[b2]-s[a]; })[0]; return c.top(function(n){ return q[n]; }, function(n){ return ds(n)===b; }); });
+add('Αριθμοί','🪞 Διπλά (11 22 33…) και 1–9 · πιο συχνά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return n<10||n%11===0; }); });
+add('Αριθμοί','🌀 Fibonacci και τετράγωνα', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return FIBSQ.has(n); }); });
+// 10. Αντίδραση στην τελευταία κλήρωση
+add('Αντίδραση','⚖️ Μεγάλο άθροισμα → μικρά (και ανάποδα)', function(c){ var s=DR[c.i].arr.reduce(function(a,b){return a+b;},0), low=s>810, q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return low?n<=40:n>40; }); });
+add('Αντίδραση','⚖️ Πολλά μονά → ζυγά (και ανάποδα)', function(c){ var o=DR[c.i].arr.filter(function(x){ return x%2; }).length, q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return o>10 ? n%2===0 : n%2===1; }); });
+add('Αντίδραση','🕳️ Από τις δεκάδες που «ξεχάστηκαν»', function(c){ var d=new Array(8).fill(0); DR[c.i].arr.forEach(function(x){ d[rowOf(x)]++; }); var q=c.cnt(30); return c.top(function(n){ return -d[rowOf(n)]*10+q[n]/10; }); });
+add('Αντίδραση','🎯 Μεσαία ζώνη 31–50 · πιο συχνά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return n>=31&&n<=50; }); });
+// 11. Ώρα
+add('Ώρα','🕐 Ίδιο λεπτό της ώρας (π.χ. όλες οι :40)', function(c){ var o=minuteF(c.i); return c.top(function(n){ return o[n]; }); });
+add('Ώρα','🕓 Ίδιο λεπτό της ώρας · πιο σπάνια', function(c){ var o=minuteF(c.i); return c.top(function(n){ return -o[n]; }); });
+add('Ώρα','🕑 Ίδια ώρα χθες · πιο συχνά (12 κληρώσεις)', function(c){ var o=cnt(c.i,282,294); return c.top(function(n){ return o[n]; }); });
+add('Ώρα','🕒 Ίδια ώρα χθες · πιο σπάνια (12 κληρώσεις)', function(c){ var o=cnt(c.i,282,294); return c.top(function(n){ return -o[n]; }); });
+// 12. Ψηφοφορία πολλών σημάτων
+function votes(c){ return mm(c.i,'vote',function(){ var v=new Array(81).fill(0), sig=[ew(c.i,8), (function(){ var a=cnt(c.i,0,10), b=cnt(c.i,10,20), o=new Array(81); for(var n=1;n<=80;n++) o[n]=a[n]-b[n]; return o; })(), co(c.i,c.last,150,'L'), bonF(c.i,100), (function(){ var g=gapSt(c.i,400), o=new Array(81); for(var n=1;n<=80;n++) o[n]=c.gap[n]/Math.max(1,g.mean[n]); return o; })()];
+  sig.forEach(function(s){ var a=[]; for(var n=1;n<=80;n++) a.push(n); a.sort(function(x,y){ return s[y]-s[x] || x-y; }); a.slice(0,15).forEach(function(n){ v[n]++; }); }); return v; }); }
+add('Ψηφοφορία','🗳️ Συμφωνία 5 σημάτων (οι πιο ψηφισμένοι)', function(c){ var v=votes(c), q=c.cnt(30); return c.top(function(n){ return v[n]*100+q[n]; }); });
+add('Ψηφοφορία','🙅 Κανένα σήμα δεν τα θέλει', function(c){ var v=votes(c), q=c.cnt(30); return c.top(function(n){ return -v[n]*100-q[n]; }); });
+add('Ψηφοφορία','🤷 Μέτρια ψηφισμένα (1–2 σήματα)', function(c){ var v=votes(c), q=c.cnt(30); return c.top(function(n){ return (v[n]===1||v[n]===2?100:0)+q[n]; }); });
+// 13. Αποστάσεις από την τελευταία
+[2,5].forEach(function(d){ add('Αποστάσεις','↔️ Απόσταση ±'+d+' από την τελευταία', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return !c.last.has(n)&&(c.last.has(n-d)||c.last.has(n+d)); }); }); });
+add('Αποστάσεις','↗️ Διαγώνιοι γείτονες (±9) στο ταμπλό', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return !c.last.has(n)&&(c.last.has(n-9)||c.last.has(n+9)); }); });
+add('Αποστάσεις','↘️ Διαγώνιοι γείτονες (±11) στο ταμπλό', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return !c.last.has(n)&&(c.last.has(n-11)||c.last.has(n+11)); }); });
+// 14. Μοτίβα εμφάνισης
+add('Μοτίβο','2️⃣ Βγήκαν πριν 2 κληρώσεις, όχι στην τελευταία', function(c){ var p2=DR[c.i-2]?DR[c.i-2].set:new Set(), q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return p2.has(n)&&!c.last.has(n); }); });
+add('Μοτίβο','3️⃣ Βγήκαν πριν 3 κληρώσεις, όχι μετά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return c.gap[n]===2; }); });
+add('Μοτίβο','🔀 Εναλλάξ: ναι-όχι-ναι-όχι', function(c){ var q=c.cnt(30); return c.top(function(n){ var s=0; for(var k=0;k<4;k++){ var d=DR[c.i-k]; if(!d) break; if(d.set.has(n)===(k%2===1)) s++; } return s*100+q[n]; }); });
+add('Μοτίβο','🔥 Βγήκαν σε 3 από τις 4 τελευταίες', function(c){ var q=c.cnt(30), q4=cnt(c.i,0,4); return c.top(function(n){ return (q4[n]===3?100:0)+q[n]; }); });
+add('Μοτίβο','🏃 Το μεγαλύτερο τρέχον σερί εμφανίσεων', function(c){ var q=c.cnt(30); return c.top(function(n){ var s=0; while(DR[c.i-s]&&DR[c.i-s].set.has(n)) s++; return s*100+q[n]; }); });
+// 15. Κατάταξη
+add('Κατάταξη','🥈 Οι 7οι–12οι πιο συχνοί (50)', function(c){ var q=c.cnt(50), a=[]; for(var n=1;n<=80;n++) a.push(n); a.sort(function(x,y){ return q[y]-q[x] || x-y; }); return a.slice(6,12); });
+add('Κατάταξη','🥉 Οι 13οι–18οι πιο συχνοί (50)', function(c){ var q=c.cnt(50), a=[]; for(var n=1;n<=80;n++) a.push(n); a.sort(function(x,y){ return q[y]-q[x] || x-y; }); return a.slice(12,18); });
+add('Κατάταξη','📊 Οι πιο «μέτριοι» (στη μέση της κατάταξης)', function(c){ var q=c.cnt(50), a=[]; for(var n=1;n<=80;n++) a.push(n); a.sort(function(x,y){ return q[y]-q[x] || x-y; }); return a.slice(37,43); });
+// 16. Bonus / 2η ευκαιρία ανάποδα
+add('2η ευκαιρία','🟢 Συχνά στη 2η ευκαιρία, σπάνια στα 20', function(c){ var s=scF(c.i,200), q=c.cnt(200); return c.top(function(n){ return s[n]*20-q[n]; }); });
+add('Bonus','🔴 Δεν έχουν γίνει Bonus εδώ και καιρό · πιο συχνά', function(c){ var b=bonF(c.i,200), q=c.cnt(30); return c.top(function(n){ return -b[n]*100+q[n]; }); });
+// 17. Ψηφία και πράξεις
+add('Ψηφία','🔢 Λήγουν στο τελευταίο ψηφίο του Bonus', function(c){ var b=DR[c.i].b||0, q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return n%10===b%10; }); });
+add('Ψηφία','🔟 Ίδια δεκάδα με το Bonus', function(c){ var b=DR[c.i].b||1, q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return rowOf(n)===rowOf(b); }); });
+add('Ψηφία','➕ Αθροίσματα ζευγαριών της τελευταίας', function(c){ var a=DR[c.i].arr, o=new Array(81).fill(0); for(var x=0;x<a.length;x++) for(var y=x+1;y<a.length;y++){ var s=a[x]+a[y]; if(s<=80) o[s]++; } return c.top(function(n){ return o[n]; }); });
+add('Ψηφία','➖ Διαφορές ζευγαριών της τελευταίας', function(c){ var a=DR[c.i].arr, o=new Array(81).fill(0); for(var x=0;x<a.length;x++) for(var y=x+1;y<a.length;y++){ var d=Math.abs(a[x]-a[y]); if(d>=1) o[d]++; } return c.top(function(n){ return o[n]; }); });
+var NRND=0;
 
 /* ---------- προσομοίωση ημέρας ---------- */
 var LB=null, EVS=[], VI=null, PICKS=null, ALLRND=(function(){ try{ return localStorage.getItem('lab_allrnd')==='1'; }catch(e){ return false; } })();
-function isR(k){ return ALLRND || S[k].fam==='Τυχαία'; } $('nRnd').textContent=NRND+' «🎲 Τυχαία»';
+function isR(k){ return ALLRND || S[k].fam==='Τυχαία'; }
 function run(){
-  prep(); var L=DR.length-1, n=S.length;
+  MEMO={}; prep(); var L=DR.length-1, n=S.length;
   var st=S.map(function(){ return {prev:null,lastWin:false}; }), sc=S.map(function(){ return {pl:0,h:0,w:0,won:0,best:0}; });
   var log=[], kp={pl:0,st:0,won:0,w:0}, lastEval=null; EVS=[];
   if(I0>=DR.length){ $('foot').textContent='Δεν έχουν γίνει ακόμα κληρώσεις σήμερα.'; }
@@ -152,7 +211,7 @@ function render(picks, ev, log, kp){
   if(ev){ var Hp=ctx(DR.indexOf(ev.d)-1,0).heat(), dist=[0,0,0,0,0,0,0], tot=0, rh=0, rn=0; var wsum=0, wins=0; ev.res.forEach(function(r){ dist[r.h]++; tot+=r.h; wsum+=r.w; if(r.w>0) wins++; if(isR(r.k)){ rh+=r.h; rn++; } });
     var ago=EVS.length-1-EVS.indexOf(ev); $('evTtl').textContent=ago>0?'Κλήρωση':'Η τελευταία κλήρωση'; $('evLbl').textContent='· '+fmtD.format(new Date(ev.d.t)).split('-').reverse().join('/')+' '+hm(ev.d.t)+' (#'+ev.d.id+')'+(ago>0?' · πριν '+ago+' '+(ago===1?'κλήρωση':'κληρώσεις'):'');
     Array.prototype.forEach.call($('evNav').children, function(b){ var v=b.dataset.v, idx=EVS.indexOf(ev); b.classList.toggle('on', v==='live' && ago===0); if(v==='live'){ b.textContent = ago===0 ? '🟢' : hm(ev.d.t); b.title = ago===0 ? 'Τελευταία κλήρωση' : 'Βλέπεις την κλήρωση των '+hm(ev.d.t)+' · πάτα για την τελευταία'; } b.disabled = v!=='live' && ((+v<0 && idx+ +v<0 && idx===0) || (+v>0 && ago===0)); });
-    $('evDist').innerHTML='<div class="dist">'+dist.map(function(v,h){ return '<div>'+h+'/6<br><b>'+v+'</b></div>'; }).join('')+(ALLRND ? '<div>Μ.ό. 100 τυχαίων<br><b>'+pc(tot/Math.max(1,ev.res.length))+'</b></div>' : '<div>Μ.ό. στρατηγικών<br><b>'+pc((tot-rh)/Math.max(1,ev.res.length-rn))+'</b></div><div>Μ.ό. 🎲 τυχαίων<br><b>'+pc(rh/Math.max(1,rn))+'</b></div>')+'<div>Θεωρία<br><b>1,5</b></div></div><div class="dist"><div>Όλες μαζί πόνταραν<br><b>'+eur(ev.res.length*COST())+'</b></div><div>Κέρδισαν<br><b>'+eur(wsum)+'</b></div><div>Κερδισμένες στήλες<br><b>'+wins+'</b></div><div>Καθαρά<br><b class="'+(wsum-ev.res.length*COST()>=0?'pos':'neg')+'">'+eur(wsum-ev.res.length*COST())+'</b></div></div>'+(ev.d.b||(ev.d.sc&&ev.d.sc.length)?'<div class="muted" style="font-size:12px;margin-bottom:6px">'+(ev.d.b?'🔴 Bonus: <b>'+ev.d.b+'</b>':'')+(ev.d.sc&&ev.d.sc.length?' · 🟢 2η ευκαιρία: <b>'+ev.d.sc.join(' ')+'</b>':'')+'</div>':'');
+    $('evDist').innerHTML='<div class="dist">'+dist.map(function(v,h){ return '<div>'+h+'/6<br><b>'+v+'</b></div>'; }).join('')+(ALLRND || !rn ? '<div>Μ.ό. '+(ALLRND?'100 τυχαίων':'100 στρατηγικών')+'<br><b>'+pc(tot/Math.max(1,ev.res.length))+'</b></div>' : '<div>Μ.ό. στρατηγικών<br><b>'+pc((tot-rh)/Math.max(1,ev.res.length-rn))+'</b></div><div>Μ.ό. 🎲 τυχαίων<br><b>'+pc(rh/Math.max(1,rn))+'</b></div>')+'<div>Θεωρία<br><b>1,5</b></div></div><div class="dist"><div>Όλες μαζί πόνταραν<br><b>'+eur(ev.res.length*COST())+'</b></div><div>Κέρδισαν<br><b>'+eur(wsum)+'</b></div><div>Κερδισμένες στήλες<br><b>'+wins+'</b></div><div>Καθαρά<br><b class="'+(wsum-ev.res.length*COST()>=0?'pos':'neg')+'">'+eur(wsum-ev.res.length*COST())+'</b></div></div>'+(ev.d.b||(ev.d.sc&&ev.d.sc.length)?'<div class="muted" style="font-size:12px;margin-bottom:6px">'+(ev.d.b?'🔴 Bonus: <b>'+ev.d.b+'</b>':'')+(ev.d.sc&&ev.d.sc.length?' · 🟢 2η ευκαιρία: <b>'+ev.d.sc.join(' ')+'</b>':'')+'</div>':'');
     var rs=ev.res.slice().sort(function(a,b){ return b.h-a.h || a.k-b.k; });
     $('ev').innerHTML='<tr><th>Στρατηγική</th><th>Εξάδα <span class="muted" style="font-weight:400">(χρώματα πριν την κλήρωση)</span></th><th>Έπιασε</th></tr>'+rs.map(function(r){ return '<tr'+(isR(r.k)?' class="rnd"':'')+'><td>'+nm(r.k)+'</td><td>'+chips(r.p,Hp,ev.d.set)+'</td><td><b>'+r.h+(MODE==='sc'&&r.s?'<span style="color:#4ade80">+'+r.s+'</span>':'')+'/6</b>'+(MODE==='kb'&&r.bh?' 🔴':'')+'<br>'+(r.w?'<b class="pos">'+eur(r.w)+'</b>':'<span class="neg">−'+eur(COST())+'</span>')+'</td></tr>'; }).join(''); }
   else { $('ev').innerHTML=''; $('evDist').innerHTML='<span class="muted">Περιμένουμε την πρώτη κλήρωση της ημέρας.</span>'; }
