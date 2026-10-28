@@ -23,6 +23,7 @@ details>summary{cursor:pointer;color:var(--gold);font-weight:700;margin:4px 0}
 .tabs{display:flex;gap:6px;margin:6px 0}.tabs button{background:#1e293b;color:var(--text);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer}#evNav{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;margin:0;gap:6px;background:rgba(15,23,42,.94);border:1px solid #334155;border-radius:999px;padding:6px 8px;box-shadow:0 8px 24px rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap}#evNav button{font-size:16px;font-weight:800;padding:9px 13px;min-width:46px}#evNav button[data-v="-1"],#evNav button[data-v="1"]{font-size:24px;line-height:1;padding:6px 18px;min-width:60px}.wrap{padding-bottom:96px!important}
 .tkAdd{background:#14532d;color:#fff;border:1px solid #166534;border-radius:8px;padding:4px 8px;font-size:15px;cursor:pointer}.tkAdd:disabled{opacity:.7}
 .card>h2{cursor:pointer;user-select:none;-webkit-user-select:none}.card>h2::before{content:'▾ ';color:var(--muted);font-size:13px}.card.collapsed>h2::before{content:'▸ '}.card.collapsed>h2{margin-bottom:0}.card.collapsed>:not(h2){display:none!important}
+.pinL{display:inline-block;margin-right:6px;vertical-align:middle}.pinL input{width:18px;height:18px;accent-color:#facc15;cursor:pointer}tr:has(.pin:checked){background:rgba(250,204,21,.08)}
 .tabs button:disabled{opacity:.35;cursor:default}.tabs button.on{background:#a16207;border-color:#facc15}
 </style></head><body><div class="wrap">
 <h1>🧪 Εργαστήριο στρατηγικών · 100 στήλες</h1>
@@ -217,18 +218,22 @@ function run(){
   $('foot').textContent='Σημερινές κληρώσεις: '+Math.max(0,DR.length-I0)+' · τελευταία '+hm(DR[L].t)+' (#'+DR[L].id+') · ανανέωση κάθε 30″';
 }
 function chips(p, H, hitSet){ return '<div class="nums">'+p.slice().sort(function(a,b){return a-b;}).map(function(x){ return '<span class="'+(H?H[x]:'')+(hitSet&&hitSet.has(x)?' on':'')+'">'+x+'</span>'; }).join('')+'</div>'; }
-function nm(k){ return ALLRND ? '🎲 Τυχαία '+(k+1)+'<span class="fam">Τυχαία</span>' : S[k].name+'<span class="fam">'+S[k].fam+'</span>'; }
+var PIN=(function(){ try{ return new Set(JSON.parse(localStorage.getItem('lab_pin')||'[]')); }catch(e){ return new Set(); } })();
+function pkey(k){ return ALLRND ? 'R'+k : S[k].name; }
+function pinned(k){ return PIN.has(pkey(k)); }
+function nm(k){ return '<label class="pinL" title="Να εμφανίζεται πρώτη"><input type="checkbox" class="pin" data-k="'+k+'"'+(pinned(k)?' checked':'')+'></label>'+nm0(k); }
+function nm0(k){ return ALLRND ? '🎲 Τυχαία '+(k+1)+'<span class="fam">Τυχαία</span>' : S[k].name+'<span class="fam">'+S[k].fam+'</span>'; }
 function render(picks, ev, log, kp){
   var L=DR.length-1, Hn=ctx(L,0).heat();
   if(ev){ var Hp=ctx(DR.indexOf(ev.d)-1,0).heat(), dist=new Array(K+1).fill(0), tot=0, rh=0, rn=0; var wsum=0, wins=0; ev.res.forEach(function(r){ dist[r.h]++; tot+=r.h; wsum+=r.w; if(r.w>0) wins++; if(isR(r.k)){ rh+=r.h; rn++; } });
     CUREV=ev; var ago=EVS.length-1-EVS.indexOf(ev); if($('tkFrom')) $('tkFrom').textContent=hm(ev.d.t+300000)+' (#'+(ev.d.id+1)+')'; $('evTtl').textContent=ago>0?'Κλήρωση':'Η τελευταία κλήρωση'; $('evLbl').textContent='· '+fmtD.format(new Date(ev.d.t)).split('-').reverse().join('/')+' '+hm(ev.d.t)+' (#'+ev.d.id+')'+(ago>0?' · πριν '+ago+' '+(ago===1?'κλήρωση':'κληρώσεις'):'');
     Array.prototype.forEach.call($('evNav').children, function(b){ var v=b.dataset.v, idx=EVS.indexOf(ev); b.classList.toggle('on', v==='live' && ago===0); if(v==='live'){ b.textContent = ago===0 ? '🟢' : hm(ev.d.t); b.title = ago===0 ? 'Τελευταία κλήρωση' : 'Βλέπεις την κλήρωση των '+hm(ev.d.t)+' · πάτα για την τελευταία'; } b.disabled = v!=='live' && ((+v<0 && idx+ +v<0 && idx===0) || (+v>0 && ago===0)); });
     $('evDist').innerHTML='<div class="dist">'+dist.map(function(v,h){ return '<div>'+h+'/'+K+'<br><b>'+v+'</b></div>'; }).join('')+(ALLRND || !rn ? '<div>Μ.ό. '+(ALLRND?'100 τυχαίων':'100 στρατηγικών')+'<br><b>'+pc(tot/Math.max(1,ev.res.length))+'</b></div>' : '<div>Μ.ό. στρατηγικών<br><b>'+pc((tot-rh)/Math.max(1,ev.res.length-rn))+'</b></div><div>Μ.ό. 🎲 τυχαίων<br><b>'+pc(rh/Math.max(1,rn))+'</b></div>')+'<div>Θεωρία<br><b>'+pc(K/4)+'</b></div></div><div class="dist"><div>Όλες μαζί πόνταραν<br><b>'+eur(ev.res.length*COST())+'</b></div><div>Κέρδισαν<br><b>'+eur(wsum)+'</b></div><div>Κερδισμένες στήλες<br><b>'+wins+'</b></div><div>Καθαρά<br><b class="'+(wsum-ev.res.length*COST()>=0?'pos':'neg')+'">'+eur(wsum-ev.res.length*COST())+'</b></div></div>'+(ev.d.b||(ev.d.sc&&ev.d.sc.length)?'<div class="muted" style="font-size:12px;margin-bottom:6px">'+(ev.d.b?'🔴 Bonus: <b>'+ev.d.b+'</b>':'')+(ev.d.sc&&ev.d.sc.length?' · 🟢 2η ευκαιρία: <b>'+ev.d.sc.join(' ')+'</b>':'')+'</div>':'');
-    var rs=ev.res.slice().sort(function(a,b){ return b.h-a.h || a.k-b.k; });
+    var rs=ev.res.slice().sort(function(a,b){ return (pinned(b.k)-pinned(a.k)) || b.h-a.h || a.k-b.k; });
     $('ev').innerHTML='<tr><th>Στρατηγική</th><th>Στήλη <span class="muted" style="font-weight:400">(χρώματα πριν την κλήρωση)</span></th><th>Έπιασε</th></tr>'+rs.map(function(r){ return '<tr'+(isR(r.k)?' class="rnd"':'')+'><td>'+nm(r.k)+'</td><td>'+chips(r.p,Hp,ev.d.set)+'</td><td><b>'+r.h+(MODE==='sc'&&r.s?'<span style="color:#4ade80">+'+r.s+'</span>':'')+'/'+K+'</b>'+(MODE==='kb'&&r.bh?' 🔴':'')+'<br>'+(r.w?'<b class="pos">'+eur(r.w)+'</b>':'<span class="neg">−'+eur(COST())+'</span>')+'<br><button class="tkAdd" style="margin-top:4px" data-k="'+r.k+'" data-n="'+r.p.join('-')+'" title="Αυτή η στήλη στα δελτία μου">➕</button></td></tr>'; }).join(''); }
   else { $('ev').innerHTML=''; $('evDist').innerHTML='<span class="muted">Περιμένουμε την πρώτη κλήρωση της ημέρας.</span>'; }
   $('nxLbl').textContent='· '+hm(DR[L].t+300000)+' (#'+(DR[L].id+1)+')';
-  if(picks){ var order=S.map(function(_,k){ return k; });
+  if(picks){ var order=S.map(function(_,k){ return k; }).sort(function(a,b){ return (pinned(b)-pinned(a)) || a-b; });
     $('nx').innerHTML='<tr><th>#</th><th>Στρατηγική</th><th>Στήλη</th></tr>'+order.map(function(k,j){ return '<tr'+(isR(k)&&!ALLRND?' class="rnd"':'')+'><td>'+(j+1)+'</td><td>'+nm(k)+'</td><td><div style="display:flex;gap:6px;align-items:center">'+chips(picks[k],Hn)+'<button class="tkAdd" data-k="'+k+'" title="Στα δελτία μου">➕</button></div></td></tr>'; }).join(''); }
 }
 
@@ -265,6 +270,7 @@ $('ev').addEventListener('click', function(e){ var b=e.target.closest('.tkAdd');
 ['tkN','tkN2'].forEach(function(id){ $(id).addEventListener('change', function(){ $('tkN').value=this.value; $('tkN2').value=this.value; }); });
 $('tkList').addEventListener('click', function(e){ var b=e.target.closest('.tkDel'); if(!b) return; var T=tkLoad(); T.splice(+b.dataset.i,1); tkSave(T); tkRender(); });
 (function(){ var DEF={cNx:1}; Array.prototype.forEach.call(document.querySelectorAll('.card[id]'), function(c){ var k='lab_col_'+c.id, v=null; try{ v=localStorage.getItem(k); }catch(e){} if(v===null ? DEF[c.id] : v==='1') c.classList.add('collapsed'); var h=c.querySelector(':scope>h2'); if(h) h.addEventListener('click', function(){ var on=c.classList.toggle('collapsed'); try{ localStorage.setItem(k, on?'1':'0'); }catch(e){} }); }); })();
+document.addEventListener('change', function(e){ var c=e.target; if(!c.classList||!c.classList.contains('pin')) return; var key=pkey(+c.dataset.k); if(c.checked) PIN.add(key); else PIN.delete(key); try{ localStorage.setItem('lab_pin', JSON.stringify(Array.from(PIN))); }catch(_){} if(CUREV||PICKS) render(PICKS, CUREV, null, null); });
 async function fetchDay(ds){ var out=[]; for(var p=0;p<40;p++){ var j=await (await fetch(API+'/draw-date/'+ds+'/'+ds+'?page='+p+'&size=10&_='+Date.now(),{cache:'no-store'})).json(), c=j.content||[];
   c.forEach(function(x){ var W=x.winningNumbers||{}, w=W.list||[]; if(w.length) out.push({id:x.drawId,t:x.drawTime,arr:w.slice(),set:new Set(w),sc:(W.secondChance||[]).slice(),b:(W.bonus||[])[0]}); }); if(!c.length||j.last) break; } return out; }
 async function load(){
