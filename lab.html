@@ -23,26 +23,33 @@ details>summary{cursor:pointer;color:var(--gold);font-weight:700;margin:4px 0}
 .tabs{display:flex;gap:6px;margin:6px 0}.tabs button{background:#1e293b;color:var(--text);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer}#evNav{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;margin:0;gap:6px;background:rgba(15,23,42,.94);border:1px solid #334155;border-radius:999px;padding:6px 8px;box-shadow:0 8px 24px rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap}#evNav button{font-size:16px;font-weight:800;padding:9px 13px;min-width:46px}#evNav button[data-v="-1"],#evNav button[data-v="1"]{font-size:24px;line-height:1;padding:6px 18px;min-width:60px}.wrap{padding-bottom:96px!important}
 .tabs button:disabled{opacity:.35;cursor:default}.tabs button.on{background:#a16207;border-color:#facc15}
 </style></head><body><div class="wrap">
-<h1>🧪 Εργαστήριο στρατηγικών · 100 εξάδες</h1>
-<div class="muted">Δοκιμαστική σελίδα · <b>ψεύτικα χρήματα</b> · κάθε εξάδα παίζει σε κάθε κλήρωση</div>
-<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><div class="tabs" id="modeTabs" style="margin-top:8px"><button data-m="">Απλή στήλη 0,50€</button><button data-m="sc">🟢 2η ευκαιρία 1€</button><button data-m="kb">🔴 ΚΙΝΟ Bonus 1€</button></div><div class="tabs" style="margin-top:8px"><button id="allRnd" title="Όλες οι 100 εξάδες εντελώς τυχαίες — χωρίς καμία στρατηγική">🎲 Όλα τυχαία</button></div></div>
-<div class="card warn">Σε κάθε κλήρωση βγαίνουν <b>100 εξάδες, η καθεμία με διαφορετική στρατηγική</b> (εκθετική φόρμα, ορμή, «παρέες» αριθμών, Bonus και 2η ευκαιρία, σειρά εξαγωγής, μεταβάσεις, ρυθμός εμφάνισης, γεωμετρία ταμπλό, πρώτοι αριθμοί, ψηφοφορία σημάτων…) και <b>αξιολογούνται στην επόμενη κλήρωση</b>. Για σύγκριση με την καθαρή τύχη πάτα <b>🎲 Όλα τυχαία</b>: μια στρατηγική αξίζει μόνο αν ξεπερνάει σταθερά τις τυχαίες. Μια εξάδα πιάνει κατά μέσο όρο <b>1,5</b> νούμερα· κερδίζει κάτι (3/6+) <b>1 στις 7,3</b> κληρώσεις. Από πάνω διαλέγεις αν παίζουν <b>απλές στήλες 0,50€</b>, με <b>🟢 2η ευκαιρία</b> ή με <b>🔴 ΚΙΝΟ Bonus</b> (1€ η στήλη).</div>
+<h1>🧪 Εργαστήριο στρατηγικών · 100 στήλες</h1>
+<div class="muted">Δοκιμαστική σελίδα · <b>ψεύτικα χρήματα</b> · κάθε στήλη παίζει σε κάθε κλήρωση</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><div class="tabs" id="modeTabs" style="margin-top:8px"><button data-m="">Απλή στήλη 0,50€</button><button data-m="sc">🟢 2η ευκαιρία 1€</button><button data-m="kb">🔴 ΚΙΝΟ Bonus 1€</button></div><div class="tabs" style="margin-top:8px;align-items:center"><span class="muted" style="font-size:13px">Αριθμοί:</span><select id="kSel" style="background:#1e293b;color:#e5e7eb;border:1px solid #24324d;border-radius:999px;padding:4px 8px;font-size:14px;font-weight:700"></select></div><div class="tabs" style="margin-top:8px"><button id="allRnd" title="Όλες οι 100 εξάδες εντελώς τυχαίες — χωρίς καμία στρατηγική">🎲 Όλα τυχαία</button></div></div>
+<div class="card warn">Σε κάθε κλήρωση βγαίνουν <b>100 στήλες, η καθεμία με διαφορετική στρατηγική</b> (εκθετική φόρμα, ορμή, «παρέες» αριθμών, Bonus και 2η ευκαιρία, σειρά εξαγωγής, μεταβάσεις, ρυθμός εμφάνισης, γεωμετρία ταμπλό, πρώτοι αριθμοί, ψηφοφορία σημάτων…) και <b>αξιολογούνται στην επόμενη κλήρωση</b>. Για σύγκριση με την καθαρή τύχη πάτα <b>🎲 Όλα τυχαία</b>: μια στρατηγική αξίζει μόνο αν ξεπερνάει σταθερά τις τυχαίες. <span id="kInfo"></span> Από πάνω διαλέγεις αν παίζουν <b>απλές στήλες 0,50€</b>, με <b>🟢 2η ευκαιρία</b> ή με <b>🔴 ΚΙΝΟ Bonus</b> (1€ η στήλη).</div>
 
 <div class="card"><h2>🔍 <span id="evTtl">Η τελευταία κλήρωση</span> <span id="evLbl" class="muted"></span></h2><div class="tabs" id="evNav"><button data-v="-10">⏪ 10</button><button data-v="-1" title="Προηγούμενη κλήρωση">◀</button><button data-v="live" class="on" title="Τελευταία κλήρωση">🟢</button><button data-v="1" title="Επόμενη κλήρωση">▶</button><button data-v="10">10 ⏩</button></div><div id="evDist"></div><div class="scroll" style="max-height:420px"><table id="ev"></table></div></div>
 
 
 
-<div class="card"><h2>🎯 Οι 100 εξάδες για την επόμενη κλήρωση <span id="nxLbl" class="muted"></span></h2><details id="nxDet"><summary>Άνοιγμα λίστας</summary><div class="scroll"><table id="nx"></table></div></details></div>
+<div class="card"><h2>🎯 Οι 100 στήλες για την επόμενη κλήρωση <span id="nxLbl" class="muted"></span></h2><details id="nxDet"><summary>Άνοιγμα λίστας</summary><div class="scroll"><table id="nx"></table></div></details></div>
 <div class="muted" style="font-size:12px;margin-top:12px" id="foot">⏳ Φόρτωση κληρώσεων…</div>
 </div>
 <script>
-var API='https://api.opap.gr/draws/v3.0/1100', K=6, PAY={3:0.5,4:3.5,5:25,6:800};
+var API='https://api.opap.gr/draws/v3.0/1100';
+var K=(function(){ try{ var v=+localStorage.getItem('lab_k'); return v>=1&&v<=12?v:6; }catch(e){ return 6; } })();
+var PAYS={1:{1:1.25},2:{1:0.5,2:2.5},3:{2:1.25,3:12.5},4:{2:0.5,3:2,4:50},5:{3:1,4:10,5:225},6:{3:0.5,4:3.5,5:25,6:800},7:{3:0.5,4:1.5,5:10,6:50,7:2500},
+ 8:{4:1,5:5,6:25,7:500,8:7500},9:{4:0.5,5:2.5,6:12.5,7:100,8:2000,9:20000},10:{0:1,5:1,6:10,7:40,8:250,9:5000,10:50000},
+ 11:{0:1,5:0.5,6:5,7:25,8:125,9:750,10:7500,11:250000},12:{0:2,6:2.5,7:12.5,8:75,9:500,10:1250,11:12500,12:500000}};
+var SCPAYS={12:{12:500000,11:6250,10:625,9:250,8:37.5,7:8,6:3},11:{11:250000,10:3750,9:375,8:62.5,7:12.5,6:5,5:1},10:{10:50000,9:2500,8:125,7:25,6:8,5:1.5},9:{9:20000,8:1000,7:50,6:7.5,5:2,4:1},8:{8:7500,7:250,6:17.5,5:4,4:1.5},7:{7:2500,6:40,5:8,4:1.5,3:1},6:{6:800,5:20,4:3.5,3:1},5:{5:225,4:12.5,3:1.5},4:{4:62.5,3:4,2:1.75},3:{3:25,2:3.75},2:{2:8,1:3.5},1:{1:8.5}};
+var KBPAYS={1:{1:52.5},2:{2:70,1:16},3:{3:175,2:18,1:8},4:{4:600,3:24,2:8,1:5},5:{5:1350,4:90,3:17,2:5,1:3},6:{6:4100,5:300,4:27,3:9,2:3,1:2},7:{7:15000,6:400,5:80,4:13,3:8,2:3,1:2},8:{8:40000,7:3000,6:200,5:30,4:7,3:4,2:3,1:2},9:{9:100000,8:10000,7:500,6:70,5:15,4:6,3:4,2:3,1:2},10:{10:250000,9:25000,8:1500,7:180,6:60,5:7,4:4,3:3,2:2.5,1:2},11:{11:1200000,10:31000,9:3500,8:550,7:105,6:25,5:6,4:4,3:3,2:2.5,1:2},12:{12:2000000,11:75000,10:5500,9:2200,8:350,7:50,6:10,5:4,4:3.5,3:3,2:2.5,1:2}};
+var PAY=PAYS[K];
 /* ίδιοι κανόνες με την εφαρμογή «Τράβα ρε»: 2η ευκαιρία και ΚΙΝΟ Bonus κοστίζουν 1€ τη στήλη */
-var SCPAY={6:800,5:20,4:3.5,3:1}, KBPAY={6:4100,5:300,4:27,3:9,2:3,1:2};
+
 var MODE=(function(){ try{ return localStorage.getItem('lab_mode')||''; }catch(e){ return ''; } })();
 function COST(){ return MODE ? 1 : 0.5; }
 function winOf(p, d){ var a=0, b=0, bh=false; p.forEach(function(x){ if(d.set.has(x)){ a++; if(x===d.b) bh=true; } else if(d.sc && d.sc.indexOf(x)>=0) b++; });
-  var base=PAY[a]||0; if(MODE==='sc' && b>0) return {h:a, s:b, w:Math.max(base, SCPAY[a+b]||0)}; if(MODE==='kb' && bh) return {h:a, bh:true, w:Math.max(base, (KBPAY[a]||0)/2)}; return {h:a, s:b, bh:bh, w:base}; }
+  var base=PAYS[K][a]||0; if(MODE==='sc' && b>0) return {h:a, s:b, w:Math.max(base, SCPAYS[K][a+b]||0)}; if(MODE==='kb' && bh) return {h:a, bh:true, w:Math.max(base, (KBPAYS[K][a]||0)/2)}; return {h:a, s:b, bh:bh, w:base}; }
 function $(i){ return document.getElementById(i); }
 var fmt=new Intl.DateTimeFormat('el-GR',{timeZone:'Europe/Athens',hour:'2-digit',minute:'2-digit',hour12:false});
 var fmtD=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Athens',year:'numeric',month:'2-digit',day:'2-digit'});
@@ -67,6 +74,7 @@ function ctx(i, sid){ var R=rng(DR[i].id*977+sid*7919);
       if(o.length<(k||K)) for(var j2=0;j2<a.length&&o.length<(k||K);j2++) if(o.indexOf(a[j2])<0) o.push(a[j2]);
       if(o.length<(k||K)){ var b=[]; for(var m=1;m<=80;m++) if(o.indexOf(m)<0) b.push(m); b.sort(function(x,y){ return tie[x]-tie[y]; }); o=o.concat(b.slice(0,(k||K)-o.length)); } return o; } };
   return c; }
+function fit(p, c){ var o=[]; (p||[]).forEach(function(x){ if(x>=1&&x<=80&&o.indexOf(x)<0&&o.length<K) o.push(x); }); if(o.length<K){ var q=c.cnt(30); o=o.concat(c.top(function(n){ return q[n]; }, function(n){ return o.indexOf(n)<0; }, K-o.length)); } return o.slice(0,K); }
 function inS(s){ return function(n){ return s.has(n); }; }
 /* ---------- οι 100 στρατηγικές ---------- */
 var S=[];
@@ -99,15 +107,15 @@ var FIBSQ=new Set([1,2,3,4,5,8,9,13,16,21,25,34,36,49,55,64]);
   add('Ορμή','🪂 Πέφτουν (τελ. '+w+' vs προηγ. '+w+')', function(c){ var a=cnt(c.i,0,w), b=cnt(c.i,w,2*w); return c.top(function(n){ return b[n]-a[n]; }); }); });
 // 3. Παρέες: όσα βγαίνουν μαζί
 [50,150,600].forEach(function(W){ add('Παρέες','🤝 Παρέες της τελευταίας κλήρωσης ('+W+')', function(c){ var o=co(c.i,c.last,W,'L'); return c.top(function(n){ return o[n]; }, function(n){ return !c.last.has(n); }); });
-  add('Παρέες','🤝 Παρέες του πιο συχνού της ημέρας ('+W+')', function(c){ var d=c.day(), h=1; for(var n=2;n<=80;n++) if(d[n]>d[h]) h=n; var o=co(c.i,new Set([h]),W,'H'+h); return [h].concat(c.top(function(n){ return o[n]; }, function(n){ return n!==h; }, 5)); });
-  add('Παρέες','🤝 Παρέες του τελευταίου Bonus ('+W+')', function(c){ var b=DR[c.i].b||1, o=co(c.i,new Set([b]),W,'B'+b); return [b].concat(c.top(function(n){ return o[n]; }, function(n){ return n!==b; }, 5)); }); });
+  add('Παρέες','🤝 Παρέες του πιο συχνού της ημέρας ('+W+')', function(c){ var d=c.day(), h=1; for(var n=2;n<=80;n++) if(d[n]>d[h]) h=n; var o=co(c.i,new Set([h]),W,'H'+h); return [h].concat(c.top(function(n){ return o[n]; }, function(n){ return n!==h; }, Math.max(0,K-1))); });
+  add('Παρέες','🤝 Παρέες του τελευταίου Bonus ('+W+')', function(c){ var b=DR[c.i].b||1, o=co(c.i,new Set([b]),W,'B'+b); return [b].concat(c.top(function(n){ return o[n]; }, function(n){ return n!==b; }, Math.max(0,K-1))); }); });
 // 4. Bonus και 2η ευκαιρία
 [20,100,600].forEach(function(W){ add('Bonus','🔴 Πιο συχνά Bonus ('+W+' κληρώσεις)', function(c){ var o=bonF(c.i,W), q=c.cnt(30); return c.top(function(n){ return o[n]*100+q[n]; }); });
   add('2η ευκαιρία','🟢 Πιο συχνά στη 2η ευκαιρία ('+W+')', function(c){ var o=scF(c.i,W), q=c.cnt(30); return c.top(function(n){ return o[n]*100+q[n]; }); }); });
-add('Bonus','🔴 Τα 3 τελευταία Bonus + η 2η ευκαιρία', function(c){ var s=[]; for(var k=0;k<6&&s.length<3;k++){ var b=DR[c.i-k]&&DR[c.i-k].b; if(b&&s.indexOf(b)<0) s.push(b); } (DR[c.i].sc||[]).forEach(function(x){ if(s.indexOf(x)<0) s.push(x); }); var q=c.cnt(30); return s.slice(0,6).concat(c.top(function(n){ return q[n]; }, function(n){ return s.indexOf(n)<0; }, Math.max(0,6-s.length))).slice(0,6); });
+add('Bonus','🔴 Τα 3 τελευταία Bonus + η 2η ευκαιρία', function(c){ var s=[]; for(var k=0;k<8&&s.length<3;k++){ var b=DR[c.i-k]&&DR[c.i-k].b; if(b&&s.indexOf(b)<0) s.push(b); } (DR[c.i].sc||[]).forEach(function(x){ if(s.indexOf(x)<0) s.push(x); }); var q=c.cnt(30); return s.slice(0,K).concat(c.top(function(n){ return q[n]; }, function(n){ return s.indexOf(n)<0; }, Math.max(0,K-s.length))).slice(0,K); });
 // 5. Σειρά εξαγωγής
-add('Σειρά','1️⃣ Οι 6 πρώτες μπίλιες της τελευταίας', function(c){ return DR[c.i].arr.slice(0,6); });
-add('Σειρά','🔚 Οι 6 τελευταίες μπίλιες της τελευταίας', function(c){ return DR[c.i].arr.slice(-6); });
+add('Σειρά','1️⃣ Οι πρώτες μπίλιες της τελευταίας', function(c){ return DR[c.i].arr.slice(0,K); });
+add('Σειρά','🔚 Οι τελευταίες μπίλιες της τελευταίας', function(c){ return DR[c.i].arr.slice(-K); });
 [20,100].forEach(function(W){ add('Σειρά','🥇 Βγαίνουν συχνά πρώτα (5 πρώτες μπίλιες, '+W+')', function(c){ var o=posF(c.i,W,true,5); return c.top(function(n){ return o[n]; }); });
   add('Σειρά','🐢 Βγαίνουν συχνά τελευταία (5 τελευταίες, '+W+')', function(c){ var o=posF(c.i,W,false,5); return c.top(function(n){ return o[n]; }); }); });
 // 6. Μεταβάσεις
@@ -127,13 +135,13 @@ function block(c, hot){ var q=c.cnt(20), best=null, bv=hot?-1:1e9; for(var r=0;r
 add('Ταμπλό','🟥 Το πιο ζεστό τετράγωνο 2×3', function(c){ return block(c,true); });
 add('Ταμπλό','🟦 Το πιο κρύο τετράγωνο 2×3', function(c){ return block(c,false); });
 add('Ταμπλό','↘️ Διαγώνιος με τη μεγαλύτερη φόρμα', function(c){ var q=c.cnt(20), best=[], bv=-1; for(var s0=1;s0<=80;s0++){ var cells=[], v=0, n=s0; while(n<=80 && cells.length<6){ cells.push(n); v+=q[n]; if(colOfN(n)===9) break; n+=11; } if(cells.length===6&&v>bv){ bv=v; best=cells; } } return best.length?best:c.top(function(n){ return q[n]; }); });
-add('Ταμπλό','➕ Σταυρός γύρω από το πιο συχνό της ημέρας', function(c){ var d=c.day(), h=1; for(var n=2;n<=80;n++) if(d[n]>d[h]) h=n; var s=[h,h-10,h+10]; if(colOfN(h)>0) s.push(h-1); if(colOfN(h)<9) s.push(h+1); s=s.filter(function(n){ return n>=1&&n<=80; }); var q=c.cnt(30); return s.concat(c.top(function(n){ return q[n]; }, function(n){ return s.indexOf(n)<0; }, 6-s.length)).slice(0,6); });
+add('Ταμπλό','➕ Σταυρός γύρω από το πιο συχνό της ημέρας', function(c){ var d=c.day(), h=1; for(var n=2;n<=80;n++) if(d[n]>d[h]) h=n; var s=[h,h-10,h+10]; if(colOfN(h)>0) s.push(h-1); if(colOfN(h)<9) s.push(h+1); s=s.filter(function(n){ return n>=1&&n<=80; }); var q=c.cnt(30); return s.slice(0,K).concat(c.top(function(n){ return q[n]; }, function(n){ return s.indexOf(n)<0; }, Math.max(0,K-s.length))).slice(0,K); });
 add('Ταμπλό','📍 Γωνίες και κέντρο (1 10 35 46 71 80)', function(){ return [1,10,35,46,71,80]; });
 add('Ταμπλό','🔲 Περίμετρος ταμπλό · πιο συχνά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return rowOf(n)===0||rowOf(n)===7||colOfN(n)===0||colOfN(n)===9; }); });
 add('Ταμπλό','🔳 Εσωτερικό ταμπλό · πιο συχνά', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, function(n){ return !(rowOf(n)===0||rowOf(n)===7||colOfN(n)===0||colOfN(n)===9); }); });
-add('Ταμπλό','🧭 Ένα από καθεμιά από τις 6 πιο ζεστές γραμμές', function(c){ var q=c.cnt(20), s=[0,1,2,3,4,5,6,7].map(function(r){ var v=0; for(var k=1;k<=10;k++) v+=q[r*10+k]; return [r,v]; }).sort(function(a,b){ return b[1]-a[1]; }).slice(0,6); return s.map(function(x){ return c.top(function(n){ return q[n]; }, function(n){ return rowOf(n)===x[0]; }, 1)[0]; }); });
-add('Ταμπλό','🧊 Ένα από καθεμιά από τις 6 πιο κρύες γραμμές', function(c){ var q=c.cnt(20), s=[0,1,2,3,4,5,6,7].map(function(r){ var v=0; for(var k=1;k<=10;k++) v+=q[r*10+k]; return [r,v]; }).sort(function(a,b){ return a[1]-b[1]; }).slice(0,6); return s.map(function(x){ return c.top(function(n){ return -q[n]; }, function(n){ return rowOf(n)===x[0]; }, 1)[0]; }); });
-add('Ταμπλό','🎚️ Ένα από καθεμιά από τις 6 πιο ζεστές κάθετες', function(c){ var q=c.cnt(20), s=[0,1,2,3,4,5,6,7,8,9].map(function(k){ var v=0; for(var r=0;r<8;r++) v+=q[r*10+k+1]; return [k,v]; }).sort(function(a,b){ return b[1]-a[1]; }).slice(0,6); return s.map(function(x){ return c.top(function(n){ return q[n]; }, function(n){ return colOfN(n)===x[0]; }, 1)[0]; }); });
+add('Ταμπλό','🧭 Ένα από καθεμιά από τις πιο ζεστές γραμμές', function(c){ var q=c.cnt(20), s=[0,1,2,3,4,5,6,7].map(function(r){ var v=0; for(var k=1;k<=10;k++) v+=q[r*10+k]; return [r,v]; }).sort(function(a,b){ return b[1]-a[1]; }).slice(0,K); return s.map(function(x){ return c.top(function(n){ return q[n]; }, function(n){ return rowOf(n)===x[0]; }, 1)[0]; }); });
+add('Ταμπλό','🧊 Ένα από καθεμιά από τις πιο κρύες γραμμές', function(c){ var q=c.cnt(20), s=[0,1,2,3,4,5,6,7].map(function(r){ var v=0; for(var k=1;k<=10;k++) v+=q[r*10+k]; return [r,v]; }).sort(function(a,b){ return a[1]-b[1]; }).slice(0,K); return s.map(function(x){ return c.top(function(n){ return -q[n]; }, function(n){ return rowOf(n)===x[0]; }, 1)[0]; }); });
+add('Ταμπλό','🎚️ Ένα από καθεμιά από τις πιο ζεστές κάθετες', function(c){ var q=c.cnt(20), s=[0,1,2,3,4,5,6,7,8,9].map(function(k){ var v=0; for(var r=0;r<8;r++) v+=q[r*10+k+1]; return [k,v]; }).sort(function(a,b){ return b[1]-a[1]; }).slice(0,K); return s.map(function(x){ return c.top(function(n){ return q[n]; }, function(n){ return colOfN(n)===x[0]; }, 1)[0]; }); });
 // 9. Αριθμοθεωρία
 add('Αριθμοί','🔣 Πρώτοι αριθμοί · πιο συχνοί', function(c){ var q=c.cnt(30); return c.top(function(n){ return q[n]; }, isPrime); });
 add('Αριθμοί','🔣 Πρώτοι αριθμοί · πιο σπάνιοι', function(c){ var q=c.cnt(30); return c.top(function(n){ return -q[n]; }, isPrime); });
@@ -168,9 +176,9 @@ add('Μοτίβο','🔀 Εναλλάξ: ναι-όχι-ναι-όχι', function(
 add('Μοτίβο','🔥 Βγήκαν σε 3 από τις 4 τελευταίες', function(c){ var q=c.cnt(30), q4=cnt(c.i,0,4); return c.top(function(n){ return (q4[n]===3?100:0)+q[n]; }); });
 add('Μοτίβο','🏃 Το μεγαλύτερο τρέχον σερί εμφανίσεων', function(c){ var q=c.cnt(30); return c.top(function(n){ var s=0; while(DR[c.i-s]&&DR[c.i-s].set.has(n)) s++; return s*100+q[n]; }); });
 // 15. Κατάταξη
-add('Κατάταξη','🥈 Οι 7οι–12οι πιο συχνοί (50)', function(c){ var q=c.cnt(50), a=[]; for(var n=1;n<=80;n++) a.push(n); a.sort(function(x,y){ return q[y]-q[x] || x-y; }); return a.slice(6,12); });
-add('Κατάταξη','🥉 Οι 13οι–18οι πιο συχνοί (50)', function(c){ var q=c.cnt(50), a=[]; for(var n=1;n<=80;n++) a.push(n); a.sort(function(x,y){ return q[y]-q[x] || x-y; }); return a.slice(12,18); });
-add('Κατάταξη','📊 Οι πιο «μέτριοι» (στη μέση της κατάταξης)', function(c){ var q=c.cnt(50), a=[]; for(var n=1;n<=80;n++) a.push(n); a.sort(function(x,y){ return q[y]-q[x] || x-y; }); return a.slice(37,43); });
+add('Κατάταξη','🥈 Η 2η ομάδα των πιο συχνών (50)', function(c){ var q=c.cnt(50), a=[]; for(var n=1;n<=80;n++) a.push(n); a.sort(function(x,y){ return q[y]-q[x] || x-y; }); return a.slice(K,2*K); });
+add('Κατάταξη','🥉 Η 3η ομάδα των πιο συχνών (50)', function(c){ var q=c.cnt(50), a=[]; for(var n=1;n<=80;n++) a.push(n); a.sort(function(x,y){ return q[y]-q[x] || x-y; }); return a.slice(2*K,3*K); });
+add('Κατάταξη','📊 Οι πιο «μέτριοι» (στη μέση της κατάταξης)', function(c){ var q=c.cnt(50), a=[]; for(var n=1;n<=80;n++) a.push(n); a.sort(function(x,y){ return q[y]-q[x] || x-y; }); return a.slice(40-Math.ceil(K/2),40-Math.ceil(K/2)+K); });
 // 16. Bonus / 2η ευκαιρία ανάποδα
 add('2η ευκαιρία','🟢 Συχνά στη 2η ευκαιρία, σπάνια στα 20', function(c){ var s=scF(c.i,200), q=c.cnt(200); return c.top(function(n){ return s[n]*20-q[n]; }); });
 add('Bonus','🔴 Δεν έχουν γίνει Bonus εδώ και καιρό · πιο συχνά', function(c){ var b=bonF(c.i,200), q=c.cnt(30); return c.top(function(n){ return -b[n]*100+q[n]; }); });
@@ -192,7 +200,7 @@ function run(){
   // οι εξάδες για την κλήρωση j φτιάχνονται με δεδομένα μέχρι j-1
   var picks=null;
   for(var j=Math.max(I0,6); j<=L+1; j++){
-    var cur=S.map(function(s,k){ try{ var c=ctx(j-1,k), p=ALLRND ? c.top(function(){ return 0; }) : s.f(c, st[k]); return p.slice(0,K); }catch(e){ return [1,2,3,4,5,6]; } });
+    var cur=S.map(function(s,k){ try{ var c=ctx(j-1,k), p=ALLRND ? c.top(function(){ return 0; }) : s.f(c, st[k]); return fit(p, c); }catch(e){ return [1,2,3,4,5,6]; } });
     if(j>L){ picks=cur; break; }
     // «ακολούθα την καλύτερη»: η καλύτερη ως τώρα (πριν την κλήρωση j)
     var bi=-1; for(var k=0;k<n;k++){ if(sc[k].pl<6) continue; var nk=sc[k].won-sc[k].pl*COST(), nb=bi<0?0:sc[bi].won-sc[bi].pl*COST(); if(bi<0||nk>nb||(nk===nb&&sc[k].h>sc[bi].h)) bi=k; }
@@ -208,18 +216,20 @@ function chips(p, H, hitSet){ return '<div class="nums">'+p.slice().sort(functio
 function nm(k){ return ALLRND ? '🎲 Τυχαία '+(k+1)+'<span class="fam">Τυχαία</span>' : S[k].name+'<span class="fam">'+S[k].fam+'</span>'; }
 function render(picks, ev, log, kp){
   var L=DR.length-1, Hn=ctx(L,0).heat();
-  if(ev){ var Hp=ctx(DR.indexOf(ev.d)-1,0).heat(), dist=[0,0,0,0,0,0,0], tot=0, rh=0, rn=0; var wsum=0, wins=0; ev.res.forEach(function(r){ dist[r.h]++; tot+=r.h; wsum+=r.w; if(r.w>0) wins++; if(isR(r.k)){ rh+=r.h; rn++; } });
+  if(ev){ var Hp=ctx(DR.indexOf(ev.d)-1,0).heat(), dist=new Array(K+1).fill(0), tot=0, rh=0, rn=0; var wsum=0, wins=0; ev.res.forEach(function(r){ dist[r.h]++; tot+=r.h; wsum+=r.w; if(r.w>0) wins++; if(isR(r.k)){ rh+=r.h; rn++; } });
     var ago=EVS.length-1-EVS.indexOf(ev); $('evTtl').textContent=ago>0?'Κλήρωση':'Η τελευταία κλήρωση'; $('evLbl').textContent='· '+fmtD.format(new Date(ev.d.t)).split('-').reverse().join('/')+' '+hm(ev.d.t)+' (#'+ev.d.id+')'+(ago>0?' · πριν '+ago+' '+(ago===1?'κλήρωση':'κληρώσεις'):'');
     Array.prototype.forEach.call($('evNav').children, function(b){ var v=b.dataset.v, idx=EVS.indexOf(ev); b.classList.toggle('on', v==='live' && ago===0); if(v==='live'){ b.textContent = ago===0 ? '🟢' : hm(ev.d.t); b.title = ago===0 ? 'Τελευταία κλήρωση' : 'Βλέπεις την κλήρωση των '+hm(ev.d.t)+' · πάτα για την τελευταία'; } b.disabled = v!=='live' && ((+v<0 && idx+ +v<0 && idx===0) || (+v>0 && ago===0)); });
-    $('evDist').innerHTML='<div class="dist">'+dist.map(function(v,h){ return '<div>'+h+'/6<br><b>'+v+'</b></div>'; }).join('')+(ALLRND || !rn ? '<div>Μ.ό. '+(ALLRND?'100 τυχαίων':'100 στρατηγικών')+'<br><b>'+pc(tot/Math.max(1,ev.res.length))+'</b></div>' : '<div>Μ.ό. στρατηγικών<br><b>'+pc((tot-rh)/Math.max(1,ev.res.length-rn))+'</b></div><div>Μ.ό. 🎲 τυχαίων<br><b>'+pc(rh/Math.max(1,rn))+'</b></div>')+'<div>Θεωρία<br><b>1,5</b></div></div><div class="dist"><div>Όλες μαζί πόνταραν<br><b>'+eur(ev.res.length*COST())+'</b></div><div>Κέρδισαν<br><b>'+eur(wsum)+'</b></div><div>Κερδισμένες στήλες<br><b>'+wins+'</b></div><div>Καθαρά<br><b class="'+(wsum-ev.res.length*COST()>=0?'pos':'neg')+'">'+eur(wsum-ev.res.length*COST())+'</b></div></div>'+(ev.d.b||(ev.d.sc&&ev.d.sc.length)?'<div class="muted" style="font-size:12px;margin-bottom:6px">'+(ev.d.b?'🔴 Bonus: <b>'+ev.d.b+'</b>':'')+(ev.d.sc&&ev.d.sc.length?' · 🟢 2η ευκαιρία: <b>'+ev.d.sc.join(' ')+'</b>':'')+'</div>':'');
+    $('evDist').innerHTML='<div class="dist">'+dist.map(function(v,h){ return '<div>'+h+'/'+K+'<br><b>'+v+'</b></div>'; }).join('')+(ALLRND || !rn ? '<div>Μ.ό. '+(ALLRND?'100 τυχαίων':'100 στρατηγικών')+'<br><b>'+pc(tot/Math.max(1,ev.res.length))+'</b></div>' : '<div>Μ.ό. στρατηγικών<br><b>'+pc((tot-rh)/Math.max(1,ev.res.length-rn))+'</b></div><div>Μ.ό. 🎲 τυχαίων<br><b>'+pc(rh/Math.max(1,rn))+'</b></div>')+'<div>Θεωρία<br><b>'+pc(K/4)+'</b></div></div><div class="dist"><div>Όλες μαζί πόνταραν<br><b>'+eur(ev.res.length*COST())+'</b></div><div>Κέρδισαν<br><b>'+eur(wsum)+'</b></div><div>Κερδισμένες στήλες<br><b>'+wins+'</b></div><div>Καθαρά<br><b class="'+(wsum-ev.res.length*COST()>=0?'pos':'neg')+'">'+eur(wsum-ev.res.length*COST())+'</b></div></div>'+(ev.d.b||(ev.d.sc&&ev.d.sc.length)?'<div class="muted" style="font-size:12px;margin-bottom:6px">'+(ev.d.b?'🔴 Bonus: <b>'+ev.d.b+'</b>':'')+(ev.d.sc&&ev.d.sc.length?' · 🟢 2η ευκαιρία: <b>'+ev.d.sc.join(' ')+'</b>':'')+'</div>':'');
     var rs=ev.res.slice().sort(function(a,b){ return b.h-a.h || a.k-b.k; });
-    $('ev').innerHTML='<tr><th>Στρατηγική</th><th>Εξάδα <span class="muted" style="font-weight:400">(χρώματα πριν την κλήρωση)</span></th><th>Έπιασε</th></tr>'+rs.map(function(r){ return '<tr'+(isR(r.k)?' class="rnd"':'')+'><td>'+nm(r.k)+'</td><td>'+chips(r.p,Hp,ev.d.set)+'</td><td><b>'+r.h+(MODE==='sc'&&r.s?'<span style="color:#4ade80">+'+r.s+'</span>':'')+'/6</b>'+(MODE==='kb'&&r.bh?' 🔴':'')+'<br>'+(r.w?'<b class="pos">'+eur(r.w)+'</b>':'<span class="neg">−'+eur(COST())+'</span>')+'</td></tr>'; }).join(''); }
+    $('ev').innerHTML='<tr><th>Στρατηγική</th><th>Στήλη <span class="muted" style="font-weight:400">(χρώματα πριν την κλήρωση)</span></th><th>Έπιασε</th></tr>'+rs.map(function(r){ return '<tr'+(isR(r.k)?' class="rnd"':'')+'><td>'+nm(r.k)+'</td><td>'+chips(r.p,Hp,ev.d.set)+'</td><td><b>'+r.h+(MODE==='sc'&&r.s?'<span style="color:#4ade80">+'+r.s+'</span>':'')+'/'+K+'</b>'+(MODE==='kb'&&r.bh?' 🔴':'')+'<br>'+(r.w?'<b class="pos">'+eur(r.w)+'</b>':'<span class="neg">−'+eur(COST())+'</span>')+'</td></tr>'; }).join(''); }
   else { $('ev').innerHTML=''; $('evDist').innerHTML='<span class="muted">Περιμένουμε την πρώτη κλήρωση της ημέρας.</span>'; }
   $('nxLbl').textContent='· '+hm(DR[L].t+300000)+' (#'+(DR[L].id+1)+')';
   if(picks){ var order=S.map(function(_,k){ return k; });
-    $('nx').innerHTML='<tr><th>#</th><th>Στρατηγική</th><th>Εξάδα</th></tr>'+order.map(function(k,j){ return '<tr'+(isR(k)&&!ALLRND?' class="rnd"':'')+'><td>'+(j+1)+'</td><td>'+nm(k)+'</td><td>'+chips(picks[k],Hn)+'</td></tr>'; }).join(''); }
+    $('nx').innerHTML='<tr><th>#</th><th>Στρατηγική</th><th>Στήλη</th></tr>'+order.map(function(k,j){ return '<tr'+(isR(k)&&!ALLRND?' class="rnd"':'')+'><td>'+(j+1)+'</td><td>'+nm(k)+'</td><td>'+chips(picks[k],Hn)+'</td></tr>'; }).join(''); }
 }
 
+function kInfo(){ var C=function(n,k){ if(k<0||k>n) return 0; var r=1; for(var i=1;i<=k;i++) r=r*(n-k+i)/i; return r; }, pw=0; for(var h in PAYS[K]) pw+=C(20,+h)*C(60,K-h)/C(80,K); var top=C(20,K)/C(80,K); $('kInfo').innerHTML='Μια στήλη '+K+(K===1?' αριθμού':' αριθμών')+' πιάνει κατά μέσο όρο <b>'+pc(K/4)+'</b>· κερδίζει κάτι <b>1 στις '+pc(1/pw)+'</b> κληρώσεις· το '+K+'/'+K+' έρχεται 1 στις '+Math.round(1/top).toLocaleString('el-GR')+'.'; }
+(function(){ var sel=$('kSel'); for(var k=1;k<=12;k++){ var o=document.createElement('option'); o.value=k; o.textContent=k; if(k===K) o.selected=true; sel.appendChild(o); } kInfo(); sel.addEventListener('change', function(){ K=+this.value; PAY=PAYS[K]; try{ localStorage.setItem('lab_k', K); }catch(_){} kInfo(); if(DR.length) run(); }); })();
 (function(){ var T=$('modeTabs'); Array.prototype.forEach.call(T.children, function(x){ x.classList.toggle('on', x.dataset.m===MODE); }); T.addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b) return; MODE=b.dataset.m; try{ localStorage.setItem('lab_mode', MODE); }catch(_){} Array.prototype.forEach.call(T.children, function(x){ x.classList.toggle('on', x===b); }); if(DR.length) run(); }); })();
 (function(){ var B=$('allRnd'); B.classList.toggle('on', ALLRND); B.addEventListener('click', function(){ ALLRND=!ALLRND; try{ localStorage.setItem('lab_allrnd', ALLRND?'1':'0'); }catch(_){} B.classList.toggle('on', ALLRND); if(DR.length) run(); }); })();
 $('evNav').addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b||!EVS.length) return; var v=b.dataset.v, cur=VI===null?EVS.length-1:VI; if(v==='live') VI=null; else { var n2=Math.max(0, Math.min(EVS.length-1, cur+(+v))); VI = n2>=EVS.length-1 ? null : n2; } render(PICKS, VI===null?EVS[EVS.length-1]:EVS[VI], null, null); });
