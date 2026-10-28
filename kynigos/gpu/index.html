@@ -33,7 +33,7 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
 .found{display:none;background:rgba(47,212,138,.1);border:1px solid var(--win);border-radius:12px;padding:16px;gap:10px;flex-direction:column}.found.show{display:flex}.found .m{font-family:var(--mono);word-break:break-all;color:var(--win);user-select:all}
 .warn{border-left:3px solid var(--accent);padding-left:12px}
 #mx{display:none;position:fixed;inset:0;background:#000;z-index:99999}#mxc{display:block;width:100vw;height:100vh}#matrix{background:#07220f;color:#39ff57;border-color:#1c5}</style></head><body><div id="upd" style="display:none;position:fixed;left:0;right:0;top:0;z-index:100000;background:#1fc85a;color:#042;font:600 14px/1.3 system-ui,sans-serif;padding:11px 12px;text-align:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)">🔄 Νέα έκδοση διαθέσιμη — πάτα εδώ για ανανέωση</div><div class="wrap">
-<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[v15 ✓]</span></p><div id="savst" style="font:12px/1.4 monospace;color:#5a7">💾 —</div></header>
+<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[v16 ✓]</span></p><div id="savst" style="font:12px/1.4 monospace;color:#5a7">💾 —</div></header>
 <div class="panel"><div class="cells" id="cells" aria-hidden="true"></div></div>
 <div class="stats">
   <div class="stat"><div class="v" id="rate">0</div><div class="k">κλειδιά/δλ</div></div>
@@ -44,12 +44,12 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
 </div>
 <div class="row"><button class="primary" id="go" disabled>Έλεγχος…</button><button id="save" disabled>Αποθήκευση κλειδιού</button><button id="matrix">🟢 Matrix</button></div>
 <div id="mx"><canvas id="mxc"></canvas></div>
+<div id="pwd" style="display:none;position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.78);align-items:center;justify-content:center"><div style="background:#0f141a;border:1px solid var(--line);border-radius:14px;padding:18px;width:min(92vw,340px);display:flex;flex-direction:column;gap:10px"><div style="font:600 15px system-ui,sans-serif">🔒 Κωδικός ρυθμίσεων</div><input id="pwdInput" type="password" inputmode="numeric" placeholder="Κωδικός" style="padding:11px;border-radius:10px;border:1px solid var(--line);background:#0b0f14;color:var(--ink);font-size:16px"><div class="note" id="pwdNote"></div><div class="row"><button class="primary" id="pwdOk">Ξεκλείδωμα</button><button id="pwdCancel">Άκυρο</button></div></div></div>
 <div class="row"><button id="cfgToggle">⚙ Ρυθμίσεις ▸</button></div>
 <div id="adv">
 <div class="row"><span class="label" style="align-self:center">CPU νήματα:</span><input id="threads" inputmode="numeric" value="8" style="width:72px"><span class="label" style="align-self:center">Τυχαία αφετηρία κάθε:</span><select id="jump"><option value="0">ποτέ (σειριακά)</option><option value="300" selected>5 λεπτά</option><option value="900">15 λεπτά</option><option value="1800">30 λεπτά</option><option value="3600">1 ώρα</option><option value="7200">2 ώρες</option><option value="21600">6 ώρες</option><option value="86400">1 μέρα</option></select></div>
 <div class="row"><span class="label" style="align-self:center">Ισχύς (W):</span><input id="watts" inputmode="decimal" value="35" style="width:70px"><span class="label" style="align-self:center">Τιμή (€/kWh):</span><input id="eur" inputmode="decimal" value="0.22" style="width:80px"><span class="note">Βάλε τα W του υπολογιστή σου σε πλήρη λειτουργία και την τιμή ρεύματος.</span></div>
 <div class="row"><span class="label" style="align-self:center">Κανάλι ειδοποίησης (ntfy):</span><input id="topicShow" readonly style="flex:1;min-width:160px;font-family:var(--mono);font-size:.78rem"><button id="testEmail">Δοκιμή</button></div><div class="row"><span class="label" style="align-self:center">Μήνυμα:</span><input id="notifyMsg" value="Έλα σπίτι, έκανα φαγητό 🍝" style="flex:1;min-width:160px"><span class="note" id="notifyNote">Άνοιξε την εφαρμογή <b>ntfy</b> στο κινητό → «Subscribe» σε αυτό το κανάλι → θα παίρνεις push όταν βρεθεί. Στέλνεται ΜΟΝΟ το μήνυμα, ποτέ το κλειδί.</span></div><div class="row"><span class="note">GPU + CPU μαζί· η ταχύτητα αθροίζεται. Κάθε τόσο ξεκινά από νέο τυχαίο σημείο (η πρόοδος μένει μικρή).</span></div>
-</div>
 <div class="row"><button id="imp">Εισαγωγή προόδου</button><button id="exp">Εξαγωγή προόδου</button></div>
 <div id="iopanel" style="display:none;flex-direction:column;gap:8px">
 <textarea id="iotext" rows="4" placeholder="Επικόλλησε εδώ το κείμενο KYN1:… από το άλλο πρόγραμμα" style="width:100%;font-family:var(--mono);font-size:.72rem;background:#0f141a;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical"></textarea>
@@ -60,6 +60,7 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
   <div class="field"><span class="label">Έως</span><input id="max" inputmode="numeric" value="2361183241434822606847"></div>
 </div>
 <div class="field"><span class="label">Διεύθυνση στόχος</span><input id="target" value="1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU"></div>
+</div>
 <div class="mono" id="status">—</div>
 <div class="found" id="found"><div class="label" style="color:var(--win)">🎉 ΒΡΕΘΗΚΕ ΚΛΕΙΔΙ</div><div>Κλειδί (δεκαδικό):</div><div class="m" id="fdec"></div><div>Κλειδί (hex):</div><div class="m" id="fhex"></div></div>
 <p class="note warn">Ταχύτητα ~95K κλειδιά/δλ στο M2. Το εύρος 2⁷⁰ έχει 1,18×10²¹ κλειδιά, άρα μια πλήρης σάρωση θα έπαιρνε εκατοντάδες εκατομμύρια χρόνια. Είναι για το θέαμα και το πείραμα — όχι ρεαλιστικός τρόπος να κερδίσεις.</p>
@@ -855,7 +856,16 @@ function dlText(name,text){ const a=document.createElement("a"); a.href=URL.crea
 $("expdl").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); loadCov(); const t=exportKYN1(); dlText("kynigos-proodos.txt",t); $("ionote").textContent="Κατέβηκε το αρχείο kynigos-proodos.txt (" + (t.length>1048576?(t.length/1048576).toFixed(1)+" MB":Math.round(t.length/1024)+" KB") + ")."; };
 $("impfile_btn").onclick=()=>{ if(!parseRange()){ERR("Βάλε πρώτα σωστό εύρος/διεύθυνση.");return;} setLsKey(); loadImported(); $("impfile").click(); };
 $("impfile").onchange=(ev)=>{ const f=ev.target.files&&ev.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>{ doImport(String(r.result)); }; r.onerror=()=>{ERR("Δεν διαβάστηκε το αρχείο.");}; r.readAsText(f); ev.target.value=""; };
-$("cfgToggle").onclick=()=>{ const a=$("adv"); a.classList.toggle("open"); $("cfgToggle").textContent=a.classList.contains("open")?"⚙ Ρυθμίσεις ▾":"⚙ Ρυθμίσεις ▸"; };
+const PWD_HASH="dbbd86bed2ca98bc498956f4f00191da44481dfaf3c28d50717ad1a4e4ea2515";
+async function sha256hex(str){ const buf=await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str)); return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,"0");}).join(""); }
+function openPwd(){ $("pwdInput").value=""; $("pwdNote").textContent=""; $("pwd").style.display="flex"; setTimeout(function(){try{$("pwdInput").focus();}catch(e){}},60); }
+function closePwd(){ $("pwd").style.display="none"; }
+async function tryPwd(){ var v=$("pwdInput").value||""; var h=""; try{ h=await sha256hex(v); }catch(e){} if(h===PWD_HASH){ closePwd(); var a=$("adv"); a.classList.add("open"); $("cfgToggle").textContent="⚙ Ρυθμίσεις ▾"; } else { $("pwdNote").textContent="Λάθος κωδικός."; try{$("pwdInput").select();}catch(e){} } }
+$("cfgToggle").onclick=()=>{ const a=$("adv"); if(a.classList.contains("open")){ a.classList.remove("open"); $("cfgToggle").textContent="⚙ Ρυθμίσεις ▸"; return; } openPwd(); };
+$("pwdOk").onclick=tryPwd;
+$("pwdCancel").onclick=closePwd;
+$("pwd").addEventListener("click",function(e){ if(e.target.id==="pwd") closePwd(); });
+$("pwdInput").addEventListener("keydown",function(e){ if(e.key==="Enter") tryPwd(); });
 
 (function(){
   var btn=document.getElementById("matrix"), mx=document.getElementById("mx"), cv=document.getElementById("mxc");
@@ -884,7 +894,7 @@ $("cfgToggle").onclick=()=>{ const a=$("adv"); a.classList.toggle("open"); $("cf
 })();
 
 
-var APPVER="15";
+var APPVER="16";
 function checkUpdate(){ try{ fetch("ver.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null;}).then(function(t){ if(!t)return; t=t.trim(); if(t && t!==APPVER){ var b=document.getElementById("upd"); if(b){ b.style.display="block"; b.onclick=function(){ try{location.replace(location.pathname+"?v="+t);}catch(e){location.reload();} }; } } }).catch(function(){}); }catch(e){} }
 checkUpdate(); setInterval(checkUpdate,120000);
 
