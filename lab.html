@@ -34,7 +34,6 @@ details>summary{cursor:pointer;color:var(--gold);font-weight:700;margin:4px 0}
 <div id="lbSum" class="dist"></div><div class="scroll"><table id="lb"></table></div>
 <div class="muted" style="font-size:12px;margin-top:6px">Η βαθμολογία κοιτάει προς τα πίσω. Αν η πρώτη θέση είναι στρατηγική, ρίξε μια ματιά πού βρίσκονται οι 🎲 τυχαίες — συνήθως κάπου ανάμεσα.</div></div>
 
-<div class="card"><h2>📒 Αν ακολουθούσες κάθε φορά την καλύτερη ως εκείνη τη στιγμή</h2><div class="kpi" id="kpi"></div><div class="scroll" style="margin-top:10px;max-height:300px"><table id="log"></table></div></div>
 
 <div class="card"><h2>🎯 Οι 100 εξάδες για την επόμενη κλήρωση <span id="nxLbl" class="muted"></span></h2><details id="nxDet"><summary>Άνοιγμα λίστας</summary><div class="scroll"><table id="nx"></table></div></details></div>
 <div class="muted" style="font-size:12px;margin-top:12px" id="foot">⏳ Φόρτωση κληρώσεων…</div>
@@ -159,8 +158,6 @@ function render(picks, ev, log, kp){
     $('ev').innerHTML='<tr><th>Στρατηγική</th><th>Εξάδα <span class="muted" style="font-weight:400">(χρώματα πριν την κλήρωση)</span></th><th>Έπιασε</th></tr>'+rs.map(function(r){ return '<tr'+(S[r.k].fam==='Τυχαία'?' class="rnd"':'')+'><td>'+nm(r.k)+'</td><td>'+chips(r.p,Hp,ev.d.set)+'</td><td><b>'+r.h+(MODE==='sc'&&r.s?'<span style="color:#4ade80">+'+r.s+'</span>':'')+'/6</b>'+(MODE==='kb'&&r.bh?' 🔴':'')+'<br>'+(r.w?'<b class="pos">'+eur(r.w)+'</b>':'<span class="neg">−'+eur(COST())+'</span>')+'</td></tr>'; }).join(''); }
   else { $('ev').innerHTML=''; $('evDist').innerHTML='<span class="muted">Περιμένουμε την πρώτη κλήρωση της ημέρας.</span>'; }
   renderLB();
-  var nt=kp.won-kp.st; $('kpi').innerHTML='<div>Παιχνίδια<b>'+kp.pl+'</b></div><div>Ποντάρισμα<b>'+eur(kp.st)+'</b></div><div>Κέρδη<b>'+eur(kp.won)+'</b></div><div>Καθαρά<b class="'+(nt>=0?'pos':'neg')+'">'+(nt>=0?'+':'')+eur(nt)+'</b></div><div>Απόδοση<b>'+(kp.st?pc(kp.won/kp.st*100):'—')+'%</b></div><div>Κέρδισε κάτι<b>'+kp.w+' φορές</b></div>';
-  $('log').innerHTML='<tr><th>Κλήρωση</th><th>Έπαιξε</th><th>Έπιασε</th></tr>'+log.slice(-25).reverse().map(function(x){ return '<tr><td>'+hm(x.d.t)+'<br><span class="muted">#'+x.d.id+'</span></td><td>'+nm(x.k)+chips(x.p,null,x.d.set)+'</td><td><b>'+x.h+'/6</b><br>'+(x.w?'<b class="pos">'+eur(x.w)+'</b>':'<span class="neg">−'+eur(COST())+'</span>')+'</td></tr>'; }).join('');
   $('nxLbl').textContent='· '+hm(DR[L].t+300000)+' (#'+(DR[L].id+1)+')';
   if(picks){ var order=S.map(function(_,k){ return k; }).sort(function(a,b){ var A=LB.sc[a], B=LB.sc[b]; return (B.won-B.pl*COST())-(A.won-A.pl*COST()) || B.h-A.h; });
     $('nx').innerHTML='<tr><th>#</th><th>Στρατηγική <span class="muted" style="font-weight:400">(σειρά: βαθμολογία ημέρας)</span></th><th>Εξάδα</th></tr>'+order.map(function(k,j){ return '<tr'+(S[k].fam==='Τυχαία'?' class="rnd"':'')+'><td>'+(j+1)+'</td><td>'+nm(k)+'</td><td>'+chips(picks[k],Hn)+'</td></tr>'; }).join(''); }
