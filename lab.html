@@ -278,15 +278,23 @@ $('ev').addEventListener('click', function(e){ var b=e.target.closest('.tkAdd');
 $('tkList').addEventListener('click', function(e){ var b=e.target.closest('.tkDel'); if(!b) return; var T=tkLoad(); T.splice(+b.dataset.i,1); tkSave(T); tkRender(); });
 (function(){ var DEF={cNx:1}; Array.prototype.forEach.call(document.querySelectorAll('.card[id]'), function(c){ var k='lab_col_'+c.id, v=null; try{ v=localStorage.getItem(k); }catch(e){} if(v===null ? DEF[c.id] : v==='1') c.classList.add('collapsed'); var h=c.querySelector(':scope>h2'); if(h) h.addEventListener('click', function(){ var on=c.classList.toggle('collapsed'); try{ localStorage.setItem(k, on?'1':'0'); }catch(e){} }); }); })();
 document.addEventListener('change', function(e){ var c=e.target; if(!c.classList||!c.classList.contains('pin')) return; var key=pkey(+c.dataset.k); if(c.checked) PIN.add(key); else PIN.delete(key); try{ localStorage.setItem('lab_pin', JSON.stringify(Array.from(PIN))); }catch(_){} if(CUREV||PICKS) render(PICKS, CUREV, null, null); });
-async function fetchDay(ds){ var out=[]; for(var p=0;p<40;p++){ var j=await (await fetch(API+'/draw-date/'+ds+'/'+ds+'?page='+p+'&size=10&_='+Date.now(),{cache:'no-store'})).json(), c=j.content||[];
-  c.forEach(function(x){ var W=x.winningNumbers||{}, w=W.list||[]; if(w.length) out.push({id:x.drawId,t:x.drawTime,arr:w.slice(),set:new Set(w),sc:(W.secondChance||[]).slice(),b:(W.bonus||[])[0]}); }); if(!c.length||j.last) break; } return out; }
-async function load(){
+async function getJ(url){ var err; for(var t=0;t<4;t++){ try{ var r=await fetch(url+(url.indexOf('?')<0?'?':'&')+'_='+Date.now(),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json(); }catch(e){ err=e; await new Promise(function(z){ setTimeout(z, 600*(t+1)); }); } } throw err; }
+function pushDraws(out, c){ (c||[]).forEach(function(x){ var W=x.winningNumbers||{}, w=W.list||[]; if(w.length) out.push({id:x.drawId,t:x.drawTime,arr:w.slice(),set:new Set(w),sc:(W.secondChance||[]).slice(),b:(W.bonus||[])[0]}); }); }
+async function fetchDay(ds){ var out=[], base=API+'/draw-date/'+ds+'/'+ds+'?size=10&page=', j=await getJ(base+0); pushDraws(out, j.content);
+  var pages=Math.min(40, Math.ceil((j.totalElements||0)/10)), rest=[]; for(var p=1;p<pages;p++) rest.push(p);
+  while(rest.length){ var batch=rest.splice(0,6), res=await Promise.all(batch.map(function(p){ return getJ(base+p); })); res.forEach(function(r){ pushDraws(out, r.content); }); }
+  return out; }
+var LOADING=false;
+async function load(){ if(LOADING) return; LOADING=true;
   try{
     var now=new Date(), ds=fmtD.format(now), y=fmtD.format(new Date(now.getTime()-86400000));
-    if(!DR.length){ var a=await fetchDay(y), b=await fetchDay(ds), m={}; a.concat(b).forEach(function(d){ m[d.id]=d; }); DR=Object.keys(m).map(Number).sort(function(p,q){return p-q;}).map(function(k){ return m[k]; }); }
-    else { var j=await (await fetch(API+'/last-result-and-active?_='+Date.now(),{cache:'no-store'})).json(), c=j.last; if(c && c.drawId>DR[DR.length-1].id){ if(c.drawId>DR[DR.length-1].id+1){ DR=[]; return load(); } var W=c.winningNumbers||{}, w=W.list||[]; DR.push({id:c.drawId,t:c.drawTime,arr:w.slice(),set:new Set(w),sc:(W.secondChance||[]).slice(),b:(W.bonus||[])[0]}); } else return; }
-    run(); tkRender();
-  }catch(e){ $('foot').textContent='Δεν φορτώθηκαν οι κληρώσεις — ξαναδοκιμάζω…'; console.warn(e); }
+    if(!DR.length){ var a=await fetchDay(y), b=await fetchDay(ds), m={}; a.concat(b).forEach(function(d){ m[d.id]=d; }); DR=Object.keys(m).map(Number).sort(function(p,q){return p-q;}).map(function(k){ return m[k]; }); if(!DR.length) throw new Error('καμία κλήρωση'); }
+    else { var j=await getJ(API+'/last-result-and-active'), c=j.last; if(!c || c.drawId<=DR[DR.length-1].id) return;
+      for(var id=DR[DR.length-1].id+1; id<=c.drawId; id++){ var x=id===c.drawId ? c : await getJ(API+'/'+id), W=x.winningNumbers||{}, w=W.list||[]; if(!w.length) break; DR.push({id:x.drawId,t:x.drawTime,arr:w.slice(),set:new Set(w),sc:(W.secondChance||[]).slice(),b:(W.bonus||[])[0]}); } }
+  }catch(e){ console.warn(e); if(!DR.length){ $('foot').textContent='Δεν φορτώθηκαν οι κληρώσεις — ξαναδοκιμάζω σε λίγα δευτερόλεπτα…'; LOADING=false; setTimeout(load, 5000); return; } }
+  finally{ LOADING=false; }
+  try{ run(); }catch(e){ console.warn(e); $('foot').textContent='Σφάλμα στον υπολογισμό: '+(e&&e.message||e); return; }
+  tkRender();
 }
 load(); setInterval(load, 30000);
 </script></body></html>
