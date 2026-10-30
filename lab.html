@@ -284,16 +284,23 @@ async function fetchDay(ds){ var out=[], base=API+'/draw-date/'+ds+'/'+ds+'?size
   var pages=Math.min(40, Math.ceil((j.totalElements||0)/10)), rest=[]; for(var p=1;p<pages;p++) rest.push(p);
   while(rest.length){ var batch=rest.splice(0,6), res=await Promise.all(batch.map(function(p){ return getJ(base+p); })); res.forEach(function(r){ pushDraws(out, r.content); }); }
   return out; }
-var LOADING=false;
+var LOADING=false, RAN=false, OFFL=false;
+/* αποθήκευση των κληρώσεων στη συσκευή: στο άνοιγμα της σελίδας κατεβαίνουν μόνο οι καινούργιες (λιγότερα αιτήματα στο Allwyn) */
+function cacheSave(){ try{ localStorage.setItem('lab_dr', JSON.stringify(DR.slice(-700).map(function(d){ return [d.id,d.t,d.arr,d.sc||[],d.b||0]; }))); }catch(e){} }
+function cacheLoad(){ try{ return (JSON.parse(localStorage.getItem('lab_dr')||'[]')).map(function(r){ return {id:r[0],t:r[1],arr:r[2],set:new Set(r[2]),sc:r[3],b:r[4]||undefined}; }); }catch(e){ return []; } }
 async function load(){ if(LOADING) return; LOADING=true;
   try{
     var now=new Date(), ds=fmtD.format(now), y=fmtD.format(new Date(now.getTime()-86400000));
+    if(!DR.length){ var CA=cacheLoad(); if(CA.length && fmtD.format(new Date(CA[0].t))<=y && Date.now()-CA[CA.length-1].t < 3*3600*1000){ DR=CA.filter(function(d){ var f=fmtD.format(new Date(d.t)); return f===y||f===ds; }); }
+    }
     if(!DR.length){ var a=await fetchDay(y), b=await fetchDay(ds), m={}; a.concat(b).forEach(function(d){ m[d.id]=d; }); DR=Object.keys(m).map(Number).sort(function(p,q){return p-q;}).map(function(k){ return m[k]; }); if(!DR.length) throw new Error('καμία κλήρωση'); }
-    else { var j=await getJ(API+'/last-result-and-active'), c=j.last; if(!c || c.drawId<=DR[DR.length-1].id) return;
-      for(var id=DR[DR.length-1].id+1; id<=c.drawId; id++){ var x=id===c.drawId ? c : await getJ(API+'/'+id), W=x.winningNumbers||{}, w=W.list||[]; if(!w.length) break; DR.push({id:x.drawId,t:x.drawTime,arr:w.slice(),set:new Set(w),sc:(W.secondChance||[]).slice(),b:(W.bonus||[])[0]}); } }
-  }catch(e){ console.warn(e); if(!DR.length){ $('foot').textContent='Δεν φορτώθηκαν οι κληρώσεις — ξαναδοκιμάζω σε λίγα δευτερόλεπτα…'; LOADING=false; setTimeout(load, 5000); return; } }
+    else { var j=await getJ(API+'/last-result-and-active'), c=j.last; if(!c || c.drawId<=DR[DR.length-1].id){ if(RAN) return; }
+      else if(c.drawId-DR[DR.length-1].id>40){ var b2=await fetchDay(ds), m2={}; DR.concat(b2).forEach(function(d){ m2[d.id]=d; }); DR=Object.keys(m2).map(Number).sort(function(p,q){return p-q;}).map(function(k){ return m2[k]; }); }
+      else for(var id=DR[DR.length-1].id+1; id<=c.drawId; id++){ var x=id===c.drawId ? c : await getJ(API+'/'+id), W=x.winningNumbers||{}, w=W.list||[]; if(!w.length) break; DR.push({id:x.drawId,t:x.drawTime,arr:w.slice(),set:new Set(w),sc:(W.secondChance||[]).slice(),b:(W.bonus||[])[0]}); } }
+  }catch(e){ console.warn(e); OFFL=true; if(!DR.length){ $('foot').textContent='Δεν φορτώθηκαν οι κληρώσεις — ξαναδοκιμάζω σε λίγα δευτερόλεπτα…'; LOADING=false; setTimeout(load, 5000); return; } }
   finally{ LOADING=false; }
-  try{ run(); }catch(e){ console.warn(e); $('foot').textContent='Σφάλμα στον υπολογισμό: '+(e&&e.message||e); return; }
+  cacheSave();
+  try{ run(); RAN=true; if(OFFL) $('foot').textContent='⚠️ Δεν απαντάει ο server του Allwyn από αυτή τη σύνδεση — δείχνω τις αποθηκευμένες κληρώσεις (ως '+hm(DR[DR.length-1].t)+') · νέα προσπάθεια σε 30″'; OFFL=false; }catch(e){ console.warn(e); $('foot').textContent='Σφάλμα στον υπολογισμό: '+(e&&e.message||e); return; }
   tkRender();
 }
 load(); setInterval(load, 30000);
