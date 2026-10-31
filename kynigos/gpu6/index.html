@@ -33,7 +33,7 @@ button,input{font:inherit}button{border-radius:10px;border:1px solid #2a3642;bac
 .found{display:none;background:rgba(47,212,138,.1);border:1px solid var(--win);border-radius:12px;padding:16px;gap:10px;flex-direction:column}.found.show{display:flex}.found .m{font-family:var(--mono);word-break:break-all;color:var(--win);user-select:all}
 .warn{border-left:3px solid var(--accent);padding-left:12px}
 #mx{display:none;position:fixed;inset:0;background:#000;z-index:99999}#mxc{display:block;width:100vw;height:100vh}#matrix{background:#07220f;color:#39ff57;border-color:#1c5}</style></head><body><div id="upd" style="display:none;position:fixed;left:0;right:0;top:0;z-index:100000;background:#1fc85a;color:#042;font:600 14px/1.3 system-ui,sans-serif;padding:11px 12px;text-align:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)">🔄 Νέα έκδοση διαθέσιμη — πάτα εδώ για ανανέωση</div><div class="wrap">
-<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[v17 ✓]</span></p><div id="savst" style="font:12px/1.4 monospace;color:#5a7">💾 —</div></header>
+<header><h1>Κυνηγός Κλειδιών — GPU+CPU</h1><p class="sub">Αναζήτηση στη GPU με secp256k1, 100% τοπικά και offline. Αν βρεθεί κλειδί, μένει μόνο εδώ. <span style="opacity:.6">[v18 ✓]</span></p><div id="savst" style="font:12px/1.4 monospace;color:#5a7">💾 —</div></header>
 <div class="panel"><div class="cells" id="cells" aria-hidden="true"></div></div>
 <div class="stats">
   <div class="stat"><div class="v" id="rate">0</div><div class="k">κλειδιά/δλ</div></div>
@@ -357,7 +357,7 @@ const $=id=>document.getElementById(id);
 let errSticky=false;
 function ERR(m,sticky){ if(errSticky&&!sticky)return; $("status").innerHTML='<span class="bad">'+m+'</span>'; if(sticky)errSticky=true; }
 function INFO(m){ if(!errSticky) $("status").innerHTML=m; }
-addEventListener("unhandledrejection",e=>{const m=(e.reason&&e.reason.message)||String(e.reason); if(/lost|device/i.test(m)){recover();} else ERR("σφάλμα: "+m);});
+addEventListener("unhandledrejection",e=>{const m=(e.reason&&e.reason.message)||String(e.reason); if(/clos|IDBDatabase|database connection|objectStore|transaction/i.test(m)){return;} if(/lost|device/i.test(m)){recover();} else ERR("σφάλμα: "+m);});
 addEventListener("error",e=>ERR("σφάλμα: "+e.message));
 const B58="123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 function b58dec(s){let num=0n;for(const ch of s){const i=B58.indexOf(ch);if(i<0)return null;num=num*58n+BigInt(i);}let by=[];while(num>0n){by.unshift(Number(num&0xffn));num>>=8n;}for(const ch of s){if(ch==="1")by.unshift(0);else break;}return by;}
@@ -725,10 +725,11 @@ function coveredEndAt(idx){ let e=inRanges(imported,idx); if(e!==null)return e; 
 function lsBase(){ return "cov:"+rangeMin+":"+rangeMax+":"+CHUNK+":"+$("target").value.trim(); }
 function recalcScanned(){ scanned.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0); const m=[]; for(const iv of scanned){ if(m.length&&iv[0]<=m[m.length-1][1]){ if(iv[1]>m[m.length-1][1])m[m.length-1][1]=iv[1]; } else m.push([iv[0],iv[1]]); } scanned=m; let t=0n; for(const iv of scanned)t+=(iv[1]-iv[0]); scannedChunks=t; }
 let _idb=null;
-function idbOpen(){ return new Promise((res,rej)=>{ if(_idb)return res(_idb); try{ const r=indexedDB.open("kyn-store",1); r.onupgradeneeded=()=>{ try{r.result.createObjectStore("kv");}catch(e){} }; r.onsuccess=()=>{_idb=r.result;res(_idb);}; r.onerror=()=>rej(r.error); }catch(e){ rej(e); } }); }
-function idbGet(k){ return idbOpen().then(db=>new Promise((res,rej)=>{ const q=db.transaction("kv","readonly").objectStore("kv").get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); })); }
-function idbSet(k,v){ return idbOpen().then(db=>new Promise((res,rej)=>{ const tx=db.transaction("kv","readwrite"); tx.objectStore("kv").put(v,k); tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error); })); }
-function covStatus(){ try{ idbGet("cov:"+lsKey).then(o=>{ const el=document.getElementById("savst"); if(!el)return; let n=0n; if(o&&o.r)for(const a of o.r)n+=(BigInt(a[1])-BigInt(a[0])); el.textContent="💾 αποθηκευμένη πρόοδος: "+dots(n.toString())+" chunks"+(window.__saveErr?(" ⚠ "+window.__saveErr):""); }); }catch(e){} }
+function idbOpen(){ return new Promise((res,rej)=>{ if(_idb)return res(_idb); let r; try{ r=indexedDB.open("kyn-store",1); }catch(e){ return rej(e); } r.onupgradeneeded=()=>{ try{r.result.createObjectStore("kv");}catch(e){} }; r.onsuccess=()=>{ const db=r.result; try{ db.onclose=function(){ if(_idb===db)_idb=null; }; db.onversionchange=function(){ try{db.close();}catch(e){} if(_idb===db)_idb=null; }; }catch(e){} _idb=db; res(db); }; r.onerror=()=>rej(r.error); }); }
+function idbDo(mode,fn){ return idbOpen().then(db=>new Promise((res,rej)=>{ let tx; try{ tx=db.transaction("kv",mode); }catch(e){ if(_idb===db)_idb=null; throw e; } fn(tx.objectStore("kv"),tx,res,rej); })); }
+function idbGet(k){ const op=()=>idbDo("readonly",(st,tx,res,rej)=>{ const q=st.get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); }); return op().catch(e=>{ _idb=null; return op(); }); }
+function idbSet(k,v){ const op=()=>idbDo("readwrite",(st,tx,res,rej)=>{ st.put(v,k); tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error||new Error("tx")); tx.onabort=()=>rej(tx.error||new Error("abort")); }); return op().catch(e=>{ _idb=null; return op(); }); }
+function covStatus(){ try{ idbGet("cov:"+lsKey).then(o=>{ const el=document.getElementById("savst"); if(!el)return; let n=0n; if(o&&o.r)for(const a of o.r)n+=(BigInt(a[1])-BigInt(a[0])); el.textContent="💾 αποθηκευμένη πρόοδος: "+dots(n.toString())+" chunks"+(window.__saveErr?(" ⚠ "+window.__saveErr):""); }).catch(function(){}); }catch(e){} }
 async function loadCov(){ scanned=[]; scannedChunks=0n;
   let o=null; try{ o=await idbGet("cov:"+lsKey); }catch(e){}
   if(!o){ try{ const raw=localStorage.getItem(lsKey); if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)){ const idxs=p.map(x=>BigInt(x)).sort((a,b)=>a<b?-1:a>b?1:0); const rr=[]; let i=0; while(i<idxs.length){ let j=i; while(j+1<idxs.length&&idxs[j+1]===idxs[j]+1n)j++; rr.push([idxs[i].toString(),(idxs[j]+1n).toString()]); i=j+1; } o={r:rr}; } else o=p; } }catch(e){} }
@@ -899,7 +900,7 @@ $("pwdInput").addEventListener("keydown",function(e){ if(e.key==="Enter") tryPwd
 })();
 
 
-var APPVER="17";
+var APPVER="18";
 function checkUpdate(){ try{ fetch("ver.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null;}).then(function(t){ if(!t)return; t=t.trim(); if(t && t!==APPVER){ var b=document.getElementById("upd"); if(b){ b.style.display="block"; b.onclick=function(){ try{location.replace(location.pathname+"?v="+t);}catch(e){location.reload();} }; } } }).catch(function(){}); }catch(e){} }
 checkUpdate(); setInterval(checkUpdate,120000);
 
