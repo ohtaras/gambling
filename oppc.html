@@ -81,7 +81,7 @@ body.stage #stageBg{opacity:1;pointer-events:auto}body.stage{overflow:hidden}
 .nav{display:flex;justify-content:center;gap:6px;margin:0 0 10px}.nav button{flex:1;max-width:84px;background:#1e293b;color:var(--text);border:1px solid #334155;border-radius:999px;padding:9px 0;font-size:15px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .nav button:active{transform:scale(.94)}.nav button:disabled{opacity:.35}.nav .lv{max-width:96px;background:#14532d;border-color:#22c55e}.nav .lv.off{background:#1e293b;border-color:#334155;color:#94a3b8}
 #boxBox.sl{animation:bxSl .25s ease-out}@keyframes bxSl{from{opacity:.3;transform:translateX(var(--sx,0))}to{opacity:1;transform:none}}
-.bxb.pk{box-shadow:0 0 0 3px #fff,0 0 10px 3px #22d3ee}
+.bxb.pk{box-shadow:0 0 0 3px #fff,0 0 10px 3px #22d3ee}#bxFly{position:fixed;inset:0;pointer-events:none;z-index:60}#bxFly .bxb{position:fixed;transition:none;will-change:transform;box-shadow:0 7px 12px rgba(0,0,0,.5)}.bxb.bxHand{position:absolute;transform:translate(-50%,-50%);transition:none;opacity:1;z-index:4;pointer-events:none}.bxRing{position:fixed;border-radius:50%;border:2px solid #fde68a;box-shadow:0 0 14px #facc15;pointer-events:none}.bxb.bxLand{animation:bxLand .4s cubic-bezier(.3,1.6,.5,1)}@keyframes bxLand{0%{transform:scale(1.4)}55%{transform:scale(.86)}100%{transform:scale(1)}}
 .pe{background:#0f172a;border:1px solid #23304d;border-radius:12px;padding:10px;margin-top:10px;font-size:13px;text-align:center}
 .bxb.bn{background:radial-gradient(circle at 35% 30%,#ffd1d1,#ef4444 55%,#991b1b);color:#fff;box-shadow:0 0 0 2px #fde68a,0 2px 4px rgba(0,0,0,.4)}
 .bxb.sc{background:radial-gradient(circle at 35% 30%,#d9ffd9,#22c55e 55%,#15803d);color:#0b2d14}
@@ -802,6 +802,31 @@ function bxArmAnim(el, keys, ms, lean){ var a = el && el.querySelector('.pA'), s
 function armPull(el){ bxArmAnim(el, [[0,0],[.45,24],[.7,18],[1,0]], 380, -5); }
 // ρίξιμο: σηκώνει το χέρι πίσω-πάνω και το τινάζει μπροστά
 function armThrow(el){ bxArmAnim(el, [[0,0],[.35,-62],[.6,22],[.8,12],[1,0]], 460, 8); }
+// 🎯 ρίψη με την αληθινή μπάλα: φαίνεται στο χέρι με τον αριθμό της, φεύγει σε τόξο και «σκάει» στη θέση της στον πίνακα
+var BX_FIST = {hood:[82.5,50.5], beard:[40.5,45.5]}, RMOT = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+function bxFlyL(){ var L = $('bxFly'); if(!L){ L = document.createElement('div'); L.id = 'bxFly'; document.body.appendChild(L); } return L; }
+function bxToss(el, b, fast){
+  function land(){ b.style.transition = 'none'; b.style.opacity = '1'; b.classList.remove('bxLand'); void b.offsetWidth; b.classList.add('bxLand'); setTimeout(function(){ b.classList.remove('bxLand'); }, 450); }
+  var a = el && el.querySelector('.pA'), f = el && el.querySelector('.pup'), ms = fast ? 320 : 460, rel = Math.round(ms*.5), fly = fast ? 360 : 480;
+  if(RMOT || !a || !f || !b.offsetWidth || !b.animate){ armThrow(el); setTimeout(land, 250); return 300; }
+  bxArmAnim(el, [[0,0],[.35,-62],[.6,22],[.8,12],[1,0]], ms, 8);
+  var P = BX_FIST[f.dataset.who] || [50,50], h = document.createElement('div'), fs = getComputedStyle(b).fontSize;
+  h.className = 'bxb bxHand' + (b.classList.contains('sc') ? ' sc' : '') + (b.classList.contains('bn') ? ' bn' : ''); h.textContent = b.textContent;
+  h.style.left = P[0]+'%'; h.style.top = P[1]+'%'; h.style.width = b.offsetWidth+'px'; h.style.height = b.offsetHeight+'px'; h.style.fontSize = fs; a.appendChild(h);
+  setTimeout(function(){
+    var hr = h.getBoundingClientRect(), br = b.getBoundingClientRect(); if(h.parentNode) h.parentNode.removeChild(h);
+    if(!br.width){ land(); return; }
+    var k = br.width / b.offsetWidth, c = document.createElement('div'), L = bxFlyL();
+    c.className = h.className.replace(' bxHand', ''); c.textContent = b.textContent;
+    c.style.cssText = 'left:'+br.left.toFixed(1)+'px;top:'+br.top.toFixed(1)+'px;width:'+br.width.toFixed(1)+'px;height:'+br.height.toFixed(1)+'px;font-size:'+(parseFloat(fs)*k).toFixed(1)+'px';
+    L.appendChild(c);
+    var dx = (hr.left+hr.width/2) - (br.left+br.width/2), dy = (hr.top+hr.height/2) - (br.top+br.height/2), arc = Math.max(br.height*2.2, Math.hypot(dx, dy)*.45), spin = (dx > 0 ? -1 : 1)*360, K = [];
+    for(var j = 0; j <= 14; j++){ var t = j/14, e = t*(2-t)*.35 + t*.65; K.push({transform:'translate('+(dx*(1-e)).toFixed(1)+'px,'+(dy*(1-e) - arc*4*e*(1-e)).toFixed(1)+'px) rotate('+(spin*e).toFixed(0)+'deg) scale('+(1+.38*Math.sin(Math.PI*e)).toFixed(3)+')'}); }
+    c.animate(K, {duration:fly, easing:'linear', fill:'forwards'}).onfinish = function(){ if(c.parentNode) c.parentNode.removeChild(c); land();
+      var r = document.createElement('div'), d = br.width*1.1; r.className = 'bxRing'; r.style.cssText = 'left:'+(br.left+br.width/2-d/2).toFixed(1)+'px;top:'+(br.top+br.height/2-d/2).toFixed(1)+'px;width:'+d.toFixed(1)+'px;height:'+d.toFixed(1)+'px'; L.appendChild(r);
+      r.animate([{transform:'scale(.5)', opacity:.95}, {transform:'scale(1.9)', opacity:0}], {duration:420, easing:'ease-out', fill:'forwards'}).onfinish = function(){ if(r.parentNode) r.parentNode.removeChild(r); }; };
+  }, rel);
+  return rel + fly + 40; }
 
 // η σκηνή ξεκινά 10″ μετά τη λήξη του πενταλέπτου· αν τα νούμερα έρθουν νωρίτερα, περιμένουμε
 var MAN_PEEK = 0;
@@ -857,7 +882,7 @@ function placeAnim(){ var D = cur(); if(!D) return; if(!view) ANIMD = D.id; var 
   else if(TK){ PN = TK.n.slice(); SRC = 'tk'; }
   if(PN.length){ P = {}; PN.forEach(function(x){ P[x] = 1; }); PN.sort(function(a,b){return a-b;}); }
   var TKS = tkLoad().map(function(t, ix){ t.ix = ix+1; return t; }).filter(function(t){ return D.id >= t.start && D.id < t.start + t.draws && t.n.length <= 12 && !(SRC==='tk' && TK && t.id===TK.id) && (SRC!=='pred' || t.n.slice().sort(function(a,b){return a-b;}).join(',') !== PN.join(',')); }).slice(0,5);
-  var balls = start(), list = D.arr.concat(D.sc||[]), STEP = P ? 430 : 115, D0 = (P ? 1900 : 250) + (vidPlay('throw', 3900) ? 3600 : 0), hits = [], schits = [], score = {L:0, R:0};
+  var balls = start(), list = D.arr.concat(D.sc||[]), STEP = P ? 430 : 230, D0 = (P ? 1900 : 250) + (vidPlay('throw', 3900) ? 3600 : 0), hits = [], schits = [], score = {L:0, R:0};
   var lastTalk = {L:0, R:0}, nSc = (D.sc||[]).length, got = {};
   function say(el, txt, force){ var k = el===L ? 'L' : 'R', now = Date.now(); if(!force && now - lastTalk[k] < 1100) return false; lastTalk[k] = now; bxSay(el, txt); return true; }
   function other(el){ return el===L ? R : L; }
@@ -865,15 +890,14 @@ function placeAnim(){ var D = cur(); if(!D) return; if(!view) ANIMD = D.id; var 
   if(P){ var st = SRC==='tk' ? pick([['Πάμε για το δελτίο μας! 🎫','Σημαδεύουμε τα νούμερα του δελτίου!'],['Το δελτίο τρέχει, ρίχνε σωστά!','Αν χάσουμε, φταις εσύ!'],['Για το δελτίο, όλα!','Όποιος αστοχήσει, βγάζει τα σκουπίδια!']]) : pick(BX_START_P); var F1 = Math.random()<.5 ? L : R, F2 = F1===L ? R : L; say(F1, st[0], true); setTimeout(function(){ say(F2, st[1], true); }, 800); }
   else { var tk = BX_NEW[Math.floor(Math.random()*BX_NEW.length)], G1 = Math.random()<.5 ? L : R, G2 = G1===L ? R : L; bxSay(G1, tk[0]); setTimeout(function(){ bxSay(G2, tk[1]); }, 700); }
   list.forEach(function(n, i){ var b = balls[n]; if(!b) return; b.dataset.l = b.style.left; b.dataset.t = b.style.top; var fromL = i % 2 === 0;
-    b.style.transition = 'none'; b.style.left = fromL ? '-8%' : '99%'; b.style.top = (52 + Math.random()*12).toFixed(1)+'%'; b.style.opacity = '0'; });
+    b.style.transition = 'none'; b.style.opacity = '0'; });
   void box.offsetWidth;
   function target(){ var left = PN.filter(function(x){ return !got[x]; }); return left.length ? pick(left) : null; }
   list.forEach(function(n, i){ var b = balls[n]; if(!b) return; var who = i % 2 === 0 ? L : R;
     // λίγο πριν τη ρίψη: «σημαδεύει» κάποιο νούμερο της πρόβλεψης
     var aim = null;
     if(P && i % 3 === 0){ setTimeout(function(){ aim = target(); if(aim) say(who, pick(BX_AIM).replace('{t}', aim)); }, D0 + i*STEP - 260); }
-    setTimeout(function(){ armThrow(who);
-      b.style.transition = 'left .5s cubic-bezier(.3,1.3,.5,1), top .5s cubic-bezier(.3,1.3,.5,1), opacity .15s'; b.style.opacity = '1'; b.style.left = b.dataset.l; b.style.top = b.dataset.t;
+    setTimeout(function(){ var TT = bxToss(who, b, !P);
       if(!P) return;
       var isSc = i >= list.length - nSc;
       setTimeout(function(){
@@ -886,7 +910,7 @@ function placeAnim(){ var D = cur(); if(!D) return; if(!view) ANIMD = D.id; var 
           if(near.length && Math.random() < 0.8){ var t = (aim && near.indexOf(aim)>=0) ? aim : near[0];
             if(say(who, pick(BX_MISS).replace('{t}', t).replace('{n}', n))) setTimeout(function(){ say(other(who), pick(BX_MISS_R)); }, 650); }
         }
-      }, 420);
+      }, TT);
     }, D0 + i*STEP); });
   var END = D0 + list.length*STEP + 900;
   setTimeout(function(){ L.classList.remove('alive'); R.classList.remove('alive'); list.forEach(function(n){ var b = balls[n]; if(b) b.style.transition = ''; }); predMark(); predEval();
