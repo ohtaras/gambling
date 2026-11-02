@@ -70,8 +70,8 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
 #bip39 .wr .w{flex:1;font-weight:700}
 #bip39 .wr .b{flex:0 0 100px;text-align:right;font-family:ui-monospace,Menlo,monospace;font-size:.75rem;color:var(--pub)}
 #bip39 .cnt{font-size:.78rem;color:var(--soft);text-align:right;margin-top:6px}
-#bip39 .btns{display:flex;gap:8px;margin-top:4px}
-#bip39 .btns button{flex:1;font-family:var(--body);font-weight:800;font-size:.95rem;cursor:pointer;border-radius:12px;padding:11px;border:1px solid var(--addr);background:var(--addr-soft);color:var(--addr)}
+.btns{display:flex;gap:8px;margin-top:4px}
+.btns button{flex:1;font-family:var(--body);font-weight:800;font-size:.95rem;cursor:pointer;border-radius:12px;padding:11px;border:1px solid var(--addr);background:var(--addr-soft);color:var(--addr)}
 #bip39 .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
 #bip39 .chip{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:6px 10px;font-size:.9rem;font-weight:700}
 #bip39 .chip b{color:var(--addr);font-family:ui-monospace,Menlo,monospace;margin-right:6px;font-size:.75rem;font-weight:800}
@@ -102,6 +102,8 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
       <button data-ex="satoshi nakamoto">satoshi nakamoto</button>
       <button data-ex="">(άδειο)</button>
     </div>
+    <div class="btns" style="margin-top:10px"><button id="b12">🎲 12 λέξεις</button><button id="b24">🎲 24 λέξεις</button></div>
+    <p class="note" style="margin:8px 0 0">🎲 Φτιάξε τυχαίο seed phrase — μπαίνει εδώ πάνω και δείχνει το πορτοφόλι του.</p>
   </div>
 
   <div class="chain">
@@ -140,9 +142,8 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
     <div class="lhead"><span class="c1">θέση</span><span class="c2">λέξη</span><span class="c3">11-bit</span></div>
     <div class="scroll" id="b39l"></div>
     <div class="cnt" id="b39c"></div>
-    <label class="big" style="margin-top:18px">🎲 Τυχαίος αριθμός → λέξεις</label>
-    <p class="note" style="margin:0 0 10px">Πάτα ένα κουμπί: οι τυχαίες λέξεις μπαίνουν αυτόματα στην <b>είσοδο πάνω</b> — και θα δεις εκεί το αληθινό τους πορτοφόλι.</p>
-    <div class="btns"><button id="b12">12 λέξεις</button><button id="b24">24 λέξεις</button></div>
+    <label class="big" style="margin-top:18px">🎲 Ανάλυση του τυχαίου αριθμού</label>
+    <p class="note" style="margin:0 0 10px">Μόλις πατήσεις 🎲 (πάνω, δίπλα στην είσοδο), εδώ βλέπεις την ανάλυση: πώς ο τυχαίος αριθμός γίνεται λέξεις.</p>
     <div class="chips" id="b39chips"></div>
     <div class="ent" id="b39ent" style="display:none"></div>
     <div class="bd" id="b39bd"></div>
