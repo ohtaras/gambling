@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; base-uri 'none'; form-action 'none'; connect-src 'none'">
+<title>Εργαστήρι Κλειδιών</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef3f0; --panel:#ffffff; --ink:#1c2a27; --soft:#5c6f6a; --line:#cfddd7;
+  --priv:#d6336c; --priv-soft:#fbdce8; --pub:#2563c9; --pub-soft:#dbe7fb; --addr:#1c8a5a; --addr-soft:#d7f0e2;
+  --warn:#b3611a; --warn-soft:#fbe8d4;
+  --disp:"Fraunces",Georgia,serif; --body:"Nunito",system-ui,sans-serif; color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1b18; --panel:#16241f; --ink:#e7efec; --soft:#9db1aa; --line:#2b3d37;
+  --priv:#ff7bac; --priv-soft:#3d1a2a; --pub:#6aa2ff; --pub-soft:#1a2b45; --addr:#5fd39a; --addr-soft:#143026;
+  --warn:#f2a35a; --warn-soft:#3a2a16; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0f1b18; --panel:#16241f; --ink:#e7efec; --soft:#9db1aa; --line:#2b3d37;
+  --priv:#ff7bac; --priv-soft:#3d1a2a; --pub:#6aa2ff; --pub-soft:#1a2b45; --addr:#5fd39a; --addr-soft:#143026;
+  --warn:#f2a35a; --warn-soft:#3a2a16; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;
+  padding:18px 16px 40px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.wrap{width:100%;max-width:640px;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--disp);font-weight:600;font-size:1.6rem;line-height:1.1;margin:0;text-wrap:balance}
+.lede{margin:0;color:var(--soft);font-size:1rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+label.big{display:block;font-weight:800;margin-bottom:8px}
+textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;border:1px solid var(--line);
+  border-radius:12px;background:var(--bg);color:var(--ink);resize:vertical;min-height:56px}
+.examples{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.examples button{font-family:var(--body);font-weight:700;font-size:.82rem;cursor:pointer;border-radius:999px;
+  padding:6px 12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.chain{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.step{border-radius:14px;padding:13px;border:1px solid var(--line)}
+.step .t{font-weight:800;font-size:.9rem;display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.step .v{font-family:var(--mono,ui-monospace,Menlo,monospace);font-size:.82rem;word-break:break-all;line-height:1.5}
+.step.priv{background:var(--priv-soft)} .step.priv .t{color:var(--priv)}
+.step.pub{background:var(--pub-soft)} .step.pub .t{color:var(--pub)}
+.step.addr{background:var(--addr-soft)} .step.addr .t{color:var(--addr)}
+.step.addr .v{font-size:1.05rem;font-weight:800}
+.arrow{text-align:center;color:var(--soft);font-size:.8rem;margin:-4px 0}
+.warn{background:var(--warn-soft);border:1px solid var(--warn);border-radius:14px;padding:14px;font-size:.92rem}
+.warn b{color:var(--warn)}
+.note{font-size:.86rem;color:var(--soft)}
+.copy{float:right;font-family:var(--body);font-weight:800;font-size:.72rem;cursor:pointer;border-radius:8px;
+  padding:3px 9px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🔑 Εργαστήρι Κλειδιών</h1>
+    <p class="lede">Γράψε ο,τιδήποτε — αριθμούς, λέξεις, μια ολόκληρη πρόταση. Θα το δεις να γίνεται ιδιωτικό κλειδί → δημόσιο κλειδί → πορτοφόλι. 100% τοπικά στο κινητό σου, τίποτα δεν φεύγει.</p>
+  </header>
+
+  <div class="card">
+    <label class="big" for="inp">Η είσοδός σου</label>
+    <textarea id="inp" placeholder="π.χ. Σπύρος, ή 12345, ή «το μαγαζί μου στην Πάτρα»…">Σπύρος</textarea>
+    <div class="examples">
+      <button data-ex="Σπύρος">Σπύρος</button>
+      <button data-ex="password">password</button>
+      <button data-ex="123456">123456</button>
+      <button data-ex="satoshi nakamoto">satoshi nakamoto</button>
+      <button data-ex="">(άδειο)</button>
+    </div>
+  </div>
+
+  <div class="chain">
+    <div class="step priv">
+      <div class="t">🔒 1. Ιδιωτικό κλειδί <span style="font-weight:600;color:var(--soft)">= SHA-256 της εισόδου</span><button class="copy" data-copy="priv">Αντιγραφή</button></div>
+      <div class="v" id="priv">—</div>
+    </div>
+    <div class="arrow">▼ k · G (πολλαπλασιασμός στην καμπύλη)</div>
+    <div class="step pub">
+      <div class="t">👁 2. Δημόσιο κλειδί <span style="font-weight:600;color:var(--soft)">= σημείο (x, y)</span></div>
+      <div class="v" id="pub">—</div>
+    </div>
+    <div class="arrow">▼ SHA-256 + RIPEMD-160 (ανακάτεμα)</div>
+    <div class="step addr">
+      <div class="t">🏦 3. Πορτοφόλι (διεύθυνση)<button class="copy" data-copy="addr">Αντιγραφή</button></div>
+      <div class="v" id="addr">—</div>
+    </div>
+  </div>
+
+  <div class="warn">
+    ⚠️ <b>ΠΟΤΕ μη βάλεις πραγματικά λεφτά σε πορτοφόλι φτιαγμένο από λέξη/φράση!</b> Λέγεται «brainwallet» και είναι θανάσιμα επικίνδυνο: ρομπότ δοκιμάζουν συνέχεια εκατομμύρια κοινές λέξεις/φράσεις, και μόλις δουν λεφτά σε τέτοιο πορτοφόλι το αδειάζουν σε δευτερόλεπτα. Αυτό το εργαστήρι είναι <b>μόνο για μάθηση</b>.
+  </div>
+
+  <div class="card note">
+    <b>Γιατί δεν τσεκάρει «αν έχει λεφτά»;</b> Κάθε είσοδος οδηγεί πάντα σε ένα έγκυρο πορτοφόλι — το ερώτημα είναι αν έχει υπόλοιπο. Αυτό θέλει αναζήτηση στο blockchain, και το να «σαρώνεις» αδύναμα πορτοφόλια για λεφτά είναι ακριβώς ο τρόπος που δουλεύουν οι κλέφτες. Γι' αυτό εδώ βλέπεις μόνο <b>ποιο</b> πορτοφόλι βγαίνει, όχι αν έχει χρήματα. Το δίδαγμα: αν η είσοδος μαντεύεται (λέξη, όνομα), το πορτοφόλι είναι άμεσα ευάλωτο· μόνο ένα <b>πραγματικά τυχαίο</b> κλειδί είναι ασφαλές.
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ---- RIPEMD-160 (verified against reference vectors) ---- */
+function ripemd160(data){
+  function rotl(x,n){return (x<<n)|(x>>>(32-n));}
+  var h0=0x67452301,h1=0xEFCDAB89,h2=0x98BADCFE,h3=0x10325476,h4=0xC3D2E1F0;
+  var zl=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,7,4,13,1,10,6,15,3,12,0,9,5,2,14,11,8,3,10,14,4,9,15,8,1,2,7,0,6,13,11,5,12,1,9,11,10,0,8,12,4,13,3,7,15,14,5,6,2,4,0,5,9,7,12,2,10,14,1,3,8,11,6,15,13];
+  var zr=[5,14,7,0,9,2,11,4,13,6,15,8,1,10,3,12,6,11,3,7,0,13,5,10,14,15,8,12,4,9,1,2,15,5,1,3,7,14,6,9,11,8,12,2,10,0,4,13,8,6,4,1,3,11,15,0,5,12,2,13,9,7,10,14,12,15,10,4,1,5,8,7,6,2,13,14,0,3,9,11];
+  var sl=[11,14,15,12,5,8,7,9,11,13,14,15,6,7,9,8,7,6,8,13,11,9,7,15,7,12,15,9,11,7,13,12,11,13,6,7,14,9,13,15,14,8,13,6,5,12,7,5,11,12,14,15,14,15,9,8,9,14,5,6,8,6,5,12,9,15,5,11,6,8,13,12,5,12,13,14,11,8,5,6];
+  var sr=[8,9,9,11,13,15,15,5,7,7,8,11,14,14,12,6,9,13,15,7,12,8,9,11,7,7,12,7,6,15,13,11,9,7,15,11,8,6,6,14,12,13,5,14,13,13,7,5,15,5,8,11,14,14,6,14,6,9,12,9,12,5,15,8,8,5,12,9,12,5,14,6,8,13,6,5,15,13,11,11];
+  var hl=[0x00000000,0x5A827999,0x6ED9EBA1,0x8F1BBCDC,0xA953FD4E];
+  var hr=[0x50A28BE6,0x5C4DD124,0x6D703EF3,0x7A6D76E9,0x00000000];
+  function f(j,x,y,z){ if(j<16)return x^y^z; if(j<32)return (x&y)|(~x&z); if(j<48)return (x|~y)^z; if(j<64)return (x&z)|(y&~z); return x^(y|~z); }
+  var len=data.length, paddedLen=(((len+8)>>6)+1)<<6;
+  var m=new Uint8Array(paddedLen); m.set(data); m[len]=0x80;
+  var bitLen=len*8; m[paddedLen-8]=bitLen&0xff; m[paddedLen-7]=(bitLen>>>8)&0xff; m[paddedLen-6]=(bitLen>>>16)&0xff; m[paddedLen-5]=(bitLen>>>24)&0xff;
+  var X=new Int32Array(16);
+  for(var i=0;i<paddedLen;i+=64){
+    for(var j=0;j<16;j++) X[j]=m[i+j*4]|(m[i+j*4+1]<<8)|(m[i+j*4+2]<<16)|(m[i+j*4+3]<<24);
+    var al=h0,bl=h1,cl=h2,dl=h3,el=h4, ar=h0,br=h1,cr=h2,dr=h3,er=h4,t;
+    for(var jj=0;jj<80;jj++){ var rnd=jj>>4;
+      t=(rotl((al+f(jj,bl,cl,dl)+X[zl[jj]]+hl[rnd])|0, sl[jj])+el)|0; al=el;el=dl;dl=rotl(cl,10)|0;cl=bl;bl=t;
+      t=(rotl((ar+f(79-jj,br,cr,dr)+X[zr[jj]]+hr[rnd])|0, sr[jj])+er)|0; ar=er;er=dr;dr=rotl(cr,10)|0;cr=br;br=t;
+    }
+    t=(h1+cl+dr)|0; h1=(h2+dl+er)|0; h2=(h3+el+ar)|0; h3=(h4+al+br)|0; h4=(h0+bl+cr)|0; h0=t;
+  }
+  var out=new Uint8Array(20),hs=[h0,h1,h2,h3,h4];
+  for(var k=0;k<5;k++){ out[k*4]=hs[k]&0xff; out[k*4+1]=(hs[k]>>>8)&0xff; out[k*4+2]=(hs[k]>>>16)&0xff; out[k*4+3]=(hs[k]>>>24)&0xff; }
+  return out;
+}
+/* ---- secp256k1 (BigInt) ---- */
+var P=(1n<<256n)-(1n<<32n)-977n;
+var Gx=0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798n;
+var Gy=0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8n;
+function mod(a){return ((a%P)+P)%P;}
+function modpow(b,e){b=mod(b);var r=1n;while(e>0n){if(e&1n)r=mod(r*b);b=mod(b*b);e>>=1n;}return r;}
+function inv(a){return modpow(mod(a),P-2n);}
+function padd(p,q){ if(!p)return q; if(!q)return p; var x1=p[0],y1=p[1],x2=q[0],y2=q[1]; if(x1===x2&&mod(y1+y2)===0n)return null; var m; if(x1===x2&&y1===y2)m=mod(3n*x1*x1*inv(2n*y1)); else m=mod((y2-y1)*inv(x2-x1)); var x3=mod(m*m-x1-x2),y3=mod(m*(x1-x3)-y1); return [x3,y3]; }
+function pmul(k){ var r=null,a=[Gx,Gy]; while(k>0n){ if(k&1n)r=padd(r,a); a=padd(a,a); k>>=1n; } return r; }
+/* ---- helpers ---- */
+function bytesToBig(b){var x=0n;for(var i=0;i<b.length;i++)x=(x<<8n)|BigInt(b[i]);return x;}
+function bigTo32(x){var b=new Uint8Array(32);for(var i=31;i>=0;i--){b[i]=Number(x&0xffn);x>>=8n;}return b;}
+function toHex(b){var s="";for(var i=0;i<b.length;i++)s+=b[i].toString(16).padStart(2,"0");return s;}
+function bigHex(x){return x.toString(16).padStart(64,"0");}
+var B58="123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+function base58(bytes){ var x=bytesToBig(bytes),s=""; while(x>0n){var r=Number(x%58n);x/=58n;s=B58[r]+s;} for(var i=0;i<bytes.length;i++){if(bytes[i]===0)s="1"+s;else break;} return s; }
+async function sha256(bytes){ var d=await crypto.subtle.digest("SHA-256", bytes); return new Uint8Array(d); }
+
+var $=function(id){return document.getElementById(id);};
+var tmr=null, lastGroup="";
+function dgroup(hex){ var g=""; for(var i=0;i<hex.length;i+=4) g+=hex.substr(i,4)+" "; return g.trim(); }
+
+async function compute(){
+  var text=$("inp").value;
+  var enc=new TextEncoder().encode(text);
+  var priv=await sha256(enc);
+  var kBig=bytesToBig(priv);
+  if(kBig===0n) kBig=1n;
+  var pt=pmul(kBig);
+  var x=pt[0], y=pt[1];
+  var pub=new Uint8Array(33); pub[0]=(y%2n===0n)?2:3; pub.set(bigTo32(x),1);
+  var h1=await sha256(pub); var h2=ripemd160(h1);
+  var payload=new Uint8Array(21); payload[0]=0x00; payload.set(h2,1);
+  var chk=(await sha256(await sha256(payload))).slice(0,4);
+  var full=new Uint8Array(25); full.set(payload); full.set(chk,21);
+  var addr=base58(full);
+  $("priv").textContent=dgroup(toHex(priv));
+  $("pub").innerHTML="x = "+bigHex(x)+"<br><br>y = "+bigHex(y);
+  $("addr").textContent=addr;
+}
+function schedule(){ if(tmr)clearTimeout(tmr); tmr=setTimeout(function(){ compute().catch(function(e){ $("addr").textContent="σφάλμα: "+(e&&e.message||e); }); },180); }
+
+$("inp").addEventListener("input",schedule);
+Array.prototype.forEach.call(document.querySelectorAll(".examples button"),function(b){
+  b.onclick=function(){ $("inp").value=b.getAttribute("data-ex"); schedule(); };
+});
+Array.prototype.forEach.call(document.querySelectorAll(".copy"),function(b){
+  b.onclick=function(e){ e.stopPropagation(); var t=$(b.getAttribute("data-copy")).textContent.replace(/\s/g,""); try{ navigator.clipboard.writeText(t); b.textContent="✓"; setTimeout(function(){b.textContent="Αντιγραφή";},1200); }catch(err){} };
+});
+compute();
+</script>
+</body>
+</html>
