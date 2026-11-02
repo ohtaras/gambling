@@ -122,7 +122,7 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
   </div>
 
     <div class="step addr" id="seedbox" style="display:none;border-style:dashed">
-    <div class="t">\U0001F3E6 Πορτοφόλι από seed phrase <span style="font-weight:600;color:var(--soft)">— κι αυτό πραγματικό — έτσι το βγάζει ένα κανονικό wallet για seed phrase. (BIP39→BIP44, m/44'/0'/0'/0/0)</span></div>
+    <div class="t">🏦 Πορτοφόλι από seed phrase <span style="font-weight:600;color:var(--soft)">— κι αυτό πραγματικό — έτσι το βγάζει ένα κανονικό wallet για seed phrase. (BIP39→BIP44, m/44'/0'/0'/0/0)</span><button class="copy" data-copy="seedaddr">Αντιγραφή</button></div>
     <div class="v" id="seedaddr">—</div>
   </div>
 
@@ -134,13 +134,13 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
     <b>Γιατί δεν τσεκάρει «αν έχει λεφτά»;</b> Κάθε είσοδος οδηγεί πάντα σε ένα έγκυρο πορτοφόλι — το ερώτημα είναι αν έχει υπόλοιπο. Αυτό θέλει αναζήτηση στο blockchain, και το να «σαρώνεις» αδύναμα πορτοφόλια για λεφτά είναι ακριβώς ο τρόπος που δουλεύουν οι κλέφτες. Γι' αυτό εδώ βλέπεις μόνο <b>ποιο</b> πορτοφόλι βγαίνει, όχι αν έχει χρήματα. Το δίδαγμα: αν η είσοδος μαντεύεται (λέξη, όνομα), το πορτοφόλι είναι άμεσα ευάλωτο· μόνο ένα <b>πραγματικά τυχαίο</b> κλειδί είναι ασφαλές.
   </div>
   <div class="card" id="bip39">
-    <label class="big">\U0001F4D6 Η λίστα BIP39 — 2048 λέξεις</label>
+    <label class="big">📖 Η λίστα BIP39 — 2048 λέξεις</label>
     <p class="note" style="margin:0 0 12px">Η <b>επίσημη</b> αγγλική λίστα. Κάθε λέξη έχει μια <b>θέση</b> (0–2047) κι έναν <b>11-bit</b> κωδικό.</p>
     <input class="srch" id="b39s" placeholder="Αναζήτηση: λέξη (zoo) ή θέση (2047)" autocapitalize="off" autocorrect="off" spellcheck="false">
     <div class="lhead"><span class="c1">θέση</span><span class="c2">λέξη</span><span class="c3">11-bit</span></div>
     <div class="scroll" id="b39l"></div>
     <div class="cnt" id="b39c"></div>
-    <label class="big" style="margin-top:18px">\U0001F3B2 Τυχαίος αριθμός → λέξεις</label>
+    <label class="big" style="margin-top:18px">🎲 Τυχαίος αριθμός → λέξεις</label>
     <p class="note" style="margin:0 0 10px">Πάτα ένα κουμπί: οι τυχαίες λέξεις μπαίνουν αυτόματα στην <b>είσοδο πάνω</b> — και θα δεις εκεί το αληθινό τους πορτοφόλι.</p>
     <div class="btns"><button id="b12">12 λέξεις</button><button id="b24">24 λέξεις</button></div>
     <div class="chips" id="b39chips"></div>
