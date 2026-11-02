@@ -53,10 +53,18 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
 .note{font-size:.86rem;color:var(--soft)}
 .copy{float:right;font-family:var(--body);font-weight:800;font-size:.72rem;cursor:pointer;border-radius:8px;
   padding:3px 9px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+#lock{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+#lock .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;width:min(94vw,360px);display:flex;flex-direction:column;gap:12px;text-align:center}
+#lock h2{font-family:var(--disp);font-weight:600;font-size:1.25rem;margin:0}
+#lock input{padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:16px;text-align:center}
+#lock button{font-family:var(--body);font-weight:800;font-size:1rem;cursor:pointer;border-radius:12px;padding:12px;border:1px solid var(--ink);background:var(--ink);color:var(--bg)}
+#lock .msg{font-size:.85rem;color:var(--priv);min-height:1.2em}
+#lock .sub{font-size:.85rem;color:var(--soft)}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div id="lock"><div class="box"><h2>🔒 Εργαστήρι Κλειδιών</h2><div class="sub">Προσωπικό εργαλείο. Βάλε τον κωδικό σου.</div><input id="pw" type="password" inputmode="numeric" placeholder="Κωδικός" autocomplete="off"><button id="pwb">Ξεκλείδωμα</button><div class="msg" id="pwm"></div></div></div>
+<div class="wrap" id="wrap" style="display:none">
   <header>
     <h1>🔑 Εργαστήρι Κλειδιών</h1>
     <p class="lede">Γράψε ο,τιδήποτε — αριθμούς, λέξεις, μια ολόκληρη πρόταση. Θα το δεις να γίνεται ιδιωτικό κλειδί → δημόσιο κλειδί → πορτοφόλι. 100% τοπικά στο κινητό σου, τίποτα δεν φεύγει.</p>
@@ -149,6 +157,12 @@ function base58(bytes){ var x=bytesToBig(bytes),s=""; while(x>0n){var r=Number(x
 async function sha256(bytes){ var d=await crypto.subtle.digest("SHA-256", bytes); return new Uint8Array(d); }
 
 var $=function(id){return document.getElementById(id);};
+var PWHASH="dbbd86bed2ca98bc498956f4f00191da44481dfaf3c28d50717ad1a4e4ea2515";
+function hex(b){var s="";for(var i=0;i<b.length;i++)s+=b[i].toString(16).padStart(2,"0");return s;}
+async function tryUnlock(){ var v=$("pw").value||""; var h=hex(await sha256(new TextEncoder().encode(v))); if(h===PWHASH){ $("lock").style.display="none"; $("wrap").style.display="flex"; compute(); } else { $("pwm").textContent="Λάθος κωδικός."; try{$("pw").select();}catch(e){} } }
+$("pwb").onclick=function(){ tryUnlock(); };
+$("pw").addEventListener("keydown",function(e){ if(e.key==="Enter") tryUnlock(); });
+setTimeout(function(){try{$("pw").focus();}catch(e){}},100);
 var tmr=null, lastGroup="";
 function dgroup(hex){ var g=""; for(var i=0;i<hex.length;i+=4) g+=hex.substr(i,4)+" "; return g.trim(); }
 
@@ -179,7 +193,7 @@ Array.prototype.forEach.call(document.querySelectorAll(".examples button"),funct
 Array.prototype.forEach.call(document.querySelectorAll(".copy"),function(b){
   b.onclick=function(e){ e.stopPropagation(); var t=$(b.getAttribute("data-copy")).textContent.replace(/\s/g,""); try{ navigator.clipboard.writeText(t); b.textContent="✓"; setTimeout(function(){b.textContent="Αντιγραφή";},1200); }catch(err){} };
 });
-compute();
+
 </script>
 </body>
 </html>
