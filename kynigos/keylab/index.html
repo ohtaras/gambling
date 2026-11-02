@@ -82,6 +82,9 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
 #bip39 .bd .bb{flex:0 0 96px;font-family:ui-monospace,Menlo,monospace;color:var(--pub);font-size:.72rem}
 #bip39 .bd .ii{flex:0 0 46px;text-align:right;color:var(--soft);font-family:ui-monospace,Menlo,monospace}
 #bip39 .bd .ww{flex:1;text-align:right;font-weight:700}
+.chead{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;-webkit-user-select:none;user-select:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-weight:800;font-size:.95rem;color:var(--ink)}
+.chead .chev{transition:transform .15s;color:var(--soft);font-size:.8rem}
+.chead.collapsed .chev{transform:rotate(-90deg)}
 </style>
 </head>
 <body>
@@ -106,6 +109,7 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
     <p class="note" style="margin:8px 0 0">🎲 Φτιάξε τυχαίο seed phrase — μπαίνει εδώ πάνω και δείχνει το πορτοφόλι του.</p>
   </div>
 
+    <div class="chead"><span>🔑 Brainwallet — κλειδί & πορτοφόλι</span><span class="chev">▾</span></div>
   <div class="chain">
     <div class="step priv">
       <div class="t">🔒 1. Ιδιωτικό κλειδί <span style="font-weight:600;color:var(--soft)">= SHA-256 της εισόδου</span><button class="copy" data-copy="priv">Αντιγραφή</button></div>
@@ -128,13 +132,16 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
     <div class="v" id="seedaddr">—</div>
   </div>
 
-<div class="warn">
+  <div class="chead"><span>⚠️ Προειδοποίηση για brainwallet</span><span class="chev">▾</span></div>
+  <div class="warn">
     ⚠️ <b>ΠΟΤΕ μη βάλεις πραγματικά λεφτά σε πορτοφόλι φτιαγμένο από λέξη/φράση!</b> Λέγεται «brainwallet» και είναι θανάσιμα επικίνδυνο: ρομπότ δοκιμάζουν συνέχεια εκατομμύρια κοινές λέξεις/φράσεις, και μόλις δουν λεφτά σε τέτοιο πορτοφόλι το αδειάζουν σε δευτερόλεπτα. Αυτό το εργαστήρι είναι <b>μόνο για μάθηση</b>.
   </div>
 
+    <div class="chead"><span>ℹ️ Γιατί δεν τσεκάρει υπόλοιπο</span><span class="chev">▾</span></div>
   <div class="card note">
     <b>Γιατί δεν τσεκάρει «αν έχει λεφτά»;</b> Κάθε είσοδος οδηγεί πάντα σε ένα έγκυρο πορτοφόλι — το ερώτημα είναι αν έχει υπόλοιπο. Αυτό θέλει αναζήτηση στο blockchain, και το να «σαρώνεις» αδύναμα πορτοφόλια για λεφτά είναι ακριβώς ο τρόπος που δουλεύουν οι κλέφτες. Γι' αυτό εδώ βλέπεις μόνο <b>ποιο</b> πορτοφόλι βγαίνει, όχι αν έχει χρήματα. Το δίδαγμα: αν η είσοδος μαντεύεται (λέξη, όνομα), το πορτοφόλι είναι άμεσα ευάλωτο· μόνο ένα <b>πραγματικά τυχαίο</b> κλειδί είναι ασφαλές.
   </div>
+    <div class="chead"><span>📖 Λίστα BIP39 & ανάλυση</span><span class="chev">▾</span></div>
   <div class="card" id="bip39">
     <label class="big">📖 Η λίστα BIP39 — 2048 λέξεις</label>
     <p class="note" style="margin:0 0 12px">Η <b>επίσημη</b> αγγλική λίστα. Κάθε λέξη έχει μια <b>θέση</b> (0–2047) κι έναν <b>11-bit</b> κωδικό.</p>
@@ -276,6 +283,9 @@ async function updateSeedbox(text){
   $("b12").onclick=function(){gen(16).catch(function(){});};
   $("b24").onclick=function(){gen(32).catch(function(){});};
 })();
+
+/* ---- σύμπτυξη ενοτήτων ---- */
+(function(){ Array.prototype.forEach.call(document.querySelectorAll(".chead"),function(h){ h.addEventListener("click",function(){ var t=h.nextElementSibling; if(!t)return; var hidden=(t.style.display==="none"); t.style.display=hidden?"":"none"; h.classList.toggle("collapsed",!hidden); }); }); })();
 </script>
 </body>
 </html>
