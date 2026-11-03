@@ -85,10 +85,10 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
 .chead{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;-webkit-user-select:none;user-select:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-weight:800;font-size:.95rem;color:var(--ink)}
 .chead .chev{transition:transform .15s;color:var(--soft);font-size:.8rem}
 .chead.collapsed .chev{transform:rotate(-90deg)}
-.step.addr .af{padding:7px 0;border-top:1px solid var(--line)}
-.step.addr .af:first-of-type{border-top:0;padding-top:2px}
-.step.addr .al{font-size:.7rem;color:var(--soft);text-transform:uppercase;letter-spacing:.03em;font-weight:800}
-.step.addr .av{font-family:ui-monospace,Menlo,monospace;font-size:.82rem;word-break:break-all;margin-top:3px;font-weight:700}
+.step .af{padding:7px 0;border-top:1px solid var(--line)}
+.step .af:first-of-type{border-top:0;padding-top:2px}
+.step .al{font-size:.7rem;color:var(--soft);text-transform:uppercase;letter-spacing:.03em;font-weight:800}
+.step .av{font-family:ui-monospace,Menlo,monospace;font-size:.82rem;word-break:break-all;margin-top:3px;font-weight:700}
 </style>
 </head>
 <body>
@@ -98,6 +98,12 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
     <h1>🔑 Εργαστήρι Κλειδιών</h1>
     <p class="lede">Γράψε ο,τιδήποτε — αριθμούς, λέξεις, μια ολόκληρη πρόταση. Θα το δεις να γίνεται ιδιωτικό κλειδί → δημόσιο κλειδί → πορτοφόλι. 100% τοπικά στο κινητό σου, τίποτα δεν φεύγει.</p>
   </header>
+
+  <div class="card" id="legend">
+    <div style="font-weight:800;margin-bottom:7px">Για να μην μπερδεύεσαι:</div>
+    <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px"><span>🔒</span><div><b style="color:var(--priv)">ΚΛΕΙΔΙΑ = ΜΥΣΤΙΚΑ</b> — κράτα τα κρυφά, ΠΟΤΕ μην τα δείξεις. Είναι τα λεφτά.</div></div>
+    <div style="display:flex;gap:8px;align-items:flex-start"><span>🏦</span><div><b style="color:var(--addr)">ΠΟΡΤΟΦΟΛΙΑ / ΔΙΕΥΘΥΝΣΕΙΣ = ΔΗΜΟΣΙΑ</b> — μοιράσου τα ελεύθερα για να λάβεις.</div></div>
+  </div>
 
   <div class="card">
     <label class="big" for="inp">Η είσοδός σου</label>
@@ -116,8 +122,13 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
     <div class="chead"><span>🔑 Brainwallet — κλειδί & πορτοφόλι</span><span class="chev">▾</span></div>
   <div class="chain">
     <div class="step priv">
-      <div class="t">🔒 1. Ιδιωτικό κλειδί <span style="font-weight:600;color:var(--soft)">= SHA-256 της εισόδου</span><button class="copy" data-copy="priv">Αντιγραφή</button></div>
-      <div class="v" id="priv">—</div>
+      <div class="t">🔒 1. Ιδιωτικό κλειδί <span style="font-weight:600;color:var(--soft)">— ΜΥΣΤΙΚΟ, 4 μορφές του ίδιου αριθμού</span></div>
+      <div class="v">
+        <div class="af"><span class="al">Hex (64 ψηφία)</span><button class="copy" data-copy="priv">Αντιγραφή</button><div class="av" id="priv">—</div></div>
+        <div class="af"><span class="al">Δεκαδικό (ο αριθμός)</span><button class="copy" data-copy="privdec">Αντιγραφή</button><div class="av" id="privdec">—</div></div>
+        <div class="af"><span class="al">WIF compressed (K/L…)</span><button class="copy" data-copy="wifc">Αντιγραφή</button><div class="av" id="wifc">—</div></div>
+        <div class="af"><span class="al">WIF uncompressed (5…)</span><button class="copy" data-copy="wifu">Αντιγραφή</button><div class="av" id="wifu">—</div></div>
+      </div>
     </div>
     <div class="arrow">▼ k · G (πολλαπλασιασμός στην καμπύλη)</div>
     <div class="step pub">
@@ -126,7 +137,7 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
     </div>
     <div class="arrow">▼ SHA-256 + RIPEMD-160 (ανακάτεμα)</div>
     <div class="step addr">
-      <div class="t">🏦 3. Πορτοφόλι (brainwallet) — 4 μορφές</div>
+      <div class="t">🏦 3. Πορτοφόλια (ΔΗΜΟΣΙΑ — μοιράζονται) — 4 μορφές</div>
       <div class="v">
         <div class="af"><span class="al">1… Legacy</span><button class="copy" data-copy="addr">Αντιγραφή</button><div class="av" id="addr">—</div></div>
         <div class="af"><span class="al">3… SegWit-συμβατό</span><button class="copy" data-copy="addr3">Αντιγραφή</button><div class="av" id="addr3">—</div></div>
@@ -239,6 +250,7 @@ function liftX(x){var ys=mod(modpow(x,3n)+7n);var y=modpow(ys,(P+1n)/4n);if(mod(
 async function taggedHash(tag,msg){var t=await sha256(new TextEncoder().encode(tag));return await sha256(concatU8(t,t,msg));}
 async function taprootOut(kBig){var ix=pmul(kBig)[0];var Pl=liftX(ix);var th=await taggedHash("TapTweak",bigTo32(ix));var t=bytesToBig(th);var Q=padd(Pl,pmul(t));return Q[0];}
 async function addr4(kBig,pub){var hh=await h160a(pub);var p1=await b58check(concatU8(new Uint8Array([0x00]),hh));var redeem=concatU8(new Uint8Array([0x00,0x14]),hh);var p3=await b58check(concatU8(new Uint8Array([0x05]),await h160a(redeem)));var bq=segwitEnc("bc",0,hh);var ox=await taprootOut(kBig);var bp=segwitEnc("bc",1,bigTo32(ox));return {p1:p1,p3:p3,bq:bq,bp:bp};}
+async function wifEnc(kBig,comp){var body=comp?concatU8(new Uint8Array([0x80]),bigTo32(kBig),new Uint8Array([0x01])):concatU8(new Uint8Array([0x80]),bigTo32(kBig));return await b58check(body);}
 async function compute(){
   var text=$("inp").value;
   var enc=new TextEncoder().encode(text);
@@ -249,6 +261,9 @@ async function compute(){
   var x=pt[0], y=pt[1];
   var pub=new Uint8Array(33); pub[0]=(y%2n===0n)?2:3; pub.set(bigTo32(x),1);
   $("priv").textContent=dgroup(toHex(priv));
+  $("privdec").textContent=kBig.toString(10);
+  $("wifc").textContent=await wifEnc(kBig,true);
+  $("wifu").textContent=await wifEnc(kBig,false);
   $("pub").innerHTML="x = "+bigHex(x)+"<br><br>y = "+bigHex(y);
   var A=await addr4(kBig, pub);
   $("addr").textContent=A.p1; $("addr3").textContent=A.p3; $("addrbq").textContent=A.bq; $("addrbp").textContent=A.bp;
