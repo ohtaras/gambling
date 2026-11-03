@@ -85,6 +85,10 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
 .chead{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;-webkit-user-select:none;user-select:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-weight:800;font-size:.95rem;color:var(--ink)}
 .chead .chev{transition:transform .15s;color:var(--soft);font-size:.8rem}
 .chead.collapsed .chev{transform:rotate(-90deg)}
+.step.addr .af{padding:7px 0;border-top:1px solid var(--line)}
+.step.addr .af:first-of-type{border-top:0;padding-top:2px}
+.step.addr .al{font-size:.7rem;color:var(--soft);text-transform:uppercase;letter-spacing:.03em;font-weight:800}
+.step.addr .av{font-family:ui-monospace,Menlo,monospace;font-size:.82rem;word-break:break-all;margin-top:3px;font-weight:700}
 </style>
 </head>
 <body>
@@ -122,8 +126,13 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
     </div>
     <div class="arrow">▼ SHA-256 + RIPEMD-160 (ανακάτεμα)</div>
     <div class="step addr">
-      <div class="t">🏦 3. Πορτοφόλι (brainwallet — SHA-256)<button class="copy" data-copy="addr">Αντιγραφή</button></div>
-      <div class="v" id="addr">—</div>
+      <div class="t">🏦 3. Πορτοφόλι (brainwallet) — 4 μορφές</div>
+      <div class="v">
+        <div class="af"><span class="al">1… Legacy</span><button class="copy" data-copy="addr">Αντιγραφή</button><div class="av" id="addr">—</div></div>
+        <div class="af"><span class="al">3… SegWit-συμβατό</span><button class="copy" data-copy="addr3">Αντιγραφή</button><div class="av" id="addr3">—</div></div>
+        <div class="af"><span class="al">bc1q… Native SegWit</span><button class="copy" data-copy="addrbq">Αντιγραφή</button><div class="av" id="addrbq">—</div></div>
+        <div class="af"><span class="al">bc1p… Taproot</span><button class="copy" data-copy="addrbp">Αντιγραφή</button><div class="av" id="addrbp">—</div></div>
+      </div>
     </div>
   </div>
 
@@ -215,6 +224,21 @@ setTimeout(function(){try{$("pw").focus();}catch(e){}},100);
 var tmr=null, lastGroup="";
 function dgroup(hex){ var g=""; for(var i=0;i<hex.length;i+=4) g+=hex.substr(i,4)+" "; return g.trim(); }
 
+/* ---- διευθύνσεις 4 μορφών (P2PKH, P2SH, bech32, taproot) ---- */
+var B32CH="qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+function b32pm(v){var G=[0x3b6a57b2,0x26508e6d,0x1ea119fa,0x3d4233dd,0x2a1462b3],chk=1;for(var p=0;p<v.length;p++){var b=chk>>>25;chk=(((chk&0x1ffffff)<<5)^v[p])>>>0;for(var i=0;i<5;i++)chk=(chk^(((b>>>i)&1)?G[i]:0))>>>0;}return chk>>>0;}
+function b32hrp(h){var a=[],b=[];for(var i=0;i<h.length;i++){a.push(h.charCodeAt(i)>>>5);b.push(h.charCodeAt(i)&31);}return a.concat([0]).concat(b);}
+function b32chk(h,d,m){var c=m?0x2bc830a3:1;var pm=(b32pm(b32hrp(h).concat(d).concat([0,0,0,0,0,0]))^c)>>>0;var r=[];for(var i=0;i<6;i++)r.push((pm>>>(5*(5-i)))&31);return r;}
+function b32enc(h,d,m){var comb=d.concat(b32chk(h,d,m)),s=h+"1";for(var i=0;i<comb.length;i++)s+=B32CH[comb[i]];return s;}
+function conv85(bytes){var acc=0,bits=0,ret=[],mv=31,ma=4095;for(var i=0;i<bytes.length;i++){acc=(((acc<<8)|bytes[i])&ma);bits+=8;while(bits>=5){bits-=5;ret.push((acc>>bits)&mv);}}if(bits>0)ret.push((acc<<(5-bits))&mv);return ret;}
+function segwitEnc(hrp,ver,prog){return b32enc(hrp,[ver].concat(conv85(Array.prototype.slice.call(prog))),ver!==0);}
+async function h160a(bytes){return ripemd160(await sha256(bytes));}
+async function b58check(payload){var chk=(await sha256(await sha256(payload))).slice(0,4);var full=new Uint8Array(payload.length+4);full.set(payload);full.set(chk,payload.length);return base58(full);}
+function concatU8(){var t=0,a=arguments,i;for(i=0;i<a.length;i++)t+=a[i].length;var out=new Uint8Array(t),o=0;for(i=0;i<a.length;i++){out.set(a[i],o);o+=a[i].length;}return out;}
+function liftX(x){var ys=mod(modpow(x,3n)+7n);var y=modpow(ys,(P+1n)/4n);if(mod(y*y)!==mod(ys))throw new Error("no sqrt");if(y%2n!==0n)y=P-y;return [x,y];}
+async function taggedHash(tag,msg){var t=await sha256(new TextEncoder().encode(tag));return await sha256(concatU8(t,t,msg));}
+async function taprootOut(kBig){var ix=pmul(kBig)[0];var Pl=liftX(ix);var th=await taggedHash("TapTweak",bigTo32(ix));var t=bytesToBig(th);var Q=padd(Pl,pmul(t));return Q[0];}
+async function addr4(kBig,pub){var hh=await h160a(pub);var p1=await b58check(concatU8(new Uint8Array([0x00]),hh));var redeem=concatU8(new Uint8Array([0x00,0x14]),hh);var p3=await b58check(concatU8(new Uint8Array([0x05]),await h160a(redeem)));var bq=segwitEnc("bc",0,hh);var ox=await taprootOut(kBig);var bp=segwitEnc("bc",1,bigTo32(ox));return {p1:p1,p3:p3,bq:bq,bp:bp};}
 async function compute(){
   var text=$("inp").value;
   var enc=new TextEncoder().encode(text);
@@ -224,14 +248,10 @@ async function compute(){
   var pt=pmul(kBig);
   var x=pt[0], y=pt[1];
   var pub=new Uint8Array(33); pub[0]=(y%2n===0n)?2:3; pub.set(bigTo32(x),1);
-  var h1=await sha256(pub); var h2=ripemd160(h1);
-  var payload=new Uint8Array(21); payload[0]=0x00; payload.set(h2,1);
-  var chk=(await sha256(await sha256(payload))).slice(0,4);
-  var full=new Uint8Array(25); full.set(payload); full.set(chk,21);
-  var addr=base58(full);
   $("priv").textContent=dgroup(toHex(priv));
   $("pub").innerHTML="x = "+bigHex(x)+"<br><br>y = "+bigHex(y);
-  $("addr").textContent=addr;
+  var A=await addr4(kBig, pub);
+  $("addr").textContent=A.p1; $("addr3").textContent=A.p3; $("addrbq").textContent=A.bq; $("addrbp").textContent=A.bp;
   try{ await updateSeedbox(text); }catch(e){}
 }
 function schedule(){ if(tmr)clearTimeout(tmr); tmr=setTimeout(function(){ compute().catch(function(e){ $("addr").textContent="σφάλμα: "+(e&&e.message||e); }); },180); }
