@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; base-uri 'none'; form-action 'none'; connect-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; base-uri 'none'; form-action 'none'; connect-src https://blockstream.info https://mempool.space">
 <title>Εργαστήρι Κλειδιών</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -150,6 +150,9 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
     <div class="step addr" id="seedbox" style="display:none;border-style:dashed">
     <div class="t">🏦 Πορτοφόλι από seed phrase <span style="font-weight:600;color:var(--soft)">— κι αυτό πραγματικό — έτσι το βγάζει ένα κανονικό wallet για seed phrase. (BIP39→BIP44, m/44'/0'/0'/0/0)</span><button class="copy" data-copy="seedaddr">Αντιγραφή</button></div>
     <div class="v" id="seedaddr">—</div>
+    <button id="seedchk" style="margin-top:12px;font-family:var(--body);font-weight:800;font-size:.85rem;cursor:pointer;border-radius:10px;border:none;background:var(--addr);color:#fff;padding:9px 16px">🔍 Έλεγχος κίνησης στην αλυσίδα</button>
+    <div class="v" id="seedact" style="margin-top:8px;display:none;font-size:.9rem;font-weight:700"></div>
+    <p class="note" style="margin:7px 0 0;font-size:.78rem">🔒 Στέλνεται μόνο η <b>δημόσια διεύθυνση</b> στον explorer — ποτέ το seed ή το κλειδί.</p>
   </div>
 
   <div class="chead"><span>⚠️ Προειδοποίηση για brainwallet</span><span class="chev">▾</span></div>
@@ -290,10 +293,29 @@ async function seedToPriv(mnemonic){var pw=new TextEncoder().encode(mnemonic.nor
 async function validMnemonic(str){var arr=str.trim().toLowerCase().split(/\s+/).filter(Boolean);if([12,15,18,21,24].indexOf(arr.length)<0)return false;var bits="";for(var i=0;i<arr.length;i++){var idx=BIP39.indexOf(arr[i]);if(idx<0)return false;bits+=idx.toString(2).padStart(11,"0");}var csLen=(arr.length*11/33)|0;var entBits=bits.length-csLen;var bytes=new Uint8Array(entBits/8);for(var b=0;b<bytes.length;b++)bytes[b]=parseInt(bits.slice(b*8,b*8+8),2);var h=await sha256(bytes);var cs=h[0].toString(2).padStart(8,"0").slice(0,csLen);return cs===bits.slice(entBits);}
 async function updateSeedbox(text){
   var box=$("seedbox"),out=$("seedaddr"); if(!box)return;
+  var act=$("seedact"); if(act){act.style.display="none";act.textContent="";}
   var ok=await validMnemonic(text);
   if(ok){ box.style.display=""; try{ var k=await seedToPriv(text.trim().toLowerCase().replace(/\s+/g," ")); out.textContent=await addrFromPriv(k);}catch(e){ out.textContent="σφάλμα"; } }
   else { box.style.display="none"; out.textContent="—"; }
 }
+async function checkSeedActivity(){
+  var addr=$("seedaddr").textContent.trim();
+  var box=$("seedact"), btn=$("seedchk");
+  if(!addr||addr==="—"||addr==="σφάλμα"){return;}
+  box.style.display=""; box.style.color="var(--soft)"; box.textContent="⏳ Έλεγχος στην αλυσίδα…"; btn.disabled=true;
+  async function q(base){ var r=await fetch(base+"/api/address/"+addr); if(!r.ok) throw 0; return r.json(); }
+  try{
+    var d; try{ d=await q("https://blockstream.info"); }catch(e){ d=await q("https://mempool.space"); }
+    var cs=d.chain_stats||{}, ms=d.mempool_stats||{};
+    var txs=(cs.tx_count||0)+(ms.tx_count||0);
+    var bal=(cs.funded_txo_sum||0)-(cs.spent_txo_sum||0)+(ms.funded_txo_sum||0)-(ms.spent_txo_sum||0);
+    var recv=(cs.funded_txo_sum||0)+(ms.funded_txo_sum||0);
+    if(txs===0){ box.style.color="var(--addr)"; box.innerHTML="✅ <b>Καμία κίνηση.</b> Αχρησιμοποίητη, άδεια διεύθυνση — όπως ένα ολοκαίνουργιο πορτοφόλι."; }
+    else{ box.style.color="var(--ink)"; box.innerHTML="📊 <b>"+txs+"</b> συναλλαγ"+(txs===1?"ή":"ές")+" · υπόλοιπο <b>"+(bal/1e8).toFixed(8)+" BTC</b> · σύνολο που έλαβε "+(recv/1e8).toFixed(8)+" BTC"; }
+  }catch(e){ box.style.color="var(--warn)"; box.textContent="⚠️ Δεν μπόρεσα να συνδεθώ στον explorer. Δοκίμασε ξανά σε λίγο."; }
+  btn.disabled=false;
+}
+var _sc=$("seedchk"); if(_sc) _sc.onclick=checkSeedActivity;
 (function(){
   var listEl=$("b39l"), cntEl=$("b39c"); if(!listEl) return;
   var html="";
