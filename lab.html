@@ -406,7 +406,11 @@ function sumRender(T, D, TOP, from, N){ var C=COST(), nm=function(k){ return ALL
   var h='<div class="muted" style="font-size:13px;margin:4px 0">'+N+' κληρώσεις × '+T.length+' στήλες = <b>'+all.toLocaleString('el-GR')+'</b> στήλες · '+K+' αριθμοί · '+(MODE==='sc'?'🟢 2η ευκαιρία':MODE==='kb'?'🔴 Bonus':'απλή')+' '+eur(C)+'</div>';
   var ex=all*pHit(K,K);
   h+='<div style="border:2px solid #f59e0b;background:#422006;border-radius:12px;padding:10px 12px;margin:8px 0"><div style="font-size:17px;font-weight:800;color:#fbbf24">🏆 Το απόλυτο ('+K+'/'+K+'): '+TOP.length+(TOP.length===1?' φορά':' φορές')+'</div><div class="muted" style="font-size:13px">Η καθαρή τύχη θα έδινε περίπου '+(ex<10?pc(ex):Math.round(ex))+' σε τόσες στήλες (1 στις '+Math.round(1/pHit(K,K)).toLocaleString('el-GR')+').</div>';
-  TOP.forEach(function(x){ h+='<div style="margin-top:6px"><b style="color:#fbbf24">'+dGR(fmtD.format(new Date(x.d.t)))+' '+hm(x.d.t)+'</b> · #'+x.d.id+' · '+nm(x.k)+' · <b style="color:#fbbf24">+'+eur(x.w)+'</b>'+chips(x.p, null, x.d.set)+'</div>'; });
+  var row=function(x){ return '<div style="margin-top:4px;font-size:13px;line-height:1.35"><b style="color:#fbbf24">'+dGR(fmtD.format(new Date(x.d.t)))+' '+hm(x.d.t)+'</b> · #'+x.d.id+' · <b style="color:#fbbf24">'+x.p.join(' ')+'</b> · +'+eur(x.w)+'<br><span class="muted">'+nm(x.k)+'</span></div>'; };
+  if(TOP.length){ var byS={}; TOP.forEach(function(x){ byS[x.k]=(byS[x.k]||0)+1; });
+    var REV=TOP.slice().reverse();
+    if(TOP.length<=3) h+=REV.map(row).join('');
+    else h+='<details style="margin-top:6px"><summary style="cursor:pointer;color:#fbbf24;font-weight:700">Δείξε και τις '+TOP.length+' φορές (πιο πρόσφατη πρώτη)</summary>'+REV.map(row).join('')+'</details>'; }
   h+='</div>';
   var o=T.map(function(z,k){ return k; }).sort(function(a,b){ return (T[b].hh[K]-T[a].hh[K]) || ((T[b].won-T[b].pl*C)-(T[a].won-T[a].pl*C)); });
   h+='<div class="scroll"><table><tr><th>Στρατηγική</th>'+lv.map(function(x){ return '<th'+(x===K?' style="color:#fbbf24"':'')+'>'+x+'/'+K+'</th>'; }).join('')+'<th>Μ.ό.</th><th>Επιστροφή</th><th>Καθαρό</th></tr>';
