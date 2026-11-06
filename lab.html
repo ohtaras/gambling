@@ -29,7 +29,7 @@ details>summary{cursor:pointer;color:var(--gold);font-weight:700;margin:4px 0}
 <h1>🧪 Εργαστήριο στρατηγικών · 12 στρατηγικές</h1>
 <div class="muted">Δοκιμαστική σελίδα · <b>ψεύτικα χρήματα</b> · κάθε στήλη παίζει σε κάθε κλήρωση</div>
 <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><div class="tabs" id="modeTabs" style="margin-top:8px"><button data-m="">Απλή στήλη 0,50€</button><button data-m="sc">🟢 2η ευκαιρία 1€</button><button data-m="kb">🔴 ΚΙΝΟ Bonus 1€</button></div><div class="tabs" style="margin-top:8px;align-items:center"><span class="muted" style="font-size:13px">Αριθμοί:</span><select id="kSel" style="background:#1e293b;color:#e5e7eb;border:1px solid #24324d;border-radius:999px;padding:4px 8px;font-size:14px;font-weight:700"></select></div><div class="tabs" style="margin-top:8px" id="heatTabs"><span class="muted" style="font-size:13px;align-self:center">Χρώματα:</span><button data-h="5">5 ΚΛΗΡ.</button><button data-h="day">ΜΕΡΑ ✂️</button></div><div class="tabs" style="margin-top:8px"><button id="allRnd" title="Όλες οι 100 εξάδες εντελώς τυχαίες — χωρίς καμία στρατηγική">🎲 Όλα τυχαία</button></div></div>
-<div class="card warn" id="cIntro"><h2>ℹ️ Πώς δουλεύει</h2><div>Σε κάθε κλήρωση βγαίνουν <b>12 στήλες, η καθεμία με διαφορετική στρατηγική</b> — <b>οι 12 πιο πετυχημένες από 100 στρατηγικές</b> (όσες έπιασαν τα περισσότερα νούμερα <b>χθες</b>· έτσι σήμερα κρίνονται τίμια, σε κληρώσεις που δεν «ήξεραν») (εκθετική φόρμα, ορμή, «παρέες» αριθμών, Bonus και 2η ευκαιρία, σειρά εξαγωγής, μεταβάσεις, ρυθμός εμφάνισης, γεωμετρία ταμπλό, πρώτοι αριθμοί, ψηφοφορία σημάτων…) και <b>αξιολογούνται στην επόμενη κλήρωση</b>. Για σύγκριση με την καθαρή τύχη πάτα <b>🎲 Όλα τυχαία</b>: μια στρατηγική αξίζει μόνο αν ξεπερνάει σταθερά τις τυχαίες. <span id="kInfo"></span> Από πάνω διαλέγεις αν παίζουν <b>απλές στήλες 0,50€</b>, με <b>🟢 2η ευκαιρία</b> ή με <b>🔴 ΚΙΝΟ Bonus</b> (1€ η στήλη).</div></div>
+<div class="card warn" id="cIntro"><h2>ℹ️ Πώς δουλεύει</h2><div>Σε κάθε κλήρωση βγαίνουν <b>12 στήλες, η καθεμία με διαφορετική στρατηγική</b> — <b>12 στρατηγικές θερμοκρασίας</b> με τη θερμοκρασία της ημέρας (ΜΕΡΑ ✂️): ⚫ τα πιο κρύα <b>μαζεμένα μεταξύ τους στο ταμπλό</b>, 🔵 κρύα, 🔴 καυτά, 🟠 χλιαρά και συνδυασμοί και <b>αξιολογούνται στην επόμενη κλήρωση</b>. Για σύγκριση με την καθαρή τύχη πάτα <b>🎲 Όλα τυχαία</b>: μια στρατηγική αξίζει μόνο αν ξεπερνάει σταθερά τις τυχαίες. <span id="kInfo"></span> Από πάνω διαλέγεις αν παίζουν <b>απλές στήλες 0,50€</b>, με <b>🟢 2η ευκαιρία</b> ή με <b>🔴 ΚΙΝΟ Bonus</b> (1€ η στήλη).</div></div>
 
 <div class="card" id="cEv"><h2>🔍 <span id="evTtl">Η τελευταία κλήρωση</span> <span id="evLbl" class="muted"></span></h2><div class="muted" style="font-size:13px;margin:2px 0 4px">➕ = η ίδια στήλη στα δελτία μου, από την κλήρωση <b id="tkFrom">αμέσως μετά</b>, για <select id="tkN2" style="background:#1e293b;color:#e5e7eb;border:1px solid #24324d;border-radius:8px;padding:2px 4px;font-weight:700"><option>1</option><option>2</option><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select> κληρώσεις.</div><div id="evDist"></div><div class="scroll" style="max-height:420px"><table id="ev"></table></div></div>
 
@@ -107,7 +107,7 @@ function winK(p, d){ var k=p.length, a=0, b=0, bh=false; p.forEach(function(x){ 
 function top12(sc){ var a=S.map(function(_,k){ return k; }).filter(function(k){ return !ALLRND; }); a.sort(function(x,y){ var X=sc[x], Y=sc[y], rx=X.pl?X.h/X.pl:0, ry=Y.pl?Y.h/Y.pl:0; return (ry-rx) || (Y.won-X.won) || x-y; }); return a.slice(0,12); }
 var P12=null, SEL=null, NSEL=12, SCY=null;
 /* Οι 12 στρατηγικές της ημέρας: όσες έπιασαν τα περισσότερα νούμερα ανά στήλη ΧΘΕΣ (τίμια σύγκριση: σήμερα τις βλέπουμε σε κληρώσεις που δεν «ήξεραν») */
-function pickSel(scY){ if(ALLRND) return S.slice(0,NSEL).map(function(_,k){ return k; }); var a=S.map(function(_,k){ return k; }); if(!scY.some(function(x){ return x.pl>0; })) return a.slice(0,NSEL);
+function pickSel(scY){ return S.map(function(_,k){ return k; }); var a=S.map(function(_,k){ return k; }); if(!scY.some(function(x){ return x.pl>0; })) return a.slice(0,NSEL);
   a.sort(function(x,y){ var X=scY[x], Y=scY[y]; return ((Y.pl?Y.h/Y.pl:0)-(X.pl?X.h/X.pl:0)) || (Y.won-X.won) || x-y; }); return a.slice(0,NSEL); }
 function inS(s){ return function(n){ return s.has(n); }; }
 /* ---------- οι 100 στρατηγικές ---------- */
@@ -221,6 +221,33 @@ add('✂️ Μέρα','✂️ Μισά καυτά · μισά χλιαρά', fun
 add('✂️ Μέρα','✂️ Μισά καυτά · μισά κρύα', function(c){ var T=dayTrim(c.i), h=Math.ceil(K/2); var a=c.top(function(n){ return T.r[n]; }, function(n){ return T.k[n]==='hh'; }, h); a=a.filter(function(n){ return T.k[n]==='hh'; }); return a.concat(c.top(function(n){ return -T.r[n]; }, function(n){ return T.k[n]==='hc' && a.indexOf(n)<0; }, K-a.length)); });
 add('✂️ Μέρα','✂️ Ζεστά στη μέρα αλλά κρύα στις 5 τελευταίες', function(c){ var T=dayTrim(c.i), q=cnt(c.i,0,5); return c.top(function(n){ return T.r[n]*10-q[n]; }); });
 var NRND=0;
+/* ---------- Οι 12 στρατηγικές θερμοκρασίας (αντικαθιστούν τις παλιές) · ΜΕΡΑ ✂️ + ⚫ τα 20 πιο κρύα ----------
+   «Τα κρύα-κρύα μαζί»: όταν παίζουμε μαύρα, τα κρατάμε κοντά μεταξύ τους στο ταμπλό (γειτονικά τετράγωνα). */
+S=[];
+function cls(c){ return heatAt(c.i); }
+function ofK(H, ks){ var a=[]; for(var n=1;n<=80;n++) if(ks.indexOf(H[n])>=0) a.push(n); return a; }
+function bd(a,b){ return Math.max(Math.abs(rowOf(a)-rowOf(b)), Math.abs(colOfN(a)-colOfN(b))); }
+function cluster(pool, k, pref){ /* k αριθμοί από το pool όσο πιο «μαζεμένοι» στο ταμπλό γίνεται */
+  if(pool.length<=k) return pool.slice(); var best=null, bv=1e9;
+  pool.forEach(function(seed){ var c=[seed], rest=pool.filter(function(x){ return x!==seed; });
+    while(c.length<k){ rest.sort(function(x,y){ var dx=c.reduce(function(t,z){ return t+bd(x,z); },0), dy=c.reduce(function(t,z){ return t+bd(y,z); },0); return (dx-dy) || ((pref?pref(x):0)-(pref?pref(y):0)) || x-y; }); c.push(rest.shift()); }
+    var v=0; for(var a=0;a<c.length;a++) for(var b=a+1;b<c.length;b++) v+=bd(c[a],c[b]); if(v<bv){ bv=v; best=c; } });
+  return best; }
+function mix(c, parts){ var H=cls(c), sc=H.score, out=[]; parts.forEach(function(pt){ var need=Math.round(pt[1]*K); if(pt===parts[parts.length-1]) need=K-out.length;
+    var pool=ofK(H, pt[0]).filter(function(n){ return out.indexOf(n)<0; }); pool.sort(function(a,b){ return pt[2]*(sc[b]-sc[a]) || a-b; }); out=out.concat(pool.slice(0,Math.max(0,need))); });
+  return out; }
+add('⚫ Μαύρα','⚫ Τα πιο παγωμένα, κολλητά μεταξύ τους', function(c){ var H=cls(c), B=ofK(H,['hk']); return cluster(B, K, function(n){ return H.score[n]; }); });
+add('⚫ Μαύρα','⚫ Μαύρα που λείπουν περισσότερο, κολλητά', function(c){ var H=cls(c), B=ofK(H,['hk']).sort(function(a,b){ return c.gap[b]-c.gap[a]; }).slice(0,Math.max(K,10)); return cluster(B, K, function(n){ return -c.gap[n]; }); });
+add('⚫ Μαύρα','⚫ Μαύρα στην ίδια γραμμή/στήλη του ταμπλό', function(c){ var H=cls(c), B=ofK(H,['hk']), best=[], f=function(g){ var m={}; B.forEach(function(n){ (m[g(n)]=m[g(n)]||[]).push(n); }); Object.keys(m).forEach(function(q){ if(m[q].length>best.length) best=m[q]; }); }; f(rowOf); f(colOfN); return best.slice(0,K).concat(cluster(B.filter(function(n){ return best.indexOf(n)<0; }), Math.max(0,K-best.length))); });
+add('⚫ Μαύρα','⚫ Μαύρα που «ξύπνησαν» στην τελευταία + γείτονές τους', function(c){ var H=cls(c), B=ofK(H,['hk']), aw=B.filter(function(n){ return c.last.has(n); }); var base=aw.length?aw:B.slice(0,1); var rest=B.filter(function(n){ return base.indexOf(n)<0; }).sort(function(x,y){ return base.reduce(function(t,z){ return t+bd(x,z); },0)-base.reduce(function(t,z){ return t+bd(y,z); },0) || x-y; }); return base.concat(rest).slice(0,K); });
+add('⚫ Μαύρα','⚫ Μισά μαύρα · μισά μπλε, μαζεμένα', function(c){ var H=cls(c), P=ofK(H,['hk','hc']); return cluster(P.filter(function(n){ return H[n]==='hk'; }), Math.ceil(K/2)).concat([]).concat(cluster(P.filter(function(n){ return H[n]==='hc'; }), K-Math.ceil(K/2))); });
+add('⚫ Μαύρα','⚫ Μαύρα που ήταν ζεστά χθες', function(c){ var H=cls(c), y=(DS[c.i]||0)-1, Hy=y>=6?heatAt(y):null, B=ofK(H,['hk']); B.sort(function(a,b){ return (Hy?Hy.score[b]-Hy.score[a]:0) || a-b; }); return cluster(B.slice(0,Math.max(K,8)), K); });
+add('🔵 Κρύα','🔵 Κρύα (μπλε) που ανεβαίνουν στις 5 τελευταίες', function(c){ var H=cls(c), q=cnt(c.i,0,5); return c.top(function(n){ return q[n]*10-H.score[n]; }, function(n){ return H[n]==='hc'; }); });
+add('⚫🔴 Αντίθετα','⚫🔴 Μισά μαύρα · μισά καυτά', function(c){ return mix(c, [[['hk'],0.5,-1],[['hh','hb'],0.5,1]]); });
+add('🔴 Ζεστά','🔴 Μόνο καυτά (τα πιο ζεστά πρώτα)', function(c){ return mix(c, [[['hh','hb'],1,1]]); });
+add('🟠 Χλιαρά','🟠 Μόνο χλιαρά', function(c){ return mix(c, [[['hw'],1,1]]); });
+add('🔴🟠 Ζεστά','🔴🟠 Μισά καυτά · μισά χλιαρά', function(c){ return mix(c, [[['hh','hb'],0.5,1],[['hw'],0.5,1]]); });
+add('🌈 Όλα','🌈 Από κάθε χρώμα (🔴🟠🔵⚫)', function(c){ return mix(c, [[['hh','hb'],0.25,1],[['hw'],0.25,1],[['hc'],0.25,1],[['hk'],0.25,-1]]); });
 
 /* ---------- προσομοίωση ημέρας ---------- */
 var LB=null, EVS=[], VI=null, PICKS=null, CUREV=null, ALLRND=(function(){ try{ return localStorage.getItem('lab_allrnd')==='1'; }catch(e){ return false; } })();
