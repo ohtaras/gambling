@@ -29,7 +29,7 @@ details>summary{cursor:pointer;color:var(--gold);font-weight:700;margin:4px 0}
 <h1>🧪 Εργαστήριο στρατηγικών · 12 στρατηγικές</h1>
 <div class="muted">Δοκιμαστική σελίδα · <b>ψεύτικα χρήματα</b> · κάθε στήλη παίζει σε κάθε κλήρωση</div>
 <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><div class="tabs" id="modeTabs" style="margin-top:8px"><button data-m="">Απλή στήλη 0,50€</button><button data-m="sc">🟢 2η ευκαιρία 1€</button><button data-m="kb">🔴 ΚΙΝΟ Bonus 1€</button></div><div class="tabs" style="margin-top:8px;align-items:center"><span class="muted" style="font-size:13px">Αριθμοί:</span><select id="kSel" style="background:#1e293b;color:#e5e7eb;border:1px solid #24324d;border-radius:999px;padding:4px 8px;font-size:14px;font-weight:700"></select></div><div class="tabs" style="margin-top:8px" id="heatTabs"><span class="muted" style="font-size:13px;align-self:center">Χρώματα:</span><button data-h="5">5 ΚΛΗΡ.</button><button data-h="day">ΜΕΡΑ ✂️</button></div><div class="tabs" style="margin-top:8px"><button id="allRnd" title="Όλες οι 100 εξάδες εντελώς τυχαίες — χωρίς καμία στρατηγική">🎲 Όλα τυχαία</button></div></div>
-<div class="card warn" id="cIntro"><h2>ℹ️ Πώς δουλεύει</h2><div>Σε κάθε κλήρωση βγαίνουν <b>12 στήλες, η καθεμία με διαφορετική στρατηγική</b> — <b>12 στρατηγικές θερμοκρασίας</b> με τη θερμοκρασία της ημέρας (ΜΕΡΑ ✂️): ⚫ τα πιο κρύα <b>μαζεμένα μεταξύ τους στο ταμπλό</b>, 🔵 κρύα, 🔴 καυτά, 🟠 χλιαρά και συνδυασμοί και <b>αξιολογούνται στην επόμενη κλήρωση</b>. Για σύγκριση με την καθαρή τύχη πάτα <b>🎲 Όλα τυχαία</b>: μια στρατηγική αξίζει μόνο αν ξεπερνάει σταθερά τις τυχαίες. <span id="kInfo"></span> Από πάνω διαλέγεις αν παίζουν <b>απλές στήλες 0,50€</b>, με <b>🟢 2η ευκαιρία</b> ή με <b>🔴 ΚΙΝΟ Bonus</b> (1€ η στήλη).</div></div>
+<div class="card warn" id="cIntro"><h2>ℹ️ Πώς δουλεύει</h2><div>Σε κάθε κλήρωση βγαίνουν <b>12 στήλες, η καθεμία με διαφορετική στρατηγική</b> — <b>οι 12 με τα περισσότερα 4/4</b> σε όλο το ιστορικό του ΚΙΝΟ (9/2018–6/11/2026, 644.937 κληρώσεις) ανάμεσα σε 112 στρατηγικές που διαλέγουν από όλους τους 80 αριθμούς. Καμία στήλη δεν είναι ίδια με άλλη, και <b>αξιολογούνται στην επόμενη κλήρωση</b>. <span class="muted">Ειλικρινά: η καθαρή τύχη δίνει ~1.976 φορές 4/4 στο ίδιο διάστημα (±44)· οι 12 έπιασαν 2.019–2.077, δηλαδή μέσα στο εύρος της τύχης.</span> Για σύγκριση με την καθαρή τύχη πάτα <b>🎲 Όλα τυχαία</b>: μια στρατηγική αξίζει μόνο αν ξεπερνάει σταθερά τις τυχαίες. <span id="kInfo"></span> Από πάνω διαλέγεις αν παίζουν <b>απλές στήλες 0,50€</b>, με <b>🟢 2η ευκαιρία</b> ή με <b>🔴 ΚΙΝΟ Bonus</b> (1€ η στήλη).</div></div>
 
 <div class="card" id="cEv"><h2>🔍 <span id="evTtl">Η τελευταία κλήρωση</span> <span id="evLbl" class="muted"></span></h2><div class="muted" style="font-size:13px;margin:2px 0 4px">➕ = η ίδια στήλη στα δελτία μου, από την κλήρωση <b id="tkFrom">αμέσως μετά</b>, για <select id="tkN2" style="background:#1e293b;color:#e5e7eb;border:1px solid #24324d;border-radius:8px;padding:2px 4px;font-weight:700"><option>1</option><option>2</option><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select> κληρώσεις.</div><div id="evDist"></div><div class="scroll" style="max-height:420px"><table id="ev"></table></div></div>
 
@@ -224,7 +224,7 @@ add('✂️ Μέρα','✂️ Ζεστά στη μέρα αλλά κρύα στ�
 var NRND=0;
 /* ---------- Οι 12 στρατηγικές θερμοκρασίας (αντικαθιστούν τις παλιές) · ΜΕΡΑ ✂️ + ⚫ τα 20 πιο κρύα ----------
    «Τα κρύα-κρύα μαζί»: όταν παίζουμε μαύρα, τα κρατάμε κοντά μεταξύ τους στο ταμπλό (γειτονικά τετράγωνα). */
-S=[];
+var SOLD=S.slice(); S=[];
 function cls(c){ return heatAt(c.i); }
 function ofK(H, ks){ var a=[]; for(var n=1;n<=80;n++) if(ks.indexOf(H[n])>=0) a.push(n); return a; }
 function bd(a,b){ return Math.max(Math.abs(rowOf(a)-rowOf(b)), Math.abs(colOfN(a)-colOfN(b))); }
@@ -249,6 +249,10 @@ add('🔴 Ζεστά','🔴 Μόνο καυτά (τα πιο ζεστά πρώτ
 add('🟠 Χλιαρά','🟠 Μόνο χλιαρά', function(c){ return mix(c, [[['hw'],1,1]]); });
 add('🔴🟠 Ζεστά','🔴🟠 Μισά καυτά · μισά χλιαρά', function(c){ return mix(c, [[['hh','hb'],0.5,1],[['hw'],0.5,1]]); });
 add('🌈 Όλα','🌈 Από κάθε χρώμα (🔴🟠🔵⚫)', function(c){ return mix(c, [[['hh','hb'],0.25,1],[['hw'],0.25,1],[['hc'],0.25,1],[['hk'],0.25,-1]]); });
+/* ---------- v7: οι 12 με τα περισσότερα 4/4 σε ΟΛΟ το ιστορικό (9/2018–6/11/2026, 644.937 κληρώσεις, τετράδες) ανάμεσα σε 112 στρατηγικές ----------
+   Η τύχη δίνει ~1.976 4/4 ανά στρατηγική (±44). Οι 12: */
+var ALLS=SOLD.concat(S), TOP4=[64, 83, 67, 91, 70, 57, 16, 5, 111, 97, 80, 93], H4=[2077, 2055, 2053, 2050, 2040, 2037, 2033, 2032, 2028, 2023, 2022, 2019];
+S=TOP4.map(function(i,q){ var x=ALLS[i]; return {fam:x.fam, name:x.name, f:x.f, h4:H4[q]}; });
 
 /* ---------- προσομοίωση ημέρας ---------- */
 var LB=null, EVS=[], VI=null, PICKS=null, CUREV=null, ALLRND=(function(){ try{ return localStorage.getItem('lab_allrnd')==='1'; }catch(e){ return false; } })();
@@ -288,7 +292,7 @@ var PIN=(function(){ try{ return new Set(JSON.parse(localStorage.getItem('lab_pi
 function pkey(k){ return ALLRND ? 'R'+k : S[k].name; }
 function pinned(k){ return PIN.has(pkey(k)); }
 function nm(k){ return '<label class="pinL" title="Να εμφανίζεται πρώτη"><input type="checkbox" class="pin" data-k="'+k+'"'+(pinned(k)?' checked':'')+'></label>'+nm0(k); }
-function nm0(k){ return ALLRND ? '🎲 Τυχαία '+(k+1)+'<span class="fam">Τυχαία</span>' : S[k].name+'<span class="fam">'+S[k].fam+'</span>'; }
+function nm0(k){ return ALLRND ? '🎲 Τυχαία '+(k+1)+'<span class="fam">Τυχαία</span>' : S[k].name+'<span class="fam">'+S[k].fam+'</span>'+(S[k].h4?'<span class="fam" title="4/4 σε όλο το ιστορικό (τύχη ~1.976)">📜 4/4: '+S[k].h4.toLocaleString('el-GR')+'</span>':''); }
 /* Πότε βγήκε ολόκληρη η στήλη (μέσα στις φορτωμένες κληρώσεις: χθες + σήμερα) και πόσες φορές σήμερα */
 function colHist(p){ var L=DR.length-1, s0=DS[L]||0, full=0, last=-1, best=0, bestN=0;
   for(var i=L;i>=0;i--){ var h=0; for(var q=0;q<p.length;q++) if(DR[i].set.has(p[q])) h++;
@@ -432,4 +436,4 @@ function sumRender(T, D, TOP, from, N){ var C=COST(), nm=function(k){ return ALL
   $('sumOut').innerHTML=h; $('sumLbl').textContent='· από '+dGR(from); }
 $('sumGo').addEventListener('click', sumGo);
 load(); setInterval(load, 30000);
-</script><div id="appVer" style="text-align:center;font-size:11px;color:#64748b;padding:10px 0 90px">έκδοση v6 · 6/11/2026</div></body></html>
+</script><div id="appVer" style="text-align:center;font-size:11px;color:#64748b;padding:10px 0 90px">έκδοση v7 · 6/11/2026</div></body></html>
