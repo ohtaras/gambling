@@ -253,6 +253,14 @@ add('🌈 Όλα','🌈 Από κάθε χρώμα (🔴🟠🔵⚫)', function(
 /* ---------- προσομοίωση ημέρας ---------- */
 var LB=null, EVS=[], VI=null, PICKS=null, CUREV=null, ALLRND=(function(){ try{ return localStorage.getItem('lab_allrnd')==='1'; }catch(e){ return false; } })();
 function isR(k){ return ALLRND || S[k].fam==='Τυχαία'; }
+/* οι 12 στήλες μιας κλήρωσης — ΚΑΜΙΑ ίδια με άλλη: αν βγει ίδια, αλλάζει ο πιο «αδύναμος» αριθμός της με τον επόμενο της ίδιας στρατηγικής */
+function mkCols(i, st){ var seen={}, ks=function(p){ return p.slice().sort(function(a,b){ return a-b; }).join('-'); };
+  return S.map(function(s,k){ var gen=function(){ try{ var c=ctx(i,k), p=ALLRND ? c.top(function(){ return 0; }) : s.f(c, st[k]); return fit(p, c); }catch(e){ return null; } };
+    var p=gen(); if(!p){ p=[]; for(var n=1;n<=K;n++) p.push(n); }
+    if(seen[ks(p)]){ var K0=K; K=Math.min(80, K0+12); var ext=gen()||[]; K=K0; var ex=ext.filter(function(x){ return p.indexOf(x)<0; }), R=rng(DR[i].id*31+k);
+      for(var n2=1;n2<=80;n2++) if(p.indexOf(n2)<0 && ex.indexOf(n2)<0) ex.push(n2);
+      var done=false; for(var pos=p.length-1; pos>=0 && !done; pos--) for(var t=0;t<ex.length;t++){ var q=p.slice(); q[pos]=ex[t]; if(!seen[ks(q)]){ p=q; done=true; break; } } }
+    seen[ks(p)]=1; return p; }); }
 function run(){ if(SUMBUSY) return;
   MEMO={}; prep(); var L=DR.length-1, n=S.length;
   var st=S.map(function(){ return {prev:null,lastWin:false}; }), sc=S.map(function(){ return {pl:0,h:0,w:0,won:0,best:0}; });
@@ -263,7 +271,7 @@ function run(){ if(SUMBUSY) return;
   var scY=S.map(function(){ return {pl:0,h:0,w:0,won:0,best:0}; }); SEL=null;
   for(var j=6; j<=L+1; j++){
     if(!SEL && j>=I0) SEL=pickSel(scY);
-    var cur=S.map(function(s,k){ try{ var c=ctx(j-1,k), p=ALLRND ? c.top(function(){ return 0; }) : s.f(c, st[k]); return fit(p, c); }catch(e){ return [1,2,3,4,5,6]; } });
+    var cur=mkCols(j-1, st);
     if(j>L){ picks=cur; break; }
     // «ακολούθα την καλύτερη»: η καλύτερη ως τώρα (πριν την κλήρωση j)
     var bi=-1; for(var k=0;k<n;k++){ if(sc[k].pl<6) continue; var nk=sc[k].won-sc[k].pl*COST(), nb=bi<0?0:sc[bi].won-sc[bi].pl*COST(); if(bi<0||nk>nb||(nk===nb&&sc[k].h>sc[bi].h)) bi=k; }
@@ -394,7 +402,7 @@ async function sumGo(){ if(SUMBUSY) return; var from=$('sumFrom').value; if(!/^\
   MEMO={}; prep(); var J0=DR.findIndex(function(d){ return fmtD.format(new Date(d.t))>=from; }); if(J0<6) J0=6; I0=J0;
   var n=S.length, st=S.map(function(){ return {prev:null,lastWin:false}; }), T=S.map(function(){ return {pl:0,h:0,won:0,w:0,best:0,hh:new Array(K+1).fill(0)}; }), D={}, TOP=[], L=DR.length-1, j=J0;
   function step(){ var end=Math.min(L, j+40);
-    for(; j<=end; j++){ var cur=S.map(function(s,k){ try{ var c=ctx(j-1,k), p=ALLRND ? c.top(function(){ return 0; }) : s.f(c, st[k]); return fit(p, c); }catch(e){ return [1,2,3,4,5,6].slice(0,K); } });
+    for(; j<=end; j++){ var cur=mkCols(j-1, st);
       var dd=fmtD.format(new Date(DR[j].t)), Z=D[dd]||(D[dd]={pl:0,st:0,won:0,n:0}); Z.n++;
       cur.forEach(function(p,k){ var o=winOf(p, DR[j]), z=T[k]; z.pl++; z.h+=o.h; z.won+=o.w; if(o.w>0) z.w++; if(o.w>z.best) z.best=o.w; z.hh[o.h]++; st[k].prev=p; st[k].lastWin=o.w>0; Z.pl++; Z.st+=COST(); Z.won+=o.w;
         if(o.h===K) TOP.push({k:k, d:DR[j], p:p.slice().sort(function(a,b){ return a-b; }), w:o.w}); }); }
@@ -424,4 +432,4 @@ function sumRender(T, D, TOP, from, N){ var C=COST(), nm=function(k){ return ALL
   $('sumOut').innerHTML=h; $('sumLbl').textContent='· από '+dGR(from); }
 $('sumGo').addEventListener('click', sumGo);
 load(); setInterval(load, 30000);
-</script><div id="appVer" style="text-align:center;font-size:11px;color:#64748b;padding:10px 0 90px">έκδοση v5 · 6/11/2026</div></body></html>
+</script><div id="appVer" style="text-align:center;font-size:11px;color:#64748b;padding:10px 0 90px">έκδοση v6 · 6/11/2026</div></body></html>
