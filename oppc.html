@@ -103,6 +103,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
 
 .add{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:10px}
 .bxGuy svg{filter:drop-shadow(0 0 1.5px rgba(255,255,255,.55))}
+.r20{margin:6px 0 8px;padding:8px;border:1px solid #334155;border-radius:10px;background:rgba(15,23,42,.6)}.r20n{display:flex;flex-wrap:wrap;gap:4px}.r20c{min-width:30px;padding:4px 3px;border-radius:8px;background:#1e293b;color:#e5e7eb;font-weight:800;text-align:center;font-size:14px;cursor:pointer;user-select:none;-webkit-user-select:none;border:2px solid transparent}.r20c.pk{border-color:#facc15}.r20c.me{background:#16a34a;color:#fff}
 </style>
 </head>
 <body><script>if(/[?&]embed=1/.test(location.search)) document.body.classList.add('embed');</script><div id="stageBg"></div><button id="fsBtn" title="Πλήρης οθόνη" aria-label="Πλήρης οθόνη">⛶</button><div id="menuBg"></div>
@@ -111,7 +112,7 @@ table.dr{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}tab
   <section id="mSet"><h3>⚙️ Ρυθμίσεις</h3>
     <div class="mrow" id="mAppRow"><div><b><img src="img/oppc_i192.png" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:-6px;margin-right:6px">Εφαρμογή στο κινητό</b><div class="muted" id="mAppTxt">Βάλ' το στην οθόνη του κινητού σαν εφαρμογή — ανοίγει χωρίς διεύθυνση και μπάρες.</div></div><button class="btn2" id="appInst"><img src="img/oppc_i192.png" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:-6px;margin-right:6px">Εγκατάσταση</button></div><div class="mrow" id="mShakeRow"><div><b>📳 Ενεργοποίηση Shake</b><div class="muted" id="mShakeTxt">Κούνα δυνατά το κινητό και ο Σπύρος με τον Ηρακλή κουνάνε το κουτί!</div></div><button class="btn2" id="shakeOn" >📳 Κούνα το κινητό</button></div>
     <div class="mrow"><div><b>💬 Ατάκες αναμονής</b><div class="muted">Μέχρι την κλήρωση ο Σπύρος κι ο Ηρακλής κουβεντιάζουν για τα νούμερα της πρόβλεψης.</div></div><button class="btn2" id="mWt">ON</button></div>
-    <div class="mrow"><div><b>🎯 Πρόβλεψη</b><div class="muted">Ο Σπύρος κι ο Ηρακλής κουνάνε το κουτί μόνο μέσα στους αριθμούς που έχουν βγει <b>2–6 φορές στις 20 τελευταίες κληρώσεις</b> και <b>καθυστερούν 0, 2 ή 3 κληρώσεις</b> (σταθερά φίλτρα). Κάθε φορά αποφασίζουν αν θα την παίξουν για 1 ή για 2 κληρώσεις.</div></div></div>
+    <div class="mrow"><div><b>🎯 Τρόπος πρόβλεψης</b><div class="muted"><b>🌡️ Φίλτρα:</b> κουνάνε μόνο μέσα στους αριθμούς που έχουν βγει 2–6 φορές στις 20 τελευταίες κληρώσεις και καθυστερούν 0, 2 ή 3 (με αποφάσεις: ίδια / κρατάνε όσα βγήκαν / όλα καινούργια). <b>📐 Κανόνες κλήρωσης:</b> φτιάχνουν μια εικοσάδα που μοιάζει με αληθινή κλήρωση (2+ συνεχόμενοι, 3–7 κοινοί με την προηγούμενη, άθροισμα 662–959, 8–12 μονά, 8–12 από το 1–40) και από αυτή διαλέγουν μοιρασμένα μικρά/μεγάλα και μονά/ζυγά, με λίγη θερμοκρασία· μπορείς να διαλέξεις κι εσύ από την εικοσάδα. Κάθε φορά αποφασίζουν αν θα την παίξουν για 1 ή 2 κληρώσεις.</div></div><select id="mPM2" class="btn2" style="max-width:150px"><option value="flt">🌡️ Φίλτρα</option><option value="rules">📐 Κανόνες κλήρωσης</option></select></div>
     <div class="mrow"><div><b>🧲 Μάτσο (κοντινοί αριθμοί)</b><div class="muted">Μέσα στους φιλτραρισμένους αριθμούς κρατάει όσους είναι κοντά μεταξύ τους στο ταμπλό, κάθε φορά σε άλλο σημείο.</div></div><button class="btn2" id="mClu">ON</button></div>
     
     <div class="mrow"><div><b>📜 Στήλες-θρύλοι</b><div class="muted">Οι στήλες (3άρι έως 12άρι) που έχουν βγει ολόκληρες τις περισσότερες φορές σε όλο το ιστορικό, με υπενθύμιση όταν βγαίνουν αρκετά νούμερά τους.</div></div><button class="btn2" id="mLeg">ON</button></div>
@@ -423,6 +424,28 @@ function pullLine(P){ var u = P.pull; if(!u) return ''; if(!u.n) return '<div cl
     ' της ημέρας <span class="muted">('+u.n+' κληρώσεις σήμερα · ένταση '+Math.round(100*u.b/PULL_MAX)+'%)</span>'+(u.top && u.top.length ? '<br>'+u.top.map(function(t){ return '<b>'+t[0]+'</b> <span class="muted">('+t[1]+'×)</span>'; }).join(' · ') : '')+'</div>'; }
 /* ---------- 🎯 Φίλτρα πρόβλεψης (σταθερά): εμφανίσεις 2–6 στις 20 τελευταίες κληρώσεις · καθυστέρηση 0, 2 ή 3 ---------- */
 var FLT_C = [2,3,4,5,6], FLT_D = [0,2,3], FLT_TRY = 0, TWOD = 0, AUTO_FORCE_NEW = false;
+var PM2 = lsGet('trv_pm2')==='rules' ? 'rules' : 'flt';
+/* 📐 Κανόνες κλήρωσης (μετρημένοι σε 645.000 κληρώσεις): 2+ συνεχόμενοι 99,8% · 3–7 κοινοί με την προηγούμενη 86,7% · άθροισμα 662–959 90% · 8–12 μονά 80,5% · 8–12 από το 1–40 80,4% */
+function r20Info(A, L){ var S = A.slice().sort(function(a,b){ return a-b; }), cons = 0, sum = 0, odd = 0, low = 0, ov = 0;
+  S.forEach(function(x, i){ sum += x; if(x%2) odd++; if(x<=40) low++; if(L && L.arr.indexOf(x) >= 0) ov++; if(i && x === S[i-1]+1) cons++; }); return {cons:cons, sum:sum, odd:odd, low:low, ov:ov}; }
+function ruleTwenty(L){ var best = null;
+  for(var t=0; t<20000; t++){ var a = []; for(var n=1;n<=80;n++) a.push(n); for(var i=0;i<20;i++){ var j = i + Math.floor(Math.random()*(80-i)), x = a[i]; a[i] = a[j]; a[j] = x; }
+    var A = a.slice(0,20), I = r20Info(A, L); best = A;
+    if(I.cons >= 1 && I.ov >= 3 && I.ov <= 7 && I.sum >= 662 && I.sum <= 959 && I.odd >= 8 && I.odd <= 12 && I.low >= 8 && I.low <= 12) return A.sort(function(p,q){ return p-q; }); }
+  return best.sort(function(p,q){ return p-q; }); }
+/* από την εικοσάδα: μοιρασμένα μικρά/μεγάλα και μονά/ζυγά, με συνοχή (ένα ζευγάρι κοντινών) και λίγη θερμοκρασία */
+function rulePick(R20, v){ if(v >= 20) return R20.slice(); var HF = null; try{ HF = legHeat(last); }catch(e){}
+  var W = {hh:1.5, hb:1.3, hw:1.25, hc:1.0, hk:0.8}, wOf = function(n){ var o = HF ? HF(n) : null; return W[o && o.k] || 1; };
+  var lo = Math.floor(v/2), hi = Math.ceil(v/2), best = null, bs = -1e9;
+  for(var t=0; t<1500; t++){ var pool = R20.slice(), S = [];
+    while(S.length < v){ var tot = 0; pool.forEach(function(n){ tot += wOf(n); }); var r = Math.random()*tot, k = 0; for(; k<pool.length-1; k++){ r -= wOf(pool[k]); if(r <= 0) break; } S.push(pool.splice(k,1)[0]); }
+    var nl = S.filter(function(n){ return n<=40; }).length, no = S.filter(function(n){ return n%2; }).length, ss = S.slice().sort(function(a,b){ return a-b; }), near = 0;
+    for(var i=1;i<ss.length;i++) if(ss[i]-ss[i-1] <= 2) near++;
+    var ok = (nl === lo || nl === hi) && (no === lo || no === hi) && (v < 4 || near >= 1), sc = (ok ? 1000 : 0) - Math.abs(nl - v/2)*10 - Math.abs(no - v/2)*10 + Math.min(near, 2) + Math.random();
+    if(sc > bs){ bs = sc; best = S; } if(ok && t > 300) break; }
+  return best; }
+var R20_SAY = ['Φτιάξαμε εικοσάδα «σαν αληθινή»: άθροισμα {s}, {o} μονά, {c} κοινά με την προηγούμενη!','Εικοσάδα με όλους τους κανόνες: {l} μικρά, {o} μονά, άθροισμα {s}. Σαν να τη βγάλαμε εμείς!','Αυτή θα μπορούσε να είναι η επόμενη κλήρωση — ούτε ο υπολογιστής του Allwyn δεν θα την ξεχώριζε!'],
+  R20_PICK = ['Από αυτήν πήραμε {v}: {pl} μικρά-{ph} μεγάλα, {po} μονά-{pe} ζυγά. Δικαιοσύνη!','Μοιρασμένα, όπως στο τραπέζι της μάνας μου: {pl} μικρά, {ph} μεγάλα!','Λίγο ζεστά, λίγο κρύα, μισά μονά μισά ζυγά — ζυγαριά φαρμακείου!'];
 var AUTO_MS = 105000; /* 🤖 η αυτόματη πρόβλεψη: 1′45″ μετά την κλήρωση (ήταν 2′) */
 function fltPool(L){ var c = new Array(81).fill(0), dl = new Array(81).fill(99), miss = [];
   for(var k=0;k<20;k++){ var id = L.id - k, a = k===0 ? L.arr : drawNums(id); if(!a || a.length !== 20){ miss.push(id); continue; } a.forEach(function(x){ c[x]++; if(dl[x] === 99) dl[x] = k; }); }
@@ -446,6 +469,10 @@ var DEC_SAME = ['Πιάσαμε {a}/{k}! Ομάδα που κερδίζει δε
   DEC_NEW = ['Μόνο {a}/{k}… Πετάμε τα πάντα και ξανακουνάμε!','Αλλαγή φρουράς! Όλα καινούργια από τους {n}!','Τίποτα δεν κρατάμε. Καινούργια στήλη, καινούργια ζωή!','Άλλα, άλλα! Αυτά τα έκαψα!'],
   DEC_NEW_R = ['Επιτέλους! Σου το έλεγα από πριν!','Καλά κάνεις, φέρε φρέσκα!','Ναι, αυτά ήταν γκαντέμικα!','Από το μηδέν, σαν να μην έγινε τίποτα!'];
 function fltTalk(P, v){ var S1 = P.who==='S' ? $('bxGuyL') : $('bxGuyR'), S2 = P.who==='S' ? $('bxGuyR') : $('bxGuyL'), D = P.dec;
+  if(P.r20){ var I = P.r20.i, pn = P.moves.map(function(m){ return m[1]; }), pl = pn.filter(function(n){ return n<=40; }).length, po = pn.filter(function(n){ return n%2; }).length;
+    bxSay(S1, pk(R20_SAY).replace('{s}', I.sum).replace('{o}', I.odd).replace('{c}', I.ov).replace('{l}', I.low));
+    setTimeout(function(){ if(PRED === P) bxSay(S2, pk(R20_PICK).replace('{v}', pn.length).replace('{pl}', pl).replace('{ph}', pn.length-pl).replace('{po}', po).replace('{pe}', pn.length-po)); }, 3800);
+    setTimeout(function(){ if(PRED === P) bxSay(S1, pk(P.two ? TWO_YES : TWO_NO)); }, 8000); return; }
   var rp = function(t){ return t.replace('{n}', P.flt.n).replace('{v}', v).replace('{a}', D ? D.a : 0).replace('{k}', D ? D.k : v).replace('{h}', D ? D.kept.length : 0).replace('{m}', v - (D ? D.kept.length : 0)).replace('{x}', D && D.kept.length ? D.kept.join(', ') : ''); };
   if(D && D.act === 'same'){ bxSay(S1, rp(pk(DEC_SAME))); setTimeout(function(){ if(PRED === P) bxSay(S2, pk(DEC_SAME_R)); }, 3800); return; }
   if(D && D.act === 'keep' && D.kept.length){ bxSay(S1, rp(pk(DEC_KEEP))); setTimeout(function(){ if(PRED !== P) return; bxSay(S2, D.drop.length ? pk(DEC_DROP).replace('{x}', D.drop.join(', ')) : pk(DEC_KEEP_R)); }, 3800); setTimeout(function(){ if(PRED === P) bxSay(S1, pk(P.two ? TWO_YES : TWO_NO)); }, 8000); return; }
@@ -478,7 +505,8 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; if(M
       while(S0.length < base.length + n && rest.length){ var bi = -1, bs = 1e9; rest.forEach(function(x, i){ var d = 0; S0.forEach(function(y){ d += DD(x, y); }); d = d/S0.length + Math.random()*1.2; if(d < bs){ bs = d; bi = i; } }); S0.push(rest.splice(bi,1)[0]); }
       return S0.filter(function(x){ return base.indexOf(x) < 0; }); }
     return shuf(P2).slice(0, n); }
-  if(ACT === 'same'){ pickN = PN0.slice(); }
+  var R20 = null; if(PM2 === 'rules'){ ACT = 'new'; DEC = null; R20 = ruleTwenty(last); pickN = rulePick(R20, v); }
+  else if(ACT === 'same'){ pickN = PN0.slice(); }
   else if(ACT === 'keep'){ var KP = HIT.filter(function(x){ return FP.c[x] <= 6; }); DEC.drop = HIT.filter(function(x){ return FP.c[x] > 6; }); /* όποιος έφτασε τις 7 στις 20 «έπιασε τον μέσο όρο του καυτού» — τον αφήνουν */
     if(KP.length > v) KP = shuf(KP).slice(0, v); DEC.kept = KP.slice(); pickN = KP.concat(fill(KP, v - KP.length, PN0)); }
   else pickN = fill([], v, PN0);
@@ -495,7 +523,7 @@ $('boxGo').addEventListener('click', function(){ if(busy || !cur()) return; if(M
   setTimeout(function(){
     moves.forEach(function(mm){ var b = balls[mm[0]]; if(!b) return; delete balls[mm[0]]; var p = boxPos(mm[1]); b.style.left = p.l; b.style.top = p.t; b.textContent = mm[1]; b.classList.remove('sc'); b.classList.remove('bn'); b.classList.add(mm[2]==='g' ? 'sc' : (mm[0]!==mm[1] ? 'nw' : 'st')); });
     Object.keys(balls).forEach(function(k){ balls[k].style.opacity = '0'; });
-    PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st, flt:{n:FP.pool.length, pool:FP.pool, short:FP.pool.length < v}, two:TWO, who:PWHO, rep:ACT === 'same', dec:DEC}; fltTalk(PRED, v); lsSet('trv_pred', JSON.stringify(PRED)); if(AUTOMK){ alogAdd(PRED); AUTOMK = false; } WT_LAST = Date.now() - 15000 + 6000; predText(PRED, false); $('boxPred').disabled = false; predEval();
+    PRED = {id:last.id, t:last.t, sc:(last.sc||[]).slice(), moves:moves, st:st, flt:{n:FP.pool.length, pool:FP.pool, short:FP.pool.length < v}, two:TWO, who:PWHO, rep:ACT === 'same', dec:DEC, r20:R20 ? {n:R20, i:r20Info(R20, last)} : null}; fltTalk(PRED, v); lsSet('trv_pred', JSON.stringify(PRED)); if(AUTOMK){ alogAdd(PRED); AUTOMK = false; } WT_LAST = Date.now() - 15000 + 6000; predText(PRED, false); $('boxPred').disabled = false; predEval();
     busy = false; navUpd(); $('boxGo').disabled = false; setTimeout(stageOff, 2200);
   }, 4000);
 });
@@ -627,11 +655,11 @@ function alogRender(){ var el = $('alog'); if(!el) return; var L = alogLoad(); l
     return '<tr><td>'+hm2+' <span class="muted">#'+nid+'</span></td><td>'+it.n.map(function(x){ return ms[x] ? '<b style="color:#facc15">'+x+'</b>' : (ss[x] ? '<b style="color:#4ade80">'+x+'</b>' : '<span class="muted">'+x+'</span>'); }).join(' ')+'</td><td><b>'+h.length+(hs.length ? '<span style="color:#4ade80">+'+hs.length+'</span>' : '')+'/'+K+'</b></td><td'+(w ? ' class="win"' : ' class="muted"')+'>'+(w ? eur(w) : '—')+'</td></tr>'; }).join('');
   $('alogSum').innerHTML = '📒 Αυτόματες προβλέψεις σήμερα: <b>'+L.items.length+'</b> · κρίθηκαν '+done+' · κέρδισαν <b>'+wins+'</b> · κόστος '+eur(cost)+' · κέρδη <b class="'+(won ? 'win' : '')+'">'+eur(won)+'</b>'+(SC ? ' <span class="muted">(με 2η ευκαιρία)</span>' : '');
   $('alogList').innerHTML = '<table class="dr">'+rows+'</table><div class="muted" style="font-size:11px;margin-top:4px">Σβήνει αυτόματα στις 00:00.</div>'; }
-function predText(P, replay){
+function predText(P, replay){ R20SEL = [];
   out = P.moves.map(function(mm){ return mm[1]; }).sort(function(a,b){return a-b;});
     $('boxHd').textContent = P.man ? '✋ Η στήλη σου: '+out.length+' αριθμοί για την κλήρωση των '+hm(P.t+300000)+' · #'+(P.id+1) : (replay ? '🔮 Η τελευταία πρόβλεψη: ' : '🎲 Οι ')+out.length+' αριθμοί'+(replay?'':' σου')+' για την κλήρωση των '+hm(P.t+300000)+' · #'+(P.id+1)+(P.two ? ' και την επόμενη (#'+(P.id+2)+')' : '');
-    $('boxTxt').innerHTML = P.man ? '' : '<details class="bxInfo"'+((P.p5||P.mm)?' open':'')+'><summary>ℹ️ Λεπτομέρειες</summary>'+(P.p5 ? '<div class="pull">⏱️ Κανόνας πενταλέπτου '+P.p5.hm+': <b>'+P.p5.name+'</b></div>' : '')+(P.mm ? '<div class="pull">🧩 Μάντεμα: '+(P.mm.first ? 'πρώτη πρόβλεψη (τυχαία)' : 'η προηγούμενη πρόβλεψη έπιασε <b>'+P.mm.h+'/'+P.mm.k+'</b> → κρατήθηκαν <b>'+P.mm.kept.length+'</b> ('+P.mm.kept.join(' ')+') και άλλαξαν '+(P.mm.K-P.mm.kept.length)+' · θυμούνται '+(P.mm.rounds||0)+' γύρους'+(P.mm.top && P.mm.top.length ? '<br>η 20άδα που πιστεύουν ότι ψάχνουν: <b>'+P.mm.top.join(' ')+'</b>'+(P.mm.keptS ? ' <span style="opacity:.7">· ίδια με πριν'+(P.mm.lastOk ? ' (ο τελευταίος γύρος τη «επιβεβαίωσε»)' : '')+'</span>' : (P.mm.chOut && P.mm.chOut.length ? '<br>άλλαξαν γνώμη: έβγαλαν <b>'+P.mm.chOut.join(' ')+'</b>, έβαλαν <b>'+P.mm.chIn.join(' ')+'</b> — με την παλιά 20άδα περίμεναν άλλα «πιάσαμε»' : ''))+(P.mm.err ? ' <span style="opacity:.7">(δεν ταιριάζει τέλεια με όλους τους γύρους — '+P.mm.err+' «λάθη»)</span>' : ' <span style="opacity:.7">(ταιριάζει με όλους τους γύρους)</span>') : ''))+'</div>' : '')+(P.flt ? '<div class="pull">🎯 Από τους <b>'+P.flt.n+'</b> αριθμούς που έχουν βγει <b>2–6 φορές</b> στις 20 τελευταίες κληρώσεις και καθυστερούν <b>0, 2 ή 3</b>: '+(P.flt.pool||[]).join(' ')+(P.flt.short ? '<br><span class="muted">Ήταν λιγότεροι από όσους ζήτησες — συμπληρώθηκαν με τους πιο κοντινούς στα φίλτρα.</span>' : '')+(P.dec ? '<br>🤔 Η προηγούμενη έπιασε <b>'+P.dec.a+'/'+P.dec.k+'</b> → '+(P.dec.act==='same' ? 'την ξαναπαίζουν <b>ίδια</b>' : (P.dec.act==='keep' ? 'κράτησαν <b>'+(P.dec.kept.join(' ')||'—')+'</b> και συμπλήρωσαν τα υπόλοιπα'+(P.dec.drop.length ? ' · άφησαν '+P.dec.drop.join(' ')+' (έφτασαν 7 στις 20)' : '') : 'τα άλλαξαν <b>όλα</b>')) : '')+'<br>'+(P.two ? '🔁 Την παίζουν για <b>2 κληρώσεις</b> (#'+(P.id+1)+' και #'+(P.id+2)+').' : '1️⃣ Για <b>1 κλήρωση</b>.')+'</div>' : '')+pullLine(P)+tplLine(P)+(P.flt ? '' : '<div class="pull">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇ · '+(P.st.ul||0)+'↖ · '+(P.st.ur||0)+'↗ · '+(P.st.dl||0)+'↙ · '+(P.st.dr||0)+'↘  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</div>')+'</details>';
-    $('boxRes').innerHTML = '<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'')+
+    $('boxTxt').innerHTML = P.man ? '' : '<details class="bxInfo"'+((P.p5||P.mm)?' open':'')+'><summary>ℹ️ Λεπτομέρειες</summary>'+(P.p5 ? '<div class="pull">⏱️ Κανόνας πενταλέπτου '+P.p5.hm+': <b>'+P.p5.name+'</b></div>' : '')+(P.mm ? '<div class="pull">🧩 Μάντεμα: '+(P.mm.first ? 'πρώτη πρόβλεψη (τυχαία)' : 'η προηγούμενη πρόβλεψη έπιασε <b>'+P.mm.h+'/'+P.mm.k+'</b> → κρατήθηκαν <b>'+P.mm.kept.length+'</b> ('+P.mm.kept.join(' ')+') και άλλαξαν '+(P.mm.K-P.mm.kept.length)+' · θυμούνται '+(P.mm.rounds||0)+' γύρους'+(P.mm.top && P.mm.top.length ? '<br>η 20άδα που πιστεύουν ότι ψάχνουν: <b>'+P.mm.top.join(' ')+'</b>'+(P.mm.keptS ? ' <span style="opacity:.7">· ίδια με πριν'+(P.mm.lastOk ? ' (ο τελευταίος γύρος τη «επιβεβαίωσε»)' : '')+'</span>' : (P.mm.chOut && P.mm.chOut.length ? '<br>άλλαξαν γνώμη: έβγαλαν <b>'+P.mm.chOut.join(' ')+'</b>, έβαλαν <b>'+P.mm.chIn.join(' ')+'</b> — με την παλιά 20άδα περίμεναν άλλα «πιάσαμε»' : ''))+(P.mm.err ? ' <span style="opacity:.7">(δεν ταιριάζει τέλεια με όλους τους γύρους — '+P.mm.err+' «λάθη»)</span>' : ' <span style="opacity:.7">(ταιριάζει με όλους τους γύρους)</span>') : ''))+'</div>' : '')+(P.flt ? '<div class="pull">🎯 Από τους <b>'+P.flt.n+'</b> αριθμούς που έχουν βγει <b>2–6 φορές</b> στις 20 τελευταίες κληρώσεις και καθυστερούν <b>0, 2 ή 3</b>: '+(P.flt.pool||[]).join(' ')+(P.flt.short ? '<br><span class="muted">Ήταν λιγότεροι από όσους ζήτησες — συμπληρώθηκαν με τους πιο κοντινούς στα φίλτρα.</span>' : '')+(P.dec ? '<br>🤔 Η προηγούμενη έπιασε <b>'+P.dec.a+'/'+P.dec.k+'</b> → '+(P.dec.act==='same' ? 'την ξαναπαίζουν <b>ίδια</b>' : (P.dec.act==='keep' ? 'κράτησαν <b>'+(P.dec.kept.join(' ')||'—')+'</b> και συμπλήρωσαν τα υπόλοιπα'+(P.dec.drop.length ? ' · άφησαν '+P.dec.drop.join(' ')+' (έφτασαν 7 στις 20)' : '') : 'τα άλλαξαν <b>όλα</b>')) : '')+(P.r20 ? '<br>📐 <b>Κανόνες κλήρωσης</b> (όχι τα φίλτρα): εικοσάδα με άθροισμα '+P.r20.i.sum+' · '+P.r20.i.odd+' μονά · '+P.r20.i.low+' από 1–40 · '+P.r20.i.ov+' κοινά με την προηγούμενη · '+P.r20.i.cons+' ζευγάρια συνεχόμενων' : '')+'<br>'+(P.two ? '🔁 Την παίζουν για <b>2 κληρώσεις</b> (#'+(P.id+1)+' και #'+(P.id+2)+').' : '1️⃣ Για <b>1 κλήρωση</b>.')+'</div>' : '')+pullLine(P)+tplLine(P)+(P.flt ? '' : '<div class="pull">'+P.st.stay+' έμειναν · '+P.st.l+'⬅ · '+P.st.r+'➡ · '+P.st.u+'⬆ · '+P.st.d+'⬇ · '+(P.st.ul||0)+'↖ · '+(P.st.ur||0)+'↗ · '+(P.st.dl||0)+'↙ · '+(P.st.dr||0)+'↘  ·  🔵 έμειναν · ⚪ μετακινήθηκαν'+'</div>')+'</details>';
+    $('boxRes').innerHTML = (P.r20 && !P.man ? '<div class="r20"><div class="muted" style="font-size:12px;margin-bottom:4px">📐 Η εικοσάδα των κανόνων — πάτα αριθμούς για να φτιάξεις τη δική σου στήλη (έως 12):</div><div class="r20n">'+P.r20.n.map(function(n){ return '<span class="r20c'+(out.indexOf(n)>=0?' pk':'')+'" data-n="'+n+'">'+n+'</span>'; }).join('')+'</div><div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="muted" style="font-size:12px" id="r20Sel">Η δική σου: —</span><button class="btn2" id="r20Add" style="background:#14532d;border-color:#166534" disabled>➕ Η δική μου στο δελτίο</button></div></div>' : '')+'<div class="nums">'+out.join(' ')+'</div><button class="btn2" id="cp">📋 Αντιγραφή</button>'+(navigator.share?' <button class="btn2" id="sh">📤 Στείλε</button>':'')+
       '<div class="add">'+(out.length>12 ? '<span class="muted" style="font-size:12px">Το δελτίο ΚΙΝΟ παίρνει έως 12 αριθμούς — διάλεξε «Πόσους» έως 12 για να το παρακολουθήσεις.</span>' :
       '<label class="muted" style="font-size:13px">για <select id="tkN">'+(function(){ var gap = (last && P.id < last.id) ? Math.min(last.id - P.id, 300) : 0, o = '';
         if(gap) o += '<option value="'+gap+'" selected>έως τη LIVE ('+gap+')</option>';
@@ -699,7 +727,12 @@ function predShow(){ if(busy || !PRED) return; var box = $('boxBox'); box.innerH
   predText(PRED, true); }
 $('boxPred').addEventListener('click', predShow);
 if(PRED) $('boxPred').disabled = false;
-$('boxRes').addEventListener('click', function(e){ var txt = 'Τράβα ρε 😜 (από #'+(PRED?PRED.id:'')+'): '+out.join(' ');
+var R20SEL = [];
+$('boxRes').addEventListener('click', function(e){ var c = e.target.closest('.r20c'); if(c){ var n = +c.dataset.n, i = R20SEL.indexOf(n); if(i >= 0) R20SEL.splice(i,1); else if(R20SEL.length < 12) R20SEL.push(n); c.classList.toggle('me', R20SEL.indexOf(n) >= 0);
+    $('r20Sel').textContent = 'Η δική σου: '+(R20SEL.length ? R20SEL.slice().sort(function(a,b){ return a-b; }).join(' ')+' ('+R20SEL.length+')' : '—'); $('r20Add').disabled = !R20SEL.length; return; }
+  if(e.target.id==='r20Add'){ var T0 = tkLoad(); if(T0.length>=5){ alert('Έχεις ήδη 5 δελτία (το όριο). Σβήσε ένα για να βάλεις καινούργιο.'); return; }
+    T0.unshift({id:Date.now(), n:R20SEL.slice().sort(function(a,b){ return a-b; }), start:(PRED ? PRED.id : last.id)+1, draws:+(($('tkN')||{}).value)||5}); tkSave(T0); e.target.textContent = '✓ Μπήκε στα δελτία'; e.target.disabled = true; tkRender(); tkCheck(); return; }
+  var txt = 'Τράβα ρε 😜 (από #'+(PRED?PRED.id:'')+'): '+out.join(' ');
   if(e.target.id==='cp'){ (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function(){ e.target.textContent = '✓ Αντιγράφηκε'; }, function(){ prompt('Αντέγραψε:', txt); }); }
   if(e.target.id==='sh'){ navigator.share({text: txt + '\n' + location.href}).catch(function(){}); }
   if(e.target.id==='tkAdd'){ var T = tkLoad(); if(T.length>=5){ alert('Έχεις ήδη 5 δελτία (το όριο). Σβήσε ένα για να βάλεις καινούργιο.'); return; }
@@ -1263,6 +1296,7 @@ function p5Pick(D, K){ if(!P5_ON || !P5_READY || !D) return null; var nid = D.id
   return {moves:moves, st:st, info:{rule:rule, name:p5Name(rule), hm:P5_FMT.format(new Date(nt)), id:nid}}; }
 if(P5_ON) setTimeout(p5Load, 1500);
 
+(function(){ var sel = $('mPM2'); sel.value = PM2; sel.addEventListener('change', function(){ PM2 = this.value === 'rules' ? 'rules' : 'flt'; lsSet('trv_pm2', PM2); }); })();
 (function(){ function u(){ $('mClu').textContent = CLU_ON ? 'ON' : 'OFF'; $('mClu').style.borderColor = CLU_ON ? '#22c55e' : ''; } $('mClu').addEventListener('click', function(){ CLU_ON = !CLU_ON; lsSet('trv_clu', CLU_ON?'1':'0'); u(); }); u(); })();
 
 (function(){ function u(){ $('mWt').textContent = WT_ON ? 'ON' : 'OFF'; $('mWt').style.borderColor = WT_ON ? '#22c55e' : ''; } $('mWt').addEventListener('click', function(){ WT_ON = !WT_ON; lsSet('trv_wtalk', WT_ON?'1':'0'); u(); }); u(); })();
@@ -1306,5 +1340,5 @@ load(); setInterval(function(){ if(!document.hidden) load(); }, 30000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
 })();
 </script>
-<div id="appVer" style="text-align:center;font-size:11px;color:#64748b;padding:10px 0 90px">έκδοση v13 · 8/11/2026</div></body>
+<div id="appVer" style="text-align:center;font-size:11px;color:#64748b;padding:10px 0 90px">έκδοση v14 · 9/11/2026</div></body>
 </html>
