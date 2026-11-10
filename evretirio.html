@@ -21,7 +21,21 @@ h1{font-size:22px;margin:6px 0 4px}
 .c{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;font-size:12px;line-height:1.05;background:var(--cell);color:var(--num);border:1px solid transparent;font-variant-numeric:tabular-nums}
 .c small{font-size:9px;opacity:.85}
 .pick .c{cursor:pointer;font-size:14px;user-select:none;-webkit-tap-highlight-color:transparent}
+.pick .c.dr{background:#f5b301;color:#2b1e00;font-weight:700}
 .pick .c.on{background:#22c55e;color:#04210f;font-weight:700}
+.pick .c.on.dr{box-shadow:inset 0 0 0 3px #f5b301}
+.view{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.view button{padding:10px 12px}
+.view .vi{flex:1;text-align:center;font-size:14px;min-width:0}
+.view .vi b{font-size:15px}
+.tr{border-top:1px solid var(--line);padding:8px 0;font-size:14px}
+.tr .top{display:flex;gap:8px;align-items:baseline}
+.tr .top span{flex:1;color:var(--muted)}
+.tr .top b.w{color:#22c55e}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.chips i{font-style:normal;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--cell);color:var(--num)}
+.chips i.h{background:#22c55e;color:#04210f;font-weight:700}
+.tot{font-size:15px;margin:10px 0 4px}
 .c.d{background:#f5b301;color:#2b1e00;font-weight:700}
 .c.p{background:#22c55e;color:#04210f;font-weight:700}
 .c.o{border:1px dashed #22c55e;color:#22c55e}
@@ -60,8 +74,14 @@ button:disabled{opacity:.45;cursor:default}
   <div class="bar"><i id="pg"></i></div>
 
   <div class="panel">
-    <div class="lbl">Πάτα τους αριθμούς στον πίνακα ή γράψ' τους από κάτω</div>
+    <div class="view">
+      <button id="vprev" aria-label="Προηγούμενη κλήρωση" disabled>‹</button>
+      <div class="vi" id="vinfo">Κλήρωση: —</div>
+      <button id="vnext" aria-label="Επόμενη κλήρωση" disabled>›</button>
+      <button id="vlast" disabled>Τελευταία</button>
+    </div>
     <div class="grid pick" id="pick"></div>
+    <div class="leg" style="margin:8px 0 0"><span class="dot" style="background:#f5b301"></span>βγήκε στην κλήρωση που βλέπεις &nbsp; <span class="dot" style="background:#22c55e"></span>οι αριθμοί που διάλεξες (πάτα ή γράψ' τους)</div>
     <input type="text" id="txt" inputmode="numeric" autocomplete="off" placeholder="π.χ. 31 32 33 41 43 51 52 53">
     <label class="chk"><input type="checkbox" id="any"> Το ίδιο σχήμα οπουδήποτε στον πίνακα</label>
     <div class="row">
@@ -69,6 +89,16 @@ button:disabled{opacity:.45;cursor:default}
       <button id="go" class="pri" disabled>Αναζήτηση</button>
       <button id="clr">Καθάρισμα</button>
     </div>
+  </div>
+
+  <div class="panel">
+    <div class="lbl">🎫 Εικονικό δελτίο με τους αριθμούς που διάλεξες (1 έως 12). Παίζει στις κληρώσεις μετά από αυτήν που βλέπεις· αν βλέπεις την τελευταία, περιμένει τις επόμενες ζωντανά.</div>
+    <div class="row">
+      <select id="tkx" aria-label="Πόσες κληρώσεις"><option value="1">1 κλήρωση</option><option value="2">2 κληρώσεις</option><option value="3">3 κληρώσεις</option><option value="4">4 κληρώσεις</option><option value="5" selected>5 κληρώσεις</option><option value="6">6 κληρώσεις</option><option value="10">10 κληρώσεις</option><option value="20">20 κληρώσεις</option><option value="50">50 κληρώσεις</option><option value="100">100 κληρώσεις</option></select>
+      <select id="tks" aria-label="Ποσό ανά κλήρωση"><option value="0.5">0,50€ ανά κλήρωση</option><option value="1">1€ ανά κλήρωση</option><option value="2">2€ ανά κλήρωση</option><option value="3">3€ ανά κλήρωση</option><option value="5">5€ ανά κλήρωση</option><option value="10">10€ ανά κλήρωση</option></select>
+      <button id="tkgo" class="pri" disabled>Παίξε δελτίο</button>
+    </div>
+    <div id="tk"></div>
   </div>
 
   <div id="sum"></div>
@@ -135,6 +165,12 @@ if(typeof module !== 'undefined') module.exports = KC;
 <script>
 (function(){
   var PER = 10, S = null, IDX = null, R = [], page = 0, sel = [], RECS = {};
+  var API = 'https://api.opap.gr/draws/v3.0/1100', LIVE = [], lastArcId = 0, cur = -1, curDraw = null, TK = null, tkTimer = null;
+  /* κέρδος ανά στήλη 0,50€: πλήθος αριθμών → {επιτυχίες: ποσό} (ίδιος πίνακας με το ΚΙΝΟ Live, μόνο αριθμοί) */
+  var PAYS = {1:{1:1.25}, 2:{1:0.5,2:2.5}, 3:{2:1.25,3:12.5}, 4:{2:0.5,3:2,4:50}, 5:{3:1,4:10,5:225}, 6:{3:0.5,4:3.5,5:25,6:800}, 7:{3:0.5,4:1.5,5:10,6:50,7:2500},
+    8:{4:1,5:5,6:25,7:500,8:7500}, 9:{4:0.5,5:2.5,6:12.5,7:100,8:2000,9:20000}, 10:{0:1,5:1,6:10,7:40,8:250,9:5000,10:50000},
+    11:{0:1,5:0.5,6:5,7:25,8:125,9:750,10:7500,11:250000}, 12:{0:2,6:2.5,7:12.5,8:75,9:500,10:1250,11:12500,12:500000}};
+  var eur = function(v){ return v.toLocaleString('el-GR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '€'; };
   var $ = function(id){ return document.getElementById(id); };
   var fmtN = function(n){ return n.toLocaleString('el-GR'); };
   var fmtT = function(sec){ return new Date(sec * 1000).toLocaleString('el-GR', {timeZone: 'Europe/Athens', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false}); };
@@ -145,7 +181,7 @@ if(typeof module !== 'undefined') module.exports = KC;
   pick.innerHTML = h;
   function paintSel(fromTxt){
     var cs = pick.children;
-    for(var i = 0; i < 80; i++) cs[i].className = 'c' + (sel.indexOf(i + 1) >= 0 ? ' on' : '');
+    for(var i = 0; i < 80; i++) cs[i].className = 'c' + (sel.indexOf(i + 1) >= 0 ? ' on' : '') + (curDraw && curDraw.nums.indexOf(i + 1) >= 0 ? ' dr' : '');
     if(!fromTxt) $('txt').value = sel.join(' ');
   }
   pick.addEventListener('click', function(e){
@@ -195,6 +231,104 @@ if(typeof module !== 'undefined') module.exports = KC;
   function info(g){ /* {id, t} της κλήρωσης στη θέση g */
     var lm = KC.locate(S, g);
     return recs(lm[0]).then(function(dv){ var o = lm[1] * 31; if(o + 8 > dv.byteLength) return null; return {id: dv.getUint32(o, true), t: dv.getUint32(o + 4, true)}; });
+  }
+
+  /* ---------- κληρώσεις: αρχείο + οι πιο πρόσφατες ζωντανά από τον ΟΠΑΠ ---------- */
+  function count(){ return S.total + LIVE.length; }
+  function maxId(){ return LIVE.length ? LIVE[LIVE.length - 1].id : lastArcId; }
+  function getDraw(p){
+    if(p < 0 || p >= count()) return Promise.resolve(null);
+    if(p >= S.total) return Promise.resolve(LIVE[p - S.total]);
+    return info(p).then(function(x){ return x ? {id: x.id, t: x.t, nums: KC.draw(S, p)} : null; });
+  }
+  function parseLive(arr){
+    return (Array.isArray(arr) ? arr : []).filter(function(c){ return c && c.status === 'results' && c.winningNumbers && c.winningNumbers.list && c.winningNumbers.list.length === 20; })
+      .map(function(c){ return {id: c.drawId, t: Math.floor(c.drawTime / 1000), nums: c.winningNumbers.list.map(Number).sort(function(x, y){ return x - y; })}; });
+  }
+  function addLive(arr){
+    var seen = {}; LIVE.forEach(function(d){ seen[d.id] = 1; });
+    arr.forEach(function(d){ if(d.id > lastArcId && !seen[d.id]){ LIVE.push(d); seen[d.id] = 1; } });
+    LIVE.sort(function(x, y){ return x.id - y.id; });
+  }
+  function getJSON(u){ return fetch(u + (u.indexOf('?') < 0 ? '?' : '&') + '_=' + Date.now()).then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); }
+  function refreshLive(n){ return getJSON(API + '/last/' + (n || 100)).then(function(j){ addLive(parseLive(j)); }); }
+  /* αν το αρχείο έχει μείνει πίσω περισσότερο από τις 100 τελευταίες, φέρνει και τις ενδιάμεσες κληρώσεις */
+  function fillGap(){
+    if(!LIVE.length || !lastArcId) return Promise.resolve();
+    var a = lastArcId + 1, b = LIVE[0].id - 1;
+    if(b < a || b - a > 1500) return Promise.resolve();
+    var u = API + '/draw-id/' + a + '/' + b + '?page=';
+    return getJSON(u + 0).then(function(f){
+      addLive(parseLive(f.content));
+      var next = 1, tp = f.totalPages || 1;
+      function one(){ if(next >= tp) return Promise.resolve(); var pgn = next++; return getJSON(u + pgn).then(function(x){ addLive(parseLive(x.content)); return one(); }); }
+      var ws = []; for(var i = 0; i < 6; i++) ws.push(one());
+      return Promise.all(ws);
+    });
+  }
+  function findArc(id){
+    var F = IDX.files;
+    for(var m = F.length - 1; m >= 0; m--) if(id >= F[m].min && id <= F[m].max) return (function(m){
+      return recs(m).then(function(dv){
+        var lo = 0, hi = F[m].n - 1;
+        while(lo <= hi){ var md = (lo + hi) >> 1, v = dv.getUint32(md * 31, true); if(v === id) return S.offs[m] + md; if(v < id) lo = md + 1; else hi = md - 1; }
+        return -1;
+      });
+    })(m);
+    return Promise.resolve(-1);
+  }
+  function drawById(id){
+    if(id <= lastArcId) return findArc(id).then(function(g){ return g < 0 ? null : getDraw(g); });
+    for(var i = 0; i < LIVE.length; i++) if(LIVE[i].id === id) return Promise.resolve(LIVE[i]);
+    return Promise.resolve(null);
+  }
+  function show(p){
+    return getDraw(p).then(function(d){
+      if(!d) return;
+      cur = p; curDraw = d; paintSel(false);
+      $('vinfo').innerHTML = '<b>#' + d.id + '</b> · ' + fmtT(d.t) + (p === count() - 1 ? ' · τελευταία' : '');
+      $('vprev').disabled = p <= 0;
+    });
+  }
+  function note(t){ var el = $('vinfo'), old = el.innerHTML; el.textContent = t; setTimeout(function(){ if(el.textContent === t) el.innerHTML = old; }, 2500); }
+  $('vprev').addEventListener('click', function(){ if(cur > 0) show(cur - 1); });
+  $('vnext').addEventListener('click', function(){
+    if(cur + 1 < count()) return show(cur + 1);
+    refreshLive(10).catch(function(){}).then(function(){ if(cur + 1 < count()) show(cur + 1); else note('Η επόμενη δεν έχει βγει ακόμα'); });
+  });
+  $('vlast').addEventListener('click', function(){ refreshLive(100).catch(function(){}).then(function(){ show(count() - 1); }); });
+
+  /* ---------- εικονικό δελτίο ---------- */
+  function saveTk(){ try{ if(TK) localStorage.setItem('evr_ticket', JSON.stringify(TK)); else localStorage.removeItem('evr_ticket'); }catch(e){} }
+  $('tkgo').addEventListener('click', function(){
+    if(sel.length < 1 || sel.length > 12){ $('tk').innerHTML = '<div class="tot err">Το δελτίο θέλει από 1 έως 12 αριθμούς (έχεις διαλέξει ' + sel.length + ').</div>'; return; }
+    var start = function(){ TK = {nums: sel.slice(), base: curDraw ? curDraw.id : maxId(), x: +$('tkx').value, stake: +$('tks').value, ts: Date.now()}; saveTk(); renderTk(); };
+    if(curDraw && cur < count() - 1) start(); else refreshLive(10).catch(function(){}).then(function(){ if(curDraw && cur >= count() - 2) return show(count() - 1).then(start); start(); });
+  });
+  var tkTok = 0;
+  function renderTk(){
+    clearTimeout(tkTimer);
+    var el = $('tk'), my = ++tkTok;
+    if(!TK){ el.innerHTML = ''; return; }
+    var ids = []; for(var i = 1; i <= TK.x; i++) ids.push(TK.base + i);
+    Promise.all(ids.map(drawById)).then(function(ds){
+      if(my !== tkTok || !TK) return;
+      var k = TK.nums.length, mult = TK.stake / 0.5, played = 0, won = 0, wins = 0, pend = 0, rows = '', mx = maxId();
+      ds.forEach(function(d, ix){
+        if(!d){ if(ids[ix] > mx) pend++; return; }
+        var hit = TK.nums.filter(function(v){ return d.nums.indexOf(v) >= 0; }), w = (PAYS[k][hit.length] || 0) * mult;
+        played++; won += w; if(w > 0) wins++;
+        rows += '<div class="tr"><div class="top"><b>#' + d.id + '</b><span>' + fmtT(d.t).slice(-5) + ' · ' + hit.length + ' στα ' + k + '</span>' + (w > 0 ? '<b class="w">+' + eur(w) + '</b>' : '<span style="flex:none">—</span>') + '</div>' +
+          '<div class="chips">' + TK.nums.map(function(v){ return '<i' + (hit.indexOf(v) >= 0 ? ' class="h"' : '') + '>' + v + '</i>'; }).join('') + '</div></div>';
+      });
+      var cost = played * TK.stake, net = won - cost;
+      el.innerHTML = '<div class="tot"><b>Δελτίο ' + TK.nums.join(' · ') + '</b><br>από την #' + (TK.base + 1) + ' · ' + TK.x + (TK.x === 1 ? ' κλήρωση' : ' κληρώσεις') + ' · ' + eur(TK.stake) + ' η καθεμία</div>' +
+        '<div class="lbl" style="margin:0 0 4px">' + (played ? 'Παίχτηκαν ' + played + ' από ' + TK.x + ' · κόστος ' + eur(cost) + ' · κέρδη ' + eur(won) + ' (σε ' + wins + ') · <b style="color:' + (net >= 0 ? '#22c55e' : '#f87171') + '">' + (net >= 0 ? '+' : '−') + eur(Math.abs(net)) + '</b>' : 'Δεν έχει παιχτεί καμία ακόμα.') +
+        (pend ? ' · ⏳ περιμένω ' + pend + (pend === 1 ? ' κλήρωση' : ' κληρώσεις') + ' ακόμα' : '') + '</div>' + rows +
+        '<div class="row" style="margin-top:10px"><button id="tkdel">Σβήσιμο δελτίου</button></div>';
+      $('tkdel').onclick = function(){ TK = null; saveTk(); renderTk(); };
+      if(pend) tkTimer = setTimeout(function(){ refreshLive(Math.min(100, pend + 10)).catch(function(){}).then(function(){ renderTk(); }); }, 20000);
+    });
   }
 
   /* ---------- αναζήτηση ---------- */
@@ -290,11 +424,19 @@ if(typeof module !== 'undefined') module.exports = KC;
   load(false).then(function(){
     $('pg').parentNode.style.display = 'none'; $('go').disabled = false;
     $('st').textContent = 'Ιστορικό: ' + fmtN(S.total) + ' κληρώσεις';
-    Promise.all([info(0), info(S.total - 1)]).then(function(x){ if(x[0] && x[1]) $('st').textContent = 'Ιστορικό: ' + fmtN(S.total) + ' κληρώσεις · ' + fmtT(x[0].t).slice(0, 10) + ' έως ' + fmtT(x[1].t); }).catch(function(){});
+    Promise.all([info(0), info(S.total - 1)]).then(function(x){
+      if(x[0] && x[1]) $('st').textContent = 'Ιστορικό: ' + fmtN(S.total) + ' κληρώσεις · ' + fmtT(x[0].t).slice(0, 10) + ' έως ' + fmtT(x[1].t);
+      lastArcId = x[1] ? x[1].id : 0;
+      return refreshLive(100).then(fillGap).catch(function(){});
+    }).catch(function(){}).then(function(){
+      $('vnext').disabled = false; $('vlast').disabled = false; $('tkgo').disabled = false;
+      show(count() - 1);
+      try{ var t = JSON.parse(localStorage.getItem('evr_ticket') || 'null'); if(t && t.nums && t.base && Date.now() - t.ts < 36 * 3600000){ TK = t; renderTk(); } }catch(e){}
+    });
     if(pending){ var p = page; search(true); if(p * PER >= R.length){ page = 0; render(); } }
   }).catch(function(e){ $('st').innerHTML = '<span class="err">Δεν φορτώθηκε το ιστορικό (' + e.message + '). Ξαναφόρτωσε τη σελίδα.</span>'; });
 })();
 </script>
-<div id="appVer" style="text-align:center;font-size:11px;color:#64748b;padding:10px 0 90px">έκδοση v15 · 10/11/2026</div>
+<div id="appVer" style="text-align:center;font-size:11px;color:#64748b;padding:10px 0 90px">έκδοση v16 · 10/11/2026</div>
 </body>
 </html>
