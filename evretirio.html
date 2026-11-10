@@ -36,6 +36,10 @@ h1{font-size:22px;margin:6px 0 4px}
 .chips i{font-style:normal;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--cell);color:var(--num)}
 .chips i.h{background:#22c55e;color:#04210f;font-weight:700}
 .tot{font-size:15px;margin:10px 0 4px}
+#sum .grid.sel .c{cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+#sum .c.tk{box-shadow:0 0 0 3px #22c55e}
+.tksel{font-size:14px;margin:10px 0}
+.tksel b{color:#22c55e}
 .c.d{background:#f5b301;color:#2b1e00;font-weight:700}
 .c.p{background:#22c55e;color:#04210f;font-weight:700}
 .c.o{border:1px dashed #22c55e;color:#22c55e}
@@ -92,7 +96,8 @@ button:disabled{opacity:.45;cursor:default}
   </div>
 
   <div class="panel">
-    <div class="lbl">🎫 Εικονικό δελτίο με τους αριθμούς που διάλεξες (1 έως 12). Παίζει στις κληρώσεις μετά από αυτήν που βλέπεις· αν βλέπεις την τελευταία, περιμένει τις επόμενες ζωντανά.</div>
+    <div class="lbl">🎫 Εικονικό δελτίο (1 έως 12 αριθμοί). Διάλεξε τους αριθμούς του πατώντας στον πίνακα «Τι ακολούθησε συνολικά» μετά από μια αναζήτηση· αν δεν πατήσεις κανέναν, παίζει με τους αριθμούς της αναζήτησης. Παίζει στις κληρώσεις μετά από αυτήν που βλέπεις· αν βλέπεις την τελευταία, περιμένει τις επόμενες ζωντανά.</div>
+    <div class="tksel" id="tksel"></div>
     <div class="row">
       <select id="tkx" aria-label="Πόσες κληρώσεις"><option value="1">1 κλήρωση</option><option value="2">2 κληρώσεις</option><option value="3">3 κληρώσεις</option><option value="4">4 κληρώσεις</option><option value="5" selected>5 κληρώσεις</option><option value="6">6 κληρώσεις</option><option value="10">10 κληρώσεις</option><option value="20">20 κληρώσεις</option><option value="50">50 κληρώσεις</option><option value="100">100 κληρώσεις</option></select>
       <select id="tks" aria-label="Ποσό ανά κλήρωση"><option value="0.5">0,50€ ανά κλήρωση</option><option value="1">1€ ανά κλήρωση</option><option value="2">2€ ανά κλήρωση</option><option value="3">3€ ανά κλήρωση</option><option value="5">5€ ανά κλήρωση</option><option value="10">10€ ανά κλήρωση</option></select>
@@ -165,7 +170,7 @@ if(typeof module !== 'undefined') module.exports = KC;
 <script>
 (function(){
   var PER = 10, S = null, IDX = null, R = [], page = 0, sel = [], RECS = {};
-  var API = 'https://api.opap.gr/draws/v3.0/1100', LIVE = [], lastArcId = 0, cur = -1, curDraw = null, TK = null, tkTimer = null;
+  var API = 'https://api.opap.gr/draws/v3.0/1100', LIVE = [], lastArcId = 0, cur = -1, curDraw = null, TK = null, tkTimer = null, tkSel = [];
   /* κέρδος ανά στήλη 0,50€: πλήθος αριθμών → {επιτυχίες: ποσό} (ίδιος πίνακας με το ΚΙΝΟ Live, μόνο αριθμοί) */
   var PAYS = {1:{1:1.25}, 2:{1:0.5,2:2.5}, 3:{2:1.25,3:12.5}, 4:{2:0.5,3:2,4:50}, 5:{3:1,4:10,5:225}, 6:{3:0.5,4:3.5,5:25,6:800}, 7:{3:0.5,4:1.5,5:10,6:50,7:2500},
     8:{4:1,5:5,6:25,7:500,8:7500}, 9:{4:0.5,5:2.5,6:12.5,7:100,8:2000,9:20000}, 10:{0:1,5:1,6:10,7:40,8:250,9:5000,10:50000},
@@ -183,6 +188,7 @@ if(typeof module !== 'undefined') module.exports = KC;
     var cs = pick.children;
     for(var i = 0; i < 80; i++) cs[i].className = 'c' + (sel.indexOf(i + 1) >= 0 ? ' on' : '') + (curDraw && curDraw.nums.indexOf(i + 1) >= 0 ? ' dr' : '');
     if(!fromTxt) $('txt').value = sel.join(' ');
+    if($('tksel')) paintTkSel();
   }
   pick.addEventListener('click', function(e){
     var t = e.target.closest('.c'); if(!t) return;
@@ -300,10 +306,29 @@ if(typeof module !== 'undefined') module.exports = KC;
 
   /* ---------- εικονικό δελτίο ---------- */
   function saveTk(){ try{ if(TK) localStorage.setItem('evr_ticket', JSON.stringify(TK)); else localStorage.removeItem('evr_ticket'); }catch(e){} }
-  $('tkgo').addEventListener('click', function(){
-    if(sel.length < 1 || sel.length > 12){ $('tk').innerHTML = '<div class="tot err">Το δελτίο θέλει από 1 έως 12 αριθμούς (έχεις διαλέξει ' + sel.length + ').</div>'; return; }
-    var start = function(){ TK = {nums: sel.slice(), base: curDraw ? curDraw.id : maxId(), x: +$('tkx').value, stake: +$('tks').value, ts: Date.now()}; saveTk(); renderTk(); };
+  function tkNums(){ return tkSel.length ? tkSel.slice().sort(function(a, b){ return a - b; }) : sel.slice(); }
+  function paintTkSel(){
+    var own = tkSel.length > 0, nums = tkNums(), t = nums.length ? '<b>' + nums.join(' · ') + '</b>' : '—';
+    $('tksel').innerHTML = 'Αριθμοί δελτίου: ' + t + (own ? '' : nums.length ? ' <span style="color:var(--muted)">(της αναζήτησης)</span>' : '');
+    var e = $('sumsel'); if(e) e.innerHTML = own ? 'Για το δελτίο: <b>' + nums.join(' · ') + '</b>' : 'Πάτα πάνω στους αριθμούς για να τους βάλεις στο δελτίο (έως 12).';
+    var cs = document.querySelectorAll('#sum .grid.sel .c');
+    for(var i = 0; i < cs.length; i++) cs[i].classList.toggle('tk', tkSel.indexOf(+cs[i].getAttribute('data-n')) >= 0);
+  }
+  function play(){
+    var nums = tkNums();
+    if(nums.length < 1 || nums.length > 12){ $('tk').innerHTML = '<div class="tot err">Το δελτίο θέλει από 1 έως 12 αριθμούς (έχεις διαλέξει ' + nums.length + ').</div>'; $('tk').scrollIntoView({behavior: 'smooth', block: 'center'}); return; }
+    var start = function(){ TK = {nums: nums, base: curDraw ? curDraw.id : maxId(), x: +$('tkx').value, stake: +$('tks').value, ts: Date.now()}; saveTk(); renderTk(); $('tksel').scrollIntoView({behavior: 'smooth', block: 'start'}); };
     if(curDraw && cur < count() - 1) start(); else refreshLive(10).catch(function(){}).then(function(){ if(curDraw && cur >= count() - 2) return show(count() - 1).then(start); start(); });
+  }
+  $('tkgo').addEventListener('click', play);
+  $('sum').addEventListener('click', function(e){
+    var b = e.target.closest('button');
+    if(b && b.id === 'sumplay') return play();
+    if(b && b.id === 'sumclr'){ tkSel = []; return paintTkSel(); }
+    var c = e.target.closest('.grid.sel .c'); if(!c) return;
+    var v = +c.getAttribute('data-n'), i = tkSel.indexOf(v);
+    if(i >= 0) tkSel.splice(i, 1); else if(tkSel.length < 12) tkSel.push(v);
+    paintTkSel();
   });
   var tkTok = 0;
   function renderTk(){
@@ -358,12 +383,14 @@ if(typeof module !== 'undefined') module.exports = KC;
     var order = []; for(var n = 1; n <= 80; n++) order.push(n);
     order.sort(function(a, b){ return cnt[b] - cnt[a] || a - b; });
     var hot = order.slice(0, 10), cold = order.slice(-10), b = '';
-    for(n = 1; n <= 80; n++) b += '<div class="c ' + (hot.indexOf(n) >= 0 ? 'hot' : cold.indexOf(n) >= 0 ? 'cold' : 'mid') + '">' + n + '<small>' + cnt[n] + '</small></div>';
+    for(n = 1; n <= 80; n++) b += '<div class="c ' + (hot.indexOf(n) >= 0 ? 'hot' : cold.indexOf(n) >= 0 ? 'cold' : 'mid') + '" data-n="' + n + '">' + n + '<small>' + cnt[n] + '</small></div>';
     el.innerHTML = '<div class="panel"><div class="big">Βρέθηκαν ' + fmtN(N) + (N === 1 ? ' κλήρωση' : ' κληρώσεις') + '</div>' +
       '<div class="lbl">' + (any ? 'Το σχήμα δοκιμάστηκε σε ' + nShapes + ' θέσεις του πίνακα. ' : '') +
       (M ? 'Στην επόμενη κλήρωση ξαναβγήκαν κατά μέσο όρο ' + (rep / M).toFixed(2).replace('.', ',') + ' από τους ' + k + ' αριθμούς.' : '') + '</div>' +
-      (M ? '<div class="cap"><b>Τι ακολούθησε συνολικά</b> · πόσες φορές βγήκε κάθε αριθμός στην επόμενη κλήρωση (σε ' + fmtN(M) + ')</div><div class="grid">' + b + '</div>' +
-      '<div class="leg"><span class="dot" style="background:#dc2626"></span>τα 10 πιο συχνά &nbsp; <span class="dot" style="background:#2563eb"></span>τα 10 πιο σπάνια</div>' : '') + '</div>';
+      (M ? '<div class="cap"><b>Τι ακολούθησε συνολικά</b> · πόσες φορές βγήκε κάθε αριθμός στην επόμενη κλήρωση (σε ' + fmtN(M) + ')</div><div class="grid sel">' + b + '</div>' +
+      '<div class="leg"><span class="dot" style="background:#dc2626"></span>τα 10 πιο συχνά &nbsp; <span class="dot" style="background:#2563eb"></span>τα 10 πιο σπάνια &nbsp; <span class="dot" style="box-shadow:0 0 0 2px #22c55e"></span>στο δελτίο</div>' +
+      '<div class="tksel" id="sumsel"></div><div class="row"><button id="sumplay" class="pri">🎫 Παίξε δελτίο με αυτούς</button><button id="sumclr">Καθάρισμα</button></div>' : '') + '</div>';
+    paintTkSel();
   }
   function board(drawn, pat, showMissing){
     var s = '<div class="grid">';
@@ -437,6 +464,6 @@ if(typeof module !== 'undefined') module.exports = KC;
   }).catch(function(e){ $('st').innerHTML = '<span class="err">Δεν φορτώθηκε το ιστορικό (' + e.message + '). Ξαναφόρτωσε τη σελίδα.</span>'; });
 })();
 </script>
-<div id="appVer" style="text-align:center;font-size:11px;color:#64748b;padding:10px 0 90px">έκδοση v16 · 10/11/2026</div>
+<div id="appVer" style="text-align:center;font-size:11px;color:#64748b;padding:10px 0 90px">έκδοση v17 · 10/11/2026</div>
 </body>
 </html>
