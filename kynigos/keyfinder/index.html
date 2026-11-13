@@ -131,8 +131,8 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
   <div class="card" id="gridcard">
     <label class="big" for="target">🎯 Στόχος — πορτοφόλι που ψάχνεις</label>
     <input id="target" placeholder="π.χ. 1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU" autocapitalize="off" autocorrect="off" spellcheck="false" style="width:100%;font-family:ui-monospace,Menlo,monospace;font-size:.9rem;padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)">
-    <p class="note" style="margin:10px 0 4px">Διάλεξε παζλ για να το βρεις μόνος σου (ή το αληθινό #71):</p>
-    <div class="examples" id="puzrow"></div>
+    <p class="note" style="margin:10px 0 4px">Διάλεξε παζλ από τη λίστα για να το βρεις μόνος σου (χειροκίνητα ή με Auto):</p>
+    <select id="puzsel" style="width:100%;font:inherit;padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)"></select>
     <div class="examples" style="margin-top:8px">
       <button id="preveal">💡 Δες τη λύση</button>
       <button id="ptgt">📋 Επικόλληση στόχου</button>
@@ -611,16 +611,38 @@ async function gen(nbytes){
   var autoRun=false, autoTimer=null, autoTries=0, autoT0=0;
   var fixedMask=new Array(256).fill(false);
   var PUZZLES=[
-    {n:6,  key:42n,  label:"🎓 42 (δοκ.)", fixMSB:false},
-    {n:1,  key:1n,   label:"#1",  fixMSB:false},
-    {n:2,  key:3n,   label:"#2",  fixMSB:false},
-    {n:3,  key:7n,   label:"#3",  fixMSB:false},
-    {n:4,  key:8n,   label:"#4",  fixMSB:false},
-    {n:5,  key:21n,  label:"#5",  fixMSB:false},
-    {n:6,  key:49n,  label:"#6",  fixMSB:false},
-    {n:7,  key:76n,  label:"#7",  fixMSB:false},
-    {n:10, key:514n, label:"#10", fixMSB:false},
-    {n:71, key:null, addr:"1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU", label:"🧩 #71", fixMSB:true}
+    {n:6,  key:42n,          label:"🎓 Δοκιμαστικό — κλειδί 42 (6 bit)", fixMSB:false},
+    {n:1,  key:1n,           label:"Puzzle #1 (1 bit) — λύνεται", fixMSB:false},
+    {n:2,  key:3n,           label:"Puzzle #2 (2 bit) — λύνεται", fixMSB:false},
+    {n:3,  key:7n,           label:"Puzzle #3 (3 bit) — λύνεται", fixMSB:false},
+    {n:4,  key:8n,           label:"Puzzle #4 (4 bit) — λύνεται", fixMSB:false},
+    {n:5,  key:21n,          label:"Puzzle #5 (5 bit) — λύνεται", fixMSB:false},
+    {n:6,  key:49n,          label:"Puzzle #6 (6 bit) — λύνεται", fixMSB:false},
+    {n:7,  key:76n,          label:"Puzzle #7 (7 bit) — λύνεται", fixMSB:false},
+    {n:8,  key:224n,         label:"Puzzle #8 (8 bit) — λύνεται", fixMSB:false},
+    {n:9,  key:467n,         label:"Puzzle #9 (9 bit) — λύνεται", fixMSB:false},
+    {n:10, key:514n,         label:"Puzzle #10 (10 bit) — λύνεται", fixMSB:false},
+    {n:11, key:1155n,        label:"Puzzle #11 (11 bit) — λύνεται", fixMSB:false},
+    {n:12, key:2683n,        label:"Puzzle #12 (12 bit) — λύνεται", fixMSB:false},
+    {n:13, key:5216n,        label:"Puzzle #13 (13 bit) — λύνεται", fixMSB:false},
+    {n:14, key:10544n,       label:"Puzzle #14 (14 bit) — λύνεται", fixMSB:false},
+    {n:15, key:26867n,       label:"Puzzle #15 (15 bit) — αργεί", fixMSB:false},
+    {n:16, key:51510n,       label:"Puzzle #16 (16 bit) — αργεί", fixMSB:false},
+    {n:17, key:95823n,       label:"Puzzle #17 (17 bit) — αργεί", fixMSB:false},
+    {n:18, key:198669n,      label:"Puzzle #18 (18 bit) — αργεί", fixMSB:false},
+    {n:19, key:357535n,      label:"Puzzle #19 (19 bit) — αργεί", fixMSB:false},
+    {n:20, key:863317n,      label:"Puzzle #20 (20 bit) — αργεί", fixMSB:false},
+    {n:21, key:1811764n,     label:"Puzzle #21 (21 bit)", fixMSB:false},
+    {n:22, key:3007503n,     label:"Puzzle #22 (22 bit)", fixMSB:false},
+    {n:23, key:5598802n,     label:"Puzzle #23 (23 bit)", fixMSB:false},
+    {n:24, key:14428676n,    label:"Puzzle #24 (24 bit)", fixMSB:false},
+    {n:25, key:33185509n,    label:"Puzzle #25 (25 bit)", fixMSB:false},
+    {n:26, key:54538862n,    label:"Puzzle #26 (26 bit)", fixMSB:false},
+    {n:27, key:111949941n,   label:"Puzzle #27 (27 bit)", fixMSB:false},
+    {n:28, key:227634408n,   label:"Puzzle #28 (28 bit)", fixMSB:false},
+    {n:29, key:400708894n,   label:"Puzzle #29 (29 bit)", fixMSB:false},
+    {n:30, key:1033162084n,  label:"Puzzle #30 (30 bit)", fixMSB:false},
+    {n:71, key:null, addr:"1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU", label:"🧩 Puzzle #71 — ΑΥΘΕΝΤΙΚΟ (άλυτο)", fixMSB:true}
   ];
   for(var pos=0;pos<256;pos++){
     var d=document.createElement("div");
@@ -725,7 +747,7 @@ async function gen(nbytes){
       $("ghint").innerHTML="🎯 Κλειδώθηκαν τα bit πάνω από το <b>"+hi+"</b> (=0). Ελεύθερα να ψάξεις: τα κάτω <b>"+(hi+1)+"</b> bit. Πάτα <b>💡 Δες τη λύση</b> αν κολλήσεις.";
     }
   }
-  (function(){ var row=$("puzrow"); if(!row) return; PUZZLES.forEach(function(pz){ var btn=document.createElement("button"); btn.textContent=pz.label; btn.onclick=function(){ applyPuzzle(pz); }; row.appendChild(btn); }); })();
+  (function(){ var sel=$("puzsel"); if(!sel) return; var ph=document.createElement("option"); ph.value=""; ph.textContent="— διάλεξε παζλ —"; sel.appendChild(ph); PUZZLES.forEach(function(pz,ix){ var o=document.createElement("option"); o.value=String(ix); o.textContent=pz.label; sel.appendChild(o); }); sel.onchange=function(){ if(sel.value==="")return; applyPuzzle(PUZZLES[parseInt(sel.value,10)]); }; })();
   $("gzero").onclick=function(){ stopAuto(); var anyFix=fixedMask.indexOf(true)>=0; if(!anyFix)$("ghint").textContent=""; var k=0n; for(var p=0;p<256;p++){ if(fixedMask[p]&&bits[p]) k|=(1n<<BigInt(255-p)); } setFromBig(k); };
   $("grand").onclick=function(){ stopAuto(); var rnd=new Uint8Array(32); crypto.getRandomValues(rnd); var k=0n; for(var p=0;p<256;p++){ var v=fixedMask[p]?bits[p]:((rnd[p>>3]>>(p&7))&1); if(v) k|=(1n<<BigInt(255-p)); } setFromBig(k); };
   $("target").addEventListener("input",recompute);
