@@ -34,6 +34,9 @@ th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--pan
 td.m{font-family:ui-monospace,Menlo,Consolas,monospace}
 tr{cursor:pointer}tr.sel{background:rgba(250,204,21,.13)}
 .scroll{max-height:520px;overflow:auto}
+summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-details-marker{display:none}details>summary::before{content:"▸ ";color:var(--muted)}details[open]>summary::before{content:"▾ "}
+.board div.pr0{outline:2px solid #22c55e;outline-offset:-2px}.board div.on.pr0{outline:3px solid #16a34a;box-shadow:0 0 0 2px #fff inset}
+.pr{margin-top:8px}.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}.chips span{min-width:32px;padding:4px 6px;border-radius:8px;background:var(--cell);font-weight:800;text-align:center}.chips span.hit{background:var(--hit);color:#111}.nx{border-top:1px solid var(--line);padding-top:8px}
 #nav{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:6px;background:rgba(15,23,42,.94);border:1px solid #334155;border-radius:999px;padding:6px 8px;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9;white-space:nowrap}
 #nav button{background:#1e293b;color:#e5e7eb;border:1px solid #334155;border-radius:999px;font-size:16px;font-weight:800;padding:8px 12px;min-width:44px;cursor:pointer}
 #nav button:disabled{opacity:.35}
@@ -43,20 +46,25 @@ tr{cursor:pointer}tr.sel{background:rgba(250,204,21,.13)}
 </head>
 <body><div class="wrap">
 <h1>#️⃣ ΚΙΝΟ Hash 32</h1>
-<div class="muted" style="font-size:13px">Κάθε κλήρωση: οι 20 αριθμοί <b>ταξινομημένοι</b> (από τον μικρότερο), κολλητά σε έναν αριθμό, και το <b>CRC32</b> του (32 bit) σε δεκαεξαδικό και σε δεκαδικό.</div>
+<details class="muted" style="font-size:13px"><summary>ℹ️ Πώς δουλεύει</summary>Κάθε κλήρωση: οι 20 αριθμοί <b>ταξινομημένοι</b> κολλητά σε έναν αριθμό → <b>CRC32</b> (32 bit) σε ψηφία → χωρίζεται ανά δύο ψηφία (π.χ. 4255612109 → 42 55 61 21 9). Πάνω από 80 αντιστρέφεται (81→18)· αν πάλι δεν κάνει (98→89) γίνεται δύο μονοψήφιοι (8, 9)· το 99 γίνεται 9. Τα μηδενικά και τα διπλά φεύγουν. Αυτοί οι αριθμοί είναι η <b>πρόβλεψη για την επόμενη κλήρωση</b> και αξιολογούνται μόλις βγει.</details>
 <div class="top"><input type="date" id="day"><button class="btn" id="today">Σήμερα</button><button class="btn" id="liveT" title="Αυτόματη ενημέρωση με κάθε νέα κλήρωση">🔄 Live</button><span class="muted" id="st" style="font-size:13px"></span></div>
 
 <div class="card" id="cur">
   <div class="dt"><b id="cTtl">—</b><span class="muted" id="cSub"></span></div>
-  <div class="board" id="board"></div>
-  <div class="muted" style="font-size:12px;margin-top:8px">Ταξινομημένοι αριθμοί κολλητά (<span id="cLen">0</span> ψηφία):</div>
+  <div class="pr" id="pIn"></div>
+  <details id="dBoard" open><summary class="muted" style="font-size:13px;margin-top:6px">🎯 Ταμπλό</summary><div class="board" id="board"></div>
+  <div class="muted" style="font-size:11.5px;margin-top:4px">🟨 κλήρωση · <span style="outline:2px solid #22c55e;border-radius:4px;padding:0 3px">πράσινο πλαίσιο</span> = η πρόβλεψη από την προηγούμενη</div></details>
+  <details id="dHash"><summary class="muted" style="font-size:13px;margin-top:6px">#️⃣ Ο αριθμός και το CRC32</summary>
+  <div class="muted" style="font-size:12px;margin-top:6px">Ταξινομημένοι αριθμοί κολλητά (<span id="cLen">0</span> ψηφία):</div>
   <div class="big" id="cNum">—</div>
-  <div class="hash"><div><small>CRC32 · δεκαεξαδικό</small><b id="cHex">—</b></div><div><small>CRC32 · μόνο ψηφία</small><b id="cDec">—</b></div></div>
+  <div class="hash"><div><small>CRC32 · ψηφία</small><b id="cDec">—</b></div><div><small>Χωρισμένο ανά δύο</small><b id="cSplit" style="font-size:16px">—</b></div></div></details>
+  <div class="pr nx" id="pOut"></div>
 </div>
 
-<div class="card"><div class="dt"><b>Όλες οι κληρώσεις της ημέρας</b><span class="muted" id="cnt" style="font-size:13px"></span></div>
-  <div class="scroll" style="margin-top:6px"><table id="tbl"></table></div></div>
-<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v19 · 13/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+<div class="card"><details id="dSum" open><summary><b>📊 Αξιολόγηση ημέρας</b></summary><div id="sum"></div></details></div>
+<div class="card"><details id="dList"><summary><b>📋 Όλες οι κληρώσεις της ημέρας</b> <span class="muted" id="cnt" style="font-size:13px"></span></summary>
+  <div class="scroll" style="margin-top:6px"><table id="tbl"></table></div></details></div>
+<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v20 · 13/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
 </div>
 <div id="nav"><button data-v="-10">⏪10</button><button data-v="-1">◀</button><button data-v="live" class="live">🟢</button><button data-v="1">▶</button><button data-v="10">10⏩</button></div>
 <script>
@@ -70,24 +78,38 @@ function today(){ return fmtD.format(new Date()); }
 /* CRC32 (IEEE, όπως zip/png) */
 var CT=(function(){ var t=[]; for(var n=0;n<256;n++){ var c=n; for(var k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t.push(c>>>0); } return t; })();
 function crc32(s){ var c=0xFFFFFFFF; for(var i=0;i<s.length;i++) c = CT[(c^s.charCodeAt(i))&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
-function mk(d){ var s=d.arr.slice().sort(function(a,b){ return a-b; }), str=s.join(''), h=crc32(str); return {id:d.id, t:d.t, s:s, str:str, h:h, hx:('00000000'+h.toString(16)).slice(-8)}; }
+/* πρόβλεψη από τα ψηφία του CRC32: ανά δύο · >80 αντιστροφή · αλλιώς δύο μονοψήφιοι · χωρίς 0 και διπλά */
+function predOf(h){ var d=String(h), parts=[], out=[];
+  for(var i=0;i<d.length;i+=2) parts.push(d.slice(i,i+2));
+  parts.forEach(function(p){ var v=+p, put=function(x){ if(x>=1 && x<=80 && out.indexOf(x)<0) out.push(x); };
+    if(v<=80){ put(v); return; } var r=+(p.split('').reverse().join('')); if(r<=80){ put(r); return; } put(+p[0]); put(+p[1]); });
+  return {parts:parts, n:out}; }
+function mk(d){ var s=d.arr.slice().sort(function(a,b){ return a-b; }), str=s.join(''), h=crc32(str); return {id:d.id, t:d.t, s:s, str:str, h:h, P:predOf(h)}; }
+function hitsOf(P, d){ return P.n.filter(function(x){ return d.s.indexOf(x)>=0; }); }
+function chips(n, d){ return '<div class="chips">'+n.slice().sort(function(a,b){ return a-b; }).map(function(x){ return '<span'+(d&&d.s.indexOf(x)>=0?' class="hit"':'')+'>'+x+'</span>'; }).join('')+'</div>'; }
 async function getJ(u){ var e; for(var t=0;t<4;t++){ try{ var r=await fetch(u+(u.indexOf('?')<0?'?':'&')+'_='+Date.now(),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json(); }catch(x){ e=x; await new Promise(function(z){ setTimeout(z,500*(t+1)); }); } } throw e; }
 async function fetchDay(ds){ var u=API+'/draw-date/'+ds+'/'+ds+'?size=10&page=', j=await getJ(u+0), all=(j.content||[]).slice(), tp=j.totalPages||1, pg=[];
   for(var p=1;p<tp;p++) pg.push(p);
   while(pg.length){ var part=pg.splice(0,6), rs=await Promise.all(part.map(function(p){ return getJ(u+p); })); rs.forEach(function(x){ all=all.concat(x.content||[]); }); }
+  if(all.length){ var minId=Math.min.apply(null, all.map(function(c){ return c.drawId; })); try{ var pv=await getJ(API+'/'+(minId-1)); if(pv&&pv.winningNumbers&&pv.winningNumbers.list) all.push(pv); }catch(e){} }
   var m={}; all.forEach(function(c){ var w=c.winningNumbers||{}; if(w.list&&w.list.length===20) m[c.drawId]={id:c.drawId, t:c.drawTime, arr:w.list.slice()}; });
   return Object.keys(m).map(Number).sort(function(a,b){ return a-b; }).map(function(k){ return mk(m[k]); }); }
 var DAY=today(), L=[], VI=null, LIVE=lsGet('h32_live')!=='0', LOADING=false;
 (function(){ var b=''; for(var n=1;n<=80;n++) b+='<div id="b'+n+'">'+n+'</div>'; $('board').innerHTML=b; })();
-function render(){ $('cnt').textContent=L.length+' κληρώσεις'; if(!L.length){ $('cTtl').textContent='Καμία κλήρωση'; $('tbl').innerHTML=''; return; }
-  var i=VI===null?L.length-1:VI, d=L[i], set={}; d.s.forEach(function(x){ set[x]=1; });
-  for(var n=1;n<=80;n++) $('b'+n).className=set[n]?'on':'';
-  $('cTtl').textContent='#'+d.id+' · '+fmtT.format(new Date(d.t)); $('cSub').textContent=(i===L.length-1 && DAY===today() ? '🟢 τελευταία' : (L.length-1-i)+' πριν την τελευταία της ημέρας');
-  $('cNum').textContent=d.str; $('cLen').textContent=d.str.length; $('cHex').textContent=d.hx; $('cDec').textContent=d.h;
-  var nb=$('nav').children; for(var k=0;k<nb.length;k++){ var v=nb[k].dataset.v; nb[k].disabled = v!=='live' && ((+v<0 && i===0) || (+v>0 && i===L.length-1)); }
-  var h='<tr><th>Ώρα</th><th>Κλήρωση</th><th>CRC32</th><th>Ψηφία</th></tr>';
-  for(var q=L.length-1;q>=0;q--){ var x=L[q]; h+='<tr data-i="'+q+'"'+(q===i?' class="sel"':'')+'><td>'+fmtT.format(new Date(x.t))+'</td><td>#'+x.id+'</td><td class="m">'+x.hx+'</td><td class="m">'+x.h+'</td></tr>'; }
-  $('tbl').innerHTML=h; }
+function render(){ var N=L.length-1; $('cnt').textContent=N>0?'· '+N:''; if(N<1){ $('cTtl').textContent='Καμία κλήρωση'; $('tbl').innerHTML=''; $('sum').innerHTML=''; return; }
+  var i=VI===null?N:Math.max(1,VI), d=L[i], pv=L[i-1], set={}, pr={}; d.s.forEach(function(x){ set[x]=1; }); pv.P.n.forEach(function(x){ pr[x]=1; });
+  for(var n=1;n<=80;n++) $('b'+n).className=(set[n]?'on':'')+(pr[n]?' pr0':'');
+  $('cTtl').textContent='#'+d.id+' · '+fmtT.format(new Date(d.t)); $('cSub').textContent=(i===N && DAY===today() ? '🟢 τελευταία' : (N-i)+' πριν την τελευταία');
+  var hh=hitsOf(pv.P, d);
+  $('pIn').innerHTML='<div class="muted" style="font-size:13px">🔮 Πρόβλεψη από την #'+pv.id+' ('+pv.h+'):</div>'+chips(pv.P.n, d)+'<div style="margin-top:4px">Έπιασε <b>'+hh.length+'/'+pv.P.n.length+'</b> <span class="muted">· η τύχη δίνει κατά μέσο όρο '+(pv.P.n.length/4).toFixed(2).replace('.',',')+'</span></div>';
+  $('cNum').textContent=d.str; $('cLen').textContent=d.str.length; $('cDec').textContent=d.h; $('cSplit').textContent=d.P.parts.join(' ');
+  $('pOut').innerHTML='<div class="muted" style="font-size:13px">➡️ Πρόβλεψη για την <b>#'+(d.id+1)+'</b> από αυτήν ('+d.h+' → '+d.P.parts.join(' ')+'):</div>'+chips(d.P.n, L[i+1])+(L[i+1] ? '<div style="margin-top:4px">Έπιασε <b>'+hitsOf(d.P, L[i+1]).length+'/'+d.P.n.length+'</b></div>' : '<div class="muted" style="margin-top:4px">⏳ Περιμένει την κλήρωση.</div>');
+  var nb=$('nav').children; for(var k=0;k<nb.length;k++){ var v=nb[k].dataset.v; nb[k].disabled = v!=='live' && ((+v<0 && i<=1) || (+v>0 && i===N)); }
+  var h='<tr><th>Ώρα</th><th>Κλήρωση</th><th>CRC32</th><th>Πρόβλεψη (από την προηγ.)</th><th>Έπιασε</th></tr>', dist={}, tk=0, th=0, tn=0;
+  for(var q=N;q>=1;q--){ var x=L[q], P=L[q-1].P, hs=hitsOf(P,x); dist[hs.length]=(dist[hs.length]||0)+1; tk+=P.n.length; th+=hs.length; tn++;
+    h+='<tr data-i="'+q+'"'+(q===i?' class="sel"':'')+'><td>'+fmtT.format(new Date(x.t))+'</td><td>#'+x.id+'</td><td class="m">'+x.h+'</td><td class="m">'+P.n.slice().sort(function(a,b){ return a-b; }).map(function(z){ return x.s.indexOf(z)>=0?'<b style="color:var(--hit)">'+z+'</b>':z; }).join(' ')+'</td><td><b>'+hs.length+'</b>/'+P.n.length+'</td></tr>'; }
+  $('tbl').innerHTML=h;
+  $('sum').innerHTML='<div style="margin-top:6px">'+tn+' κληρώσεις · κατά μέσο όρο <b>'+(tk/tn).toFixed(1).replace('.',',')+'</b> αριθμοί ανά πρόβλεψη · έπιασε συνολικά <b>'+th+'</b> από '+tk+' = <b>'+(100*th/tk).toFixed(1).replace('.',',')+'%</b> <span class="muted">(η τύχη: 25%)</span></div><div class="chips" style="margin-top:6px">'+Object.keys(dist).sort(function(a,b){ return a-b; }).map(function(k){ return '<span style="font-weight:600">'+k+' σωστά: <b>'+dist[k]+'</b></span>'; }).join('')+'</div>'; }
 async function load(ds, keep){ if(LOADING) return; LOADING=true; $('st').textContent='⏳ φόρτωση…';
   try{ var R=await fetchDay(ds); if(ds!==DAY){ LOADING=false; return; } var atEnd=VI===null; L=R; if(!keep) VI=null; else if(!atEnd && VI>=L.length) VI=null; $('st').textContent=''; render(); }
   catch(e){ $('st').textContent='⚠️ Δεν απάντησε το Allwyn — ξαναδοκίμασε'; }
@@ -96,10 +118,11 @@ $('day').value=DAY; $('day').max=today();
 $('day').addEventListener('change', function(){ if(!this.value) return; DAY=this.value; VI=null; L=[]; render(); load(DAY); });
 $('today').addEventListener('click', function(){ DAY=today(); $('day').value=DAY; VI=null; load(DAY); });
 $('nav').addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b||!L.length) return; var v=b.dataset.v, i=VI===null?L.length-1:VI;
-  if(v==='live'){ VI=null; if(DAY!==today()){ DAY=today(); $('day').value=DAY; load(DAY); return; } } else { var n=Math.max(0,Math.min(L.length-1,i+(+v))); VI=n===L.length-1?null:n; } render(); });
+  if(v==='live'){ VI=null; if(DAY!==today()){ DAY=today(); $('day').value=DAY; load(DAY); return; } } else { var n=Math.max(1,Math.min(L.length-1,i+(+v))); VI=n===L.length-1?null:n; } render(); });
 $('tbl').addEventListener('click', function(e){ var r=e.target.closest('tr[data-i]'); if(!r) return; var i=+r.dataset.i; VI=i===L.length-1?null:i; render(); window.scrollTo({top:0,behavior:'smooth'}); });
 (function(){ var B=$('liveT'); function u(){ B.classList.toggle('on',LIVE); B.textContent=LIVE?'🔄 Live ON':'🔄 Live OFF'; } B.addEventListener('click', function(){ LIVE=!LIVE; lsSet('h32_live',LIVE?'1':'0'); u(); }); u(); })();
 setInterval(function(){ if(LIVE && DAY===today() && !document.hidden) load(DAY, true); }, 30000);
+['dBoard','dHash','dSum','dList'].forEach(function(id){ var el=$(id), v=lsGet('h32_'+id); if(v!==null) el.open=v==='1'; el.addEventListener('toggle', function(){ lsSet('h32_'+id, el.open?'1':'0'); }); });
 render(); load(DAY);
 </script>
 </body>
