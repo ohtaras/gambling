@@ -491,7 +491,7 @@ async function checkBrainActivity(){
 
   var anyActivity = false;
   var htmlResults = [];
-  var checkedCount = 0;
+  var checkedCount = 0, gotData = 0, triedCount = 0;
 
   for(var i=0; i<addrs.length; i++){
     var a = addrs[i];
@@ -499,8 +499,10 @@ async function checkBrainActivity(){
     if(cb && !cb.checked) continue;
     checkedCount++;
     if(!a.val || a.val === "—") continue;
+    triedCount++;
     var d = await fetchAddressData(a.val);
     if(d){
+      gotData++;
       var cs = d.chain_stats || {}, ms = d.mempool_stats || {};
       var txs = (cs.tx_count||0) + (ms.tx_count||0);
       var bal = (cs.funded_txo_sum||0) - (cs.spent_txo_sum||0) + (ms.funded_txo_sum||0) - (ms.spent_txo_sum||0);
@@ -522,6 +524,10 @@ async function checkBrainActivity(){
     box.style.color = "var(--priv)";
     box.innerHTML = htmlResults.join("<br>");
     return true;
+  } else if(triedCount>0 && gotData===0){
+    box.style.color = "var(--warn)";
+    box.innerHTML = "⚠️ <b>Δεν μπόρεσα να συνδεθώ</b> στον explorer (δίκτυο ή όριο αιτήσεων). Δοκίμασε ξανά σε λίγο, ή άνοιξε τη διεύθυνση στο blockchain.com για σιγουριά.";
+    return false;
   } else {
     box.style.color = "var(--addr)";
     box.innerHTML = "✅ <b>Καμία κίνηση</b> στις επιλεγμένες μορφές brainwallet.";
@@ -547,7 +553,7 @@ async function checkSeedActivity(){
 
   var anyActivity = false;
   var htmlResults = [];
-  var checkedCount = 0;
+  var checkedCount = 0, gotData = 0, triedCount = 0;
 
   for(var i=0; i<addrs.length; i++){
     var a = addrs[i];
@@ -558,6 +564,7 @@ async function checkSeedActivity(){
 
     var d = await fetchAddressData(a.val);
     if(d){
+      gotData++;
       var cs = d.chain_stats || {}, ms = d.mempool_stats || {};
       var txs = (cs.tx_count||0) + (ms.tx_count||0);
       var bal = (cs.funded_txo_sum||0) - (cs.spent_txo_sum||0) + (ms.funded_txo_sum||0) - (ms.spent_txo_sum||0);
@@ -579,6 +586,10 @@ async function checkSeedActivity(){
     box.style.color = "var(--priv)";
     box.innerHTML = htmlResults.join("<br>");
     return true;
+  } else if(triedCount>0 && gotData===0){
+    box.style.color = "var(--warn)";
+    box.innerHTML = "⚠️ <b>Δεν μπόρεσα να συνδεθώ</b> στον explorer (δίκτυο ή όριο αιτήσεων). Δοκίμασε ξανά σε λίγο, ή άνοιξε τη διεύθυνση στο blockchain.com για σιγουριά.";
+    return false;
   } else {
     box.style.color = "var(--addr)";
     box.innerHTML = "✅ <b>Καμία κίνηση</b> στις επιλεγμένες διευθύνσεις seed.";
