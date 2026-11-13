@@ -3,25 +3,153 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Games</title>
+<title>Τα εργαλεία μας</title>
 <style>
-:root{--bg:#0f1420;--panel:#171e2e;--line:#2a3550;--text:#e8ecf5;--muted:#8c97b0;--accent:#3b82f6}
-@media (prefers-color-scheme: light){:root{--bg:#f3f5fa;--panel:#fff;--line:#dbe2ee;--text:#141a29;--muted:#5d6984}}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-.wrap{max-width:640px;margin:0 auto;padding:24px 16px}
-h1{font-size:24px;margin:0 0 16px}
-a.tile{display:block;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;color:inherit;text-decoration:none}
+:root{
+  --bg:#0f1420; --panel:#171e2e; --panel2:#1d263a; --line:#2a3550;
+  --text:#e8ecf5; --muted:#8c97b0; --accent:#3b82f6; --gold:#d4a84b; --btc:#f7931a;
+}
+@media (prefers-color-scheme: light){:root{
+  --bg:#f3f5fa; --panel:#ffffff; --panel2:#f7f9fd; --line:#dbe2ee;
+  --text:#141a29; --muted:#5d6984; --accent:#2563eb; --gold:#b8862b; --btc:#d97706;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding:0 0 env(safe-area-inset-bottom,0)}
+.wrap{max-width:660px;margin:0 auto;padding:24px 16px 48px}
+header h1{font-size:25px;margin:0 0 4px;letter-spacing:-.01em}
+header p{margin:0 0 22px;color:var(--muted);font-size:14.5px}
+.sec{margin:0 0 26px}
+.sec > h2{display:flex;align-items:center;gap:9px;font-size:14px;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--muted);margin:0 0 11px;font-weight:700}
+.sec > h2 .ln{flex:1;height:1px;background:var(--line)}
+a.tile{display:flex;align-items:flex-start;gap:13px;background:var(--panel);
+  border:1px solid var(--line);border-radius:14px;padding:15px 16px;margin-bottom:11px;
+  color:inherit;text-decoration:none;transition:border-color .15s,transform .05s}
+a.tile:active{transform:scale(.993)}
 a.tile:hover{border-color:var(--accent)}
-a.tile b{font-size:17px}
-a.tile span{display:block;color:var(--muted);font-size:14px;margin-top:4px}
+.ic{font-size:23px;line-height:1.1;flex:0 0 30px;text-align:center;margin-top:1px}
+.tx{min-width:0;flex:1}
+.tx b{font-size:16.5px;display:block}
+.tx span{display:block;color:var(--muted);font-size:13.5px;margin-top:3px}
+.go{color:var(--muted);font-size:19px;align-self:center;flex:0 0 auto}
+.sec.btc a.tile:hover{border-color:var(--btc)}
+footer{margin-top:30px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.7}
+footer b{color:var(--text)}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Εργαλεία παιχνιδιών</h1>
-  <a class="tile" href="general.html"><b>🗂️ General</b><span>Όλες οι σελίδες που έχουμε φτιάξει, με περιγραφή και αναζήτηση</span></a>
-<a class="tile" href="kino_live.html"><b>🟢 ΚΙΝΟ Live</b><span>Ζωντανές κληρώσεις, αντίστροφη μέτρηση, στατιστικά και στατιστικά θέσεων 1–23 (με 2η ευκαιρία), προσομοίωση δελτίου 1–12 αριθμών</span></a>
-  <a class="tile" href="evretirio.html"><b>🔎 Ευρετήριο ΚΙΝΟ</b><span>Γράφεις ή πατάς αριθμούς και βλέπεις σε πίνακες όλες τις κληρώσεις του ιστορικού που τους είχαν, 10 τη φορά, μαζί με το τι ακολούθησε · και το ίδιο σχήμα οπουδήποτε στον πίνακα</span></a>
+  <header>
+    <h1>🧰 Τα εργαλεία μας</h1>
+    <p>Όλα όσα έχουμε φτιάξει, σε ένα μέρος — για να μην τα ψάχνεις κάθε φορά.</p>
+  </header>
+
+  <section class="sec">
+    <h2><span>🎰 Λαχεία &amp; Παιχνίδια</span><span class="ln"></span></h2>
+
+    <a class="tile" href="kino_live.html">
+      <span class="ic">🟢</span>
+      <span class="tx"><b>ΚΙΝΟ Live</b><span>Ζωντανές κληρώσεις, αντίστροφη μέτρηση, στατιστικά θέσεων 1–23 (με 2η ευκαιρία) και προσομοίωση δελτίου 1–12 αριθμών.</span></span>
+      <span class="go">›</span>
+    </a>
+
+    <a class="tile" href="evretirio.html">
+      <span class="ic">🔎</span>
+      <span class="tx"><b>Ευρετήριο ΚΙΝΟ</b><span>Γράφεις ή πατάς αριθμούς και βλέπεις σε πίνακες όλες τις κληρώσεις του ιστορικού που τους είχαν — και τι ακολούθησε.</span></span>
+      <span class="go">›</span>
+    </a>
+
+    <a class="tile" href="lab.html">
+      <span class="ic">🧪</span>
+      <span class="tx"><b>Εργαστήριο Στρατηγικών ΚΙΝΟ</b><span>Στρατηγικές θερμοκρασίας (ζεστοί/κρύοι), σύνοψη από την αρχή και οι καλύτερες στήλες του ιστορικού.</span></span>
+      <span class="go">›</span>
+    </a>
+
+    <a class="tile" href="joker_lab.html">
+      <span class="ic">🃏</span>
+      <span class="tx"><b>Εργαστήριο Τζόκερ</b><span>Στρατηγικές για τους 5 αριθμούς + το Τζόκερ, δοκιμασμένες σε όλο το ιστορικό κληρώσεων.</span></span>
+      <span class="go">›</span>
+    </a>
+
+    <a class="tile" href="oppc.html">
+      <span class="ic">🎯</span>
+      <span class="tx"><b>Τράβα ρε 😜</b><span>Το εργαλείο δελτίου του μαγαζιού.</span></span>
+      <span class="go">›</span>
+    </a>
+  </section>
+
+  <section class="sec btc">
+    <h2><span>₿ Bitcoin — Μάθηση</span><span class="ln"></span></h2>
+
+    <a class="tile" href="skaftias.html">
+      <span class="ic">⛏️</span>
+      <span class="tx"><b>Το Εργαστήρι του Σκαφτιά</b><span>Διαδραστικό: δοκίμασε SHA-256, «σκάψε» ένα μπλοκ, δες την αλυσίδα και 4 αληθινά μπλοκ να επαληθεύονται.</span></span>
+      <span class="go">›</span>
+    </a>
+
+    <a class="tile" href="odigos.html">
+      <span class="ic">📖</span>
+      <span class="tx"><b>Πώς Λύνεται ένα Μπλοκ</b><span>Ο οδηγός: τι χρειάζεται, τα 6 υλικά, ο στόχος, τα 7 βήματα και η αμοιβή — όλα όσα είπαμε.</span></span>
+      <span class="go">›</span>
+    </a>
+
+    <a class="tile" href="kynigos/keylab/">
+      <span class="ic">🔑</span>
+      <span class="tx"><b>Εργαστήρι Κλειδιών</b><span>Γράψε οτιδήποτε και δες το να γίνεται ιδιωτικό κλειδί → δημόσιο κλειδί → πορτοφόλι. 100% τοπικά.</span></span>
+      <span class="go">›</span>
+    </a>
+
+    <a class="tile" href="kynigos/blockchain/">
+      <span class="ic">⛓️</span>
+      <span class="tx"><b>Εργαστήρι Αλυσίδας</b><span>Πώς κουμπώνει το ένα μπλοκ στο άλλο και γιατί η αλυσίδα δεν αλλάζει.</span></span>
+      <span class="go">›</span>
+    </a>
+
+    <a class="tile" href="kynigos/sign/">
+      <span class="ic">✍️</span>
+      <span class="tx"><b>Εργαστήρι Υπογραφής</b><span>Πώς υπογράφεις μια συναλλαγή με το ιδιωτικό κλειδί — χωρίς να το αποκαλύψεις ποτέ.</span></span>
+      <span class="go">›</span>
+    </a>
+
+    <a class="tile" href="kynigos/genesis/">
+      <span class="ic">🌱</span>
+      <span class="tx"><b>Η Αληθινή Genesis</b><span>Το πρώτο μπλοκ του Bitcoin (2009) — αληθινά δεδομένα και η ιστορία του.</span></span>
+      <span class="go">›</span>
+    </a>
+
+    <a class="tile" href="kynigos/bip39/">
+      <span class="ic">📝</span>
+      <span class="tx"><b>Λίστα BIP39</b><span>Οι 2048 λέξεις με τη θέση και τον 11-bit κωδικό τους — με αναζήτηση.</span></span>
+      <span class="go">›</span>
+    </a>
+  </section>
+
+  <section class="sec btc">
+    <h2><span>🧩 Γρίφοι &amp; Κυνηγός</span><span class="ln"></span></h2>
+
+    <a class="tile" href="kynigos/">
+      <span class="ic">🛰️</span>
+      <span class="tx"><b>Κυνηγός Κλειδιών</b><span>Η σουίτα για δημόσιους γρίφους Bitcoin (π.χ. Puzzle #71) — CPU/GPU αναζήτηση σε ορισμένο εύρος.</span></span>
+      <span class="go">›</span>
+    </a>
+  </section>
+
+  <section class="sec">
+    <h2><span>🗂️ Όλες οι σελίδες</span><span class="ln"></span></h2>
+
+    <a class="tile" href="general.html">
+      <span class="ic">🗂️</span>
+      <span class="tx"><b>General — Κατάλογος</b><span>Όλες οι σελίδες που έχουμε φτιάξει, με περιγραφή και αναζήτηση.</span></span>
+      <span class="go">›</span>
+    </a>
+  </section>
+
+  <footer>
+    <div><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Πάτρα</div>
+    <div>Αρχική v1 · φτιαγμένη για κινητό 📱</div>
+  </footer>
 </div>
 </body>
 </html>

@@ -1,0 +1,340 @@
+<title>Εργαστήρι του Σκαφτιά</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: single centered column of "stations"; warm-neutral palette with Bitcoin-orange accent; mono for all hashes */
+:root{
+  --bg:#f3efe7; --surface:#fffdf8; --surface2:#f7f2e8; --fg:#1d1a15; --muted:#6c6557;
+  --line:#e3dccd; --accent:#e07c0a; --accent-ink:#8a4b00;
+  --good:#2f9e44; --good-bg:#e7f6ea; --bad:#d63a2f; --bad-bg:#fbe9e7;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --sans:'IBM Plex Sans',system-ui,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15130d; --surface:#1f1c14; --surface2:#262117; --fg:#efe9db; --muted:#a69d89;
+  --line:#352f22; --accent:#ffa733; --accent-ink:#ffc777;
+  --good:#51cf66; --good-bg:#132a18; --bad:#ff6b5e; --bad-bg:#2c1512; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#15130d; --surface:#1f1c14; --surface2:#262117; --fg:#efe9db; --muted:#a69d89;
+  --line:#352f22; --accent:#ffa733; --accent-ink:#ffc777;
+  --good:#51cf66; --good-bg:#132a18; --bad:#ff6b5e; --bad-bg:#2c1512; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));}
+.wrap{max-width:730px;margin:0 auto;padding-block:28px 60px}
+h1{font-size:1.9rem;font-weight:700;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:.4rem 0 0;font-size:1rem}
+.lead{background:var(--accent);color:#1d1a15;display:inline-block;font-weight:600;
+  font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;padding:4px 10px;border-radius:999px}
+.station{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  padding:22px;margin-top:22px}
+.station h2{font-size:1.15rem;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+.num{font-family:var(--mono);background:var(--surface2);border:1px solid var(--line);
+  color:var(--accent-ink);width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+  font-weight:600;font-size:.95rem;flex:none}
+.desc{color:var(--muted);font-size:.92rem;margin:.2rem 0 16px}
+label{font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;
+  display:block;margin:0 0 6px}
+textarea,input[type=text]{width:100%;font-family:var(--sans);font-size:1rem;color:var(--fg);
+  background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:11px 12px;resize:vertical}
+textarea{min-height:52px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hashbox{font-family:var(--mono);font-size:.84rem;word-break:break-all;background:var(--surface2);
+  border:1px solid var(--line);border-radius:10px;padding:12px;line-height:1.7;min-width:0}
+.zeros{color:var(--good);font-weight:600;background:var(--good-bg);border-radius:3px;padding:0 1px}
+.btn{font-family:var(--sans);font-weight:600;font-size:.95rem;cursor:pointer;border-radius:10px;
+  border:1px solid var(--line);background:var(--surface2);color:var(--fg);padding:10px 16px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#1d1a15}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-family:var(--mono);font-size:.8rem;padding:5px 10px;border-radius:8px;border:1px solid var(--line);
+  background:var(--surface2);color:var(--fg);cursor:pointer}
+.statline{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px;font-size:.88rem;color:var(--muted)}
+.statline b{color:var(--fg);font-family:var(--mono);font-variant-numeric:tabular-nums}
+.diffbtns{display:flex;gap:6px;flex-wrap:wrap}
+.diffbtns button{font-family:var(--mono);width:40px;height:40px;border-radius:9px;border:1px solid var(--line);
+  background:var(--surface2);color:var(--fg);cursor:pointer;font-size:1rem}
+.diffbtns button.on{background:var(--accent);border-color:var(--accent);color:#1d1a15;font-weight:600}
+.live{margin-top:14px;padding:14px;border-radius:12px;background:var(--surface2);border:1px solid var(--line)}
+.live.found{border-color:var(--good);background:var(--good-bg)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.big{font-size:1.5rem;font-weight:600}
+.spark{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:middle}
+.mining .spark{animation:pulse .7s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.block{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px;background:var(--surface2)}
+.block.ok{border-left:5px solid var(--good)}
+.block.bad{border-left:5px solid var(--bad)}
+.block-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.block-head .t{font-weight:700}
+.pill{font-size:.72rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:999px}
+.pill.ok{background:var(--good-bg);color:var(--good)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.kv{font-size:.76rem;color:var(--muted);margin-top:8px;display:grid;grid-template-columns:auto 1fr;gap:3px 10px;align-items:baseline}
+.kv .mono{font-size:.78rem;word-break:break-all;color:var(--fg)}
+.note{font-size:.86rem;color:var(--muted);margin-top:10px}
+.ing-lbl{font-size:.73rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:10px 0 0}
+.hashbox.sm2{font-size:.72rem;padding:8px;line-height:1.6;margin-top:4px}
+.rf{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-top:9px;font-size:.85rem;border-bottom:1px dashed var(--line);padding-bottom:7px}
+.rf span{color:var(--muted);font-size:.74rem;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.rf b{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;word-break:break-word}
+.vok{margin-top:10px;font-size:.82rem;color:var(--good);font-weight:600;background:var(--good-bg);border-radius:8px;padding:8px 10px}
+.tiny{font-size:.78rem;color:var(--muted)}
+hr{border:none;border-top:1px solid var(--line);margin:18px 0}
+@media (max-width:430px){h1{font-size:1.55rem}.station{padding:16px}.kv{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <span class="lead">Bitcoin · πρακτικά</span>
+  <h1 style="margin-top:12px">Εργαστήρι του Σκαφτιά</h1>
+  <p class="sub">Τρεις σταθμοί για να δεις με τα χέρια σου πώς δουλεύει το SHA-256, το σκάψιμο (mining) και η αλυσίδα. Παίξε ελεύθερα — όλα τρέχουν εδώ, τίποτα δεν φεύγει απ' τη συσκευή σου.</p>
+
+  <!-- STATION 1 -->
+  <section class="station">
+    <h2><span class="num">1</span> Ο μύλος SHA-256</h2>
+    <p class="desc">Γράψε ό,τι θες. Θα δεις ότι βγαίνουν <b>πάντα 64 χαρακτήρες</b>, ότι η ίδια είσοδος δίνει πάντα το ίδιο, κι ότι μια <b>μικρή</b> αλλαγή τα τινάζει <b>όλα</b> στον αέρα.</p>
+    <label for="sha-input">Είσοδος</label>
+    <textarea id="sha-input" spellcheck="false">Ο Σπύρος μαθαίνει Bitcoin</textarea>
+    <div class="presets" id="sha-presets">
+      <button class="chip" data-v="hello">hello</button>
+      <button class="chip" data-v="Hello">Hello</button>
+      <button class="chip" data-v="">(κενό)</button>
+      <button class="chip" data-v="Σπύρος">Σπύρος</button>
+    </div>
+    <label for="sha-out" style="margin-top:16px">Αποτέλεσμα SHA-256</label>
+    <div class="hashbox" id="sha-out"></div>
+    <div class="statline">
+      <span>Είσοδος: <b id="sha-inlen">0</b> χαρακτήρες</span>
+      <span>Έξοδος: <b id="sha-outlen">64</b> χαρακτήρες (πάντα)</span>
+    </div>
+  </section>
+
+  <!-- STATION 2 -->
+  <section class="station" id="mine-station">
+    <h2><span class="num">2</span> Γίνε σκαφτιάς</h2>
+    <p class="desc">Διάλεξε πόσα <b>μηδενικά</b> πρέπει να ξεκινάει το hash (η δυσκολία). Μετά πάτα «Σκάψε» και κοίτα τη μηχανή να δοκιμάζει <b>nonce</b> ένα-ένα μέχρι να πετύχει. Όσο πιο πολλά μηδενικά, τόσο εκθετικά δυσκολότερο.</p>
+    <label for="mine-data">Δεδομένα μπλοκ</label>
+    <input type="text" id="mine-data" value="Μπλοκ #1 — ο Σπύρος πληρώνει 5 BTC" spellcheck="false">
+    <div style="margin-top:14px">
+      <label>Δυσκολία (μηδενικά στην αρχή)</label>
+      <div class="diffbtns" id="diffbtns">
+        <button data-d="1">1</button><button data-d="2">2</button><button data-d="3">3</button>
+        <button data-d="4" class="on">4</button><button data-d="5">5</button><button data-d="6">6</button>
+      </div>
+      <div class="tiny" id="diff-hint" style="margin-top:6px"></div>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn primary" id="mine-go">⛏️ Σκάψε!</button>
+      <button class="btn" id="mine-stop" disabled>Σταμάτα</button>
+    </div>
+    <div class="live" id="mine-live">
+      <div><span class="spark"></span><span id="mine-status">Έτοιμος. Διάλεξε δυσκολία και σκάψε.</span></div>
+      <div class="hashbox" id="mine-hash" style="margin-top:10px;background:var(--surface)"></div>
+      <div class="statline">
+        <span>nonce: <b id="mine-nonce">—</b></span>
+        <span>δοκιμές: <b id="mine-tries">0</b></span>
+        <span>ταχύτητα: <b id="mine-rate">0</b>/δευτ.</span>
+        <span>χρόνος: <b id="mine-time">0.0</b>s</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATION 3 -->
+  <section class="station">
+    <h2><span class="num">3</span> Η αλυσίδα</h2>
+    <p class="desc">Τρία μπλοκ, το καθένα κρατάει το hash του προηγούμενου (δυσκολία 3). Είναι όλα <b style="color:var(--good)">έγκυρα</b>. Τώρα <b>άλλαξε το κείμενο</b> σ' ένα παλιό μπλοκ και δες πώς σπάει η αλυσίδα από κει και κάτω — ακριβώς γιατί δεν αλλάζει η ιστορία του Bitcoin.</p>
+    <div id="chain"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn primary" id="chain-fix">🔧 Διόρθωσε όλη την αλυσίδα</button>
+      <button class="btn" id="chain-reset">Επαναφορά</button>
+    </div>
+    <p class="note" id="chain-note"></p>
+  </section>
+
+  <section class="station">
+    <h2><span class="num">4</span> Αληθινά μπλοκ του Bitcoin</h2>
+    <p class="desc">Εδώ δεν υπάρχει απλοποίηση: <b>4 πραγματικά, διαδοχικά μπλοκ</b> τραβηγμένα απ' την αλυσίδα. Όλα τα <b>6 αληθινά «συστατικά»</b>, <b>διπλό SHA-256</b> (όπως ισχύει στ' αλήθεια), και η πραγματική δυσκολία — 19 μηδενικά. Πάτα «Επαλήθευσε» να δεις ότι τα 6 συστατικά ξαναφτιάχνουν ΑΚΡΙΒΩΣ το επίσημο hash.</p>
+    <div id="real-chain"></div>
+    <div class="row" style="margin-top:14px"><button class="btn primary" id="real-verify">🔎 Επαλήθευσε όλα (διπλό SHA-256)</button></div>
+    <p class="note" id="real-note"></p>
+  </section>
+
+  <p class="tiny" style="margin-top:26px;text-align:center">Σταθμοί 1–3: απλοποιημένοι για να παίζεις (ένα πέρασμα SHA-256, μικρή δυσκολία). Σταθμός 4: το αληθινό Bitcoin — διπλό SHA-256, πραγματικά δεδομένα, πραγματική δυσκολία.</p>
+</div>
+
+<script>
+/* ---------- SHA-256 (synchronous, pure JS) ---------- */
+function sha256(ascii){
+  function rr(v,a){return (v>>>a)|(v<<(32-a))}
+  var mp=Math.pow, mw=mp(2,32), res='', words=[], bl=ascii.length*8;
+  var hash=sha256.h=sha256.h||[], k=sha256.k=sha256.k||[], pc=k.length, comp={};
+  for(var cand=2;pc<64;cand++){
+    if(!comp[cand]){for(var i=0;i<313;i+=cand)comp[i]=cand;
+      hash[pc]=(mp(cand,.5)*mw)|0; k[pc++]=(mp(cand,1/3)*mw)|0;}
+  }
+  var i; ascii+='\x80';
+  while(ascii.length%64-56)ascii+='\x00';
+  for(i=0;i<ascii.length;i++){var j=ascii.charCodeAt(i);if(j>>8)return;words[i>>2]|=j<<((3-i)%4*8);}
+  words[words.length]=(bl/mw)|0; words[words.length]=bl;
+  for(var J=0;J<words.length;){
+    var w=words.slice(J,J+=16), oh=hash; hash=hash.slice(0,8);
+    for(i=0;i<64;i++){
+      var w15=w[i-15],w2=w[i-2], a=hash[0], e=hash[4];
+      var t1=hash[7]+(rr(e,6)^rr(e,11)^rr(e,25))+((e&hash[5])^((~e)&hash[6]))+k[i]
+        +(w[i]=(i<16)?w[i]:(w[i-16]+(rr(w15,7)^rr(w15,18)^(w15>>>3))+w[i-7]+(rr(w2,17)^rr(w2,19)^(w2>>>10)))|0);
+      var t2=(rr(a,2)^rr(a,13)^rr(a,22))+((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+      hash=[(t1+t2)|0].concat(hash); hash[4]=(hash[4]+t1)|0;
+    }
+    for(i=0;i<8;i++)hash[i]=(hash[i]+oh[i])|0;
+  }
+  for(i=0;i<8;i++)for(var j=3;j+1;j--){var b=(hash[i]>>(j*8))&255;res+=((b<16)?0:'')+b.toString(16);}
+  return res;
+}
+function utf8(s){return unescape(encodeURIComponent(s))}
+function H(s){return sha256(utf8(s))}
+function u32le(n){return String.fromCharCode(n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255)}
+function hexLE(h){let s='';for(let i=h.length-2;i>=0;i-=2)s+=String.fromCharCode(parseInt(h.substr(i,2),16));return s}
+function hexToBytes(h){let s='';for(let i=0;i<h.length;i+=2)s+=String.fromCharCode(parseInt(h.substr(i,2),16));return s}
+function dsha(bs){return sha256(hexToBytes(sha256(bs)))}
+function realHash(b){const d=dsha(u32le(b.ver)+hexLE(b.prev)+hexLE(b.merkle)+u32le(b.time)+u32le(b.bits)+u32le(b.nonce));let r='';for(let i=d.length-2;i>=0;i-=2)r+=d.substr(i,2);return r}
+const REAL=[{"h":974830,"ver":931561472,"prev":"000000000000000000011b42f2ea0a64fb31785b534715489064caf6d8bf64c4","merkle":"52f7f0db5fc2589158e40bb498505d6388a1bcf59b1126ff70850915bc86aff8","time":1793985833,"bits":386000300,"nonce":3187617119,"id":"00000000000000000000d7c16cbac2efe9770d2f70c78f7f85061f365cdafeac","txs":3950},{"h":974831,"ver":946487296,"prev":"00000000000000000000d7c16cbac2efe9770d2f70c78f7f85061f365cdafeac","merkle":"223e61ba2466c1bc9cb3044ee90165c5075f44817d576b1fd83997d2b7903fa0","time":1793985997,"bits":386000300,"nonce":2358350248,"id":"000000000000000000003283dcade8e1313a3d757a425da4cf37097186d4cd49","txs":2262},{"h":974832,"ver":947159040,"prev":"000000000000000000003283dcade8e1313a3d757a425da4cf37097186d4cd49","merkle":"a0edb1798b927eb813e263dfa38d631abec5950268fc01cc9f9cdf707c9d799c","time":1793986275,"bits":386000300,"nonce":2680582055,"id":"000000000000000000018d14f8686432996174361067567ed0e2cdb0ee676405","txs":2992},{"h":974833,"ver":598491136,"prev":"000000000000000000018d14f8686432996174361067567ed0e2cdb0ee676405","merkle":"49e36af7fb2deaf6a3eafab917a3cbd625de46bdbf2d862813f45924c97ead42","time":1793986546,"bits":386000300,"nonce":3356550675,"id":"00000000000000000001920d9b0769107ae1c037f3658a12ce04893e4421dc66","txs":2894}];
+const $=s=>document.querySelector(s);
+function markup(hex){var i=0;while(i<hex.length&&hex[i]==='0')i++;
+  return '<span class="zeros">'+hex.slice(0,i)+'</span>'+hex.slice(i);}
+function fmt(n){return n.toLocaleString('el-GR')}
+
+/* ---------- Station 1 ---------- */
+const s1=$('#sha-input');
+function upd1(){const v=s1.value;$('#sha-out').innerHTML=markup(H(v));
+  $('#sha-inlen').textContent=fmt([...v].length);}
+s1.addEventListener('input',upd1);
+$('#sha-presets').addEventListener('click',e=>{const b=e.target.closest('[data-v]');
+  if(!b)return;s1.value=b.dataset.v;upd1();s1.focus();});
+upd1();
+
+/* ---------- Station 2 ---------- */
+let diff=4, mining=false;
+const hints={1:'~16 δοκιμές — ακαριαίο',2:'~256 δοκιμές — ακαριαίο',3:'~4.000 δοκιμές — στιγμή',
+  4:'~65.000 δοκιμές — λίγα δευτερόλεπτα',5:'~1 εκατ. δοκιμές — λίγα δευτ.',6:'~16 εκατ. δοκιμές — αργεί, κάνε υπομονή!'};
+function setHint(){$('#diff-hint').textContent=hints[diff]}
+$('#diffbtns').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b||mining)return;
+  diff=+b.dataset.d;[...e.currentTarget.children].forEach(c=>c.classList.toggle('on',c===b));setHint();});
+setHint();
+$('#mine-go').addEventListener('click',startMine);
+$('#mine-stop').addEventListener('click',()=>{mining=false;finishUI('Σταμάτησες.');});
+function finishUI(msg){$('#mine-station').classList.remove('mining');$('#mine-go').disabled=false;
+  $('#mine-stop').disabled=true;if(msg)$('#mine-status').textContent=msg;}
+function startMine(){
+  if(mining)return;
+  const data=$('#mine-data').value, prefix='0'.repeat(diff);
+  let nonce=0,tries=0,lastHex=''; const t0=performance.now();
+  mining=true; $('#mine-station').classList.add('mining');
+  $('#mine-go').disabled=true; $('#mine-stop').disabled=false;
+  $('#mine-live').classList.remove('found'); $('#mine-status').textContent='Σκάβω… δοκιμάζω nonces';
+  function chunk(){
+    if(!mining)return;
+    const end=tries+9000;
+    while(tries<end){
+      lastHex=H(data+nonce); tries++;
+      if(lastHex.startsWith(prefix)){
+        mining=false; const dt=(performance.now()-t0)/1000;
+        $('#mine-live').classList.add('found');
+        $('#mine-status').innerHTML='✅ <b>Βρέθηκε!</b> Το μπλοκ «σφραγίστηκε».';
+        $('#mine-hash').innerHTML=markup(lastHex);
+        $('#mine-nonce').textContent=fmt(nonce);
+        $('#mine-tries').textContent=fmt(tries);
+        $('#mine-rate').textContent=fmt(Math.round(tries/Math.max(dt,.001)));
+        $('#mine-time').textContent=dt.toFixed(1);
+        finishUI(null);
+        return;
+      }
+      nonce++;
+    }
+    const dt=(performance.now()-t0)/1000;
+    $('#mine-hash').innerHTML=markup(lastHex);
+    $('#mine-nonce').textContent=fmt(nonce);
+    $('#mine-tries').textContent=fmt(tries);
+    $('#mine-rate').textContent=fmt(Math.round(tries/Math.max(dt,.001)));
+    $('#mine-time').textContent=dt.toFixed(1);
+    setTimeout(chunk,0);
+  }
+  chunk();
+}
+
+/* ---------- Station 3 ---------- */
+const DIFF3='000';
+const seed=[
+  'Ο Σπύρος στέλνει 10 BTC στη Μαρία',
+  'Η Μαρία στέλνει 4 BTC στον Νίκο',
+  'Ο Νίκος στέλνει 1 BTC στον Σπύρο'
+];
+let blocks=[], cells=[];
+function bHash(i){const p=i===0?'0'.repeat(64):blocks[i-1].hash;
+  return H(i+'|'+blocks[i].data+'|'+blocks[i].nonce+'|'+p);}
+function computeChain(){
+  for(let i=0;i<blocks.length;i++){
+    blocks[i].prev=i===0?'0'.repeat(64):blocks[i-1].hash;
+    blocks[i].hash=bHash(i);
+    blocks[i].valid=blocks[i].hash.startsWith(DIFF3);
+  }
+}
+function mineBlock(i){
+  const p=i===0?'0'.repeat(64):blocks[i-1].hash;
+  let n=0,h;
+  do{h=H(i+'|'+blocks[i].data+'|'+n+'|'+p);n++;}while(!h.startsWith(DIFF3));
+  blocks[i].nonce=n-1;
+}
+function mineAll(){for(let i=0;i<blocks.length;i++){computeChain();mineBlock(i);}computeChain();}
+function short(h){return h.slice(0,16)+'…'+h.slice(-6)}
+function buildChain(){
+  const c=$('#chain');c.innerHTML='';cells=[];
+  blocks.forEach((b,i)=>{
+    const el=document.createElement('div');el.className='block';
+    el.innerHTML=
+      '<div class="block-head"><span class="t">Μπλοκ #'+i+'</span>'+
+      '<span class="pill" data-pill></span></div>'+
+      '<label for="b'+i+'">① Κείμενο (συναλλαγή) — άλλαξέ το</label>'+
+      '<textarea id="b'+i+'" spellcheck="false" autocomplete="off"></textarea>'+
+      '<div class="kv" style="margin-top:12px"><span>② nonce:</span><span class="mono" data-nonce></span></div>'+
+      '<label style="margin-top:12px">③ prev — ο κρίκος στο προηγούμενο</label>'+
+      '<div class="hashbox" style="font-size:.74rem;padding:9px" data-prev></div>'+
+      '<div style="text-align:center;font-family:var(--mono);color:var(--accent-ink);font-weight:600;font-size:.78rem;margin:10px 0">⬇ SHA-256( ① + ② + ③ ) ⬇</div>'+
+      '<label>= hash αυτού του μπλοκ (τι βγαίνει)</label>'+
+      '<div class="hashbox" style="font-size:.74rem;padding:9px" data-hash></div>'+
+      '<div class="row" style="margin-top:12px"><button class="btn" data-mine>⛏️ Σκάψε ξανά αυτό</button></div>';
+    c.appendChild(el);
+    const ta=el.querySelector('textarea');ta.value=b.data;
+    ta.addEventListener('input',()=>{blocks[i].data=ta.value;computeChain();paintChain();});
+    el.querySelector('[data-mine]').addEventListener('click',()=>{mineBlock(i);computeChain();paintChain();});
+    cells.push({el,pill:el.querySelector('[data-pill]'),prev:el.querySelector('[data-prev]'),
+      nonce:el.querySelector('[data-nonce]'),hash:el.querySelector('[data-hash]')});
+  });
+  paintChain();
+}
+function paintChain(){
+  blocks.forEach((b,i)=>{const k=cells[i];
+    k.el.className='block '+(b.valid?'ok':'bad');
+    k.pill.className='pill '+(b.valid?'ok':'bad');k.pill.textContent=b.valid?'Έγκυρο':'Άκυρο';
+    k.prev.innerHTML=markup(b.prev);
+    k.nonce.textContent=fmt(b.nonce);
+    k.hash.innerHTML=markup(b.hash);
+  });
+  const firstBad=blocks.findIndex(b=>!b.valid);
+  $('#chain-note').textContent = firstBad===-1
+    ? '✅ Η αλυσίδα είναι γερή — κάθε κρίκος κλειδώνει στον προηγούμενο.'
+    : '⚠️ Σπασμένη από το Μπλοκ #'+firstBad+' και κάτω: άλλαξε το hash του, κι έτσι δεν ταιριάζει πια με το «prev» των επόμενων. Για να σταθεί ξανά, πρέπει να ξανασκαφτούν ΟΛΑ από κει και μετά — πρακτικά αδύνατο σε αληθινό Bitcoin.';
+}
+$('#chain-fix').addEventListener('click',()=>{mineAll();paintChain();});
+$('#chain-reset').addEventListener('click',()=>{blocks=seed.map(d=>({data:d,nonce:0}));mineAll();buildChain();});
+blocks=seed.map(d=>({data:d,nonce:0}));mineAll();buildChain();
+
+/* ---------- Station 4: real blocks ---------- */
+function renderReal(v){var c=$('#real-chain');c.innerHTML='';REAL.forEach(function(b,idx){var link=idx===0?'':(b.prev===REAL[idx-1].id?' ✓ ταιριάζει':' ✗');var el=document.createElement('div');el.className='block';el.innerHTML='<div class="block-head"><span class="t">Μπλοκ #'+b.h+'</span><span class="pill ok">'+fmt(b.txs)+' συναλλαγές</span></div>'+'<div class="rf"><span>① version</span><b>'+b.ver+'</b></div>'+'<div class="ing-lbl">② prev — κρίκος στο προηγούμενο'+link+'</div>'+'<div class="hashbox sm2">'+markup(b.prev)+'</div>'+'<div class="ing-lbl">③ merkle root — περίληψη '+fmt(b.txs)+' συναλλαγών</div>'+'<div class="hashbox sm2">'+b.merkle+'</div>'+'<div class="rf"><span>④ ώρα</span><b>'+new Date(b.time*1000).toLocaleString('el-GR')+'</b></div>'+'<div class="rf"><span>⑤ bits (στόχος)</span><b>0x'+b.bits.toString(16)+'</b></div>'+'<div class="rf"><span>⑥ nonce</span><b>'+fmt(b.nonce)+'</b></div>'+'<div style="text-align:center;font-family:var(--mono);color:var(--accent-ink);font-weight:600;font-size:.76rem;margin:10px 0">⬇ διπλό SHA-256 ⬇</div>'+'<div class="ing-lbl">hash (πραγματικό, 19 μηδενικά)</div>'+'<div class="hashbox sm2">'+markup(b.id)+'</div>'+(v?'<div class="vok">✓ Ξαναϋπολόγισα το hash από τα 6 συστατικά — βγήκε ΑΚΡΙΒΩΣ το ίδιο</div>':'');c.appendChild(el);});}
+$('#real-verify').addEventListener('click',function(){var ok=true;for(var i=0;i<REAL.length;i++)if(realHash(REAL[i])!==REAL[i].id)ok=false;renderReal(true);$('#real-note').textContent=ok?'✅ Και στα 4: τα 6 συστατικά → διπλό SHA-256 → έβγαλαν ΑΚΡΙΒΩΣ το επίσημο hash. Κι ο κάθε κρίκος «prev» ταιριάζει με το hash του προηγούμενου. Αυτό ακριβώς κάνει ο ελεγκτής.':'⚠️ Κάτι δεν ταίριαξε.';});
+renderReal(false);
+</script>

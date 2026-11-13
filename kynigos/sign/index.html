@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Εργαστήρι Υπογραφής</title>
+<meta name="description" content="Υπόγραψε ένα μήνυμα με ιδιωτικό κλειδί και δες οποιονδήποτε να το επαληθεύει με το δημόσιο — και να σπάει μόλις αλλάξει ένα γράμμα.">
+<style>
+:root{
+  --bg:#0b0f14;--panel:#131a22;--panel2:#0f151c;--ink:#e7eef6;--dim:#8aa0b5;
+  --line:#243141;--accent:#4cc3ff;--ok:#27d38a;--okbg:#0f2a20;--bad:#ff5a6a;--badbg:#2a1115;
+  --gold:#ffcf4d;--mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
+  line-height:1.5;padding:16px;padding-bottom:60px;-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto}
+h1{font-size:22px;margin:4px 0 2px}
+.sub{color:var(--dim);font-size:14px;margin:0 0 16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px}
+.step{font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.k2{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px}
+textarea,input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:10px;padding:10px;font-size:15px;font-family:inherit;resize:vertical}
+textarea{min-height:48px}
+input[type=text]{font-family:var(--mono);font-size:14px}
+.mono{font-family:var(--mono);font-size:13px;word-break:break-all;background:var(--panel2);
+  border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--dim)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+button{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:10px;
+  padding:10px 13px;font-size:15px;font-weight:600;cursor:pointer}
+button.pri{background:var(--accent);color:#04121c;border-color:var(--accent);flex:1}
+.banner{border-radius:12px;padding:14px;font-weight:800;text-align:center;margin-top:10px;font-size:16px}
+.banner.ok{background:var(--okbg);color:var(--ok);border:1px solid var(--ok)}
+.banner.bad{background:var(--badbg);color:var(--bad);border:1px solid var(--bad)}
+.banner.idle{background:var(--panel2);color:var(--dim);border:1px solid var(--line)}
+.chk{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;color:var(--dim)}
+.chk input{width:18px;height:18px}
+.note{font-size:12px;color:var(--dim);margin-top:6px}
+.foot{margin-top:18px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:14px}
+.foot b{color:var(--ink)}
+.lab{font-size:11px;color:var(--dim)}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme]){--bg:#eef3f8;--panel:#fff;--panel2:#f1f5f9;--ink:#0f1a26;--dim:#5a6b7d;
+    --line:#d4dde7;--okbg:#e4f8ee;--badbg:#fde8ea}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>✍️ Εργαστήρι Υπογραφής</h1>
+  <p class="sub">Υπόγραψε με το <b>ιδιωτικό</b> κλειδί — επαλήθευσε με το <b>δημόσιο</b>. Άλλαξε ένα γράμμα και δες την υπογραφή να σπάει.</p>
+
+  <div class="card">
+    <div class="step">① Το κλειδί σου</div>
+    <div class="k2">Ιδιωτικό κλειδί (το μυστικό)</div>
+    <input type="text" id="priv" value="123456789">
+    <div class="row">
+      <button id="randBtn">🎲 Τυχαίο κλειδί</button>
+    </div>
+    <div class="k2">Δημόσιο κλειδί (βγαίνει από το ιδιωτικό — φανερό)</div>
+    <div class="mono" id="pub"></div>
+  </div>
+
+  <div class="card">
+    <div class="step">② Υπόγραψε ένα μήνυμα</div>
+    <div class="k2">Μήνυμα / πληρωμή</div>
+    <textarea id="msg">στείλε 1 BTC στον Χ</textarea>
+    <div class="row"><button class="pri" id="signBtn">✍️ Υπόγραψε με το ιδιωτικό κλειδί</button></div>
+    <div class="k2">Η υπογραφή (δύο αριθμοί: r, s)</div>
+    <div class="mono" id="sig">— δεν έχει υπογραφεί ακόμα —</div>
+  </div>
+
+  <div class="card">
+    <div class="step">③ Επαλήθευση — με το δημόσιο κλειδί</div>
+    <p class="note" style="margin-top:0">Ο καθένας ελέγχει αν η υπογραφή ταιριάζει με το <b>τρέχον</b> μήνυμα (πάνω) και το δημόσιο κλειδί. Άλλαξε έστω ένα γράμμα στο μήνυμα και κοίτα εδώ:</p>
+    <div class="banner idle" id="verdict">υπόγραψε πρώτα ↑</div>
+    <label class="chk"><input type="checkbox" id="wrongKey"> Δοκίμασε την επαλήθευση με <b>λάθος</b> δημόσιο κλειδί</label>
+  </div>
+
+  <div class="foot">
+    <p><b>Τι να προσέξεις:</b></p>
+    <p>• Η <b>υπογραφή</b> φτιάχνεται από το ιδιωτικό κλειδί + το μήνυμα. Χωρίς το κλειδί δεν γίνεται.</p>
+    <p>• Η επαλήθευση γίνεται με το <b>δημόσιο</b> κλειδί — που δεν προδίδει ποτέ το ιδιωτικό.</p>
+    <p>• Αλλάζεις <b>ένα γράμμα</b> στο μήνυμα → η υπογραφή γίνεται άκυρη (<span style="color:var(--bad)">κόκκινο</span>). Γι' αυτό κανείς δεν μπορεί να «μετακινήσει» την υπογραφή σου σε άλλη πληρωμή.</p>
+    <p>• Όλα γίνονται <b>μέσα στη συσκευή σου</b> — τίποτα δεν φεύγει στο δίκτυο (ούτε καν σύνδεση).</p>
+  </div>
+</div>
+
+<script>
+/* verified SHA-256 */
+function sha256bytes(bytes){
+  const K=new Uint32Array([0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2]);
+  let H=new Uint32Array([0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]);
+  const ml=bytes.length*8, withOne=bytes.length+1;
+  let padded=new Uint8Array((Math.ceil((withOne+8)/64))*64);
+  padded.set(bytes); padded[bytes.length]=0x80;
+  const dv=new DataView(padded.buffer);
+  dv.setUint32(padded.length-4, ml>>>0, false);
+  dv.setUint32(padded.length-8, Math.floor(ml/0x100000000), false);
+  const rotr=(n,x)=>(x>>>n)|(x<<(32-n));
+  const w=new Uint32Array(64);
+  for(let i=0;i<padded.length;i+=64){
+    for(let t=0;t<16;t++) w[t]=dv.getUint32(i+t*4,false);
+    for(let t=16;t<64;t++){
+      const s0=rotr(7,w[t-15])^rotr(18,w[t-15])^(w[t-15]>>>3);
+      const s1=rotr(17,w[t-2])^rotr(19,w[t-2])^(w[t-2]>>>10);
+      w[t]=(w[t-16]+s0+w[t-7]+s1)|0;
+    }
+    let a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+    for(let t=0;t<64;t++){
+      const S1=rotr(6,e)^rotr(11,e)^rotr(25,e);const ch=(e&f)^(~e&g);
+      const t1=(h+S1+ch+K[t]+w[t])|0;
+      const S0=rotr(2,a)^rotr(13,a)^rotr(22,a);const maj=(a&b)^(a&c)^(b&c);
+      const t2=(S0+maj)|0;
+      h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0;
+    }
+    H[0]=(H[0]+a)|0;H[1]=(H[1]+b)|0;H[2]=(H[2]+c)|0;H[3]=(H[3]+d)|0;H[4]=(H[4]+e)|0;H[5]=(H[5]+f)|0;H[6]=(H[6]+g)|0;H[7]=(H[7]+h)|0;
+  }
+  let hex='';for(let i=0;i<8;i++)hex+=(H[i]>>>0).toString(16).padStart(8,'0');return hex;
+}
+const enc=new TextEncoder();
+function sha256hex(s){return sha256bytes(enc.encode(s));}
+
+/* secp256k1 + ECDSA (verified) */
+const P=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2Fn;
+const N=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141n;
+const Gx=0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798n;
+const Gy=0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8n;
+const G=[Gx,Gy];
+const mod=(a,m)=>((a%m)+m)%m;
+function inv(a,m){a=mod(a,m);let o=a,r=m,os=1n,s=0n;while(r!==0n){const q=o/r;[o,r]=[r,o-q*r];[os,s]=[s,os-q*s];}return mod(os,m);}
+function padd(p,q){if(!p)return q;if(!q)return p;if(p[0]===q[0]&&mod(p[1]+q[1],P)===0n)return null;
+  let l;if(p[0]===q[0]&&p[1]===q[1]){l=mod(3n*p[0]*p[0]*inv(2n*p[1],P),P);}else{l=mod((q[1]-p[1])*inv(q[0]-p[0],P),P);}
+  const x=mod(l*l-p[0]-q[0],P);const y=mod(l*(p[0]-x)-p[1],P);return[x,y];}
+function pmul(k,p){let r=null,a=p;k=mod(k,N);while(k>0n){if(k&1n)r=padd(r,a);a=padd(a,a);k>>=1n;}return r;}
+function hx(b){return b.toString(16).padStart(64,'0');}
+function msgInt(m){return mod(BigInt('0x'+sha256hex(m)),N);}
+function randScalar(){const b=new Uint8Array(32);crypto.getRandomValues(b);let x=0n;for(const v of b)x=(x<<8n)|BigInt(v);return mod(x,N)||1n;}
+function sign(d,m){const z=msgInt(m);let r,s,k;do{k=randScalar();if(k===0n)continue;const R=pmul(k,G);r=mod(R[0],N);if(r===0n)continue;s=mod(inv(k,N)*(z+r*d),N);}while(r===0n||s===0n);return[r,s];}
+function verify(Q,m,sig){const[r,s]=sig;if(r<=0n||r>=N||s<=0n||s>=N)return false;const z=msgInt(m);const w=inv(s,N);const u1=mod(z*w,N),u2=mod(r*w,N);const R=padd(pmul(u1,G),pmul(u2,Q));if(!R)return false;return mod(R[0],N)===r;}
+function compressed(Q){const pre=(Q[1]%2n===0n)?'02':'03';return pre+hx(Q[0]);}
+
+/* ---- UI ---- */
+const privEl=document.getElementById('priv');
+const pubEl=document.getElementById('pub');
+const msgEl=document.getElementById('msg');
+const sigEl=document.getElementById('sig');
+const verdict=document.getElementById('verdict');
+const wrongKey=document.getElementById('wrongKey');
+let Q=null, sig=null;
+const WRONGQ=pmul(987654321n,G);
+
+function parsePriv(){
+  let t=privEl.value.trim();
+  if(!t) return null;
+  let d;
+  try{ d = /^0x/i.test(t)? BigInt(t) : BigInt(t.replace(/[^0-9]/g,'')||'0'); }catch(e){ return null; }
+  d=mod(d,N); if(d===0n) d=1n;
+  return d;
+}
+function refreshPub(){
+  const d=parsePriv();
+  if(d===null){ pubEl.textContent='(βάλε έναν αριθμό)'; Q=null; return; }
+  Q=pmul(d,G);
+  pubEl.innerHTML='συμπιεσμένο: '+compressed(Q);
+}
+function doVerify(){
+  if(!sig){ verdict.className='banner idle'; verdict.textContent='υπόγραψε πρώτα ↑'; return; }
+  const useQ = wrongKey.checked ? WRONGQ : Q;
+  const ok = verify(useQ, msgEl.value, sig);
+  if(ok){ verdict.className='banner ok'; verdict.textContent='✔ ΕΓΚΥΡΗ — η υπογραφή ταιριάζει'; }
+  else{
+    verdict.className='banner bad';
+    verdict.textContent = wrongKey.checked ? '✗ ΑΚΥΡΗ — λάθος δημόσιο κλειδί' : '✗ ΑΚΥΡΗ — το μήνυμα άλλαξε';
+  }
+}
+document.getElementById('signBtn').addEventListener('click',()=>{
+  const d=parsePriv(); if(d===null){ sigEl.textContent='βάλε έγκυρο ιδιωτικό κλειδί'; return; }
+  refreshPub();
+  sig=sign(d,msgEl.value);
+  sigEl.innerHTML='r = '+hx(sig[0])+'<br><br>s = '+hx(sig[1]);
+  doVerify();
+});
+document.getElementById('randBtn').addEventListener('click',()=>{
+  privEl.value=randScalar().toString();
+  refreshPub(); sig=null; sigEl.textContent='— δεν έχει υπογραφεί ακόμα —'; doVerify();
+});
+privEl.addEventListener('input',()=>{ refreshPub(); sig=null; sigEl.textContent='— δεν έχει υπογραφεί ακόμα —'; doVerify(); });
+msgEl.addEventListener('input',doVerify);
+wrongKey.addEventListener('change',doVerify);
+
+refreshPub(); doVerify();
+</script>
+</body>
+</html>
