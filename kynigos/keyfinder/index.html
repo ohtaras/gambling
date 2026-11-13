@@ -104,6 +104,16 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
 .gout .av.hit{color:var(--addr)}
 .matchbar{margin-top:12px;border-radius:12px;padding:12px;font-weight:800;text-align:center;background:var(--warn-soft);color:var(--warn)}
 .matchbar.hit{background:var(--addr-soft);color:var(--addr)}
+#foundlock{position:fixed;inset:0;z-index:9999;background:rgba(9,18,14,.93);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:20px}
+#foundlock.show{display:flex}
+#foundlock .fb{background:var(--panel);border:2px solid var(--addr);border-radius:18px;padding:20px;width:min(94vw,440px);display:flex;flex-direction:column;gap:11px;margin:auto}
+#foundlock h2{font-family:var(--disp);margin:0;font-size:1.4rem;color:var(--addr);text-align:center}
+#foundlock .fkv{font-family:ui-monospace,Menlo,monospace;font-size:.78rem;word-break:break-all;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px;color:var(--ink)}
+#foundlock .fkv b{color:var(--addr)}
+#foundlock img{width:100%;border-radius:12px;border:1px solid var(--line);display:block}
+#foundlock .unlock{font-family:var(--body);font-weight:800;font-size:1.05rem;cursor:pointer;border-radius:14px;padding:14px;border:2px solid var(--warn);background:var(--warn-soft);color:var(--warn);margin-top:2px}
+#foundlock .dl{font-family:var(--body);font-weight:800;font-size:.9rem;cursor:pointer;border-radius:12px;padding:11px;border:1px solid var(--line);background:var(--bg);color:var(--ink);text-decoration:none;text-align:center}
+#foundlock .fnote{font-size:.82rem;color:var(--soft);text-align:center}
 </style>
 </head>
 <body>
@@ -231,6 +241,21 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
     <div class="chips" id="b39chips"></div>
     <div class="ent" id="b39ent" style="display:none"></div>
     <div class="bd" id="b39bd"></div>
+  </div>
+</div>
+
+<div id="foundlock">
+  <div class="fb">
+    <div style="font-size:2.4rem;text-align:center">🔒</div>
+    <h2>ΒΡΕΘΗΚΕ ΚΛΕΙΔΙ!</h2>
+    <div class="fnote">Η σελίδα κλείδωσε για ασφάλεια. Το αποτέλεσμα καταγράφηκε ως εικόνα — μένει κλειδωμένο μέχρι να το ελευθερώσεις εσύ.</div>
+    <div class="fkv" id="fl-form"></div>
+    <div class="fkv" id="fl-addr"></div>
+    <div class="fkv" id="fl-hex"></div>
+    <img id="fl-img" alt="στιγμιότυπο κλειδιού">
+    <div class="fnote">📱 Κράτα πατημένη την εικόνα για αποθήκευση στις Φωτογραφίες.</div>
+    <a class="dl" id="fl-dl" download="klidi-pou-brethike.png">💾 Κατέβασε την εικόνα</a>
+    <button class="unlock" id="fl-unlock">🔓 Ξεκλείδωμα &amp; συνέχεια</button>
   </div>
 </div>
 
@@ -573,10 +598,11 @@ async function gen(nbytes){
 (function(){
   var gridEl=$("bitgrid"); if(!gridEl) return;
   var bits=new Uint8Array(256), cells=[];
+  var locked=false;
   for(var pos=0;pos<256;pos++){
     var d=document.createElement("div");
     d.className="cell"; d.textContent="0";
-    (function(p,el){ el.onclick=function(){ bits[p]=bits[p]?0:1; el.classList.toggle("on",!!bits[p]); el.textContent=bits[p]?"1":"0"; recompute(); }; })(pos,d);
+    (function(p,el){ el.onclick=function(){ if(locked)return; bits[p]=bits[p]?0:1; el.classList.toggle("on",!!bits[p]); el.textContent=bits[p]?"1":"0"; recompute(); }; })(pos,d);
     gridEl.appendChild(d); cells.push(d);
   }
   function keyBig(){ var k=0n; for(var p=0;p<256;p++) if(bits[p]) k|=(1n<<BigInt(255-p)); return k; }
@@ -591,13 +617,61 @@ async function gen(nbytes){
     if(k===0n||k>=NN){ var msg=(k===0n?"(μηδέν — άναψε bit)":"(εκτός ορίου)"); $("g-a1").textContent=msg;$("g-a3").textContent=msg;$("g-bq").textContent=msg;$("g-bp").textContent=msg; mark(false,""); return; }
     var A=await addr4(k, compPub(k));
     $("g-a1").textContent=A.p1; $("g-a3").textContent=A.p3; $("g-bq").textContent=A.bq; $("g-bp").textContent=A.bp;
-    var t=($("target").value||"").trim(), form="";
-    if(t&&t===A.p1){form="1… Legacy";$("g-a1").classList.add("hit");}
-    else if(t&&t===A.p3){form="3… SegWit";$("g-a3").classList.add("hit");}
-    else if(t&&t===A.bq){form="bc1q… Native";$("g-bq").classList.add("hit");}
-    else if(t&&t===A.bp){form="bc1p… Taproot";$("g-bp").classList.add("hit");}
+    var t=($("target").value||"").trim(), form="", hitAddr="";
+    if(t&&t===A.p1){form="1… Legacy";hitAddr=A.p1;$("g-a1").classList.add("hit");}
+    else if(t&&t===A.p3){form="3… SegWit";hitAddr=A.p3;$("g-a3").classList.add("hit");}
+    else if(t&&t===A.bq){form="bc1q… Native";hitAddr=A.bq;$("g-bq").classList.add("hit");}
+    else if(t&&t===A.bp){form="bc1p… Taproot";hitAddr=A.bp;$("g-bp").classList.add("hit");}
     mark(!!form,form);
+    if(form && !locked){ lockFound(form, hitAddr, k); }
   }
+  /* ---- 🔒 Δικλείδα ασφαλείας: κλείδωμα + εικόνα όταν βρεθεί κλειδί ---- */
+  function wrapTxt(g,txt,x,y,n,lh){ for(var i=0;i<txt.length;i+=n){ g.fillText(txt.slice(i,i+n), x, y); y+=lh; } return y; }
+  function snapshotPNG(form, addr, k){
+    var hex=k.toString(16).padStart(64,"0"), dec=k.toString(10);
+    var W=560, pad=24, cell=28, gridW=cell*16;
+    var addrLines=Math.ceil(addr.length/44)||1, decLines=Math.ceil(dec.length/48)||1;
+    var H=pad+30+26+24+18+addrLines*18+8+18+36+24+18+decLines*16+16+gridW+pad+10;
+    var c=document.createElement("canvas"); c.width=W; c.height=H;
+    var g=c.getContext("2d");
+    g.fillStyle="#0f1b18"; g.fillRect(0,0,W,H);
+    var x=pad, y=pad+22;
+    g.fillStyle="#5fd39a"; g.font="bold 23px sans-serif"; g.fillText("ΒΡΕΘΗΚΕ ΚΛΕΙΔΙ", x, y); y+=28;
+    g.fillStyle="#9db1aa"; g.font="13px sans-serif"; g.fillText(new Date().toLocaleString("el-GR"), x, y); y+=24;
+    g.fillStyle="#e7efec"; g.font="bold 15px sans-serif"; g.fillText("Μορφη: "+form, x, y); y+=24;
+    g.fillStyle="#9db1aa"; g.font="12px sans-serif"; g.fillText("Διευθυνση:", x, y); y+=18;
+    g.fillStyle="#e7efec"; g.font="13px monospace"; y=wrapTxt(g,addr,x,y,44,18); y+=8;
+    g.fillStyle="#9db1aa"; g.font="12px sans-serif"; g.fillText("Κλειδι (hex):", x, y); y+=18;
+    g.fillStyle="#f0a23a"; g.font="13px monospace"; g.fillText(hex.slice(0,32),x,y); y+=18; g.fillText(hex.slice(32),x,y); y+=24;
+    g.fillStyle="#9db1aa"; g.font="12px sans-serif"; g.fillText("Δεκαδικο:", x, y); y+=18;
+    g.fillStyle="#e7efec"; g.font="12px monospace"; y=wrapTxt(g,dec,x,y,48,16); y+=16;
+    var gx=(W-gridW)/2;
+    for(var p=0;p<256;p++){ var r=(p/16)|0, col=p%16, on=bits[p]; var cx=gx+col*cell, cy=y+r*cell; g.fillStyle=on?"#5fd39a":"#16241f"; g.fillRect(cx,cy,cell-2,cell-2); g.strokeStyle="#2b3d37"; g.strokeRect(cx,cy,cell-2,cell-2); if(on){ g.fillStyle="#0f1b18"; g.font="bold 12px monospace"; g.fillText("1",cx+9,cy+19);} }
+    return c.toDataURL("image/png");
+  }
+  function showLockUI(form, addr, hex, img){
+    $("fl-form").innerHTML="Μορφή: <b>"+form+"</b>";
+    $("fl-addr").textContent=addr;
+    $("fl-hex").textContent="hex: "+hex;
+    if(img){ $("fl-img").src=img; $("fl-img").style.display=""; $("fl-dl").href=img; $("fl-dl").style.display=""; }
+    else { $("fl-img").style.display="none"; $("fl-dl").style.display="none"; }
+    $("foundlock").classList.add("show");
+    gridEl.style.pointerEvents="none";
+  }
+  function lockFound(form, addr, k){
+    if(locked) return; locked=true;
+    var hex=k.toString(16).padStart(64,"0"), img="";
+    try{ img=snapshotPNG(form,addr,k); }catch(e){ img=""; }
+    showLockUI(form, addr, hex, img);
+    try{ localStorage.setItem("kf_lock", JSON.stringify({form:form,addr:addr,hex:hex,dec:k.toString(10),img:img})); }catch(e){}
+  }
+  function releaseLock(){
+    locked=false;
+    $("foundlock").classList.remove("show");
+    gridEl.style.pointerEvents="";
+    try{ localStorage.removeItem("kf_lock"); }catch(e){}
+  }
+  $("fl-unlock").onclick=releaseLock;
   function mark(hit,form){
     var m=$("matchbar"); var t=($("target").value||"").trim();
     if(!t){ m.className="matchbar"; m.textContent="Βάλε έναν στόχο πιο πάνω ⤴"; return; }
@@ -611,6 +685,14 @@ async function gen(nbytes){
   $("ptgt").onclick=async function(){ try{ var t=await navigator.clipboard.readText(); if(t){ $("target").value=t.trim(); recompute(); } }catch(e){} };
   $("pzdemo").onclick=async function(){ var A=await addr4(42n, compPub(42n)); $("target").value=A.p1; $("ghint").innerHTML="🎓 Στόχος = το πορτοφόλι του κλειδιού <b>42</b> (δυαδικό <b>101010</b>). Άναψε τα σωστά bit κάτω-δεξιά για να γίνει πράσινο!"; setFromBig(0n); };
   setFromBig(0n);
+  /* Επαναφορά κλειδώματος αν η σελίδα είχε κλειδώσει πριν (ακόμη κι μετά από ανανέωση) */
+  try{
+    var sv=localStorage.getItem("kf_lock");
+    if(sv){ var o=JSON.parse(sv); locked=true; var kk=BigInt("0x"+o.hex);
+      for(var rp=0;rp<256;rp++){ var ron=((kk>>BigInt(255-rp))&1n)===1n; bits[rp]=ron?1:0; cells[rp].classList.toggle("on",ron); cells[rp].textContent=ron?"1":"0"; }
+      showLockUI(o.form,o.addr,o.hex,o.img);
+    }
+  }catch(e){}
 })();
 /* πρώτος υπολογισμός για το εκπαιδευτικό (brainwallet) κομμάτι */
 try{ compute().catch(function(){}); }catch(e){}
