@@ -87,6 +87,7 @@ h1{font-family:var(--disp);font-weight:700;font-size:2.1rem;margin:6px 0 2px;let
   <p class="odds" style="margin:-6px 2px 0">Τα 70 κουτάκια = τα <b>άγνωστα</b> bit. Τα ψηλά (=0) και το bit 70 (=1) είναι ήδη <b>κλειδωμένα</b> μέσα στο κλειδί (εύρος 2⁷⁰…2⁷¹−1).</p>
 
   <button class="auto" id="autobtn">▶️ Auto</button>
+  <label style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:.85rem;color:var(--soft);cursor:pointer"><input type="checkbox" id="seqmode"><span>🔢 Στη σειρά (όχι τυχαία) — κάθε συνδυασμό μία φορά</span></label>
 
   <div class="speeds">
     <span>Ταχύτητα</span>
@@ -195,6 +196,7 @@ function compPub(kBig){var pt=pmul(kBig);var out=new Uint8Array(33);out[0]=(pt[1
 var $=function(id){return document.getElementById(id);};
 var PZ="1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU";
 var FREE=70, cells=[], running=false, locked=false, tries=0, timer=null, t0=0, delay=70;
+var seqMode=false, seqCounter=0n;
 
 (function(){ var box=$("bitbox"); for(var i=0;i<FREE;i++){ var d=document.createElement("div"); d.className="bc"; d.textContent="0"; box.appendChild(d); cells.push(d);} })();
 
@@ -203,7 +205,9 @@ function renderBits(r){ for(var i=0;i<FREE;i++){ var on=((r>>BigInt(FREE-1-i))&1
 function randomFree(){ var b=new Uint8Array(9); crypto.getRandomValues(b); var r=0n; for(var i=0;i<9;i++) r=(r<<8n)|BigInt(b[i]); return r & ((1n<<70n)-1n); }
 
 async function attempt(){
-  var r=randomFree(); renderBits(r);
+  var r;
+  if(seqMode){ r=seqCounter & ((1n<<70n)-1n); seqCounter++; } else { r=randomFree(); }
+  renderBits(r);
   var k=(1n<<70n)|r;
   $("khex").textContent=toHex64(k);
   $("kdec").textContent=k.toString(10);
@@ -215,7 +219,7 @@ async function attempt(){
 }
 function updateStats(){ $("tries").textContent=tries.toLocaleString("el-GR"); var s=(Date.now()-t0)/1000; $("rate").textContent=s>0?(tries/s).toFixed(1):"0"; }
 async function loop(){ if(!running)return; try{ if(await attempt()) return; }catch(e){} updateStats(); if(running) timer=setTimeout(loop, delay); }
-function start(){ if(running||locked)return; running=true; t0=Date.now(); tries=0; var b=$("autobtn"); b.textContent="⏹️ Stop"; b.classList.add("on"); loop(); }
+function start(){ if(running||locked)return; seqMode=$("seqmode")&&$("seqmode").checked; if(seqMode) seqCounter=0n; running=true; t0=Date.now(); tries=0; var b=$("autobtn"); b.textContent="⏹️ Stop"; b.classList.add("on"); loop(); }
 function stop(){ running=false; if(timer)clearTimeout(timer); var b=$("autobtn"); b.textContent="▶️ Auto"; b.classList.remove("on"); }
 $("autobtn").onclick=function(){ running?stop():start(); };
 Array.prototype.forEach.call(document.querySelectorAll(".spd"),function(btn){ btn.onclick=function(){ delay=parseInt(btn.getAttribute("data-ms"),10)||0; Array.prototype.forEach.call(document.querySelectorAll(".spd"),function(x){x.classList.remove("on");}); btn.classList.add("on"); }; });
