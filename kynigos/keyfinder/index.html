@@ -94,6 +94,8 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
 .grid{display:grid;grid-template-columns:repeat(16,1fr);gap:3px;margin-top:12px}
 .grid .cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Menlo,monospace;font-weight:800;font-size:clamp(.55rem,2.3vw,.85rem);border:1px solid var(--line);border-radius:5px;cursor:pointer;-webkit-user-select:none;user-select:none;background:var(--bg);color:var(--soft)}
 .grid .cell.on{background:var(--addr);color:#fff;border-color:var(--addr)}
+.grid .cell.fix{opacity:.38;cursor:not-allowed;box-shadow:inset 0 0 0 1px var(--line)}
+.grid .cell.fix.on{opacity:.55}
 .gbtns{display:flex;gap:8px;margin-top:12px}
 .gbtns button{flex:1;font-family:var(--body);font-weight:800;font-size:.9rem;cursor:pointer;border-radius:12px;padding:11px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 .gout{margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:2px 12px}
@@ -126,10 +128,11 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
   <div class="card" id="gridcard">
     <label class="big" for="target">🎯 Στόχος — πορτοφόλι που ψάχνεις</label>
     <input id="target" placeholder="π.χ. 1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU" autocapitalize="off" autocorrect="off" spellcheck="false" style="width:100%;font-family:ui-monospace,Menlo,monospace;font-size:.9rem;padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)">
-    <div class="examples" style="margin-top:10px">
-      <button id="pz71">🧩 Puzzle #71</button>
-      <button id="pzdemo">🎓 Δοκιμαστικό (λύνεται)</button>
-      <button id="ptgt">📋 Επικόλληση</button>
+    <p class="note" style="margin:10px 0 4px">Διάλεξε παζλ για να το βρεις μόνος σου (ή το αληθινό #71):</p>
+    <div class="examples" id="puzrow"></div>
+    <div class="examples" style="margin-top:8px">
+      <button id="preveal">💡 Δες τη λύση</button>
+      <button id="ptgt">📋 Επικόλληση στόχου</button>
     </div>
     <div id="matchbar" class="matchbar">Βάλε έναν στόχο κι άναψε bit…</div>
     <div id="ghint" class="note" style="margin-top:8px"></div>
@@ -598,15 +601,28 @@ async function gen(nbytes){
 (function(){
   var gridEl=$("bitgrid"); if(!gridEl) return;
   var bits=new Uint8Array(256), cells=[];
-  var locked=false;
+  var locked=false, peeking=false, curKey=null;
+  var fixedMask=new Array(256).fill(false);
+  var PUZZLES=[
+    {n:6,  key:42n,  label:"🎓 42 (δοκ.)", fixMSB:false},
+    {n:1,  key:1n,   label:"#1",  fixMSB:false},
+    {n:2,  key:3n,   label:"#2",  fixMSB:false},
+    {n:3,  key:7n,   label:"#3",  fixMSB:false},
+    {n:4,  key:8n,   label:"#4",  fixMSB:false},
+    {n:5,  key:21n,  label:"#5",  fixMSB:false},
+    {n:6,  key:49n,  label:"#6",  fixMSB:false},
+    {n:7,  key:76n,  label:"#7",  fixMSB:false},
+    {n:10, key:514n, label:"#10", fixMSB:false},
+    {n:71, key:null, addr:"1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU", label:"🧩 #71", fixMSB:true}
+  ];
   for(var pos=0;pos<256;pos++){
     var d=document.createElement("div");
     d.className="cell"; d.textContent="0";
-    (function(p,el){ el.onclick=function(){ if(locked)return; bits[p]=bits[p]?0:1; el.classList.toggle("on",!!bits[p]); el.textContent=bits[p]?"1":"0"; recompute(); }; })(pos,d);
+    (function(p,el){ el.onclick=function(){ if(locked||fixedMask[p])return; bits[p]=bits[p]?0:1; el.classList.toggle("on",!!bits[p]); el.textContent=bits[p]?"1":"0"; recompute(); }; })(pos,d);
     gridEl.appendChild(d); cells.push(d);
   }
   function keyBig(){ var k=0n; for(var p=0;p<256;p++) if(bits[p]) k|=(1n<<BigInt(255-p)); return k; }
-  function setFromBig(k){ for(var p=0;p<256;p++){ var on=((k>>BigInt(255-p))&1n)===1n; bits[p]=on?1:0; cells[p].classList.toggle("on",on); cells[p].textContent=on?"1":"0"; } recompute(); }
+  function setFromBig(k){ for(var p=0;p<256;p++){ var on=((k>>BigInt(255-p))&1n)===1n; bits[p]=on?1:0; cells[p].classList.toggle("on",on); cells[p].classList.toggle("fix",fixedMask[p]); cells[p].textContent=on?"1":"0"; } recompute(); }
   var gt=null;
   function recompute(){ if(gt)clearTimeout(gt); gt=setTimeout(doCompute,60); }
   async function doCompute(){
@@ -623,7 +639,8 @@ async function gen(nbytes){
     else if(t&&t===A.bq){form="bc1q… Native";hitAddr=A.bq;$("g-bq").classList.add("hit");}
     else if(t&&t===A.bp){form="bc1p… Taproot";hitAddr=A.bp;$("g-bp").classList.add("hit");}
     mark(!!form,form);
-    if(form && !locked){ lockFound(form, hitAddr, k); }
+    if(form && !locked && !peeking){ lockFound(form, hitAddr, k); }
+    peeking=false;
   }
   /* ---- 🔒 Δικλείδα ασφαλείας: κλείδωμα + εικόνα όταν βρεθεί κλειδί ---- */
   function wrapTxt(g,txt,x,y,n,lh){ for(var i=0;i<txt.length;i+=n){ g.fillText(txt.slice(i,i+n), x, y); y+=lh; } return y; }
@@ -678,12 +695,33 @@ async function gen(nbytes){
     if(hit){ m.className="matchbar hit"; m.innerHTML="🎉 ΒΡΕΘΗΚΕ! Ταιριάζει η μορφή <b>"+form+"</b> — αυτό είναι το κλειδί!"; }
     else { m.className="matchbar"; m.textContent="🔍 Δεν ταιριάζει ακόμα — συνέχισε."; }
   }
-  $("gzero").onclick=function(){ $("ghint").textContent=""; setFromBig(0n); };
-  $("grand").onclick=function(){ var b=new Uint8Array(32); crypto.getRandomValues(b); var k=0n; for(var i=0;i<32;i++)k=(k<<8n)|BigInt(b[i]); $("ghint").textContent=""; setFromBig(k); };
+  function clearFixed(){ for(var p=0;p<256;p++) fixedMask[p]=false; curKey=null; }
+  function applyPuzzle(pz){
+    var hi=pz.n-1;
+    for(var p=0;p<256;p++){ var bi=255-p;
+      if(bi>hi) fixedMask[p]=true;                  // ψηλά bit εκτός εύρους → κλειδωμένα στο 0
+      else if(bi===hi && pz.fixMSB) fixedMask[p]=true; // το κορυφαίο bit → κλειδωμένο στο 1
+      else fixedMask[p]=false;                        // ελεύθερα να ψάξεις
+    }
+    curKey = (pz.key!=null)?pz.key:null;
+    var base = pz.fixMSB ? (1n<<BigInt(hi)) : 0n;
+    (async function(){
+      if(pz.addr){ $("target").value=pz.addr; }
+      else { var A=await addr4(pz.key, compPub(pz.key)); $("target").value=A.p1; }
+      setFromBig(base);
+    })();
+    if(pz.fixMSB){
+      $("ghint").innerHTML="🔒 <b>Αυθεντικός γρίφος.</b> Κλειδώθηκαν όλα τα bit πάνω από το <b>"+hi+"</b> (=0) και το bit <b>"+hi+"</b> (=1) — εκεί ξεκινά το εύρος, στο 2^"+hi+" (σε δυαδικό: «1» κι από πίσω "+hi+" μηδενικά). Ελεύθερα: τα <b>"+hi+"</b> κάτω bit. Πρακτικά δεν λύνεται στο χέρι — είναι για να δεις τη δομή. (Επαλήθευσε τη διεύθυνση από τη σελίδα του γρίφου.)";
+    } else {
+      $("ghint").innerHTML="🎯 Κλειδώθηκαν τα bit πάνω από το <b>"+hi+"</b> (=0). Ελεύθερα να ψάξεις: τα κάτω <b>"+(hi+1)+"</b> bit. Πάτα <b>💡 Δες τη λύση</b> αν κολλήσεις.";
+    }
+  }
+  (function(){ var row=$("puzrow"); if(!row) return; PUZZLES.forEach(function(pz){ var btn=document.createElement("button"); btn.textContent=pz.label; btn.onclick=function(){ applyPuzzle(pz); }; row.appendChild(btn); }); })();
+  $("gzero").onclick=function(){ clearFixed(); $("ghint").textContent=""; setFromBig(0n); };
+  $("grand").onclick=function(){ clearFixed(); var b=new Uint8Array(32); crypto.getRandomValues(b); var k=0n; for(var i=0;i<32;i++)k=(k<<8n)|BigInt(b[i]); $("ghint").textContent=""; setFromBig(k); };
   $("target").addEventListener("input",recompute);
-  $("pz71").onclick=function(){ $("target").value="1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU"; $("ghint").innerHTML="🧩 Puzzle #71: το κλειδί βρίσκεται ανάμεσα στο 2⁷⁰ και στο 2⁷¹ — δηλαδή το ψηλότερο αναμμένο bit είναι το bit 70. (Καλό είναι να επαληθεύσεις τη διεύθυνση από τη σελίδα του γρίφου.)"; recompute(); };
-  $("ptgt").onclick=async function(){ try{ var t=await navigator.clipboard.readText(); if(t){ $("target").value=t.trim(); recompute(); } }catch(e){} };
-  $("pzdemo").onclick=async function(){ var A=await addr4(42n, compPub(42n)); $("target").value=A.p1; $("ghint").innerHTML="🎓 Στόχος = το πορτοφόλι του κλειδιού <b>42</b> (δυαδικό <b>101010</b>). Άναψε τα σωστά bit κάτω-δεξιά για να γίνει πράσινο!"; setFromBig(0n); };
+  $("ptgt").onclick=async function(){ try{ var t=await navigator.clipboard.readText(); if(t){ clearFixed(); $("ghint").textContent=""; $("target").value=t.trim(); setFromBig(0n); } }catch(e){} };
+  $("preveal").onclick=function(){ if(curKey==null){ $("ghint").innerHTML="Αυτός ο στόχος δεν έχει γνωστή λύση (αυθεντικός γρίφος)."; return; } peeking=true; setFromBig(curKey); };
   setFromBig(0n);
   /* Επαναφορά κλειδώματος αν η σελίδα είχε κλειδώσει πριν (ακόμη κι μετά από ανανέωση) */
   try{
