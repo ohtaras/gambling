@@ -459,29 +459,31 @@ async function updateSeedbox(text){
 
 /* ---- Βοηθητική συνάρτηση κλήσης API με Timeout 7 δευτερολέπτων ---- */
 async function fetchJSON(url, ms){
-  var c=new AbortController(); var t=setTimeout(function(){c.abort();}, ms||7000);
+  var c=new AbortController(); var t=setTimeout(function(){c.abort();}, ms||4500);
   try{ var r=await fetch(url,{signal:c.signal,cache:"no-cache"}); clearTimeout(t); if(!r.ok) return null; return await r.json(); }
   catch(e){ clearTimeout(t); return null; }
 }
-/* Δοκιμάζει πολλούς explorers με σειρά· γυρίζει {txs,balance} ή null αν ΟΛΟΙ αποτύχουν. */
-async function fetchAddressData(addr){
-  var j;
-  // 1) Esplora — mempool.space
-  j=await fetchJSON("https://mempool.space/api/address/"+addr);
-  if(j && j.chain_stats){ var c1=j.chain_stats, m1=j.mempool_stats||{}; return {txs:(c1.tx_count||0)+(m1.tx_count||0), balance:(c1.funded_txo_sum||0)-(c1.spent_txo_sum||0)+((m1.funded_txo_sum||0)-(m1.spent_txo_sum||0))}; }
-  // 2) Esplora — blockstream.info
-  j=await fetchJSON("https://blockstream.info/api/address/"+addr);
-  if(j && j.chain_stats){ var c2=j.chain_stats, m2=j.mempool_stats||{}; return {txs:(c2.tx_count||0)+(m2.tx_count||0), balance:(c2.funded_txo_sum||0)-(c2.spent_txo_sum||0)+((m2.funded_txo_sum||0)-(m2.spent_txo_sum||0))}; }
-  // 3) blockchain.info
-  j=await fetchJSON("https://blockchain.info/rawaddr/"+addr+"?limit=0&cors=true");
-  if(j && typeof j.n_tx!=="undefined"){ return {txs:j.n_tx||0, balance:(typeof j.final_balance!=="undefined")?j.final_balance:0}; }
-  // 4) blockchair
-  j=await fetchJSON("https://api.blockchair.com/bitcoin/dashboards/address/"+addr);
-  if(j && j.data && j.data[addr] && j.data[addr].address){ var a4=j.data[addr].address; return {txs:a4.transaction_count||0, balance:a4.balance||0}; }
-  // 5) blockcypher
-  j=await fetchJSON("https://api.blockcypher.com/v1/btc/main/addrs/"+addr+"/balance");
-  if(j && typeof j.n_tx!=="undefined"){ return {txs:j.n_tx||0, balance:j.final_balance||0}; }
-  return null;
+/* Γυρίζει το πρώτο έγκυρο αποτέλεσμα από πολλές πηγές (όλες μαζί, όποια προλάβει). */
+function firstValid(makers){
+  return new Promise(function(resolve){
+    if(!makers.length){ resolve(null); return; }
+    var left=makers.length, done=false;
+    function fin(v){ if(done)return; if(v){ done=true; resolve(v); } else { left--; if(left<=0){ done=true; resolve(null); } } }
+    makers.forEach(function(mk){ try{ mk().then(fin, function(){ fin(null); }); }catch(e){ fin(null); } });
+  });
+}
+/* Δοκιμάζει 5 explorers ΤΑΥΤΟΧΡΟΝΑ· γυρίζει {txs,balance} από όποιον προλάβει, ή null αν αποτύχουν ΟΛΟΙ. */
+function fetchAddressData(addr){
+  function esp(j){ if(j&&j.chain_stats){ var cs=j.chain_stats,ms=j.mempool_stats||{}; return {txs:(cs.tx_count||0)+(ms.tx_count||0), balance:(cs.funded_txo_sum||0)-(cs.spent_txo_sum||0)+((ms.funded_txo_sum||0)-(ms.spent_txo_sum||0))}; } return null; }
+  function bci(j){ if(j&&typeof j.n_tx!=="undefined") return {txs:j.n_tx||0, balance:(typeof j.final_balance!=="undefined")?j.final_balance:0}; return null; }
+  function bch(j){ if(j&&j.data&&j.data[addr]&&j.data[addr].address){ var a=j.data[addr].address; return {txs:a.transaction_count||0, balance:a.balance||0}; } return null; }
+  return firstValid([
+    function(){ return fetchJSON("https://mempool.space/api/address/"+addr).then(esp); },
+    function(){ return fetchJSON("https://blockstream.info/api/address/"+addr).then(esp); },
+    function(){ return fetchJSON("https://blockchain.info/rawaddr/"+addr+"?limit=0&cors=true").then(bci); },
+    function(){ return fetchJSON("https://api.blockchair.com/bitcoin/dashboards/address/"+addr).then(bch); },
+    function(){ return fetchJSON("https://api.blockcypher.com/v1/btc/main/addrs/"+addr+"/balance").then(bci); }
+  ]);
 }
 
 /* ---- Έλεγχος Brainwallet με βάση τα checkboxes ---- */
@@ -499,24 +501,18 @@ async function checkBrainActivity(){
   var htmlResults = [];
   var checkedCount = 0, gotData = 0, triedCount = 0;
 
-  for(var i=0; i<addrs.length; i++){
-    var a = addrs[i];
+  var tasks = [];
+  for(var i=0; i<addrs.length; i++){ (function(a){
     var cb = $(a.id);
-    if(cb && !cb.checked) continue;
+    if(cb && !cb.checked) return;
     checkedCount++;
-    if(!a.val || a.val === "—") continue;
+    if(!a.val || a.val === "—") return;
     triedCount++;
-    var d = await fetchAddressData(a.val);
-    if(d){
-      gotData++;
-      var txs = d.txs||0;
-      var bal = d.balance||0;
-      if(txs > 0){
-        anyActivity = true;
-        htmlResults.push("🚨 <b>"+a.label+":</b> "+txs+" συναλλαγές, υπόλοιπο "+(bal/1e8).toFixed(8)+" BTC");
-      }
-    }
-  }
+    tasks.push(fetchAddressData(a.val).then(function(d){
+      if(d){ gotData++; var txs=d.txs||0, bal=d.balance||0; if(txs>0){ anyActivity=true; htmlResults.push("🚨 <b>"+a.label+":</b> "+txs+" συναλλαγές, υπόλοιπο "+(bal/1e8).toFixed(8)+" BTC"); } }
+    }));
+  })(addrs[i]); }
+  await Promise.all(tasks);
 
   if(btn) btn.disabled = false;
   if(checkedCount === 0){
@@ -560,24 +556,18 @@ async function checkSeedActivity(){
   var htmlResults = [];
   var checkedCount = 0, gotData = 0, triedCount = 0;
 
-  for(var i=0; i<addrs.length; i++){
-    var a = addrs[i];
+  var tasks = [];
+  for(var i=0; i<addrs.length; i++){ (function(a){
     var cb = $(a.id);
-    if(cb && !cb.checked) continue;
+    if(cb && !cb.checked) return;
     checkedCount++;
-    if(!a.val || a.val === "—" || a.val === "σφάλμα") continue;
-
-    var d = await fetchAddressData(a.val);
-    if(d){
-      gotData++;
-      var txs = d.txs||0;
-      var bal = d.balance||0;
-      if(txs > 0){
-        anyActivity = true;
-        htmlResults.push("🚨 <b>"+a.label+":</b> "+txs+" συναλλαγές, υπόλοιπο "+(bal/1e8).toFixed(8)+" BTC");
-      }
-    }
-  }
+    if(!a.val || a.val === "—" || a.val === "σφάλμα") return;
+    triedCount++;
+    tasks.push(fetchAddressData(a.val).then(function(d){
+      if(d){ gotData++; var txs=d.txs||0, bal=d.balance||0; if(txs>0){ anyActivity=true; htmlResults.push("🚨 <b>"+a.label+":</b> "+txs+" συναλλαγές, υπόλοιπο "+(bal/1e8).toFixed(8)+" BTC"); } }
+    }));
+  })(addrs[i]); }
+  await Promise.all(tasks);
 
   if(btn) btn.disabled = false;
   if(checkedCount === 0){
