@@ -145,6 +145,8 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
       <button id="grand">🎲 Τυχαίο</button>
       <button id="glock">🔒 Κλείδωμα bit</button>
     </div>
+    <div class="gbtns" style="margin-top:9px"><button id="gauto" style="flex:1">▶️ Auto — λύσε το παζλ</button></div>
+    <div class="note" id="autostat" style="margin-top:6px;text-align:center"></div>
     <div class="gout">
       <div class="af"><span class="al">Κλειδί (hex, 64 ψηφία)</span><div class="av" id="g-hex">—</div></div>
       <div class="af"><span class="al">Κλειδί (δεκαδικό)</span><div class="av" id="g-dec">—</div></div>
@@ -605,7 +607,8 @@ async function gen(nbytes){
 (function(){
   var gridEl=$("bitgrid"); if(!gridEl) return;
   var bits=new Uint8Array(256), cells=[];
-  var locked=false, peeking=false, curKey=null, lockMode=false;
+  var locked=false, peeking=false, curKey=null, lockMode=false, puzzleActive=false;
+  var autoRun=false, autoTimer=null, autoTries=0, autoT0=0;
   var fixedMask=new Array(256).fill(false);
   var PUZZLES=[
     {n:6,  key:42n,  label:"🎓 42 (δοκ.)", fixMSB:false},
@@ -627,6 +630,7 @@ async function gen(nbytes){
   }
   function keyBig(){ var k=0n; for(var p=0;p<256;p++) if(bits[p]) k|=(1n<<BigInt(255-p)); return k; }
   function setFromBig(k){ for(var p=0;p<256;p++){ var on=((k>>BigInt(255-p))&1n)===1n; bits[p]=on?1:0; cells[p].classList.toggle("on",on); cells[p].classList.toggle("fix",fixedMask[p]); cells[p].textContent=on?"1":"0"; } recompute(); }
+  function renderBits(k){ for(var p=0;p<256;p++){ var on=((k>>BigInt(255-p))&1n)===1n; bits[p]=on?1:0; cells[p].classList.toggle("on",on); cells[p].classList.toggle("fix",fixedMask[p]); cells[p].textContent=on?"1":"0"; } }
   var gt=null;
   function recompute(){ if(gt)clearTimeout(gt); gt=setTimeout(doCompute,60); }
   async function doCompute(){
@@ -699,8 +703,9 @@ async function gen(nbytes){
     if(hit){ m.className="matchbar hit"; m.innerHTML="🎉 ΒΡΕΘΗΚΕ! Ταιριάζει η μορφή <b>"+form+"</b> — αυτό είναι το κλειδί!"; }
     else { m.className="matchbar"; m.textContent="🔍 Δεν ταιριάζει ακόμα — συνέχισε."; }
   }
-  function clearFixed(){ for(var p=0;p<256;p++) fixedMask[p]=false; curKey=null; }
+  function clearFixed(){ for(var p=0;p<256;p++) fixedMask[p]=false; curKey=null; puzzleActive=false; }
   function applyPuzzle(pz){
+    stopAuto(); puzzleActive=true;
     var hi=pz.n-1;
     for(var p=0;p<256;p++){ var bi=255-p;
       if(bi>hi) fixedMask[p]=true;                  // ψηλά bit εκτός εύρους → κλειδωμένα στο 0
@@ -721,12 +726,26 @@ async function gen(nbytes){
     }
   }
   (function(){ var row=$("puzrow"); if(!row) return; PUZZLES.forEach(function(pz){ var btn=document.createElement("button"); btn.textContent=pz.label; btn.onclick=function(){ applyPuzzle(pz); }; row.appendChild(btn); }); })();
-  $("gzero").onclick=function(){ var anyFix=fixedMask.indexOf(true)>=0; if(!anyFix)$("ghint").textContent=""; var k=0n; for(var p=0;p<256;p++){ if(fixedMask[p]&&bits[p]) k|=(1n<<BigInt(255-p)); } setFromBig(k); };
-  $("grand").onclick=function(){ var rnd=new Uint8Array(32); crypto.getRandomValues(rnd); var k=0n; for(var p=0;p<256;p++){ var v=fixedMask[p]?bits[p]:((rnd[p>>3]>>(p&7))&1); if(v) k|=(1n<<BigInt(255-p)); } setFromBig(k); };
+  $("gzero").onclick=function(){ stopAuto(); var anyFix=fixedMask.indexOf(true)>=0; if(!anyFix)$("ghint").textContent=""; var k=0n; for(var p=0;p<256;p++){ if(fixedMask[p]&&bits[p]) k|=(1n<<BigInt(255-p)); } setFromBig(k); };
+  $("grand").onclick=function(){ stopAuto(); var rnd=new Uint8Array(32); crypto.getRandomValues(rnd); var k=0n; for(var p=0;p<256;p++){ var v=fixedMask[p]?bits[p]:((rnd[p>>3]>>(p&7))&1); if(v) k|=(1n<<BigInt(255-p)); } setFromBig(k); };
   $("target").addEventListener("input",recompute);
-  $("ptgt").onclick=async function(){ try{ var t=await navigator.clipboard.readText(); if(t){ clearFixed(); $("ghint").textContent=""; $("target").value=t.trim(); setFromBig(0n); } }catch(e){} };
-  $("preveal").onclick=function(){ if(curKey==null){ $("ghint").innerHTML="Αυτός ο στόχος δεν έχει γνωστή λύση (αυθεντικός γρίφος)."; return; } peeking=true; setFromBig(curKey); };
+  $("ptgt").onclick=async function(){ stopAuto(); try{ var t=await navigator.clipboard.readText(); if(t){ clearFixed(); $("ghint").textContent=""; $("target").value=t.trim(); setFromBig(0n); } }catch(e){} };
+  $("preveal").onclick=function(){ stopAuto(); if(curKey==null){ $("ghint").innerHTML="Αυτός ο στόχος δεν έχει γνωστή λύση (αυθεντικός γρίφος)."; return; } peeking=true; setFromBig(curKey); };
   $("glock").onclick=function(){ lockMode=!lockMode; this.classList.toggle("active",lockMode); gridEl.classList.toggle("lockmode",lockMode); $("ghint").innerHTML = lockMode ? "🔒 <b>Λειτουργία κλειδώματος ΟΝ.</b> Πάτα κουτάκια για να τα κλειδώσεις/ξεκλειδώσεις — <b>δεν</b> αλλάζει η τιμή τους, απλώς «παγώνουν». Ξαναπάτα το κουμπί για να γυρίσεις στο κανονικό." : "✏️ Κανονική λειτουργία: πάτα κουτάκια για να αλλάξεις 0↔1."; };
+  function updateAutoStat(){ var s=(Date.now()-autoT0)/1000; $("autostat").textContent="δοκιμές: "+autoTries.toLocaleString("el-GR")+(s>0?" · "+(autoTries/s).toFixed(1)+"/δευτ":""); }
+  async function autoStep(){
+    if(!autoRun) return;
+    var rnd=new Uint8Array(32); crypto.getRandomValues(rnd);
+    var k=0n; for(var p=0;p<256;p++){ var v=fixedMask[p]?bits[p]:((rnd[p>>3]>>(p&7))&1); if(v)k|=(1n<<BigInt(255-p)); }
+    autoTries++; renderBits(k);
+    try{ await doCompute(); }catch(e){}
+    if(locked){ stopAuto(); return; }
+    updateAutoStat();
+    if(autoRun) autoTimer=setTimeout(autoStep, 60);
+  }
+  function startAuto(){ if(autoRun||locked)return; if(!puzzleActive){ $("ghint").innerHTML="▶️ Το <b>Auto</b> δουλεύει όταν έχεις διαλέξει <b>παζλ</b> (πάτα ένα πιο πάνω). Ψάχνει αυτόματα μόνο μέσα στο εύρος του."; return; } autoRun=true; autoTries=0; autoT0=Date.now(); $("gauto").textContent="⏹️ Stop"; $("gauto").classList.add("active"); autoStep(); }
+  function stopAuto(){ autoRun=false; if(autoTimer)clearTimeout(autoTimer); var g=$("gauto"); if(g){ g.textContent="▶️ Auto — λύσε το παζλ"; g.classList.remove("active"); } }
+  $("gauto").onclick=function(){ autoRun?stopAuto():startAuto(); };
   setFromBig(0n);
   /* Επαναφορά κλειδώματος αν η σελίδα είχε κλειδώσει πριν (ακόμη κι μετά από ανανέωση) */
   try{
