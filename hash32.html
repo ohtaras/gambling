@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ΚΙΝΟ Hash 32</title>
+<style>
+:root{--bg:#0f1420;--panel:#171e2e;--line:#2a3550;--text:#e8ecf5;--muted:#8c97b0;--accent:#3b82f6;--cell:#101726;--num:#55627f;--hit:#facc15}
+@media (prefers-color-scheme: light){:root{--bg:#f3f5fa;--panel:#fff;--line:#dbe2ee;--text:#141a29;--muted:#5d6984;--cell:#f3f5fa;--num:#9aa5bd}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:640px;margin:0 auto;padding:16px 16px 110px}
+h1{font-size:21px;margin:2px 0 2px}
+.muted{color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:12px}
+.top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+input[type=date]{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-size:15px}
+.btn{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;cursor:pointer}
+.btn.on{border-color:#22c55e;color:#22c55e}
+.board{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-top:8px}
+.board div{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--cell);color:var(--num);font-weight:700;font-size:14px}
+.board div.on{background:var(--hit);color:#111}
+.dt{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.dt b{font-size:17px}
+.big{font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all;font-size:14px;background:var(--cell);border-radius:8px;padding:6px 8px;margin-top:6px}
+.hash{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.hash div{flex:1 1 140px;background:var(--cell);border-radius:10px;padding:8px 10px}
+.hash small{display:block;color:var(--muted);font-size:12px}
+.hash b{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:20px;letter-spacing:.02em}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--panel)}
+td.m{font-family:ui-monospace,Menlo,Consolas,monospace}
+tr{cursor:pointer}tr.sel{background:rgba(250,204,21,.13)}
+.scroll{max-height:520px;overflow:auto}
+#nav{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:6px;background:rgba(15,23,42,.94);border:1px solid #334155;border-radius:999px;padding:6px 8px;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9;white-space:nowrap}
+#nav button{background:#1e293b;color:#e5e7eb;border:1px solid #334155;border-radius:999px;font-size:16px;font-weight:800;padding:8px 12px;min-width:44px;cursor:pointer}
+#nav button:disabled{opacity:.35}
+#nav button[data-v="-1"],#nav button[data-v="1"]{font-size:22px;padding:5px 16px}
+#nav button.live{background:#14532d;border-color:#16a34a}
+</style>
+</head>
+<body><div class="wrap">
+<h1>#️⃣ ΚΙΝΟ Hash 32</h1>
+<div class="muted" style="font-size:13px">Κάθε κλήρωση: οι 20 αριθμοί <b>ταξινομημένοι</b> (από τον μικρότερο), κολλητά σε έναν αριθμό, και το <b>CRC32</b> του (32 bit) σε δεκαεξαδικό και σε δεκαδικό.</div>
+<div class="top"><input type="date" id="day"><button class="btn" id="today">Σήμερα</button><button class="btn" id="liveT" title="Αυτόματη ενημέρωση με κάθε νέα κλήρωση">🔄 Live</button><span class="muted" id="st" style="font-size:13px"></span></div>
+
+<div class="card" id="cur">
+  <div class="dt"><b id="cTtl">—</b><span class="muted" id="cSub"></span></div>
+  <div class="board" id="board"></div>
+  <div class="muted" style="font-size:12px;margin-top:8px">Ταξινομημένοι αριθμοί κολλητά (<span id="cLen">0</span> ψηφία):</div>
+  <div class="big" id="cNum">—</div>
+  <div class="hash"><div><small>CRC32 · δεκαεξαδικό</small><b id="cHex">—</b></div><div><small>CRC32 · μόνο ψηφία</small><b id="cDec">—</b></div></div>
+</div>
+
+<div class="card"><div class="dt"><b>Όλες οι κληρώσεις της ημέρας</b><span class="muted" id="cnt" style="font-size:13px"></span></div>
+  <div class="scroll" style="margin-top:6px"><table id="tbl"></table></div></div>
+<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v19 · 13/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+</div>
+<div id="nav"><button data-v="-10">⏪10</button><button data-v="-1">◀</button><button data-v="live" class="live">🟢</button><button data-v="1">▶</button><button data-v="10">10⏩</button></div>
+<script>
+var API='https://api.opap.gr/draws/v3.0/1100';
+function $(i){ return document.getElementById(i); }
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+var fmtD=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Athens',year:'numeric',month:'2-digit',day:'2-digit'});
+var fmtT=new Intl.DateTimeFormat('el-GR',{timeZone:'Europe/Athens',hour:'2-digit',minute:'2-digit',hour12:false});
+function today(){ return fmtD.format(new Date()); }
+/* CRC32 (IEEE, όπως zip/png) */
+var CT=(function(){ var t=[]; for(var n=0;n<256;n++){ var c=n; for(var k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t.push(c>>>0); } return t; })();
+function crc32(s){ var c=0xFFFFFFFF; for(var i=0;i<s.length;i++) c = CT[(c^s.charCodeAt(i))&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function mk(d){ var s=d.arr.slice().sort(function(a,b){ return a-b; }), str=s.join(''), h=crc32(str); return {id:d.id, t:d.t, s:s, str:str, h:h, hx:('00000000'+h.toString(16)).slice(-8)}; }
+async function getJ(u){ var e; for(var t=0;t<4;t++){ try{ var r=await fetch(u+(u.indexOf('?')<0?'?':'&')+'_='+Date.now(),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json(); }catch(x){ e=x; await new Promise(function(z){ setTimeout(z,500*(t+1)); }); } } throw e; }
+async function fetchDay(ds){ var u=API+'/draw-date/'+ds+'/'+ds+'?size=10&page=', j=await getJ(u+0), all=(j.content||[]).slice(), tp=j.totalPages||1, pg=[];
+  for(var p=1;p<tp;p++) pg.push(p);
+  while(pg.length){ var part=pg.splice(0,6), rs=await Promise.all(part.map(function(p){ return getJ(u+p); })); rs.forEach(function(x){ all=all.concat(x.content||[]); }); }
+  var m={}; all.forEach(function(c){ var w=c.winningNumbers||{}; if(w.list&&w.list.length===20) m[c.drawId]={id:c.drawId, t:c.drawTime, arr:w.list.slice()}; });
+  return Object.keys(m).map(Number).sort(function(a,b){ return a-b; }).map(function(k){ return mk(m[k]); }); }
+var DAY=today(), L=[], VI=null, LIVE=lsGet('h32_live')!=='0', LOADING=false;
+(function(){ var b=''; for(var n=1;n<=80;n++) b+='<div id="b'+n+'">'+n+'</div>'; $('board').innerHTML=b; })();
+function render(){ $('cnt').textContent=L.length+' κληρώσεις'; if(!L.length){ $('cTtl').textContent='Καμία κλήρωση'; $('tbl').innerHTML=''; return; }
+  var i=VI===null?L.length-1:VI, d=L[i], set={}; d.s.forEach(function(x){ set[x]=1; });
+  for(var n=1;n<=80;n++) $('b'+n).className=set[n]?'on':'';
+  $('cTtl').textContent='#'+d.id+' · '+fmtT.format(new Date(d.t)); $('cSub').textContent=(i===L.length-1 && DAY===today() ? '🟢 τελευταία' : (L.length-1-i)+' πριν την τελευταία της ημέρας');
+  $('cNum').textContent=d.str; $('cLen').textContent=d.str.length; $('cHex').textContent=d.hx; $('cDec').textContent=d.h;
+  var nb=$('nav').children; for(var k=0;k<nb.length;k++){ var v=nb[k].dataset.v; nb[k].disabled = v!=='live' && ((+v<0 && i===0) || (+v>0 && i===L.length-1)); }
+  var h='<tr><th>Ώρα</th><th>Κλήρωση</th><th>CRC32</th><th>Ψηφία</th></tr>';
+  for(var q=L.length-1;q>=0;q--){ var x=L[q]; h+='<tr data-i="'+q+'"'+(q===i?' class="sel"':'')+'><td>'+fmtT.format(new Date(x.t))+'</td><td>#'+x.id+'</td><td class="m">'+x.hx+'</td><td class="m">'+x.h+'</td></tr>'; }
+  $('tbl').innerHTML=h; }
+async function load(ds, keep){ if(LOADING) return; LOADING=true; $('st').textContent='⏳ φόρτωση…';
+  try{ var R=await fetchDay(ds); if(ds!==DAY){ LOADING=false; return; } var atEnd=VI===null; L=R; if(!keep) VI=null; else if(!atEnd && VI>=L.length) VI=null; $('st').textContent=''; render(); }
+  catch(e){ $('st').textContent='⚠️ Δεν απάντησε το Allwyn — ξαναδοκίμασε'; }
+  LOADING=false; }
+$('day').value=DAY; $('day').max=today();
+$('day').addEventListener('change', function(){ if(!this.value) return; DAY=this.value; VI=null; L=[]; render(); load(DAY); });
+$('today').addEventListener('click', function(){ DAY=today(); $('day').value=DAY; VI=null; load(DAY); });
+$('nav').addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b||!L.length) return; var v=b.dataset.v, i=VI===null?L.length-1:VI;
+  if(v==='live'){ VI=null; if(DAY!==today()){ DAY=today(); $('day').value=DAY; load(DAY); return; } } else { var n=Math.max(0,Math.min(L.length-1,i+(+v))); VI=n===L.length-1?null:n; } render(); });
+$('tbl').addEventListener('click', function(e){ var r=e.target.closest('tr[data-i]'); if(!r) return; var i=+r.dataset.i; VI=i===L.length-1?null:i; render(); window.scrollTo({top:0,behavior:'smooth'}); });
+(function(){ var B=$('liveT'); function u(){ B.classList.toggle('on',LIVE); B.textContent=LIVE?'🔄 Live ON':'🔄 Live OFF'; } B.addEventListener('click', function(){ LIVE=!LIVE; lsSet('h32_live',LIVE?'1':'0'); u(); }); u(); })();
+setInterval(function(){ if(LIVE && DAY===today() && !document.hidden) load(DAY, true); }, 30000);
+render(); load(DAY);
+</script>
+</body>
+</html>
