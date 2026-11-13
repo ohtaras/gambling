@@ -172,6 +172,7 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
   <div class="card">
     <label class="big" for="inp">Η είσοδός σου</label>
     <textarea id="inp" placeholder="π.χ. Σπύρος, ή 12345, ή «το μαγαζί μου στην Πάτρα»…">Σπύρος</textarea>
+    <label style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:.9rem;cursor:pointer"><input type="checkbox" id="rawkey" style="margin-top:3px"><span>🔢 Διάβασέ το ως <b>ωμό κλειδί</b> (δεκαδικό ή hex) — όχι ως φράση. Έτσι ο αριθμός μπαίνει αυτούσιος και βγάζει το πορτοφόλι ενός παζλ.</span></label>
     <div class="examples">
       <button data-ex="Σπύρος">Σπύρος</button>
       <button data-ex="password">password</button>
@@ -336,10 +337,21 @@ async function wifEnc(kBig,comp){var body=comp?concatU8(new Uint8Array([0x80]),b
 
 async function compute(){
   var text=$("inp").value;
-  var enc=new TextEncoder().encode(text);
-  var priv=await sha256(enc);
-  var kBig=bytesToBig(priv);
-  if(kBig===0n) kBig=1n;
+  var raw=$("rawkey") && $("rawkey").checked;
+  var kBig;
+  if(raw){
+    var s=text.trim();
+    if(/^0x[0-9a-fA-F]+$/.test(s)) kBig=BigInt(s);
+    else if(/^[0-9]+$/.test(s)) kBig=BigInt(s);
+    else if(/^[0-9a-fA-F]{40,64}$/.test(s)) kBig=BigInt("0x"+s);
+    else kBig=0n;
+    if(kBig<=0n) kBig=1n;
+    if(kBig>=NN) kBig=(kBig%NN)||1n;
+  } else {
+    var priv0=await sha256(new TextEncoder().encode(text));
+    kBig=bytesToBig(priv0); if(kBig===0n) kBig=1n;
+  }
+  var priv=bigTo32(kBig);
   var pt=pmul(kBig);
   var x=pt[0], y=pt[1];
   var pub=new Uint8Array(33); pub[0]=(y%2n===0n)?2:3; pub.set(bigTo32(x),1);
@@ -355,6 +367,7 @@ async function compute(){
 function schedule(){ if(tmr)clearTimeout(tmr); tmr=setTimeout(function(){ compute().catch(function(e){ $("addr").textContent="σφάλμα: "+(e&&e.message||e); }); },180); }
 
 $("inp").addEventListener("input",schedule);
+(function(){ var rk=$("rawkey"); if(rk) rk.addEventListener("change",schedule); })();
 Array.prototype.forEach.call(document.querySelectorAll(".examples button"),function(b){
   b.onclick=function(){ $("inp").value=b.getAttribute("data-ex"); schedule(); };
 });
