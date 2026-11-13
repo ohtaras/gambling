@@ -94,8 +94,8 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
 .grid{display:grid;grid-template-columns:repeat(16,1fr);gap:3px;margin-top:12px}
 .grid .cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Menlo,monospace;font-weight:800;font-size:clamp(.55rem,2.3vw,.85rem);border:1px solid var(--line);border-radius:5px;cursor:pointer;-webkit-user-select:none;user-select:none;background:var(--bg);color:var(--soft)}
 .grid .cell.on{background:var(--addr);color:#fff;border-color:var(--addr)}
-.grid .cell.fix{opacity:.38;cursor:not-allowed;box-shadow:inset 0 0 0 1px var(--line)}
-.grid .cell.fix.on{opacity:.55}
+.grid .cell.fix{cursor:not-allowed;border-style:dashed;border-color:var(--soft);background-image:repeating-linear-gradient(45deg,var(--line) 0 2px,transparent 2px 5px)}
+.grid .cell.fix.on{background-color:var(--addr);background-image:repeating-linear-gradient(45deg,rgba(0,0,0,.26) 0 2px,transparent 2px 5px);border-color:var(--addr);color:#fff}
 .grid.lockmode .cell{cursor:pointer}
 .grid.lockmode .cell.fix{cursor:pointer}
 .gbtns button.active{background:var(--addr);color:#fff;border-color:var(--addr)}
@@ -156,7 +156,7 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
       <div class="af"><span class="al">bc1q… Native</span><div class="av" id="g-bq">—</div></div>
       <div class="af"><span class="al">bc1p… Taproot</span><div class="av" id="g-bp">—</div></div>
     </div>
-    <p class="note" style="margin:10px 0 0">Πάνω-αριστερά = το «βαρύτερο» bit (2²⁵⁵) · κάτω-δεξιά = το «ελαφρύτερο» (2⁰). Για το Puzzle #71 μόνο τα ~71 κάτω-δεξιά bit χρειάζονται.</p>
+    <p class="note" style="margin:10px 0 0">Πάνω-αριστερά = το «βαρύτερο» bit (2²⁵⁵) · κάτω-δεξιά = το «ελαφρύτερο» (2⁰). Για το Puzzle #71 μόνο τα ~71 κάτω-δεξιά bit χρειάζονται. Τα <b>ριγέ/διακεκομμένα</b> κουτάκια είναι <b>κλειδωμένα</b> (δεν αλλάζουν).</p>
   </div>
 
   <header style="margin-top:6px">
