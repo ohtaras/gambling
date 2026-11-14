@@ -76,7 +76,7 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
 <div class="card"><details id="dSum" open><summary><b id="lblSum">📊 Σύνοψη ημέρας</b></summary><div id="sum"></div></details></div>
 <div class="card"><details id="dList"><summary><b id="lblList">📋 Όλες οι κληρώσεις της ημέρας</b> <span class="muted" id="cnt" style="font-size:13px"></span></summary>
   <div class="scroll" style="margin-top:6px"><table id="tbl"></table></div></details></div>
-<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v29 · 14/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v30 · 14/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
 </div>
 <div id="nav"><button data-v="dprev" class="dy" title="Προηγούμενη μέρα">◀📅</button><button data-v="-10">⏪10</button><button data-v="-1">◀</button><button data-v="live" class="live">🟢</button><button data-v="1">▶</button><button data-v="10">10⏩</button><button data-v="dnext" class="dy" title="Επόμενη μέρα">📅▶</button></div>
 <script>
@@ -183,8 +183,13 @@ function rehash(){ L=L.map(function(x){ return mk(x); }); render(); }
 function goDay(ds){ DAY=ds; $('day').value=DAY; VI=null; L=[]; render(); load(DAY); }
 function chipsRender(){ var h='', wd=new Intl.DateTimeFormat('el-GR',{timeZone:'Europe/Athens',weekday:'short'}); for(var k=0;k<5;k++){ var d=dAdd(today(),-k); h+='<button data-d="'+d+'"'+(d===DAY?' class="on"':'')+'>'+(k===0?'Σήμερα':d.slice(8)+'/'+d.slice(5,7))+'<small>'+wd.format(new Date(d+'T12:00:00Z'))+'</small></button>'; } $('dayChips').innerHTML=h; }
 function dAdd(ds, k){ var t=new Date(ds+'T12:00:00Z').getTime()+k*86400000; return new Date(t).toISOString().slice(0,10); }
-async function dayCached(ds){ var key='h32_d_'+ds; if(ds<today()){ try{ var c=JSON.parse(lsGet(key)||'null'); if(c && c.length>200) return c.map(function(r){ return mk({id:r[0], t:r[1], arr:r[2]}); }); }catch(e){} }
-  var R=await fetchDay(ds); if(ds<today() && R.length>200) lsSet(key, JSON.stringify(R.map(function(x){ return [x.id, x.t, x.arr]; }))); return R; }
+/* Το Allwyn ομαδοποιεί τις κληρώσεις ανά μέρα UTC (02:00 → 01:55 ώρα Ελλάδας). Η «μέρα» της σελίδας είναι η ελληνική: 00:00 → 23:55 */
+async function dayCached(ds){ var A=await utcCached(dAdd(ds,-1)), B=await utcCached(ds), m={};
+  A.concat(B).forEach(function(x){ m[x.id]=x; }); var all=Object.keys(m).map(Number).sort(function(a,b){ return a-b; }).map(function(k){ return m[k]; });
+  var i0=all.findIndex(function(x){ return fmtD.format(new Date(x.t))===ds; }); if(i0<0) return [];
+  var out=all.filter(function(x){ return fmtD.format(new Date(x.t))===ds; }); if(i0>0) out.unshift(all[i0-1]); return out; }
+async function utcCached(ds){ var key='h32_u_'+ds; if(ds<today()){ try{ var c=JSON.parse(lsGet(key)||'null'); if(c && c.length>=288) return c.map(function(r){ return mk({id:r[0], t:r[1], arr:r[2]}); }); }catch(e){} }
+  var R=await fetchDay(ds); if(ds<today() && R.length>=288) lsSet(key, JSON.stringify(R.map(function(x){ return [x.id, x.t, x.arr]; }))); return R; }
 async function load(ds, keep){ if(LOADING) return; LOADING=true; $('st').textContent='⏳ φόρτωση…';
   try{ var R=[], m={}; for(var k=DAYS-1;k>=0;k--){ var dd=dAdd(ds,-k); if(DAYS>1) $('st').textContent='⏳ φόρτωση '+dd.slice(8)+'/'+dd.slice(5,7)+'…'; (await dayCached(dd)).forEach(function(x){ m[x.id]=x; }); }
     R=Object.keys(m).map(Number).sort(function(a,b){ return a-b; }).map(function(k2){ return m[k2]; }); if(ds!==DAY){ LOADING=false; return; } var atEnd=VI===null; L=R; if(!keep) VI=null; else if(!atEnd && VI>=L.length) VI=null; $('st').textContent=''; render(); }
