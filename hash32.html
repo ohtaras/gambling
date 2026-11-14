@@ -72,11 +72,11 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
   <div class="pr nx" id="pOut"></div>
 </div>
 
-<div class="card"><details id="dCmp"><summary><b>🏁 Σύγκριση όλων των τρόπων <span id="lblCmp">(ημέρα)</span></b></summary><div id="cmp" style="margin-top:6px"></div></details></div>
+<div class="card"><details id="dCmp"><summary><b>🏁 Σύγκριση όλων των τρόπων <span id="lblCmp">(ημέρα)</span></b></summary><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px"><span class="muted" style="font-size:13px">⏰ Ώρες:</span><input type="time" id="cFrom" value="00:00" step="300" style="background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 6px;font-size:15px"><span class="muted">έως</span><input type="time" id="cTo" value="08:00" step="300" style="background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 6px;font-size:15px"><button class="btn" id="cNight">00–08</button><button class="btn" id="cAll">Όλη η μέρα</button></div><div id="cmp" style="margin-top:6px"></div></details></div>
 <div class="card"><details id="dSum" open><summary><b id="lblSum">📊 Σύνοψη ημέρας</b></summary><div id="sum"></div></details></div>
 <div class="card"><details id="dList"><summary><b id="lblList">📋 Όλες οι κληρώσεις της ημέρας</b> <span class="muted" id="cnt" style="font-size:13px"></span></summary>
   <div class="scroll" style="margin-top:6px"><table id="tbl"></table></div></details></div>
-<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v30 · 14/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v31 · 14/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
 </div>
 <div id="nav"><button data-v="dprev" class="dy" title="Προηγούμενη μέρα">◀📅</button><button data-v="-10">⏪10</button><button data-v="-1">◀</button><button data-v="live" class="live">🟢</button><button data-v="1">▶</button><button data-v="10">10⏩</button><button data-v="dnext" class="dy" title="Επόμενη μέρα">📅▶</button></div>
 <script>
@@ -169,14 +169,19 @@ function render(){ chipsRender(); var nbx=$('nav').children; for(var z=0;z<nbx.l
   if(DAYS>1){ var byD={}; for(var q3=1;q3<=N;q3++){ var P3=L[q3-1].P, K3=P3.n.length, dk=fmtD.format(new Date(L[q3].t)), hh3=hitsOf(P3,L[q3]).length, z3=byD[dk]||(byD[dk]={n:0,h:0,k:0,st:0,w:0}); z3.n++; z3.h+=hh3; z3.k+=K3; if(K3>=1&&K3<=12){ z3.st+=0.5; z3.w+=(PAYS[K3]||{})[hh3]||0; } }
     DY='<div class="scroll" style="max-height:none;margin-top:8px"><table><tr><th>Μέρα</th><th>Κληρ.</th><th>Έπιασε</th><th>Πόνταρε</th><th>Κέρδισε</th></tr>'+Object.keys(byD).sort().reverse().map(function(dk){ var z=byD[dk]; return '<tr><td>'+dk.slice(8)+'/'+dk.slice(5,7)+'</td><td>'+z.n+'</td><td>'+(100*z.h/z.k).toFixed(1).replace('.',',')+'%</td><td>'+eur(z.st)+'</td><td style="font-weight:700;color:'+(z.w>=z.st?'#22c55e':'#f87171')+'">'+eur(z.w)+'</td></tr>'; }).join('')+'</table></div>'; }
   $('sum').innerHTML='<div style="margin-top:6px"><b>'+ALGS[ALG].n+'</b> · '+INS[INP].n+' · '+tn+' κληρώσεις · κατά μέσο όρο <b>'+(tk/tn).toFixed(1).replace('.',',')+'</b> αριθμοί ανά πρόβλεψη · έπιασε <b>'+th+'</b> από '+tk+' = <b>'+(100*th/tk).toFixed(1).replace('.',',')+'%</b> <span class="muted">(η τύχη: 25%)</span></div>'+gh+DY; }
-function cmpRender(){ if(L.length<2){ $('cmp').innerHTML=''; return; } var rows=[];
+/* ⏰ ώρες της σύγκρισης: κάθε φορά που ανοίγει η σελίδα ξεκινάει 00:00–08:00 */
+var CW={a:'00:00', b:'08:00', all:false};
+function inWin(x){ if(CW.all) return true; var t=fmtT.format(new Date(x.t)); return t>=CW.a && t<=CW.b; }
+function cwLabel(){ return CW.all ? 'όλη τη μέρα' : CW.a+'–'+CW.b; }
+function cmpRender(){ if(L.length<2){ $('cmp').innerHTML=''; return; } var rows=[], NW=0; for(var z=1;z<L.length;z++) if(inWin(L[z])) NW++;
+  if(!NW){ $('cmp').innerHTML='<div class="muted" style="font-size:13px">Καμία κλήρωση στις ώρες '+cwLabel()+' ακόμα.</div>'; return; }
   Object.keys(ALGS).forEach(function(a){ Object.keys(INS).forEach(function(k){ var C={}, st=0, w=0, n=0;
-    for(var q0=1;q0<L.length;q0++){ var p0=L[q0-1], P=predOf(ALGS[a].f(INS[k].f(p0,p0.s))), K=P.n.length; if(K<1||K>12) continue; for(var rr=0;rr<RUN && q0+rr<L.length;rr++){ var q=q0+rr, hs=P.n.filter(function(x){ return L[q].s.indexOf(x)>=0; }).length, pay=(PAYS[K]||{})[hs]||0;
+    for(var q0=1;q0<L.length;q0++){ if(!inWin(L[q0])) continue; var p0=L[q0-1], P=predOf(ALGS[a].f(INS[k].f(p0,p0.s))), K=P.n.length; if(K<1||K>12) continue; for(var rr=0;rr<RUN && q0+rr<L.length;rr++){ var q=q0+rr, hs=P.n.filter(function(x){ return L[q].s.indexOf(x)>=0; }).length, pay=(PAYS[K]||{})[hs]||0;
       n++; st+=0.5; w+=pay; if(hs>=3 || (hs===K && K>=2)){ var key=hs+'/'+K; C[key]=(C[key]||0)+1; } } }
     var ks=Object.keys(C).sort(function(x,y){ var a1=x.split('/'), b1=y.split('/'); return (b1[0]-a1[0]) || (a1[1]-b1[1]); });
     rows.push({a:a, k:k, C:C, ks:ks, st:st, w:w, n:n}); }); });
   rows.sort(function(x,y){ return (y.w-y.st)-(x.w-x.st); });
-  $('cmp').innerHTML='<div class="muted" style="font-size:12px">Όλοι οι 35 συνδυασμοί σε '+(L.length-1)+' κληρώσεις '+(DAYS>1?'των 5 ημερών':'της ημέρας')+': πόσες φορές έπιασε <b>3 και πάνω</b> (π.χ. 5/5 ×1 = μία φορά πέντε στα πέντε) και πόσα θα κέρδιζε με μία στήλη 0,50€ σε κάθε κλήρωση'+(RUN>1?' (κάθε πρόβλεψη για '+RUN+' κληρώσεις)':'')+'. Σειρά: από το καλύτερο καθαρό. Πάτα μια γραμμή για να τη διαλέξεις.<br>⚠️ Με 35 συνδυασμούς, κάποιος θα βγει πάντα «τυχερός» μέσα σε μία μέρα — κοίτα αν κρατάει και τις επόμενες μέρες.</div>'+
+  $('cmp').innerHTML='<div class="muted" style="font-size:12px">Όλοι οι 35 συνδυασμοί σε <b>'+NW+' κληρώσεις</b> ('+cwLabel()+'): πόσες φορές έπιασε <b>3 και πάνω</b> (π.χ. 5/5 ×1 = μία φορά πέντε στα πέντε) και πόσα θα κέρδιζε με μία στήλη 0,50€ σε κάθε κλήρωση'+(RUN>1?' (κάθε πρόβλεψη για '+RUN+' κληρώσεις)':'')+'. Σειρά: από το καλύτερο καθαρό. Πάτα μια γραμμή για να τη διαλέξεις.<br>⚠️ Με 35 συνδυασμούς, κάποιος θα βγει πάντα «τυχερός» μέσα σε μία μέρα — κοίτα αν κρατάει και τις επόμενες μέρες.</div>'+
     '<div class="scroll" style="max-height:420px"><table><tr><th>Hash</th><th>Τι μπαίνει</th><th>Τι έπιασε (3+)</th><th>Καθαρό</th></tr>'+
     rows.map(function(r){ var on=r.a===ALG&&r.k===INP, net=r.w-r.st; return '<tr data-a="'+r.a+'" data-k="'+r.k+'"'+(on?' class="sel"':'')+'><td>'+ALGS[r.a].n+'</td><td style="font-size:12px">'+INS[r.k].n+'</td><td>'+(r.ks.length ? r.ks.map(function(key){ var hk=key.split('/'), full=hk[0]===hk[1]; return '<span style="white-space:nowrap;'+(full?'color:var(--hit);font-weight:800':'')+'">'+key+' ×'+r.C[key]+'</span>'; }).join(' · ') : '<span class="muted">—</span>')+'</td><td style="white-space:nowrap;font-weight:700;color:'+(net>=0?'#22c55e':'#f87171')+'">'+(net>=0?'+':'')+eur(net)+'<br><span class="muted" style="font-weight:400;font-size:11px">'+eur(r.w)+' / '+eur(r.st)+'</span></td></tr>'; }).join('')+'</table></div>'; }
 function rehash(){ L=L.map(function(x){ return mk(x); }); render(); }
@@ -225,6 +230,11 @@ poll();
   var RS=$('hRun'); var ro=''; for(var x=1;x<=20;x++) ro+='<option value="'+x+'">'+(x===1?'1 κλήρωση (μόνο την επόμενη)':x+' συνεχόμενες κληρώσεις')+'</option>'; RS.innerHTML=ro; RS.value=String(RUN); RS.addEventListener('change', function(){ RUN=+this.value; lsSet('h32_run',String(RUN)); render(); });
   A.addEventListener('change', function(){ ALG=this.value; lsSet('h32_alg',ALG); rehash(); }); I.addEventListener('change', function(){ INP=this.value; lsSet('h32_in',INP); rehash(); });
   $('cmp').addEventListener('click', function(e){ var r=e.target.closest('tr[data-a]'); if(!r) return; ALG=r.dataset.a; INP=r.dataset.k; A.value=ALG; I.value=INP; lsSet('h32_alg',ALG); lsSet('h32_in',INP); rehash(); });
+  function cw(){ CW.a=$('cFrom').value||'00:00'; CW.b=$('cTo').value||'23:55'; if(CW.b<CW.a){ var t=CW.a; CW.a=CW.b; CW.b=t; } CW.all=false; $('cAll').classList.remove('on'); $('cNight').classList.toggle('on', CW.a==='00:00'&&CW.b==='08:00'); cmpRender(); }
+  $('cFrom').addEventListener('change', cw); $('cTo').addEventListener('change', cw);
+  $('cNight').addEventListener('click', function(){ $('cFrom').value='00:00'; $('cTo').value='08:00'; cw(); });
+  $('cAll').addEventListener('click', function(){ CW.all=true; $('cAll').classList.add('on'); $('cNight').classList.remove('on'); cmpRender(); });
+  $('cNight').classList.add('on');
   $('dCmp').addEventListener('toggle', function(){ if(this.open) cmpRender(); }); })();
 ['dCfg','dCmp','dBoard','dHash','dSum','dList'].forEach(function(id){ var el=$(id), v=lsGet('h32_'+id); if(v!==null) el.open=v==='1'; el.addEventListener('toggle', function(){ lsSet('h32_'+id, el.open?'1':'0'); }); });
 render(); load(DAY);
