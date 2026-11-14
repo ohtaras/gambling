@@ -47,7 +47,7 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
 <body><div class="wrap">
 <h1>#️⃣ ΚΙΝΟ Hash 32</h1>
 <details class="muted" style="font-size:13px"><summary>ℹ️ Πώς δουλεύει</summary>Κάθε κλήρωση: οι 20 αριθμοί <b>ταξινομημένοι</b> κολλητά σε έναν αριθμό → <b>CRC32</b> (32 bit) σε ψηφία → χωρίζεται ανά δύο ψηφία (π.χ. 4255612109 → 42 55 61 21 9). Πάνω από 80 αντιστρέφεται (81→18)· αν πάλι δεν κάνει (98→89) γίνεται δύο μονοψήφιοι (8, 9)· το 99 γίνεται 9. Τα μηδενικά και τα διπλά φεύγουν. Αυτοί οι αριθμοί είναι η <b>πρόβλεψη για την επόμενη κλήρωση</b> και αξιολογούνται μόλις βγει.</details>
-<div class="top"><input type="date" id="day"><button class="btn" id="today">Σήμερα</button><button class="btn" id="liveT" title="Αυτόματη ενημέρωση με κάθε νέα κλήρωση">🔄 Live</button><span class="muted" id="st" style="font-size:13px"></span></div>
+<div class="top"><input type="date" id="day"><button class="btn" id="today">Σήμερα</button><button class="btn" id="daysT" title="Πόσες μέρες ιστορικό">📅 1 μέρα</button><button class="btn" id="liveT" title="Αυτόματη ενημέρωση με κάθε νέα κλήρωση">🔄 Live</button><span class="muted" id="st" style="font-size:13px"></span></div>
 
 <div class="card"><details id="dCfg" open><summary><b>⚙️ Τρόπος hash</b> <span class="muted" id="cfgLbl" style="font-size:13px"></span></summary>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
@@ -67,11 +67,11 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
   <div class="pr nx" id="pOut"></div>
 </div>
 
-<div class="card"><details id="dCmp"><summary><b>🏁 Σύγκριση όλων των τρόπων (ημέρα)</b></summary><div id="cmp" style="margin-top:6px"></div></details></div>
-<div class="card"><details id="dSum" open><summary><b>📊 Σύνοψη ημέρας</b></summary><div id="sum"></div></details></div>
-<div class="card"><details id="dList"><summary><b>📋 Όλες οι κληρώσεις της ημέρας</b> <span class="muted" id="cnt" style="font-size:13px"></span></summary>
+<div class="card"><details id="dCmp"><summary><b>🏁 Σύγκριση όλων των τρόπων <span id="lblCmp">(ημέρα)</span></b></summary><div id="cmp" style="margin-top:6px"></div></details></div>
+<div class="card"><details id="dSum" open><summary><b id="lblSum">📊 Σύνοψη ημέρας</b></summary><div id="sum"></div></details></div>
+<div class="card"><details id="dList"><summary><b id="lblList">📋 Όλες οι κληρώσεις της ημέρας</b> <span class="muted" id="cnt" style="font-size:13px"></span></summary>
   <div class="scroll" style="margin-top:6px"><table id="tbl"></table></div></details></div>
-<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v23 · 14/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v24 · 14/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
 </div>
 <div id="nav"><button data-v="-10">⏪10</button><button data-v="-1">◀</button><button data-v="live" class="live">🟢</button><button data-v="1">▶</button><button data-v="10">10⏩</button></div>
 <script>
@@ -124,12 +124,13 @@ async function fetchDay(ds){ var u=API+'/draw-date/'+ds+'/'+ds+'?size=10&page=',
   if(all.length){ var minId=Math.min.apply(null, all.map(function(c){ return c.drawId; })); try{ var pv=await getJ(API+'/'+(minId-1)); if(pv&&pv.winningNumbers&&pv.winningNumbers.list) all.push(pv); }catch(e){} }
   var m={}; all.forEach(function(c){ var w=c.winningNumbers||{}; if(w.list&&w.list.length===20) m[c.drawId]={id:c.drawId, t:c.drawTime, arr:w.list.slice()}; });
   return Object.keys(m).map(Number).sort(function(a,b){ return a-b; }).map(function(k){ return mk(m[k]); }); }
-var DAY=today(), L=[], VI=null, LIVE=lsGet('h32_live')!=='0', LOADING=false;
+var DAYS=lsGet('h32_days')==='5'?5:1, DAY=today(), L=[], VI=null, LIVE=lsGet('h32_live')!=='0', LOADING=false;
 (function(){ var b=''; for(var n=1;n<=80;n++) b+='<div id="b'+n+'">'+n+'</div>'; $('board').innerHTML=b; })();
-function render(){ var N=L.length-1; $('cnt').textContent=N>0?'· '+N:''; if(N<1){ $('cTtl').textContent='Καμία κλήρωση'; $('tbl').innerHTML=''; $('sum').innerHTML=''; return; }
+function tL(t){ var x=new Date(t); return (DAYS>1 ? fmtD.format(x).slice(8)+'/'+fmtD.format(x).slice(5,7)+' ' : '')+fmtT.format(x); }
+function render(){ var N=L.length-1; var PL=DAYS>1?'των 5 ημερών':'της ημέρας'; $('lblCmp').textContent=DAYS>1?'(5 μέρες)':'(ημέρα)'; $('lblSum').textContent=DAYS>1?'📊 Σύνοψη 5 ημερών':'📊 Σύνοψη ημέρας'; $('lblList').textContent='📋 Όλες οι κληρώσεις '+PL; $('cnt').textContent=N>0?'· '+N:''; if(N<1){ $('cTtl').textContent='Καμία κλήρωση'; $('tbl').innerHTML=''; $('sum').innerHTML=''; return; }
   var i=VI===null?N:Math.max(1,VI), d=L[i], pv=L[i-1], set={}, pr={}; d.s.forEach(function(x){ set[x]=1; }); pv.P.n.forEach(function(x){ pr[x]=1; });
   for(var n=1;n<=80;n++) $('b'+n).className=(set[n]?'on':'')+(pr[n]?' pr0':'');
-  $('cTtl').textContent='#'+d.id+' · '+fmtT.format(new Date(d.t)); $('cSub').textContent=(i===N && DAY===today() ? '🟢 τελευταία' : (N-i)+' πριν την τελευταία');
+  $('cTtl').textContent='#'+d.id+' · '+tL(d.t); $('cSub').textContent=(i===N && DAY===today() ? '🟢 τελευταία' : (N-i)+' πριν την τελευταία');
   var hh=hitsOf(pv.P, d);
   $('pIn').innerHTML='<div class="muted" style="font-size:13px">🔮 Πρόβλεψη από την #'+pv.id+' ('+ALGS[ALG].n+' '+pv.h+'):</div>'+chips(pv.P.n, d)+'<div style="margin-top:4px">Έπιασε <b>'+hh.length+'/'+pv.P.n.length+'</b> <span class="muted">· η τύχη δίνει κατά μέσο όρο '+(pv.P.n.length/4).toFixed(2).replace('.',',')+'</span></div>';
   $('cNum').textContent=d.str; $('cLen').textContent=d.str.length; $('cDec').textContent=d.h; $('cSplit').textContent=d.P.parts.join(' ');
@@ -137,7 +138,7 @@ function render(){ var N=L.length-1; $('cnt').textContent=N>0?'· '+N:''; if(N<1
   var nb=$('nav').children; for(var k=0;k<nb.length;k++){ var v=nb[k].dataset.v; nb[k].disabled = v!=='live' && ((+v<0 && i<=1) || (+v>0 && i===N)); }
   var h='<tr><th>Ώρα</th><th>Κλήρωση</th><th>Hash</th><th>Πρόβλεψη (από την προηγ.)</th><th>Έπιασε</th></tr>', dist={}, tk=0, th=0, tn=0;
   for(var q=N;q>=1;q--){ var x=L[q], P=L[q-1].P, hs=hitsOf(P,x); dist[hs.length]=(dist[hs.length]||0)+1; tk+=P.n.length; th+=hs.length; tn++;
-    h+='<tr data-i="'+q+'"'+(q===i?' class="sel"':'')+'><td>'+fmtT.format(new Date(x.t))+'</td><td>#'+x.id+'</td><td class="m">'+x.h+'</td><td class="m">'+P.n.slice().sort(function(a,b){ return a-b; }).map(function(z){ return x.s.indexOf(z)>=0?'<b style="color:var(--hit)">'+z+'</b>':z; }).join(' ')+'</td><td><b>'+hs.length+'</b>/'+P.n.length+'</td></tr>'; }
+    h+='<tr data-i="'+q+'"'+(q===i?' class="sel"':'')+'><td>'+tL(x.t)+'</td><td>#'+x.id+'</td><td class="m">'+x.h+'</td><td class="m">'+P.n.slice().sort(function(a,b){ return a-b; }).map(function(z){ return x.s.indexOf(z)>=0?'<b style="color:var(--hit)">'+z+'</b>':z; }).join(' ')+'</td><td><b>'+hs.length+'</b>/'+P.n.length+'</td></tr>'; }
   $('tbl').innerHTML=h; $('hName').textContent=ALGS[ALG].n+' · ψηφία'; $('cfgLbl').textContent='· '+ALGS[ALG].n+' · '+INS[INP].n; $('cfgEx').innerHTML='Μέσα στο hash: <code style="word-break:break-all">'+d.str+'</code>'; if($('dCmp').open) cmpRender();
   /* 💶 σύνοψη ανά πλήθος αριθμών της πρόβλεψης: κατανομή k/K και χρήματα (απλή στήλη 0,50€) */
   var G={}, ST=0, WN=0, BIG=[];
@@ -147,20 +148,28 @@ function render(){ var N=L.length-1; $('cnt').textContent=N>0?'· '+N:''; if(N<1
     Object.keys(G).sort(function(a,b){ return b-a; }).map(function(K){ var g=G[K], ks=Object.keys(g.d).sort(function(a,b){ return b-a; }); return '<tr><td><b>'+K+'</b></td><td>'+g.n+'</td><td>'+ks.map(function(k){ var pay=(PAYS[K]||{})[k]; return '<span style="white-space:nowrap'+(pay?';color:var(--hit);font-weight:800':'')+'">'+k+'/'+K+' ×'+g.d[k]+'</span>'; }).join(' · ')+'</td><td>'+eur(g.st)+'</td><td style="font-weight:700;color:'+(g.w>=g.st?'#22c55e':'#f87171')+'">'+eur(g.w)+'</td></tr>'; }).join('')+
     '<tr style="font-weight:800"><td>Όλα</td><td>'+tn+'</td><td></td><td>'+eur(ST)+'</td><td style="color:'+(WN>=ST?'#22c55e':'#f87171')+'">'+eur(WN)+'</td></tr></table></div>'+
     '<div style="margin-top:6px">💶 Με μία απλή στήλη 0,50€ σε κάθε κλήρωση: πόνταρε <b>'+eur(ST)+'</b>, κέρδισε <b>'+eur(WN)+'</b> → <b style="color:'+(WN>=ST?'#22c55e':'#f87171')+'">'+(WN-ST>=0?'+':'')+eur(WN-ST)+'</b> ('+Math.round(WN/ST*100)+'% επιστροφή · μακροπρόθεσμα το ΚΙΝΟ επιστρέφει ~70%)</div>'+
-    (BIG.length ? '<div class="muted" style="font-size:12.5px;margin-top:4px">🏆 Τα μεγαλύτερα: '+BIG.sort(function(a,b){ return b.w-a.w; }).slice(0,5).map(function(z){ return '<b style="color:var(--hit)">'+z.h+'/'+z.K+'</b> '+fmtT.format(new Date(z.x.t))+' (#'+z.x.id+') '+eur(z.w); }).join(' · ')+'</div>' : '');
-  $('sum').innerHTML='<div style="margin-top:6px"><b>'+ALGS[ALG].n+'</b> · '+INS[INP].n+' · '+tn+' κληρώσεις · κατά μέσο όρο <b>'+(tk/tn).toFixed(1).replace('.',',')+'</b> αριθμοί ανά πρόβλεψη · έπιασε <b>'+th+'</b> από '+tk+' = <b>'+(100*th/tk).toFixed(1).replace('.',',')+'%</b> <span class="muted">(η τύχη: 25%)</span></div>'+gh; }
+    (BIG.length ? '<div class="muted" style="font-size:12.5px;margin-top:4px">🏆 Τα μεγαλύτερα: '+BIG.sort(function(a,b){ return b.w-a.w; }).slice(0,5).map(function(z){ return '<b style="color:var(--hit)">'+z.h+'/'+z.K+'</b> '+tL(z.x.t)+' (#'+z.x.id+') '+eur(z.w); }).join(' · ')+'</div>' : '');
+  var DY='';
+  if(DAYS>1){ var byD={}; for(var q3=1;q3<=N;q3++){ var P3=L[q3-1].P, K3=P3.n.length, dk=fmtD.format(new Date(L[q3].t)), hh3=hitsOf(P3,L[q3]).length, z3=byD[dk]||(byD[dk]={n:0,h:0,k:0,st:0,w:0}); z3.n++; z3.h+=hh3; z3.k+=K3; if(K3>=1&&K3<=12){ z3.st+=0.5; z3.w+=(PAYS[K3]||{})[hh3]||0; } }
+    DY='<div class="scroll" style="max-height:none;margin-top:8px"><table><tr><th>Μέρα</th><th>Κληρ.</th><th>Έπιασε</th><th>Πόνταρε</th><th>Κέρδισε</th></tr>'+Object.keys(byD).sort().reverse().map(function(dk){ var z=byD[dk]; return '<tr><td>'+dk.slice(8)+'/'+dk.slice(5,7)+'</td><td>'+z.n+'</td><td>'+(100*z.h/z.k).toFixed(1).replace('.',',')+'%</td><td>'+eur(z.st)+'</td><td style="font-weight:700;color:'+(z.w>=z.st?'#22c55e':'#f87171')+'">'+eur(z.w)+'</td></tr>'; }).join('')+'</table></div>'; }
+  $('sum').innerHTML='<div style="margin-top:6px"><b>'+ALGS[ALG].n+'</b> · '+INS[INP].n+' · '+tn+' κληρώσεις · κατά μέσο όρο <b>'+(tk/tn).toFixed(1).replace('.',',')+'</b> αριθμοί ανά πρόβλεψη · έπιασε <b>'+th+'</b> από '+tk+' = <b>'+(100*th/tk).toFixed(1).replace('.',',')+'%</b> <span class="muted">(η τύχη: 25%)</span></div>'+gh+DY; }
 function cmpRender(){ if(L.length<2){ $('cmp').innerHTML=''; return; } var rows=[];
   Object.keys(ALGS).forEach(function(a){ Object.keys(INS).forEach(function(k){ var th=0, tk=0, best=0; for(var q=1;q<L.length;q++){ var p0=L[q-1], s0=p0.s, P=predOf(ALGS[a].f(INS[k].f(p0,s0))), hs=P.n.filter(function(x){ return L[q].s.indexOf(x)>=0; }).length; th+=hs; tk+=P.n.length; if(hs>best) best=hs; } rows.push({a:a,k:k,p:th/tk,th:th,tk:tk,b:best}); }); });
   rows.sort(function(x,y){ return y.p-x.p; });
-  $('cmp').innerHTML='<div class="muted" style="font-size:12px">Όλοι οι συνδυασμοί σε '+(L.length-1)+' κληρώσεις της ημέρας — πόσοι από τους αριθμούς της πρόβλεψης βγήκαν. <b>Η τύχη: 25%</b>. Πάτα μια γραμμή για να τη διαλέξεις. <br>⚠️ Με 35 συνδυασμούς, μέσα σε μία μέρα ο πρώτος βγαίνει από καθαρή τύχη συνήθως γύρω στο 27–28% — κοίτα αν κρατάει και τις επόμενες μέρες (ημερολόγιο πάνω).</div><div class="scroll" style="max-height:340px"><table><tr><th>Hash</th><th>Τι μπαίνει</th><th>Έπιασε</th><th>%</th><th>Καλύτερο</th></tr>'+
+  $('cmp').innerHTML='<div class="muted" style="font-size:12px">Όλοι οι συνδυασμοί σε '+(L.length-1)+' κληρώσεις '+(DAYS>1?'των 5 ημερών':'της ημέρας')+' — πόσοι από τους αριθμούς της πρόβλεψης βγήκαν. <b>Η τύχη: 25%</b>. Πάτα μια γραμμή για να τη διαλέξεις. <br>⚠️ Με 35 συνδυασμούς, μέσα σε μία μέρα ο πρώτος βγαίνει από καθαρή τύχη συνήθως γύρω στο 27–28% — κοίτα αν κρατάει και τις επόμενες μέρες (ημερολόγιο πάνω).</div><div class="scroll" style="max-height:340px"><table><tr><th>Hash</th><th>Τι μπαίνει</th><th>Έπιασε</th><th>%</th><th>Καλύτερο</th></tr>'+
     rows.map(function(r){ var on=r.a===ALG&&r.k===INP; return '<tr data-a="'+r.a+'" data-k="'+r.k+'"'+(on?' class="sel"':'')+'><td>'+ALGS[r.a].n+'</td><td>'+INS[r.k].n+'</td><td>'+r.th+'/'+r.tk+'</td><td><b>'+(100*r.p).toFixed(1).replace('.',',')+'%</b></td><td>'+r.b+'</td></tr>'; }).join('')+'</table></div>'; }
 function rehash(){ L=L.map(function(x){ return mk(x); }); render(); }
+function dAdd(ds, k){ var t=new Date(ds+'T12:00:00Z').getTime()+k*86400000; return new Date(t).toISOString().slice(0,10); }
+async function dayCached(ds){ var key='h32_d_'+ds; if(ds<today()){ try{ var c=JSON.parse(lsGet(key)||'null'); if(c && c.length>200) return c.map(function(r){ return mk({id:r[0], t:r[1], arr:r[2]}); }); }catch(e){} }
+  var R=await fetchDay(ds); if(ds<today() && R.length>200) lsSet(key, JSON.stringify(R.map(function(x){ return [x.id, x.t, x.arr]; }))); return R; }
 async function load(ds, keep){ if(LOADING) return; LOADING=true; $('st').textContent='⏳ φόρτωση…';
-  try{ var R=await fetchDay(ds); if(ds!==DAY){ LOADING=false; return; } var atEnd=VI===null; L=R; if(!keep) VI=null; else if(!atEnd && VI>=L.length) VI=null; $('st').textContent=''; render(); }
+  try{ var R=[], m={}; for(var k=DAYS-1;k>=0;k--){ var dd=dAdd(ds,-k); if(DAYS>1) $('st').textContent='⏳ φόρτωση '+dd.slice(8)+'/'+dd.slice(5,7)+'…'; (await dayCached(dd)).forEach(function(x){ m[x.id]=x; }); }
+    R=Object.keys(m).map(Number).sort(function(a,b){ return a-b; }).map(function(k2){ return m[k2]; }); if(ds!==DAY){ LOADING=false; return; } var atEnd=VI===null; L=R; if(!keep) VI=null; else if(!atEnd && VI>=L.length) VI=null; $('st').textContent=''; render(); }
   catch(e){ $('st').textContent='⚠️ Δεν απάντησε το Allwyn — ξαναδοκίμασε'; }
   LOADING=false; }
 $('day').value=DAY; $('day').max=today();
 $('day').addEventListener('change', function(){ if(!this.value) return; DAY=this.value; VI=null; L=[]; render(); load(DAY); });
+(function(){ var B=$('daysT'); function u(){ B.textContent=DAYS>1?'📅 5 μέρες':'📅 1 μέρα'; B.classList.toggle('on',DAYS>1); } B.addEventListener('click', function(){ DAYS=DAYS>1?1:5; lsSet('h32_days',String(DAYS)); u(); VI=null; load(DAY); }); u(); })();
 $('today').addEventListener('click', function(){ DAY=today(); $('day').value=DAY; VI=null; load(DAY); });
 $('nav').addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b||!L.length) return; var v=b.dataset.v, i=VI===null?L.length-1:VI;
   if(v==='live'){ VI=null; if(DAY!==today()){ DAY=today(); $('day').value=DAY; load(DAY); return; } } else { var n=Math.max(1,Math.min(L.length-1,i+(+v))); VI=n===L.length-1?null:n; } render(); });
