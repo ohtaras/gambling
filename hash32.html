@@ -72,11 +72,11 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
   <div class="pr nx" id="pOut"></div>
 </div>
 
-<div class="card"><details id="dCmp"><summary><b>🏁 Σύγκριση όλων των τρόπων <span id="lblCmp">(ημέρα)</span></b></summary><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px"><span class="muted" style="font-size:13px">⏰ Ώρες:</span><input type="time" id="cFrom" value="00:00" step="300" style="background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 6px;font-size:15px"><span class="muted">έως</span><input type="time" id="cTo" value="08:00" step="300" style="background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 6px;font-size:15px"><button class="btn" id="cNight">00–08</button><button class="btn" id="cAll">Όλη η μέρα</button></div><div id="cmp" style="margin-top:6px"></div></details></div>
-<div class="card"><details id="dSum" open><summary><b id="lblSum">📊 Σύνοψη ημέρας</b></summary><div id="sum"></div></details></div>
+<div class="card"><details id="dCmp"><summary><b>🏁 Σύγκριση όλων των τρόπων <span id="lblCmp">(ημέρα)</span></b></summary><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px"><span class="muted" style="font-size:13px">⏰ Ώρες (σύγκριση &amp; σύνοψη):</span><input type="time" id="cFrom" value="00:00" step="300" style="background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 6px;font-size:15px"><span class="muted">έως</span><input type="time" id="cTo" value="08:00" step="300" style="background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 6px;font-size:15px"><button class="btn" id="cNight">00–08</button><button class="btn" id="cAll">Όλη η μέρα</button></div><div id="cmp" style="margin-top:6px"></div></details></div>
+<div class="card"><details id="dSum" open><summary><b id="lblSum">📊 Σύνοψη ημέρας</b> <span class="muted" id="lblSumW" style="font-size:13px"></span></summary><div id="sum"></div></details></div>
 <div class="card"><details id="dList"><summary><b id="lblList">📋 Όλες οι κληρώσεις της ημέρας</b> <span class="muted" id="cnt" style="font-size:13px"></span></summary>
   <div class="scroll" style="margin-top:6px"><table id="tbl"></table></div></details></div>
-<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v31 · 14/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v32 · 14/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
 </div>
 <div id="nav"><button data-v="dprev" class="dy" title="Προηγούμενη μέρα">◀📅</button><button data-v="-10">⏪10</button><button data-v="-1">◀</button><button data-v="live" class="live">🟢</button><button data-v="1">▶</button><button data-v="10">10⏩</button><button data-v="dnext" class="dy" title="Επόμενη μέρα">📅▶</button></div>
 <script>
@@ -143,7 +143,7 @@ async function fetchDay(ds){ var u=API+'/draw-date/'+ds+'/'+ds+'?size=10&page=',
 var DAYS=1, DAY=today(), L=[], VI=null, LIVE=lsGet('h32_live')!=='0', LOADING=false;
 (function(){ var b=''; for(var n=1;n<=80;n++) b+='<div id="b'+n+'">'+n+'</div>'; $('board').innerHTML=b; })();
 function tL(t){ var x=new Date(t); return (DAYS>1 ? fmtD.format(x).slice(8)+'/'+fmtD.format(x).slice(5,7)+' ' : '')+fmtT.format(x); }
-function render(){ chipsRender(); var nbx=$('nav').children; for(var z=0;z<nbx.length;z++){ if(nbx[z].dataset.v==='dnext') nbx[z].disabled=DAY>=today(); } var N=L.length-1; var PL=DAYS>1?'των 5 ημερών':'της ημέρας'; $('lblCmp').textContent=DAYS>1?'(5 μέρες)':'(ημέρα)'; $('lblSum').textContent=DAYS>1?'📊 Σύνοψη 5 ημερών':'📊 Σύνοψη ημέρας'; $('lblList').textContent='📋 Όλες οι κληρώσεις '+PL; $('cnt').textContent=N>0?'· '+N:''; if(N<1){ $('cTtl').textContent='Καμία κλήρωση'; $('tbl').innerHTML=''; $('sum').innerHTML=''; return; }
+function render(){ chipsRender(); var nbx=$('nav').children; for(var z=0;z<nbx.length;z++){ if(nbx[z].dataset.v==='dnext') nbx[z].disabled=DAY>=today(); } var N=L.length-1; var PL=DAYS>1?'των 5 ημερών':'της ημέρας'; $('lblCmp').textContent=DAYS>1?'(5 μέρες)':'(ημέρα)'; $('lblSum').textContent=DAYS>1?'📊 Σύνοψη 5 ημερών':'📊 Σύνοψη ημέρας'; $('lblSumW').textContent='· ⏰ '+cwLabel(); $('lblList').textContent='📋 Όλες οι κληρώσεις '+PL; $('cnt').textContent=N>0?'· '+N:''; if(N<1){ $('cTtl').textContent='Καμία κλήρωση'; $('tbl').innerHTML=''; $('sum').innerHTML=''; return; }
   var i=VI===null?N:Math.max(1,VI), d=L[i], pv=L[i-1], set={}, pr={}; d.s.forEach(function(x){ set[x]=1; }); pv.P.n.forEach(function(x){ pr[x]=1; });
   for(var n=1;n<=80;n++) $('b'+n).className=(set[n]?'on':'')+(pr[n]?' pr0':'');
   $('cTtl').textContent='#'+d.id+' · '+tL(d.t); $('cSub').textContent=(i===N ? (DAY===today() ? '🟢 τελευταία' : '🔚 τελευταία της μέρας') : (N-i)+' πριν την τελευταία');
@@ -153,12 +153,12 @@ function render(){ chipsRender(); var nbx=$('nav').children; for(var z=0;z<nbx.l
   $('pOut').innerHTML='<div class="muted" style="font-size:13px">➡️ Πρόβλεψη για την <b>#'+(d.id+1)+'</b> από αυτήν ('+d.h+' → '+d.P.parts.join(' ')+'):</div>'+chips(d.P.n, L[i+1])+(L[i+1] ? '<div style="margin-top:4px">Έπιασε <b>'+hitsOf(d.P, L[i+1]).length+'/'+d.P.n.length+'</b></div>' : '<div class="muted" style="margin-top:4px">⏳ Περιμένει την κλήρωση.</div>');
   var nb=$('nav').children; for(var k=0;k<nb.length;k++){ var v=nb[k].dataset.v; if(v==='dprev'||v==='dnext') continue; nb[k].disabled = v!=='live' && ((+v<0 && i<=1) || (+v>0 && i===N)); }
   var h='<tr><th>Κλήρωση</th><th>Πρόβλεψη</th><th>Έπιασε</th>'+(RUN>1?'<th>Για '+RUN+' κληρώσεις</th>':'')+'</tr>', dist={}, tk=0, th=0, tn=0;
-  for(var q=N;q>=1;q--){ var x=L[q], P=L[q-1].P, hs=hitsOf(P,x); dist[hs.length]=(dist[hs.length]||0)+1; tk+=P.n.length; th+=hs.length; tn++;
+  for(var q=N;q>=1;q--){ var x=L[q], P=L[q-1].P, hs=hitsOf(P,x); if(inWin(x)){ dist[hs.length]=(dist[hs.length]||0)+1; tk+=P.n.length; th+=hs.length; tn++; }
     h+='<tr data-i="'+q+'"'+(q===i?' class="sel"':'')+'><td style="white-space:nowrap"><b>'+tL(x.t)+'</b><br><span class="muted" style="font-size:11px">#'+x.id+'<br>'+x.h+'</span></td><td class="m">'+P.n.slice().sort(function(a,b){ return a-b; }).map(function(z){ return x.s.indexOf(z)>=0?'<b style="color:var(--hit)">'+z+'</b>':z; }).join(' ')+'</td><td><b>'+hs.length+'</b>/'+P.n.length+'</td>'+(RUN>1?runCell(P,q):'')+'</tr>'; }
   $('tbl').innerHTML=h; $('hName').textContent=ALGS[ALG].n+' · ψηφία'; $('cfgLbl').textContent='· '+ALGS[ALG].n+' · '+INS[INP].n; $('cfgEx').innerHTML='Μέσα στο hash: <code style="word-break:break-all">'+d.str+'</code>'; if($('dCmp').open) cmpRender();
   /* 💶 σύνοψη ανά πλήθος αριθμών της πρόβλεψης: κατανομή k/K και χρήματα (απλή στήλη 0,50€) */
   var G={}, ST=0, WN=0, BIG=[];
-  for(var q0=1;q0<=N;q0++){ var P2=L[q0-1].P, K=P2.n.length; if(K<1||K>12) continue; for(var rr=0;rr<RUN && q0+rr<=N;rr++){ var q2=q0+rr, hh2=hitsOf(P2,L[q2]).length, w=(PAYS[K]||{})[hh2]||0, g=G[K]||(G[K]={n:0,d:{},st:0,w:0});
+  for(var q0=1;q0<=N;q0++){ if(!inWin(L[q0])) continue; var P2=L[q0-1].P, K=P2.n.length; if(K<1||K>12) continue; for(var rr=0;rr<RUN && q0+rr<=N;rr++){ var q2=q0+rr, hh2=hitsOf(P2,L[q2]).length, w=(PAYS[K]||{})[hh2]||0, g=G[K]||(G[K]={n:0,d:{},st:0,w:0});
     g.n++; g.d[hh2]=(g.d[hh2]||0)+1; g.st+=0.5; g.w+=w; ST+=0.5; WN+=w; if(w>=10) BIG.push({x:L[q2], K:K, h:hh2, w:w}); } }
   var gh='<div class="scroll" style="max-height:none;margin-top:8px"><table><tr><th>Αριθμοί</th><th>'+(RUN>1?'Στήλες':'Κληρ.')+'</th><th>Τι έπιασε</th><th>Πόνταρε</th><th>Κέρδισε</th></tr>'+
     Object.keys(G).sort(function(a,b){ return b-a; }).map(function(K){ var g=G[K], ks=Object.keys(g.d).sort(function(a,b){ return b-a; }); return '<tr><td><b>'+K+'</b></td><td>'+g.n+'</td><td>'+ks.map(function(k){ var pay=(PAYS[K]||{})[k]; return '<span style="white-space:nowrap'+(pay?';color:var(--hit);font-weight:800':'')+'">'+k+'/'+K+' ×'+g.d[k]+'</span>'; }).join(' · ')+'</td><td>'+eur(g.st)+'</td><td style="font-weight:700;color:'+(g.w>=g.st?'#22c55e':'#f87171')+'">'+eur(g.w)+'</td></tr>'; }).join('')+
@@ -168,7 +168,8 @@ function render(){ chipsRender(); var nbx=$('nav').children; for(var z=0;z<nbx.l
   var DY='';
   if(DAYS>1){ var byD={}; for(var q3=1;q3<=N;q3++){ var P3=L[q3-1].P, K3=P3.n.length, dk=fmtD.format(new Date(L[q3].t)), hh3=hitsOf(P3,L[q3]).length, z3=byD[dk]||(byD[dk]={n:0,h:0,k:0,st:0,w:0}); z3.n++; z3.h+=hh3; z3.k+=K3; if(K3>=1&&K3<=12){ z3.st+=0.5; z3.w+=(PAYS[K3]||{})[hh3]||0; } }
     DY='<div class="scroll" style="max-height:none;margin-top:8px"><table><tr><th>Μέρα</th><th>Κληρ.</th><th>Έπιασε</th><th>Πόνταρε</th><th>Κέρδισε</th></tr>'+Object.keys(byD).sort().reverse().map(function(dk){ var z=byD[dk]; return '<tr><td>'+dk.slice(8)+'/'+dk.slice(5,7)+'</td><td>'+z.n+'</td><td>'+(100*z.h/z.k).toFixed(1).replace('.',',')+'%</td><td>'+eur(z.st)+'</td><td style="font-weight:700;color:'+(z.w>=z.st?'#22c55e':'#f87171')+'">'+eur(z.w)+'</td></tr>'; }).join('')+'</table></div>'; }
-  $('sum').innerHTML='<div style="margin-top:6px"><b>'+ALGS[ALG].n+'</b> · '+INS[INP].n+' · '+tn+' κληρώσεις · κατά μέσο όρο <b>'+(tk/tn).toFixed(1).replace('.',',')+'</b> αριθμοί ανά πρόβλεψη · έπιασε <b>'+th+'</b> από '+tk+' = <b>'+(100*th/tk).toFixed(1).replace('.',',')+'%</b> <span class="muted">(η τύχη: 25%)</span></div>'+gh+DY; }
+  if(!tn){ $('sum').innerHTML='<div class="muted" style="margin-top:6px">⏰ '+cwLabel()+': καμία κλήρωση ακόμα.</div>'; return; }
+  $('sum').innerHTML='<div style="margin-top:6px">⏰ <b>'+cwLabel()+'</b> · <b>'+ALGS[ALG].n+'</b> · '+INS[INP].n+' · '+tn+' κληρώσεις · κατά μέσο όρο <b>'+(tk/tn).toFixed(1).replace('.',',')+'</b> αριθμοί ανά πρόβλεψη · έπιασε <b>'+th+'</b> από '+tk+' = <b>'+(100*th/tk).toFixed(1).replace('.',',')+'%</b> <span class="muted">(η τύχη: 25%)</span></div>'+gh+DY; }
 /* ⏰ ώρες της σύγκρισης: κάθε φορά που ανοίγει η σελίδα ξεκινάει 00:00–08:00 */
 var CW={a:'00:00', b:'08:00', all:false};
 function inWin(x){ if(CW.all) return true; var t=fmtT.format(new Date(x.t)); return t>=CW.a && t<=CW.b; }
@@ -230,10 +231,10 @@ poll();
   var RS=$('hRun'); var ro=''; for(var x=1;x<=20;x++) ro+='<option value="'+x+'">'+(x===1?'1 κλήρωση (μόνο την επόμενη)':x+' συνεχόμενες κληρώσεις')+'</option>'; RS.innerHTML=ro; RS.value=String(RUN); RS.addEventListener('change', function(){ RUN=+this.value; lsSet('h32_run',String(RUN)); render(); });
   A.addEventListener('change', function(){ ALG=this.value; lsSet('h32_alg',ALG); rehash(); }); I.addEventListener('change', function(){ INP=this.value; lsSet('h32_in',INP); rehash(); });
   $('cmp').addEventListener('click', function(e){ var r=e.target.closest('tr[data-a]'); if(!r) return; ALG=r.dataset.a; INP=r.dataset.k; A.value=ALG; I.value=INP; lsSet('h32_alg',ALG); lsSet('h32_in',INP); rehash(); });
-  function cw(){ CW.a=$('cFrom').value||'00:00'; CW.b=$('cTo').value||'23:55'; if(CW.b<CW.a){ var t=CW.a; CW.a=CW.b; CW.b=t; } CW.all=false; $('cAll').classList.remove('on'); $('cNight').classList.toggle('on', CW.a==='00:00'&&CW.b==='08:00'); cmpRender(); }
+  function cw(){ CW.a=$('cFrom').value||'00:00'; CW.b=$('cTo').value||'23:55'; if(CW.b<CW.a){ var t=CW.a; CW.a=CW.b; CW.b=t; } CW.all=false; $('cAll').classList.remove('on'); $('cNight').classList.toggle('on', CW.a==='00:00'&&CW.b==='08:00'); render(); }
   $('cFrom').addEventListener('change', cw); $('cTo').addEventListener('change', cw);
   $('cNight').addEventListener('click', function(){ $('cFrom').value='00:00'; $('cTo').value='08:00'; cw(); });
-  $('cAll').addEventListener('click', function(){ CW.all=true; $('cAll').classList.add('on'); $('cNight').classList.remove('on'); cmpRender(); });
+  $('cAll').addEventListener('click', function(){ CW.all=true; $('cAll').classList.add('on'); $('cNight').classList.remove('on'); render(); });
   $('cNight').classList.add('on');
   $('dCmp').addEventListener('toggle', function(){ if(this.open) cmpRender(); }); })();
 ['dCfg','dCmp','dBoard','dHash','dSum','dList'].forEach(function(id){ var el=$(id), v=lsGet('h32_'+id); if(v!==null) el.open=v==='1'; el.addEventListener('toggle', function(){ lsSet('h32_'+id, el.open?'1':'0'); }); });
