@@ -148,19 +148,19 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
     <div class="gbtns" style="margin-top:9px"><button id="gauto" style="flex:1">▶️ Auto — λύσε το παζλ</button></div>
     <label style="display:flex;align-items:flex-start;gap:8px;margin-top:8px;font-size:.88rem;cursor:pointer"><input type="checkbox" id="seqmode" style="margin-top:3px"><span>🔢 <b>Στη σειρά</b> (όχι τυχαία) — δοκιμάζει κάθε συνδυασμό <b>μία φορά</b> και σταματά όταν τελειώσει το εύρος.</span></label>
     <div style="border:1px solid var(--line);border-radius:12px;padding:11px;margin-top:9px">
-      <div style="font-weight:800;font-size:.86rem;margin-bottom:8px">🔎 Φίλτρα (στα ελεύθερα bit)</div>
+      <label style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:.86rem;margin-bottom:8px;cursor:pointer"><input type="checkbox" id="f-enable"><span>🔎 Φίλτρα (στα ελεύθερα bit) — <b>ενεργά</b></span></label>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:.86rem">
         <span>Πλήθος «1»: από</span>
-        <input id="f-onesmin" type="number" min="0" inputmode="numeric" placeholder="0" style="width:58px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
+        <input id="f-onesmin" type="number" min="0" inputmode="numeric" value="27" style="width:58px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
         <span>έως</span>
-        <input id="f-onesmax" type="number" min="0" inputmode="numeric" placeholder="όλα" style="width:58px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
+        <input id="f-onesmax" type="number" min="0" inputmode="numeric" value="43" style="width:58px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
         <button id="f-balance" style="font-family:var(--body);font-weight:800;font-size:.82rem;cursor:pointer;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:9px;padding:7px 10px">ίσα 0/1</button>
       </div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.86rem">
         <span>Μέγιστο σερί ίδιων bit:</span>
-        <input id="f-maxrun" type="number" min="0" inputmode="numeric" placeholder="χωρίς όριο" style="width:110px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
+        <input id="f-maxrun" type="number" min="0" inputmode="numeric" value="10" style="width:110px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
       </div>
-      <div class="note" id="f-info" style="margin-top:8px">Άφησέ τα κενά για κανένα φίλτρο. Τα φίλτρα ισχύουν όταν πατήσεις ▶️ Auto.</div>
+      <div class="note" id="f-info" style="margin-top:8px">Default (για #71): 27–43 άσσοι & σερί ≤10 → ~96% να περιέχει το σωστό. Τσέκαρε «ενεργά» για να ισχύσουν. (Σε μικρά παζλ άφησέ τα ανενεργά.)</div>
     </div>
     <div class="note" id="autostat" style="margin-top:6px;text-align:center"></div>
     <div class="gout">
@@ -805,6 +805,8 @@ async function gen(nbytes){
     freeCount=freePos.length; seqCounter=0n; seqMax=(1n<<BigInt(freeCount));
   }
   function readFilters(){
+    var en=$("f-enable");
+    if(en && !en.checked){ onesMin=0; onesMax=freeCount; maxRunAllowed=0; return; }
     var mn=$("f-onesmin"), mx=$("f-onesmax"), mr=$("f-maxrun");
     onesMin = (mn && mn.value!=="") ? Math.max(0, parseInt(mn.value,10)||0) : 0;
     onesMax = (mx && mx.value!=="") ? (parseInt(mx.value,10)) : freeCount;
