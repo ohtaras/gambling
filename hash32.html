@@ -76,7 +76,7 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
 <div class="card"><details id="dSum" open><summary><b id="lblSum">📊 Σύνοψη ημέρας</b></summary><div id="sum"></div></details></div>
 <div class="card"><details id="dList"><summary><b id="lblList">📋 Όλες οι κληρώσεις της ημέρας</b> <span class="muted" id="cnt" style="font-size:13px"></span></summary>
   <div class="scroll" style="margin-top:6px"><table id="tbl"></table></div></details></div>
-<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v28 · 14/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v29 · 14/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
 </div>
 <div id="nav"><button data-v="dprev" class="dy" title="Προηγούμενη μέρα">◀📅</button><button data-v="-10">⏪10</button><button data-v="-1">◀</button><button data-v="live" class="live">🟢</button><button data-v="1">▶</button><button data-v="10">10⏩</button><button data-v="dnext" class="dy" title="Επόμενη μέρα">📅▶</button></div>
 <script>
@@ -158,12 +158,12 @@ function render(){ chipsRender(); var nbx=$('nav').children; for(var z=0;z<nbx.l
   $('tbl').innerHTML=h; $('hName').textContent=ALGS[ALG].n+' · ψηφία'; $('cfgLbl').textContent='· '+ALGS[ALG].n+' · '+INS[INP].n; $('cfgEx').innerHTML='Μέσα στο hash: <code style="word-break:break-all">'+d.str+'</code>'; if($('dCmp').open) cmpRender();
   /* 💶 σύνοψη ανά πλήθος αριθμών της πρόβλεψης: κατανομή k/K και χρήματα (απλή στήλη 0,50€) */
   var G={}, ST=0, WN=0, BIG=[];
-  for(var q0=1;q0<=N;q0+=RUN){ var P2=L[q0-1].P, K=P2.n.length; if(K<1||K>12) continue; for(var rr=0;rr<RUN && q0+rr<=N;rr++){ var q2=q0+rr, hh2=hitsOf(P2,L[q2]).length, w=(PAYS[K]||{})[hh2]||0, g=G[K]||(G[K]={n:0,d:{},st:0,w:0});
+  for(var q0=1;q0<=N;q0++){ var P2=L[q0-1].P, K=P2.n.length; if(K<1||K>12) continue; for(var rr=0;rr<RUN && q0+rr<=N;rr++){ var q2=q0+rr, hh2=hitsOf(P2,L[q2]).length, w=(PAYS[K]||{})[hh2]||0, g=G[K]||(G[K]={n:0,d:{},st:0,w:0});
     g.n++; g.d[hh2]=(g.d[hh2]||0)+1; g.st+=0.5; g.w+=w; ST+=0.5; WN+=w; if(w>=10) BIG.push({x:L[q2], K:K, h:hh2, w:w}); } }
-  var gh='<div class="scroll" style="max-height:none;margin-top:8px"><table><tr><th>Αριθμοί</th><th>Κληρ.</th><th>Τι έπιασε</th><th>Πόνταρε</th><th>Κέρδισε</th></tr>'+
+  var gh='<div class="scroll" style="max-height:none;margin-top:8px"><table><tr><th>Αριθμοί</th><th>'+(RUN>1?'Στήλες':'Κληρ.')+'</th><th>Τι έπιασε</th><th>Πόνταρε</th><th>Κέρδισε</th></tr>'+
     Object.keys(G).sort(function(a,b){ return b-a; }).map(function(K){ var g=G[K], ks=Object.keys(g.d).sort(function(a,b){ return b-a; }); return '<tr><td><b>'+K+'</b></td><td>'+g.n+'</td><td>'+ks.map(function(k){ var pay=(PAYS[K]||{})[k]; return '<span style="white-space:nowrap'+(pay?';color:var(--hit);font-weight:800':'')+'">'+k+'/'+K+' ×'+g.d[k]+'</span>'; }).join(' · ')+'</td><td>'+eur(g.st)+'</td><td style="font-weight:700;color:'+(g.w>=g.st?'#22c55e':'#f87171')+'">'+eur(g.w)+'</td></tr>'; }).join('')+
-    '<tr style="font-weight:800"><td>Όλα</td><td>'+tn+'</td><td></td><td>'+eur(ST)+'</td><td style="color:'+(WN>=ST?'#22c55e':'#f87171')+'">'+eur(WN)+'</td></tr></table></div>'+
-    '<div style="margin-top:6px">💶 Με μία απλή στήλη 0,50€ σε κάθε κλήρωση'+(RUN>1?' — κάθε πρόβλεψη για '+RUN+' κληρώσεις, μετά η καινούργια':'')+': πόνταρε <b>'+eur(ST)+'</b>, κέρδισε <b>'+eur(WN)+'</b> → <b style="color:'+(WN>=ST?'#22c55e':'#f87171')+'">'+(WN-ST>=0?'+':'')+eur(WN-ST)+'</b> ('+Math.round(WN/ST*100)+'% επιστροφή · μακροπρόθεσμα το ΚΙΝΟ επιστρέφει ~70%)</div>'+
+    '<tr style="font-weight:800"><td>Όλα</td><td>'+Object.keys(G).reduce(function(t,K){ return t+G[K].n; },0)+'</td><td></td><td>'+eur(ST)+'</td><td style="color:'+(WN>=ST?'#22c55e':'#f87171')+'">'+eur(WN)+'</td></tr></table></div>'+
+    '<div style="margin-top:6px">💶 '+(RUN>1?'Με απλές στήλες 0,50€':'Με μία απλή στήλη 0,50€ σε κάθε κλήρωση')+(RUN>1?' — <b>κάθε</b> πρόβλεψη παίζεται για '+RUN+' συνεχόμενες κληρώσεις (όπως η στήλη της λίστας, οπότε τρέχουν μέχρι '+RUN+' στήλες μαζί)':'')+': πόνταρε <b>'+eur(ST)+'</b>, κέρδισε <b>'+eur(WN)+'</b> → <b style="color:'+(WN>=ST?'#22c55e':'#f87171')+'">'+(WN-ST>=0?'+':'')+eur(WN-ST)+'</b> ('+Math.round(WN/ST*100)+'% επιστροφή · μακροπρόθεσμα το ΚΙΝΟ επιστρέφει ~70%)</div>'+
     (BIG.length ? '<div class="muted" style="font-size:12.5px;margin-top:4px">🏆 Τα μεγαλύτερα: '+BIG.sort(function(a,b){ return b.w-a.w; }).slice(0,5).map(function(z){ return '<b style="color:var(--hit)">'+z.h+'/'+z.K+'</b> '+tL(z.x.t)+' (#'+z.x.id+') '+eur(z.w); }).join(' · ')+'</div>' : '');
   var DY='';
   if(DAYS>1){ var byD={}; for(var q3=1;q3<=N;q3++){ var P3=L[q3-1].P, K3=P3.n.length, dk=fmtD.format(new Date(L[q3].t)), hh3=hitsOf(P3,L[q3]).length, z3=byD[dk]||(byD[dk]={n:0,h:0,k:0,st:0,w:0}); z3.n++; z3.h+=hh3; z3.k+=K3; if(K3>=1&&K3<=12){ z3.st+=0.5; z3.w+=(PAYS[K3]||{})[hh3]||0; } }
@@ -171,7 +171,7 @@ function render(){ chipsRender(); var nbx=$('nav').children; for(var z=0;z<nbx.l
   $('sum').innerHTML='<div style="margin-top:6px"><b>'+ALGS[ALG].n+'</b> · '+INS[INP].n+' · '+tn+' κληρώσεις · κατά μέσο όρο <b>'+(tk/tn).toFixed(1).replace('.',',')+'</b> αριθμοί ανά πρόβλεψη · έπιασε <b>'+th+'</b> από '+tk+' = <b>'+(100*th/tk).toFixed(1).replace('.',',')+'%</b> <span class="muted">(η τύχη: 25%)</span></div>'+gh+DY; }
 function cmpRender(){ if(L.length<2){ $('cmp').innerHTML=''; return; } var rows=[];
   Object.keys(ALGS).forEach(function(a){ Object.keys(INS).forEach(function(k){ var C={}, st=0, w=0, n=0;
-    for(var q0=1;q0<L.length;q0+=RUN){ var p0=L[q0-1], P=predOf(ALGS[a].f(INS[k].f(p0,p0.s))), K=P.n.length; if(K<1||K>12) continue; for(var rr=0;rr<RUN && q0+rr<L.length;rr++){ var q=q0+rr, hs=P.n.filter(function(x){ return L[q].s.indexOf(x)>=0; }).length, pay=(PAYS[K]||{})[hs]||0;
+    for(var q0=1;q0<L.length;q0++){ var p0=L[q0-1], P=predOf(ALGS[a].f(INS[k].f(p0,p0.s))), K=P.n.length; if(K<1||K>12) continue; for(var rr=0;rr<RUN && q0+rr<L.length;rr++){ var q=q0+rr, hs=P.n.filter(function(x){ return L[q].s.indexOf(x)>=0; }).length, pay=(PAYS[K]||{})[hs]||0;
       n++; st+=0.5; w+=pay; if(hs>=3 || (hs===K && K>=2)){ var key=hs+'/'+K; C[key]=(C[key]||0)+1; } } }
     var ks=Object.keys(C).sort(function(x,y){ var a1=x.split('/'), b1=y.split('/'); return (b1[0]-a1[0]) || (a1[1]-b1[1]); });
     rows.push({a:a, k:k, C:C, ks:ks, st:st, w:w, n:n}); }); });
