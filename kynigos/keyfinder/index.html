@@ -822,8 +822,13 @@ async function gen(nbytes){
     if(!autoRun) return;
     var fv=null;
     if(seqMode){
-      while(seqCounter<seqMax){ var c=seqCounter; seqCounter++; if(passFilter(c)){ fv=c; break; } }
-      if(fv===null){ autoDone(); return; }
+      var skipped=0;
+      while(seqCounter<seqMax){ var c=seqCounter; seqCounter++; if(passFilter(c)){ fv=c; break; } if(++skipped>=4000) break; }
+      if(fv===null){
+        if(seqCounter>=seqMax){ autoDone(); return; }
+        if(autoRun) autoTimer=setTimeout(autoStep, 0); // προσπέρασε παρτίδα χωρίς «πάγωμα»
+        return;
+      }
     } else {
       var exact=(onesMin===onesMax);
       for(var tryi=0; tryi<300; tryi++){ var cand = exact ? randExactOnes(onesMin) : randFreeVal(); if(passFilter(cand)){ fv=cand; break; } }

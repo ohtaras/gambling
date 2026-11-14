@@ -226,8 +226,9 @@ function passFilter(r){ if(!filtEnabled) return true; var o=popcnt(r); if(o<ones
 async function attempt(){
   var r=null;
   if(seqMode){
-    while(seqCounter<(1n<<70n)){ var c=seqCounter & ((1n<<70n)-1n); seqCounter++; if(passFilter(c)){ r=c; break; } }
-    if(r===null){ stop(); return true; }
+    var skipped=0;
+    while(seqCounter<(1n<<70n)){ var c=seqCounter & ((1n<<70n)-1n); seqCounter++; if(passFilter(c)){ r=c; break; } if(++skipped>=4000) break; }
+    if(r===null){ if(seqCounter>=(1n<<70n)){ stop(); return true; } return false; } // προσπέρασε παρτίδα, χωρίς πάγωμα
   } else {
     for(var i=0;i<400;i++){ var cand=randomFree(); if(passFilter(cand)){ r=cand; break; } }
     if(r===null) r=randomFree();
