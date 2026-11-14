@@ -87,6 +87,7 @@ h1{font-family:var(--disp);font-weight:700;font-size:2.1rem;margin:6px 0 2px;let
   <p class="odds" style="margin:-6px 2px 0">Τα 70 κουτάκια = τα <b>άγνωστα</b> bit. Τα ψηλά (=0) και το bit 70 (=1) είναι ήδη <b>κλειδωμένα</b> μέσα στο κλειδί (εύρος 2⁷⁰…2⁷¹−1).</p>
 
   <button class="auto" id="autobtn">▶️ Auto</button>
+  <div id="pwarn" class="odds" style="margin:0;color:var(--warn)"></div>
   <label style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:.85rem;color:var(--soft);cursor:pointer"><input type="checkbox" id="seqmode"><span>🔢 Στη σειρά (όχι τυχαία) — κάθε συνδυασμό μία φορά</span></label>
 
   <div style="border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--panel)">
@@ -253,6 +254,8 @@ function start(){ if(running||locked)return; seqMode=$("seqmode")&&$("seqmode").
     onesMin=Math.min(onesMin,70); onesMax=Math.min(onesMax,70);
     maxRunAllowed=(mr&&mr.value!=="")?Math.max(0,parseInt(mr.value,10)||0):0;
   }
+  if(seqMode && filtEnabled){ var w=$("pwarn"); if(w) w.innerHTML="⚠️ «Στη σειρά» + φίλτρο δεν έχει νόημα στο #71 (70 bit) — θα προσπερνούσε εκατομμύρια τιμές μία-μία. Ξετσέκαρε το «Στη σειρά» και χρησιμοποίησε 🎲 Τυχαίο με το φίλτρο."; return; }
+  var pw=$("pwarn"); if(pw) pw.innerHTML="";
   running=true; t0=Date.now(); tries=0; var b=$("autobtn"); b.textContent="⏹️ Stop"; b.classList.add("on"); loop(); }
 function stop(){ running=false; if(timer)clearTimeout(timer); var b=$("autobtn"); b.textContent="▶️ Auto"; b.classList.remove("on"); }
 $("autobtn").onclick=function(){ running?stop():start(); };
