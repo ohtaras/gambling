@@ -49,6 +49,7 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
 <details class="muted" style="font-size:13px"><summary>ℹ️ Πώς δουλεύει</summary>Κάθε κλήρωση: οι 20 αριθμοί <b>ταξινομημένοι</b> κολλητά σε έναν αριθμό → <b>CRC32</b> (32 bit) σε ψηφία → χωρίζεται ανά δύο ψηφία (π.χ. 4255612109 → 42 55 61 21 9). Πάνω από 80 αντιστρέφεται (81→18)· αν πάλι δεν κάνει (98→89) γίνεται δύο μονοψήφιοι (8, 9)· το 99 γίνεται 9. Τα μηδενικά και τα διπλά φεύγουν. Αυτοί οι αριθμοί είναι η <b>πρόβλεψη για την επόμενη κλήρωση</b> και αξιολογούνται μόλις βγει.</details>
 <div class="top"><input type="date" id="day"><button class="btn" id="today">Σήμερα</button><button class="btn" id="liveT" title="Αυτόματη ενημέρωση με κάθε νέα κλήρωση">🔄 Live</button><span class="muted" id="st" style="font-size:13px"></span></div>
 
+<div class="card" id="cdCard" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px"><span class="muted" style="font-size:13px" id="cdLbl">Επόμενη κλήρωση</span><b id="cd" style="font-size:22px;font-variant-numeric:tabular-nums">—</b></div>
 <div class="card" id="cur">
   <div class="dt"><b id="cTtl">—</b><span class="muted" id="cSub"></span></div>
   <div class="pr" id="pIn"></div>
@@ -64,7 +65,7 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
 <div class="card"><details id="dSum" open><summary><b>📊 Αξιολόγηση ημέρας</b></summary><div id="sum"></div></details></div>
 <div class="card"><details id="dList"><summary><b>📋 Όλες οι κληρώσεις της ημέρας</b> <span class="muted" id="cnt" style="font-size:13px"></span></summary>
   <div class="scroll" style="margin-top:6px"><table id="tbl"></table></div></details></div>
-<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v20 · 13/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v21 · 14/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
 </div>
 <div id="nav"><button data-v="-10">⏪10</button><button data-v="-1">◀</button><button data-v="live" class="live">🟢</button><button data-v="1">▶</button><button data-v="10">10⏩</button></div>
 <script>
@@ -87,7 +88,7 @@ function predOf(h){ var d=String(h), parts=[], out=[];
 function mk(d){ var s=d.arr.slice().sort(function(a,b){ return a-b; }), str=s.join(''), h=crc32(str); return {id:d.id, t:d.t, s:s, str:str, h:h, P:predOf(h)}; }
 function hitsOf(P, d){ return P.n.filter(function(x){ return d.s.indexOf(x)>=0; }); }
 function chips(n, d){ return '<div class="chips">'+n.slice().sort(function(a,b){ return a-b; }).map(function(x){ return '<span'+(d&&d.s.indexOf(x)>=0?' class="hit"':'')+'>'+x+'</span>'; }).join('')+'</div>'; }
-async function getJ(u){ var e; for(var t=0;t<4;t++){ try{ var r=await fetch(u+(u.indexOf('?')<0?'?':'&')+'_='+Date.now(),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json(); }catch(x){ e=x; await new Promise(function(z){ setTimeout(z,500*(t+1)); }); } } throw e; }
+async function getJ(u){ var e; for(var t=0;t<4;t++){ try{ var ac=typeof AbortController!=='undefined'?new AbortController():null, to=ac?setTimeout(function(){ ac.abort(); },9000):0; var r=await fetch(u+(u.indexOf('?')<0?'?':'&')+'_='+Date.now(),{cache:'no-store', signal:ac?ac.signal:undefined}); clearTimeout(to); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json(); }catch(x){ e=x; await new Promise(function(z){ setTimeout(z,500*(t+1)); }); } } throw e; }
 async function fetchDay(ds){ var u=API+'/draw-date/'+ds+'/'+ds+'?size=10&page=', j=await getJ(u+0), all=(j.content||[]).slice(), tp=j.totalPages||1, pg=[];
   for(var p=1;p<tp;p++) pg.push(p);
   while(pg.length){ var part=pg.splice(0,6), rs=await Promise.all(part.map(function(p){ return getJ(u+p); })); rs.forEach(function(x){ all=all.concat(x.content||[]); }); }
@@ -121,7 +122,23 @@ $('nav').addEventListener('click', function(e){ var b=e.target.closest('button')
   if(v==='live'){ VI=null; if(DAY!==today()){ DAY=today(); $('day').value=DAY; load(DAY); return; } } else { var n=Math.max(1,Math.min(L.length-1,i+(+v))); VI=n===L.length-1?null:n; } render(); });
 $('tbl').addEventListener('click', function(e){ var r=e.target.closest('tr[data-i]'); if(!r) return; var i=+r.dataset.i; VI=i===L.length-1?null:i; render(); window.scrollTo({top:0,behavior:'smooth'}); });
 (function(){ var B=$('liveT'); function u(){ B.classList.toggle('on',LIVE); B.textContent=LIVE?'🔄 Live ON':'🔄 Live OFF'; } B.addEventListener('click', function(){ LIVE=!LIVE; lsSet('h32_live',LIVE?'1':'0'); u(); }); u(); })();
-setInterval(function(){ if(LIVE && DAY===today() && !document.hidden) load(DAY, true); }, 30000);
+/* 🟢 Live: κάθε 10″ ρωτάει την τελευταία κλήρωση· με νέα κλήρωση φέρνει μόνο τις καινούργιες (όχι όλη τη μέρα) */
+var NEXT=null, POLLING=false;
+async function poll(){ if(POLLING) return; POLLING=true;
+  try{ var j=await getJ(API+'/last-result-and-active'); if(j.active) NEXT={id:j.active.drawId, t:j.active.drawTime};
+    var lst=j.last; if(LIVE && lst && DAY===today() && L.length && lst.drawId>L[L.length-1].id && !LOADING){ var atEnd=VI===null, add=[];
+      for(var id=L[L.length-1].id+1; id<=lst.drawId; id++){ var x=id===lst.drawId?lst:await getJ(API+'/'+id), w=(x&&x.winningNumbers)||{}; if(w.list&&w.list.length===20) add.push(mk({id:x.drawId, t:x.drawTime, arr:w.list.slice()})); }
+      if(add.length && DAY===today()){ L=L.concat(add); if(atEnd) VI=null; render(); $('st').textContent=''; } }
+    else if(LIVE && lst && DAY!==today() && VI===null && L.length && fmtD.format(new Date(lst.drawTime))===today() && DAY===fmtD.format(new Date(Date.now()-86400000))){ /* πέρασε η μέρα: πάει στη νέα μέρα */ DAY=today(); $('day').value=DAY; $('day').max=DAY; load(DAY); }
+  }catch(e){ $('st').textContent='⚠️ δεν απαντά το Allwyn'; }
+  POLLING=false; }
+setInterval(function(){ if(!document.hidden) poll(); }, 10000);
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) poll(); });
+setInterval(function(){ var el=$('cd'); if(!NEXT){ el.textContent='—'; return; } var ms=NEXT.t-Date.now();
+  $('cdLbl').textContent='Επόμενη κλήρωση #'+NEXT.id+' · '+fmtT.format(new Date(NEXT.t));
+  if(ms>0){ var m=Math.floor(ms/60000), sc=Math.floor(ms/1000)%60; el.textContent=m+':'+('0'+sc).slice(-2); el.style.color=ms<30000?'#f59e0b':''; }
+  else { el.textContent='⏳ κλήρωση…'; el.style.color='#22c55e'; if(-ms>4000 && (-ms)%5000<1000) poll(); } }, 1000);
+poll();
 ['dBoard','dHash','dSum','dList'].forEach(function(id){ var el=$(id), v=lsGet('h32_'+id); if(v!==null) el.open=v==='1'; el.addEventListener('toggle', function(){ lsSet('h32_'+id, el.open?'1':'0'); }); });
 render(); load(DAY);
 </script>
