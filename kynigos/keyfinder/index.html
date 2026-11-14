@@ -147,6 +147,21 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
     </div>
     <div class="gbtns" style="margin-top:9px"><button id="gauto" style="flex:1">▶️ Auto — λύσε το παζλ</button></div>
     <label style="display:flex;align-items:flex-start;gap:8px;margin-top:8px;font-size:.88rem;cursor:pointer"><input type="checkbox" id="seqmode" style="margin-top:3px"><span>🔢 <b>Στη σειρά</b> (όχι τυχαία) — δοκιμάζει κάθε συνδυασμό <b>μία φορά</b> και σταματά όταν τελειώσει το εύρος.</span></label>
+    <div style="border:1px solid var(--line);border-radius:12px;padding:11px;margin-top:9px">
+      <div style="font-weight:800;font-size:.86rem;margin-bottom:8px">🔎 Φίλτρα (στα ελεύθερα bit)</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:.86rem">
+        <span>Πλήθος «1»: από</span>
+        <input id="f-onesmin" type="number" min="0" inputmode="numeric" placeholder="0" style="width:58px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
+        <span>έως</span>
+        <input id="f-onesmax" type="number" min="0" inputmode="numeric" placeholder="όλα" style="width:58px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
+        <button id="f-balance" style="font-family:var(--body);font-weight:800;font-size:.82rem;cursor:pointer;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:9px;padding:7px 10px">ίσα 0/1</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.86rem">
+        <span>Μέγιστο σερί ίδιων bit:</span>
+        <input id="f-maxrun" type="number" min="0" inputmode="numeric" placeholder="χωρίς όριο" style="width:110px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
+      </div>
+      <div class="note" id="f-info" style="margin-top:8px">Άφησέ τα κενά για κανένα φίλτρο. Τα φίλτρα ισχύουν όταν πατήσεις ▶️ Auto.</div>
+    </div>
     <div class="note" id="autostat" style="margin-top:6px;text-align:center"></div>
     <div class="gout">
       <div class="af"><span class="al">Κλειδί (hex, 64 ψηφία)</span><div class="av" id="g-hex">—</div></div>
@@ -629,6 +644,7 @@ async function gen(nbytes){
   var locked=false, peeking=false, curKey=null, lockMode=false, puzzleActive=false;
   var autoRun=false, autoTimer=null, autoTries=0, autoT0=0;
   var seqMode=false, seqCounter=0n, seqMax=0n, freePos=[], fixedBase=0n;
+  var freeCount=0, onesMin=0, onesMax=256, maxRunAllowed=0;
   var fixedMask=new Array(256).fill(false);
   var PUZZLES=[
     {n:6,  key:42n,          label:"🎓 Δοκιμαστικό — κλειδί 42 (6 bit)", fixMSB:false},
@@ -775,42 +791,53 @@ async function gen(nbytes){
   $("preveal").onclick=function(){ stopAuto(); if(curKey==null){ $("ghint").innerHTML="Αυτός ο στόχος δεν έχει γνωστή λύση (αυθεντικός γρίφος)."; return; } peeking=true; setFromBig(curKey); };
   $("glock").onclick=function(){ lockMode=!lockMode; this.classList.toggle("active",lockMode); gridEl.classList.toggle("lockmode",lockMode); $("ghint").innerHTML = lockMode ? "🔒 <b>Λειτουργία κλειδώματος ΟΝ.</b> Πάτα κουτάκια για να τα κλειδώσεις/ξεκλειδώσεις — <b>δεν</b> αλλάζει η τιμή τους, απλώς «παγώνουν». Ξαναπάτα το κουμπί για να γυρίσεις στο κανονικό." : "✏️ Κανονική λειτουργία: πάτα κουτάκια για να αλλάξεις 0↔1."; };
   function updateAutoStat(){ var s=(Date.now()-autoT0)/1000; $("autostat").textContent="δοκιμές: "+autoTries.toLocaleString("el-GR")+(s>0?" · "+(autoTries/s).toFixed(1)+"/δευτ":""); }
-  function prepSeq(){
+  function freeCountNow(){ var c=0; for(var p=0;p<256;p++) if(!fixedMask[p]) c++; return c; }
+  function popcnt(x){ var c=0; while(x>0n){ if(x&1n)c++; x>>=1n; } return c; }
+  function maxRunBits(x,n){ if(n<=0) return 0; var mr=1,cur=1,prev=(x&1n); for(var i=1;i<n;i++){ var bit=(x>>BigInt(i))&1n; if(bit===prev){cur++; if(cur>mr)mr=cur;} else {cur=1;prev=bit;} } return mr; }
+  function passFilter(fv){ var ones=popcnt(fv); if(ones<onesMin||ones>onesMax) return false; if(maxRunAllowed>0 && maxRunBits(fv,freeCount)>maxRunAllowed) return false; return true; }
+  function buildK(fv){ var k=fixedBase; for(var j=0;j<freePos.length;j++){ if((fv>>BigInt(j))&1n) k|=(1n<<BigInt(freePos[j])); } return k; }
+  function randFreeVal(){ var nb=Math.ceil(freeCount/8)||1; var b=new Uint8Array(nb); crypto.getRandomValues(b); var v=0n; for(var i=0;i<nb;i++) v=(v<<8n)|BigInt(b[i]); return v & ((1n<<BigInt(freeCount))-1n); }
+  function randExactOnes(k){ var pos=[],i; for(i=0;i<freeCount;i++)pos.push(i); for(i=0;i<k;i++){ var j=i+Math.floor(Math.random()*(freeCount-i)); var t=pos[i];pos[i]=pos[j];pos[j]=t; } var v=0n; for(i=0;i<k;i++) v|=(1n<<BigInt(pos[i])); return v; }
+  function prep(){
     freePos=[]; fixedBase=0n;
     for(var p=0;p<256;p++){ if(fixedMask[p]){ if(bits[p]) fixedBase|=(1n<<BigInt(255-p)); } else { freePos.push(255-p); } }
     freePos.sort(function(a,b){return a-b;});
-    seqCounter=0n; seqMax=(1n<<BigInt(freePos.length));
+    freeCount=freePos.length; seqCounter=0n; seqMax=(1n<<BigInt(freeCount));
   }
-  function nextSeqKey(){
-    if(seqCounter>=seqMax) return null;
-    var k=fixedBase;
-    for(var j=0;j<freePos.length;j++){ if((seqCounter>>BigInt(j))&1n) k|=(1n<<BigInt(freePos[j])); }
-    seqCounter++;
-    return k;
+  function readFilters(){
+    var mn=$("f-onesmin"), mx=$("f-onesmax"), mr=$("f-maxrun");
+    onesMin = (mn && mn.value!=="") ? Math.max(0, parseInt(mn.value,10)||0) : 0;
+    onesMax = (mx && mx.value!=="") ? (parseInt(mx.value,10)) : freeCount;
+    if(isNaN(onesMax)) onesMax=freeCount;
+    onesMin=Math.min(onesMin,freeCount); onesMax=Math.min(onesMax,freeCount);
+    maxRunAllowed = (mr && mr.value!=="") ? Math.max(0, parseInt(mr.value,10)||0) : 0;
   }
   function autoDone(){
     stopAuto();
-    $("ghint").innerHTML="✅ <b>Ψάχτηκε ΟΛΟ το εύρος</b> ("+autoTries.toLocaleString("el-GR")+" συνδυασμοί) — το κλειδί δεν ταιριάζει με αυτά τα κλειδωμένα bit.";
+    $("ghint").innerHTML="✅ <b>Ψάχτηκε ΟΛΟ το εύρος</b> ("+autoTries.toLocaleString("el-GR")+" δοκιμές) — καμία δεν ταίριαξε με αυτά τα κλειδωμένα bit / φίλτρα.";
   }
   async function autoStep(){
     if(!autoRun) return;
-    var k;
+    var fv=null;
     if(seqMode){
-      k=nextSeqKey();
-      if(k===null){ autoDone(); return; }
+      while(seqCounter<seqMax){ var c=seqCounter; seqCounter++; if(passFilter(c)){ fv=c; break; } }
+      if(fv===null){ autoDone(); return; }
     } else {
-      var rnd=new Uint8Array(32); crypto.getRandomValues(rnd);
-      k=0n; for(var p=0;p<256;p++){ var v=fixedMask[p]?bits[p]:((rnd[p>>3]>>(p&7))&1); if(v)k|=(1n<<BigInt(255-p)); }
+      var exact=(onesMin===onesMax);
+      for(var tryi=0; tryi<300; tryi++){ var cand = exact ? randExactOnes(onesMin) : randFreeVal(); if(passFilter(cand)){ fv=cand; break; } }
+      if(fv===null){ fv=randFreeVal(); }
     }
+    var k=buildK(fv);
     autoTries++; renderBits(k);
     try{ await doCompute(); }catch(e){}
     if(locked){ stopAuto(); return; }
     updateAutoStat();
     if(autoRun) autoTimer=setTimeout(autoStep, 60);
   }
-  function startAuto(){ if(autoRun||locked)return; if(!puzzleActive){ $("ghint").innerHTML="▶️ Το <b>Auto</b> δουλεύει όταν έχεις διαλέξει <b>παζλ</b> (πάτα ένα πιο πάνω). Ψάχνει αυτόματα μόνο μέσα στο εύρος του."; return; } seqMode=$("seqmode")&&$("seqmode").checked; if(seqMode) prepSeq(); autoRun=true; autoTries=0; autoT0=Date.now(); $("gauto").textContent="⏹️ Stop"; $("gauto").classList.add("active"); autoStep(); }
+  function startAuto(){ if(autoRun||locked)return; if(!puzzleActive){ $("ghint").innerHTML="▶️ Το <b>Auto</b> δουλεύει όταν έχεις διαλέξει <b>παζλ</b> (πάτα ένα πιο πάνω). Ψάχνει αυτόματα μόνο μέσα στο εύρος του."; return; } seqMode=$("seqmode")&&$("seqmode").checked; prep(); readFilters(); if(onesMin>onesMax){ $("ghint").innerHTML="⚠️ Αντιφατικά φίλτρα: τα ελάχιστα «1» είναι περισσότερα από τα μέγιστα."; return; } autoRun=true; autoTries=0; autoT0=Date.now(); $("gauto").textContent="⏹️ Stop"; $("gauto").classList.add("active"); autoStep(); }
   function stopAuto(){ autoRun=false; if(autoTimer)clearTimeout(autoTimer); var g=$("gauto"); if(g){ g.textContent="▶️ Auto — λύσε το παζλ"; g.classList.remove("active"); } }
   $("gauto").onclick=function(){ autoRun?stopAuto():startAuto(); };
+  (function(){ var fb=$("f-balance"); if(!fb) return; fb.onclick=function(){ var fc=freeCountNow(); var h=Math.floor(fc/2); if($("f-onesmin"))$("f-onesmin").value=h; if($("f-onesmax"))$("f-onesmax").value=fc-h; $("f-info").innerHTML="Ισορροπημένο: ~<b>"+h+"</b> άσσοι & <b>"+(fc-h)+"</b> μηδενικά (σε "+fc+" ελεύθερα bit). Για το #71 → 35/35."; }; })();
   setFromBig(0n);
   /* Επαναφορά κλειδώματος αν η σελίδα είχε κλειδώσει πριν (ακόμη κι μετά από ανανέωση) */
   try{
