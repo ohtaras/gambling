@@ -254,8 +254,8 @@ function start(){ if(running||locked)return; seqMode=$("seqmode")&&$("seqmode").
     onesMin=Math.min(onesMin,70); onesMax=Math.min(onesMax,70);
     maxRunAllowed=(mr&&mr.value!=="")?Math.max(0,parseInt(mr.value,10)||0):0;
   }
-  if(seqMode && filtEnabled){ var w=$("pwarn"); if(w) w.innerHTML="⚠️ «Στη σειρά» + φίλτρο δεν έχει νόημα στο #71 (70 bit) — θα προσπερνούσε εκατομμύρια τιμές μία-μία. Ξετσέκαρε το «Στη σειρά» και χρησιμοποίησε 🎲 Τυχαίο με το φίλτρο."; return; }
-  var pw=$("pwarn"); if(pw) pw.innerHTML="";
+  if(seqMode && filtEnabled){ seqMode=false; var sc=$("seqmode"); if(sc) sc.checked=false; var w=$("pwarn"); if(w) w.innerHTML="ℹ️ «Στη σειρά» + φίλτρο δεν γίνεται στο #71 — γύρισα αυτόματα σε 🎲 Τυχαίο με το φίλτρο."; }
+  else { var pw=$("pwarn"); if(pw) pw.innerHTML=""; }
   running=true; t0=Date.now(); tries=0; var b=$("autobtn"); b.textContent="⏹️ Stop"; b.classList.add("on"); loop(); }
 function stop(){ running=false; if(timer)clearTimeout(timer); var b=$("autobtn"); b.textContent="▶️ Auto"; b.classList.remove("on"); }
 $("autobtn").onclick=function(){ running?stop():start(); };
