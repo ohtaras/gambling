@@ -37,6 +37,9 @@ tr{cursor:pointer}tr.sel{background:rgba(250,204,21,.13)}
 summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-details-marker{display:none}details>summary::before{content:"▸ ";color:var(--muted)}details[open]>summary::before{content:"▾ "}
 .board div.pr0{outline:2px solid #22c55e;outline-offset:-2px}.board div.on.pr0{outline:3px solid #16a34a;box-shadow:0 0 0 2px #fff inset}
 .pr{margin-top:8px}.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}.chips span{min-width:32px;padding:4px 6px;border-radius:8px;background:var(--cell);font-weight:800;text-align:center}.chips span.hit{background:var(--hit);color:#111}.nx{border-top:1px solid var(--line);padding-top:8px}
+.dchips{display:flex;gap:6px;margin-top:10px;overflow-x:auto}.dchips button{flex:1 0 auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:6px 10px;font-weight:700;font-size:14px;cursor:pointer}.dchips button.on{background:#a16207;border-color:#facc15;color:#fff}.dchips small{display:block;font-weight:400;font-size:11px;color:var(--muted)}.dchips button.on small{color:#fde68a}
+#nav button.dy{background:#312e81;border-color:#4f46e5;font-size:13px}
+@media (max-width:430px){#nav{gap:3px;padding:5px 5px;width:calc(100vw - 16px);justify-content:space-between}#nav button{flex:1 1 0}#nav button{padding:7px 8px;min-width:0;font-size:14px}#nav button[data-v="-1"],#nav button[data-v="1"]{font-size:20px;padding:4px 11px}#nav button.dy{font-size:12px;padding:7px 6px}}
 #nav{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:6px;background:rgba(15,23,42,.94);border:1px solid #334155;border-radius:999px;padding:6px 8px;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9;white-space:nowrap}
 #nav button{background:#1e293b;color:#e5e7eb;border:1px solid #334155;border-radius:999px;font-size:16px;font-weight:800;padding:8px 12px;min-width:44px;cursor:pointer}
 #nav button:disabled{opacity:.35}
@@ -47,8 +50,9 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
 <body><div class="wrap">
 <h1>#️⃣ ΚΙΝΟ Hash 32</h1>
 <details class="muted" style="font-size:13px"><summary>ℹ️ Πώς δουλεύει</summary>Κάθε κλήρωση: οι 20 αριθμοί <b>ταξινομημένοι</b> κολλητά σε έναν αριθμό → <b>CRC32</b> (32 bit) σε ψηφία → χωρίζεται ανά δύο ψηφία (π.χ. 4255612109 → 42 55 61 21 9). Πάνω από 80 αντιστρέφεται (81→18)· αν πάλι δεν κάνει (98→89) γίνεται δύο μονοψήφιοι (8, 9)· το 99 γίνεται 9. Τα μηδενικά και τα διπλά φεύγουν. Αυτοί οι αριθμοί είναι η <b>πρόβλεψη για την επόμενη κλήρωση</b> και αξιολογούνται μόλις βγει.</details>
-<div class="top"><input type="date" id="day"><button class="btn" id="today">Σήμερα</button><button class="btn" id="daysT" title="Πόσες μέρες ιστορικό">📅 1 μέρα</button><button class="btn" id="liveT" title="Αυτόματη ενημέρωση με κάθε νέα κλήρωση">🔄 Live</button><span class="muted" id="st" style="font-size:13px"></span></div>
+<div class="top"><input type="date" id="day"><button class="btn" id="today">Σήμερα</button><button class="btn" id="liveT" title="Αυτόματη ενημέρωση με κάθε νέα κλήρωση">🔄 Live</button><span class="muted" id="st" style="font-size:13px"></span></div>
 
+<div class="dchips" id="dayChips"></div>
 <div class="card"><details id="dCfg" open><summary><b>⚙️ Τρόπος hash</b> <span class="muted" id="cfgLbl" style="font-size:13px"></span></summary>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
   <label class="muted" style="font-size:13px;flex:1 1 150px">Hash (32 bit)<br><select id="hAlg" style="width:100%;margin-top:3px;background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px;font-size:15px"></select></label>
@@ -71,9 +75,9 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
 <div class="card"><details id="dSum" open><summary><b id="lblSum">📊 Σύνοψη ημέρας</b></summary><div id="sum"></div></details></div>
 <div class="card"><details id="dList"><summary><b id="lblList">📋 Όλες οι κληρώσεις της ημέρας</b> <span class="muted" id="cnt" style="font-size:13px"></span></summary>
   <div class="scroll" style="margin-top:6px"><table id="tbl"></table></div></details></div>
-<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v24 · 14/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v25 · 14/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
 </div>
-<div id="nav"><button data-v="-10">⏪10</button><button data-v="-1">◀</button><button data-v="live" class="live">🟢</button><button data-v="1">▶</button><button data-v="10">10⏩</button></div>
+<div id="nav"><button data-v="dprev" class="dy" title="Προηγούμενη μέρα">◀📅</button><button data-v="-10">⏪10</button><button data-v="-1">◀</button><button data-v="live" class="live">🟢</button><button data-v="1">▶</button><button data-v="10">10⏩</button><button data-v="dnext" class="dy" title="Επόμενη μέρα">📅▶</button></div>
 <script>
 var API='https://api.opap.gr/draws/v3.0/1100';
 function $(i){ return document.getElementById(i); }
@@ -124,18 +128,18 @@ async function fetchDay(ds){ var u=API+'/draw-date/'+ds+'/'+ds+'?size=10&page=',
   if(all.length){ var minId=Math.min.apply(null, all.map(function(c){ return c.drawId; })); try{ var pv=await getJ(API+'/'+(minId-1)); if(pv&&pv.winningNumbers&&pv.winningNumbers.list) all.push(pv); }catch(e){} }
   var m={}; all.forEach(function(c){ var w=c.winningNumbers||{}; if(w.list&&w.list.length===20) m[c.drawId]={id:c.drawId, t:c.drawTime, arr:w.list.slice()}; });
   return Object.keys(m).map(Number).sort(function(a,b){ return a-b; }).map(function(k){ return mk(m[k]); }); }
-var DAYS=lsGet('h32_days')==='5'?5:1, DAY=today(), L=[], VI=null, LIVE=lsGet('h32_live')!=='0', LOADING=false;
+var DAYS=1, DAY=today(), L=[], VI=null, LIVE=lsGet('h32_live')!=='0', LOADING=false;
 (function(){ var b=''; for(var n=1;n<=80;n++) b+='<div id="b'+n+'">'+n+'</div>'; $('board').innerHTML=b; })();
 function tL(t){ var x=new Date(t); return (DAYS>1 ? fmtD.format(x).slice(8)+'/'+fmtD.format(x).slice(5,7)+' ' : '')+fmtT.format(x); }
-function render(){ var N=L.length-1; var PL=DAYS>1?'των 5 ημερών':'της ημέρας'; $('lblCmp').textContent=DAYS>1?'(5 μέρες)':'(ημέρα)'; $('lblSum').textContent=DAYS>1?'📊 Σύνοψη 5 ημερών':'📊 Σύνοψη ημέρας'; $('lblList').textContent='📋 Όλες οι κληρώσεις '+PL; $('cnt').textContent=N>0?'· '+N:''; if(N<1){ $('cTtl').textContent='Καμία κλήρωση'; $('tbl').innerHTML=''; $('sum').innerHTML=''; return; }
+function render(){ chipsRender(); var nbx=$('nav').children; for(var z=0;z<nbx.length;z++){ if(nbx[z].dataset.v==='dnext') nbx[z].disabled=DAY>=today(); } var N=L.length-1; var PL=DAYS>1?'των 5 ημερών':'της ημέρας'; $('lblCmp').textContent=DAYS>1?'(5 μέρες)':'(ημέρα)'; $('lblSum').textContent=DAYS>1?'📊 Σύνοψη 5 ημερών':'📊 Σύνοψη ημέρας'; $('lblList').textContent='📋 Όλες οι κληρώσεις '+PL; $('cnt').textContent=N>0?'· '+N:''; if(N<1){ $('cTtl').textContent='Καμία κλήρωση'; $('tbl').innerHTML=''; $('sum').innerHTML=''; return; }
   var i=VI===null?N:Math.max(1,VI), d=L[i], pv=L[i-1], set={}, pr={}; d.s.forEach(function(x){ set[x]=1; }); pv.P.n.forEach(function(x){ pr[x]=1; });
   for(var n=1;n<=80;n++) $('b'+n).className=(set[n]?'on':'')+(pr[n]?' pr0':'');
-  $('cTtl').textContent='#'+d.id+' · '+tL(d.t); $('cSub').textContent=(i===N && DAY===today() ? '🟢 τελευταία' : (N-i)+' πριν την τελευταία');
+  $('cTtl').textContent='#'+d.id+' · '+tL(d.t); $('cSub').textContent=(i===N ? (DAY===today() ? '🟢 τελευταία' : '🔚 τελευταία της μέρας') : (N-i)+' πριν την τελευταία');
   var hh=hitsOf(pv.P, d);
   $('pIn').innerHTML='<div class="muted" style="font-size:13px">🔮 Πρόβλεψη από την #'+pv.id+' ('+ALGS[ALG].n+' '+pv.h+'):</div>'+chips(pv.P.n, d)+'<div style="margin-top:4px">Έπιασε <b>'+hh.length+'/'+pv.P.n.length+'</b> <span class="muted">· η τύχη δίνει κατά μέσο όρο '+(pv.P.n.length/4).toFixed(2).replace('.',',')+'</span></div>';
   $('cNum').textContent=d.str; $('cLen').textContent=d.str.length; $('cDec').textContent=d.h; $('cSplit').textContent=d.P.parts.join(' ');
   $('pOut').innerHTML='<div class="muted" style="font-size:13px">➡️ Πρόβλεψη για την <b>#'+(d.id+1)+'</b> από αυτήν ('+d.h+' → '+d.P.parts.join(' ')+'):</div>'+chips(d.P.n, L[i+1])+(L[i+1] ? '<div style="margin-top:4px">Έπιασε <b>'+hitsOf(d.P, L[i+1]).length+'/'+d.P.n.length+'</b></div>' : '<div class="muted" style="margin-top:4px">⏳ Περιμένει την κλήρωση.</div>');
-  var nb=$('nav').children; for(var k=0;k<nb.length;k++){ var v=nb[k].dataset.v; nb[k].disabled = v!=='live' && ((+v<0 && i<=1) || (+v>0 && i===N)); }
+  var nb=$('nav').children; for(var k=0;k<nb.length;k++){ var v=nb[k].dataset.v; if(v==='dprev'||v==='dnext') continue; nb[k].disabled = v!=='live' && ((+v<0 && i<=1) || (+v>0 && i===N)); }
   var h='<tr><th>Ώρα</th><th>Κλήρωση</th><th>Hash</th><th>Πρόβλεψη (από την προηγ.)</th><th>Έπιασε</th></tr>', dist={}, tk=0, th=0, tn=0;
   for(var q=N;q>=1;q--){ var x=L[q], P=L[q-1].P, hs=hitsOf(P,x); dist[hs.length]=(dist[hs.length]||0)+1; tk+=P.n.length; th+=hs.length; tn++;
     h+='<tr data-i="'+q+'"'+(q===i?' class="sel"':'')+'><td>'+tL(x.t)+'</td><td>#'+x.id+'</td><td class="m">'+x.h+'</td><td class="m">'+P.n.slice().sort(function(a,b){ return a-b; }).map(function(z){ return x.s.indexOf(z)>=0?'<b style="color:var(--hit)">'+z+'</b>':z; }).join(' ')+'</td><td><b>'+hs.length+'</b>/'+P.n.length+'</td></tr>'; }
@@ -159,6 +163,8 @@ function cmpRender(){ if(L.length<2){ $('cmp').innerHTML=''; return; } var rows=
   $('cmp').innerHTML='<div class="muted" style="font-size:12px">Όλοι οι συνδυασμοί σε '+(L.length-1)+' κληρώσεις '+(DAYS>1?'των 5 ημερών':'της ημέρας')+' — πόσοι από τους αριθμούς της πρόβλεψης βγήκαν. <b>Η τύχη: 25%</b>. Πάτα μια γραμμή για να τη διαλέξεις. <br>⚠️ Με 35 συνδυασμούς, μέσα σε μία μέρα ο πρώτος βγαίνει από καθαρή τύχη συνήθως γύρω στο 27–28% — κοίτα αν κρατάει και τις επόμενες μέρες (ημερολόγιο πάνω).</div><div class="scroll" style="max-height:340px"><table><tr><th>Hash</th><th>Τι μπαίνει</th><th>Έπιασε</th><th>%</th><th>Καλύτερο</th></tr>'+
     rows.map(function(r){ var on=r.a===ALG&&r.k===INP; return '<tr data-a="'+r.a+'" data-k="'+r.k+'"'+(on?' class="sel"':'')+'><td>'+ALGS[r.a].n+'</td><td>'+INS[r.k].n+'</td><td>'+r.th+'/'+r.tk+'</td><td><b>'+(100*r.p).toFixed(1).replace('.',',')+'%</b></td><td>'+r.b+'</td></tr>'; }).join('')+'</table></div>'; }
 function rehash(){ L=L.map(function(x){ return mk(x); }); render(); }
+function goDay(ds){ DAY=ds; $('day').value=DAY; VI=null; L=[]; render(); load(DAY); }
+function chipsRender(){ var h='', wd=new Intl.DateTimeFormat('el-GR',{timeZone:'Europe/Athens',weekday:'short'}); for(var k=0;k<5;k++){ var d=dAdd(today(),-k); h+='<button data-d="'+d+'"'+(d===DAY?' class="on"':'')+'>'+(k===0?'Σήμερα':d.slice(8)+'/'+d.slice(5,7))+'<small>'+wd.format(new Date(d+'T12:00:00Z'))+'</small></button>'; } $('dayChips').innerHTML=h; }
 function dAdd(ds, k){ var t=new Date(ds+'T12:00:00Z').getTime()+k*86400000; return new Date(t).toISOString().slice(0,10); }
 async function dayCached(ds){ var key='h32_d_'+ds; if(ds<today()){ try{ var c=JSON.parse(lsGet(key)||'null'); if(c && c.length>200) return c.map(function(r){ return mk({id:r[0], t:r[1], arr:r[2]}); }); }catch(e){} }
   var R=await fetchDay(ds); if(ds<today() && R.length>200) lsSet(key, JSON.stringify(R.map(function(x){ return [x.id, x.t, x.arr]; }))); return R; }
@@ -169,9 +175,10 @@ async function load(ds, keep){ if(LOADING) return; LOADING=true; $('st').textCon
   LOADING=false; }
 $('day').value=DAY; $('day').max=today();
 $('day').addEventListener('change', function(){ if(!this.value) return; DAY=this.value; VI=null; L=[]; render(); load(DAY); });
-(function(){ var B=$('daysT'); function u(){ B.textContent=DAYS>1?'📅 5 μέρες':'📅 1 μέρα'; B.classList.toggle('on',DAYS>1); } B.addEventListener('click', function(){ DAYS=DAYS>1?1:5; lsSet('h32_days',String(DAYS)); u(); VI=null; load(DAY); }); u(); })();
+$('dayChips').addEventListener('click', function(e){ var b=e.target.closest('button[data-d]'); if(b) goDay(b.dataset.d); });
 $('today').addEventListener('click', function(){ DAY=today(); $('day').value=DAY; VI=null; load(DAY); });
 $('nav').addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b||!L.length) return; var v=b.dataset.v, i=VI===null?L.length-1:VI;
+  if(v==='dprev'||v==='dnext'){ var nd=dAdd(DAY, v==='dprev'?-1:1); if(nd>today()) return; goDay(nd); return; }
   if(v==='live'){ VI=null; if(DAY!==today()){ DAY=today(); $('day').value=DAY; load(DAY); return; } } else { var n=Math.max(1,Math.min(L.length-1,i+(+v))); VI=n===L.length-1?null:n; } render(); });
 $('tbl').addEventListener('click', function(e){ var r=e.target.closest('tr[data-i]'); if(!r) return; var i=+r.dataset.i; VI=i===L.length-1?null:i; render(); window.scrollTo({top:0,behavior:'smooth'}); });
 (function(){ var B=$('liveT'); function u(){ B.classList.toggle('on',LIVE); B.textContent=LIVE?'🔄 Live ON':'🔄 Live OFF'; } B.addEventListener('click', function(){ LIVE=!LIVE; lsSet('h32_live',LIVE?'1':'0'); u(); }); u(); })();
