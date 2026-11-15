@@ -64,7 +64,7 @@ a{color:var(--accent)}
 <body>
 <div class="wrap">
   <h1>🎡 Φράσεις Power Spin</h1>
-  <p class="lead">Για κάθε κλήρωση του Power Spin, μια φράση για <b>τη στιγμή</b> της κλήρωσης: η ώρα, ο ήλιος και το φεγγάρι πάνω από την Πάτρα, οι δείκτες του ρολογιού, το προηγούμενο γύρισμα. Περνάει από SHA-256 και δίνει τους τρεις τροχούς της. Η φράση της επόμενης κλήρωσης γράφεται πριν γυρίσει ο τροχός.</p>
+  <p class="lead">Για κάθε κλήρωση του Power Spin, μια φράση για <b>τη στιγμή</b> της κλήρωσης: η ώρα, ο ήλιος και το φεγγάρι πάνω από την Πάτρα, οι δείκτες του ρολογιού, το προηγούμενο γύρισμα. Περνάει από SHA-256 και δίνει τον <b>αριθμό του 1ου τροχού</b>. Η φράση της επόμενης κλήρωσης γράφεται πριν γυρίσει ο τροχός.</p>
 
   <div class="card" id="cNext">
     <h2>🔮 Επόμενο γύρισμα</h2>
@@ -80,9 +80,9 @@ a{color:var(--accent)}
   </div>
 
   <div class="card" id="cDay">
-    <h2>📊 Έλεγχος ημέρας</h2>
-    <div class="muted">Για κάθε κλήρωση μιας μέρας υπολογίζεται η φράση-πρόβλεψη από όσα ήταν γνωστά πριν από αυτήν και συγκρίνεται με ό,τι βγήκε.</div>
-    <div class="row" style="margin-top:8px"><input id="dd" type="date" aria-label="Ημέρα ελέγχου"><button class="pri" id="goDay">Έλεγχος</button></div>
+    <h2>📊 Έλεγχος ημερών</h2>
+    <div class="muted">Για κάθε κλήρωση υπολογίζεται η φράση-πρόβλεψη από όσα ήταν γνωστά πριν από αυτήν, και ο αριθμός της συγκρίνεται με τον 1ο τροχό που βγήκε.</div>
+    <div class="row" style="margin-top:8px"><input id="dd" type="date" aria-label="Ημέρα ελέγχου"><select id="dn" aria-label="Πλήθος ημερών" style="font:inherit;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text)"><option value="1">1 μέρα</option><option value="7">7 μέρες</option><option value="30">30 μέρες</option></select><button class="pri" id="goDay">Έλεγχος</button></div>
     <div id="day" style="margin-top:10px"></div>
   </div>
 
@@ -91,24 +91,24 @@ a{color:var(--accent)}
     <label class="tg"><span>🔮 Πρόβλεψη επόμενου γυρίσματος</span><span class="sw"><input type="checkbox" id="tPred"><span></span></span></label>
     <label class="tg"><span>🔄 Αυτόματη ανανέωση (κάθε 4΄)</span><span class="sw"><input type="checkbox" id="tAuto"><span></span></span></label>
     <label class="tg"><span>🔍 Βρες και τη φράση κάθε κλήρωσης στο Ευρετήριο</span><span class="sw"><input type="checkbox" id="tFind"><span></span></span></label>
-    <label class="tg"><span>📊 Έλεγχος ημέρας</span><span class="sw"><input type="checkbox" id="tDay"><span></span></span></label>
+    <label class="tg"><span>📊 Έλεγχος ημερών</span><span class="sw"><input type="checkbox" id="tDay"><span></span></span></label>
   </div>
 
   <div class="card collapsed" id="cHow">
     <h2>❓ Πώς δουλεύει</h2>
     <ol>
-      <li>Κάθε τροχός έχει <b>27 θέσεις</b>, όχι 25: τα νούμερα 1–24 και 3 σύμβολα (στο σύστημα της Allwyn είναι τα 25, 26, 27). Το βλέπουμε στο ιστορικό, όπου βγαίνει το καθένα περίπου 1 φορά στις 27. Με 3 τροχούς υπάρχουν 27×27×27 = <b>19.683</b> πιθανά αποτελέσματα.</li>
-      <li>Η φράση έχει 8 κομμάτια για τη στιγμή της κλήρωσης: ώρα και ημερομηνία (πάντα πρώτη), ήλιος στην Πάτρα (ύψος/αζιμούθιο), σελήνη, ρολόι, προηγούμενη κλήρωση, αριθμός κλήρωσης, χρόνος Unix, θέση στη χρονιά. Κάθε κομμάτι γράφεται με 3–4 τρόπους, και τα κομμάτια μπαίνουν με οποιαδήποτε σειρά. Έτσι κάθε κλήρωση έχει 247.726.080 διατυπώσεις, αριθμημένες από 0.</li>
-      <li>Σπόρος = SHA-256 του κειμένου → πρώτα 8 bytes → mod 19.683 → τροχός 1, 2, 3.</li>
-      <li><b>Φράση κλήρωσης</b>: η πρώτη διατύπωση (0, 1, 2, …) που δίνει ακριβώς ό,τι βγήκε. Βρίσκεται κατά μέσο όρο στη διατύπωση #19.683.</li>
-      <li><b>Πρόβλεψη</b>: η κλήρωση με αριθμό Ν παίρνει τη διατύπωση #Ν. Έτσι κάθε κλήρωση έχει δική της διατύπωση που δεν επαναλαμβάνεται ποτέ. Είναι και πάντα διαφορετική από τις φράσεις των κληρώσεων, που βρίσκονται σχεδόν πάντα κάτω από #300.000 (η πιθανότητα να φτάσει μία ως τη #555.000 είναι περίπου 1 στο 10<sup>12</sup>). Χρειάζεται μόνο την προηγούμενη κλήρωση, οπότε γράφεται μόλις εκείνη βγει, περίπου 4 λεπτά πριν.</li>
+      <li>Μετράει μόνο ο <b>1ος τροχός</b>. Έχει <b>27 θέσεις</b>, όχι 25: τα νούμερα 1–24 και 3 σύμβολα (στο σύστημα της Allwyn είναι τα 25, 26, 27). Το βλέπουμε στο ιστορικό, όπου βγαίνει το καθένα περίπου 1 φορά στις 27.</li>
+      <li>Η φράση έχει 8 κομμάτια για τη στιγμή της κλήρωσης: ώρα και ημερομηνία (πάντα πρώτη), ήλιος στην Πάτρα (ύψος/αζιμούθιο), σελήνη, ρολόι, προηγούμενη κλήρωση, αριθμός κλήρωσης, χρόνος Unix, θέση στη χρονιά. Κάθε κομμάτι γράφεται με 3–4 τρόπους, και τα κομμάτια μπαίνουν με οποιαδήποτε σειρά. Οι διατυπώσεις αριθμούνται από 0.</li>
+      <li>Σπόρος = SHA-256 του κειμένου → πρώτα 8 bytes → mod 27 → αριθμός 1ου τροχού (25–27 = σύμβολα).</li>
+      <li><b>Φράση κλήρωσης</b>: η πρώτη διατύπωση (0, 1, 2, …) που δίνει ακριβώς τον αριθμό που βγήκε. Βρίσκεται κατά μέσο όρο στη διατύπωση #27.</li>
+      <li><b>Πρόβλεψη</b>: η κλήρωση με αριθμό Ν παίρνει τη διατύπωση #Ν. Έτσι κάθε κλήρωση έχει δική της διατύπωση που δεν επαναλαμβάνεται ποτέ, και δεν συμπίπτει με τις φράσεις των κληρώσεων, που βρίσκονται στις πρώτες εκατοντάδες. Χρειάζεται μόνο την προηγούμενη κλήρωση, οπότε γράφεται μόλις εκείνη βγει, περίπου 4 λεπτά πριν.</li>
     </ol>
-    <p class="muted">Ειλικρινά: 25 ή 27 «κλειδιά» δεν κάνουν το παιχνίδι πιο εύκολο να προβλεφθεί. Απλώς κάθε κλήρωση βρίσκει τη φράση της πιο γρήγορα. Η πρόβλεψη πετυχαίνει τον πρώτο τροχό 1 φορά στις 27 (3,7%), όπως κάθε άλλη επιλογή. Ο «Έλεγχος ημέρας» το δείχνει με πραγματικές κληρώσεις.</p>
+    <p class="muted">Ειλικρινά: 25 ή 27 «κλειδιά» δεν κάνουν το παιχνίδι πιο εύκολο να προβλεφθεί. Απλώς κάθε κλήρωση βρίσκει τη φράση της πιο γρήγορα. Η πρόβλεψη πετυχαίνει τον 1ο τροχό 1 φορά στις 27 (3,7%), όπως κάθε άλλη επιλογή. Ο «Έλεγχος ημερών» το δείχνει με πραγματικές κληρώσεις.</p>
   </div>
 
   <footer>
     <div><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα</div>
-    <div id="appVer">έκδοση v38 · 16/11/2026 · <a href="index.html" style="color:inherit">🏠 Αρχική</a> · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+    <div id="appVer">έκδοση v39 · 16/11/2026 · <a href="index.html" style="color:inherit">🏠 Αρχική</a> · <a href="general.html" style="color:inherit">🗂️ General</a></div>
   </footer>
 </div>
 <script>
@@ -198,8 +198,7 @@ function pattern(k){ // διατύπωση #k -> {ch, perm}
   return {ch:ch, perm:perm};
 }
 function textOf(S,k){ var P=pattern(k); return P.perm.map(function(s){return S[s][P.ch[s]];}).join('. ')+'.'; }
-function outcome(v, nw){ if(nw===1) return [v+1]; return [Math.floor(v/729)+1, Math.floor(v/27)%27+1, v%27+1]; }
-function codeOf(w){ return w.length===1 ? w[0]-1 : (w[0]-1)*729+(w[1]-1)*27+(w[2]-1); }
+var M=27; // μόνο ο 1ος τροχός: 24 νούμερα + 3 σύμβολα
 
 /* ---------- API ---------- */
 var CACHE={};
@@ -219,22 +218,22 @@ function showDraw(id){
   Promise.all([getDraw(id), id>1?getDraw(id-1):Promise.resolve(null)]).then(function(x){
     var d=x[0], pd=x[1];
     if(d.status!=='results'){ $('out').innerHTML='<div class="muted">Η κλήρωση #'+id+' δεν έχει γίνει ακόμα.</div>'; return; }
-    var w=wheels(d), ts=d.drawTime/1000, t=ath(ts), nw=w.length, m=nw===1?27:19683;
+    var w=wheels(d), ts=d.drawTime/1000, t=ath(ts), m=M;
     var prev=pd&&pd.status==='results'?wheels(pd).map(function(z){return z.v;}):null;
-    var S=slots(id,ts,prev), target=codeOf(w.map(function(z){return z.v;}));
+    var S=slots(id,ts,prev), target=w[0].v-1;
     $('qd').value=t.iso; $('qt').value=t.hm;
     var h='<div class="meta"><span class="big">#'+dots(id)+'</span><span>'+DAYS[t.wd]+' '+t.d+'/'+t.mo+'/'+t.y+' · '+t.hm+'</span></div>'+wheelHTML(w);
     if(OPT.find){
       var t0=performance.now(), k=-1;
-      for(var j=0;j<3000000;j++){ if(seedOf(textOf(S,j),m)===target){ k=j; break; } }
+      for(var j=0;j<100000;j++){ if(seedOf(textOf(S,j),m)===target){ k=j; break; } }
       var ms=Math.round(performance.now()-t0);
-      if(k>=0) h+='<div class="sub">Η φράση της · διατύπωση #'+dots(k)+'</div><div class="phrase">'+textOf(S,k)+'</div><div class="ver ok">✓ SHA-256 → σπόρος '+seedOf(textOf(S,k),m)+' → '+outcome(target,nw).map(wname).join(' · ')+' · βρέθηκε στο κινητό σου σε '+ms+' ms</div>';
-      else h+='<div class="phrase muted">Δεν βρέθηκε φράση στις πρώτες 3.000.000 διατυπώσεις.</div>';
+      if(k>=0) h+='<div class="sub">Η φράση της · διατύπωση #'+dots(k)+'</div><div class="phrase">'+textOf(S,k)+'</div><div class="ver ok">✓ SHA-256 → σπόρος '+seedOf(textOf(S,k),m)+' → '+wname(target+1)+' · βρέθηκε στο κινητό σου σε '+ms+' ms</div>';
+      else h+='<div class="phrase muted">Δεν βρέθηκε φράση στις πρώτες 100.000 διατυπώσεις.</div>';
     }
-    if(prev && nw===3){
-      var pv=seedOf(textOf(S,id),19683), po=outcome(pv,3), act=w.map(function(z){return z.v;}), hit=po.map(function(v,i){return v===act[i];});
-      h+='<div class="sub">Η πρόβλεψή της · διατύπωση #'+dots(id)+'</div><div class="phrase">'+textOf(S,id)+'</div>'+wheelHTML(po,hit)+
-         '<div class="muted">Πέτυχε <b>'+hit.filter(Boolean).length+'</b> από 3 τροχούς.</div>';
+    if(prev){
+      var pv=seedOf(textOf(S,id),M)+1, ok=pv===w[0].v;
+      h+='<div class="sub">Η πρόβλεψή της · διατύπωση #'+dots(id)+'</div><div class="phrase">'+textOf(S,id)+'</div>'+wheelHTML([pv],[ok])+
+         '<div class="muted">'+(ok?'✅ Πέτυχε τον 1ο τροχό!':'Δεν πέτυχε (βγήκε '+wname(w[0].v)+').')+'</div>';
     }
     $('out').innerHTML=h;
   }).catch(function(e){ $('out').innerHTML='<div class="muted">Σφάλμα: '+e+'</div>'; });
@@ -261,12 +260,12 @@ function loadNext(){
   fetch(API+'/last-result-and-active').then(function(r){return r.json();}).then(function(j){
     var L=j.last, A=j.active; CACHE[L.drawId]=L;
     var prev=wheels(L).map(function(z){return z.v;}), id=A.drawId, ts=A.drawTime/1000, t=ath(ts);
-    var S=slots(id,ts,prev), txt=textOf(S,id), v=seedOf(txt,19683), o=outcome(v,3);
+    var S=slots(id,ts,prev), txt=textOf(S,id), v=seedOf(txt,M), o=[v+1];
     NEXT={id:id, ts:ts};
     var lt=ath(L.drawTime/1000);
     $('next').innerHTML='<div class="meta"><span class="big">#'+dots(id)+'</span><span>'+DAYS[t.wd]+' '+t.d+'/'+t.mo+' · '+t.hm+' · σε <span class="cd" id="cd">…</span></span></div>'+
       '<div class="phrase">'+txt+'</div>'+wheelHTML(o)+
-      '<div class="muted">Διατύπωση #'+dots(id)+' · σπόρος '+v+' · γράφτηκε μόλις βγήκε η #'+dots(L.drawId)+' ('+lt.hm+': '+prev.map(wname).join(' · ')+')</div>';
+      '<div class="muted">Διατύπωση #'+dots(id)+' · σπόρος '+v+' → 1ος τροχός '+wname(v+1)+' · γράφτηκε μόλις βγήκε η #'+dots(L.drawId)+' ('+lt.hm+': '+prev.map(wname).join(' · ')+')</div>';
     tick();
   }).catch(function(e){ $('next').textContent='Σφάλμα: '+e; });
 }
@@ -277,31 +276,33 @@ function tick(){
 }
 setInterval(tick,1000);
 
-/* ---------- έλεγχος ημέρας ---------- */
+/* ---------- έλεγχος ημερών ---------- */
+function isoAdd(iso,k){ var p=iso.split('-'), t=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]+k)); return t.toISOString().slice(0,10); }
 function runDay(){
-  if(!OPT.day){ $('day').innerHTML='<span class="muted">Ο έλεγχος ημέρας είναι κλειστός στις Ρυθμίσεις.</span>'; return; }
-  var iso=$('dd').value; if(!iso) return; $('day').innerHTML='<div class="muted">Φόρτωση…</div>';
-  dayDraws(iso).then(function(c){
-    if(!c.length){ $('day').innerHTML='<div class="muted">Καμία κλήρωση εκείνη τη μέρα.</div>'; return; }
-    return (CACHE[c[0].drawId-1]?Promise.resolve(CACHE[c[0].drawId-1]):getDraw(c[0].drawId-1)).then(function(first){
-      var n=0, w1=0, any=0, all3=0, perW=[0,0,0], rows='', prevW=first&&first.status==='results'?wheels(first).map(function(z){return z.v;}):null;
+  if(!OPT.day){ $('day').innerHTML='<span class="muted">Ο έλεγχος είναι κλειστός στις Ρυθμίσεις.</span>'; return; }
+  var iso=$('dd').value, nd=+$('dn').value; if(!iso) return; $('day').innerHTML='<div class="muted">Φόρτωση '+nd+' ημερών…</div>';
+  var isos=[]; for(var k=nd-1;k>=0;k--) isos.push(isoAdd(iso,-k));
+  Promise.all(isos.map(dayDraws)).then(function(L){
+    var c=[].concat.apply([],L).sort(function(a,b){return a.drawId-b.drawId;});
+    if(!c.length){ $('day').innerHTML='<div class="muted">Καμία κλήρωση.</div>'; return; }
+    return getDraw(c[0].drawId-1).then(function(first){
+      var n=0, hit=0, rows='', byNum={}, prevW=first&&first.status==='results'?wheels(first).map(function(z){return z.v;}):null, last=c[0].drawId-1;
       c.forEach(function(d){
         var act=wheels(d).map(function(z){return z.v;});
-        if(prevW && act.length===3){
-          var o=outcome(seedOf(textOf(slots(d.drawId,d.drawTime/1000,prevW),d.drawId),19683),3), hit=o.map(function(v,i){return v===act[i];}), k=hit.filter(Boolean).length;
-          n++; if(hit[0]) w1++; if(k) any++; if(k===3) all3++; hit.forEach(function(x,i){ if(x) perW[i]++; });
-          if(k) rows+='<tr><td class="n"><a href="#" data-id="'+d.drawId+'">'+ath(d.drawTime/1000).hm+'</a></td><td class="n">'+o.map(wname).join(' · ')+'</td><td class="n">'+act.map(wname).join(' · ')+'</td><td>'+k+'</td></tr>';
+        if(prevW && d.drawId===last+1){
+          var o=seedOf(textOf(slots(d.drawId,d.drawTime/1000,prevW),d.drawId),M)+1; n++;
+          if(o===act[0]){ hit++; if(nd===1) rows+='<tr><td class="n"><a href="#" data-id="'+d.drawId+'">'+ath(d.drawTime/1000).hm+'</a></td><td class="n">'+wname(o)+'</td></tr>';
+            else rows+='<tr><td class="n"><a href="#" data-id="'+d.drawId+'">'+ath(d.drawTime/1000).d+'/'+ath(d.drawTime/1000).mo+' '+ath(d.drawTime/1000).hm+'</a></td><td class="n">'+wname(o)+'</td></tr>'; }
         }
-        prevW=act;
+        prevW=act; last=d.drawId;
       });
+      var exp=n/27, sd=Math.sqrt(n*(1/27)*(26/27)), z=(hit-exp)/sd;
       var pc=function(a,b){return (100*a/b).toFixed(1).replace('.',',')+'%';};
       $('day').innerHTML='<table><tr><th></th><th>Πρόβλεψη</th><th>Τύχη</th></tr>'+
         '<tr><td>Κληρώσεις</td><td class="n">'+n+'</td><td></td></tr>'+
-        '<tr><td>Πέτυχε τον 1ο τροχό</td><td class="n"><b>'+w1+'</b> ('+pc(w1,n)+')</td><td class="n">'+(n/27).toFixed(1).replace('.',',')+' (3,7%)</td></tr>'+
-        '<tr><td>Έστω έναν τροχό</td><td class="n"><b>'+any+'</b> ('+pc(any,n)+')</td><td class="n">'+(n*0.1073).toFixed(1).replace('.',',')+' (10,7%)</td></tr>'+
-        '<tr><td>Και τους 3 τροχούς</td><td class="n"><b>'+all3+'</b></td><td class="n">'+(n/19683).toFixed(2).replace('.',',')+'</td></tr>'+
-        '<tr><td>Ανά τροχό</td><td class="n">'+perW.join(' / ')+'</td><td class="n">'+(n/27).toFixed(1).replace('.',',')+' ο καθένας</td></tr></table>'+
-        (rows?'<div class="sub">Οι κληρώσεις που πέτυχε κάτι</div><table><tr><th>Ώρα</th><th>Πρόβλεψη</th><th>Βγήκαν</th><th>Τροχοί</th></tr>'+rows+'</table>':'');
+        '<tr><td>Πέτυχε τον 1ο τροχό</td><td class="n"><b>'+hit+'</b> ('+pc(hit,n)+')</td><td class="n">'+exp.toFixed(1).replace('.',',')+' ± '+sd.toFixed(1).replace('.',',')+' (3,7%)</td></tr></table>'+
+        '<div class="muted" style="margin-top:6px">'+(Math.abs(z)<2?'Μέσα στη συνηθισμένη διακύμανση της τύχης':'Έξω από τη συνηθισμένη διακύμανση')+' (απόκλιση '+z.toFixed(1).replace('.',',')+' τυπικές αποκλίσεις).</div>'+
+        (rows?'<div class="sub">Οι επιτυχίες</div><table><tr><th>Πότε</th><th>1ος τροχός</th></tr>'+rows+'</table>':'');
     });
   }).catch(function(e){ $('day').innerHTML='<div class="muted">Σφάλμα: '+e+'</div>'; });
 }
