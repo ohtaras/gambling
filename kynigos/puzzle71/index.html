@@ -89,6 +89,8 @@ h1{font-family:var(--disp);font-weight:700;font-size:2.1rem;margin:6px 0 2px;let
   <button class="auto" id="autobtn">▶️ Auto</button>
   <div id="pwarn" class="odds" style="margin:0;color:var(--warn)"></div>
   <label style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:.85rem;color:var(--soft);cursor:pointer"><input type="checkbox" id="seqmode"><span>🔢 Στη σειρά (όχι τυχαία) — κάθε συνδυασμό μία φορά</span></label>
+  <label style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:.85rem;color:var(--soft);cursor:pointer"><input type="checkbox" id="rangemode"><span>🎯 Τυχαίο εύρος — ψάξε 1 κομμάτι από 666</span></label>
+  <div id="chunkinfo" class="odds" style="margin:0;color:var(--acc);font-weight:800"></div>
 
   <div style="border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--panel)">
     <label style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:.86rem;cursor:pointer"><input type="checkbox" id="f-enable"><span>🔎 Φίλτρα (στα 70 bit) — <b>ενεργά</b></span></label>
@@ -213,6 +215,8 @@ var $=function(id){return document.getElementById(id);};
 var PZ="1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU";
 var FREE=70, cells=[], running=false, locked=false, tries=0, timer=null, t0=0, delay=70;
 var seqMode=false, seqCounter=0n;
+var rangeMode=false, chunkStart=0n, chunkEnd=(1n<<70n), chunkIdx=0;
+var CHUNK=(1n<<70n)/666n;
 var filtEnabled=false, onesMin=0, onesMax=70, maxRunAllowed=0;
 
 (function(){ var box=$("bitbox"); for(var i=0;i<FREE;i++){ var d=document.createElement("div"); d.className="bc"; d.textContent="0"; box.appendChild(d); cells.push(d);} })();
@@ -220,19 +224,21 @@ var filtEnabled=false, onesMin=0, onesMax=70, maxRunAllowed=0;
 function toHex64(k){ return k.toString(16).padStart(64,"0"); }
 function renderBits(r){ for(var i=0;i<FREE;i++){ var on=((r>>BigInt(FREE-1-i))&1n)===1n; cells[i].classList.toggle("on",on); cells[i].textContent=on?"1":"0"; } }
 function randomFree(){ var b=new Uint8Array(9); crypto.getRandomValues(b); var r=0n; for(var i=0;i<9;i++) r=(r<<8n)|BigInt(b[i]); return r & ((1n<<70n)-1n); }
+function randInChunk(){ var size=chunkEnd-chunkStart; var b=new Uint8Array(8); crypto.getRandomValues(b); var v=0n; for(var i=0;i<8;i++) v=(v<<8n)|BigInt(b[i]); return chunkStart + (v % size); }
 function popcnt(x){ var c=0; while(x>0n){ if(x&1n)c++; x>>=1n; } return c; }
 function maxRunBits(x,n){ if(n<=0)return 0; var mr=1,cur=1,prev=(x&1n); for(var i=1;i<n;i++){ var b=(x>>BigInt(i))&1n; if(b===prev){cur++; if(cur>mr)mr=cur;} else {cur=1;prev=b;} } return mr; }
 function passFilter(r){ if(!filtEnabled) return true; var o=popcnt(r); if(o<onesMin||o>onesMax) return false; if(maxRunAllowed>0 && maxRunBits(r,70)>maxRunAllowed) return false; return true; }
 
 async function attempt(){
   var r=null;
+  var END = rangeMode ? chunkEnd : (1n<<70n);
   if(seqMode){
     var skipped=0;
-    while(seqCounter<(1n<<70n)){ var c=seqCounter & ((1n<<70n)-1n); seqCounter++; if(passFilter(c)){ r=c; break; } if(++skipped>=4000) break; }
-    if(r===null){ if(seqCounter>=(1n<<70n)){ stop(); return true; } return false; } // προσπέρασε παρτίδα, χωρίς πάγωμα
+    while(seqCounter<END){ var c=seqCounter & ((1n<<70n)-1n); seqCounter++; if(passFilter(c)){ r=c; break; } if(++skipped>=4000) break; }
+    if(r===null){ if(seqCounter>=END){ stop(); return true; } return false; } // προσπέρασε παρτίδα, χωρίς πάγωμα
   } else {
-    for(var i=0;i<400;i++){ var cand=randomFree(); if(passFilter(cand)){ r=cand; break; } }
-    if(r===null) r=randomFree();
+    for(var i=0;i<400;i++){ var cand = rangeMode ? randInChunk() : randomFree(); if(passFilter(cand)){ r=cand; break; } }
+    if(r===null) r = rangeMode ? randInChunk() : randomFree();
   }
   renderBits(r);
   var k=(1n<<70n)|r;
@@ -246,7 +252,8 @@ async function attempt(){
 }
 function updateStats(){ $("tries").textContent=tries.toLocaleString("el-GR"); var s=(Date.now()-t0)/1000; $("rate").textContent=s>0?(tries/s).toFixed(1):"0"; }
 async function loop(){ if(!running)return; try{ if(await attempt()) return; }catch(e){} updateStats(); if(running) timer=setTimeout(loop, delay); }
-function start(){ if(running||locked)return; seqMode=$("seqmode")&&$("seqmode").checked; if(seqMode) seqCounter=0n;
+function start(){ if(running||locked)return;
+  seqMode=$("seqmode")&&$("seqmode").checked;
   var en=$("f-enable"); filtEnabled=!!(en&&en.checked);
   if(filtEnabled){ var mn=$("f-onesmin"),mx=$("f-onesmax"),mr=$("f-maxrun");
     onesMin=(mn&&mn.value!=="")?Math.max(0,parseInt(mn.value,10)||0):0;
@@ -254,6 +261,10 @@ function start(){ if(running||locked)return; seqMode=$("seqmode")&&$("seqmode").
     onesMin=Math.min(onesMin,70); onesMax=Math.min(onesMax,70);
     maxRunAllowed=(mr&&mr.value!=="")?Math.max(0,parseInt(mr.value,10)||0):0;
   }
+  rangeMode=$("rangemode")&&$("rangemode").checked;
+  if(rangeMode){ chunkIdx=Math.floor(Math.random()*666); chunkStart=BigInt(chunkIdx)*CHUNK; chunkEnd=(chunkIdx===665)?(1n<<70n):(chunkStart+CHUNK); var ci=$("chunkinfo"); if(ci) ci.innerHTML="🎯 Κομμάτι <b>"+(chunkIdx+1)+"</b> / 666"; }
+  else { chunkStart=0n; chunkEnd=(1n<<70n); var ci0=$("chunkinfo"); if(ci0) ci0.innerHTML=""; }
+  if(seqMode) seqCounter = rangeMode ? chunkStart : 0n;
   if(seqMode && filtEnabled){ seqMode=false; var sc=$("seqmode"); if(sc) sc.checked=false; var w=$("pwarn"); if(w) w.innerHTML="ℹ️ «Στη σειρά» + φίλτρο δεν γίνεται στο #71 — γύρισα αυτόματα σε 🎲 Τυχαίο με το φίλτρο."; }
   else { var pw=$("pwarn"); if(pw) pw.innerHTML=""; }
   running=true; t0=Date.now(); tries=0; var b=$("autobtn"); b.textContent="⏹️ Stop"; b.classList.add("on"); loop(); }
