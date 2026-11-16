@@ -59,6 +59,19 @@ td.n{font-variant-numeric:tabular-nums}
 ol{padding-left:20px;margin:6px 0} li{margin:3px 0}
 footer{text-align:center;color:var(--muted);font-size:12px;margin-top:18px;line-height:1.7}
 a{color:var(--accent)}
+.gwrap{overflow-x:auto;margin-top:4px}
+table.grid{font-size:12.5px;min-width:100%}
+table.grid td,table.grid th{padding:3px 2px;text-align:center}
+table.grid td.n{text-align:left;white-space:nowrap}
+.gc{min-width:30px}
+.gc a{color:var(--muted);text-decoration:none}
+.gh{background:var(--ok);border-radius:5px}
+.gh a{color:#fff;font-weight:800}
+.hbars{display:flex;gap:3px;align-items:flex-end;height:90px;margin:6px 0 2px}
+.hb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.hbv{width:100%;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px}
+.hbn{font-size:10.5px;font-weight:700}
+.hbl{font-size:10px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -94,6 +107,8 @@ a{color:var(--accent)}
     <label class="tg"><span>⏱️ Και πρόβλεψη από σκέτο timestamp</span><span class="sw"><input type="checkbox" id="tTs"><span></span></span></label>
     <label class="tg"><span>🔍 Βρες και τη φράση κάθε κλήρωσης στο Ευρετήριο</span><span class="sw"><input type="checkbox" id="tFind"><span></span></span></label>
     <label class="tg"><span>📊 Έλεγχος ημερών</span><span class="sw"><input type="checkbox" id="tDay"><span></span></span></label>
+    <label class="tg"><span>🗓️ Πίνακας ωρών (μέρες δίπλα-δίπλα)</span><span class="sw"><input type="checkbox" id="tGrid"><span></span></span></label>
+    <label class="tg"><span>🎯 Στον πίνακα μόνο ώρες με επιτυχία</span><span class="sw"><input type="checkbox" id="tGonly"><span></span></span></label>
   </div>
 
   <div class="card collapsed" id="cHow">
@@ -109,7 +124,7 @@ a{color:var(--accent)}
 
   <footer>
     <div><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα</div>
-    <div id="appVer">έκδοση v41 · 16/11/2026 · <a href="index.html" style="color:inherit">🏠 Αρχική</a> · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+    <div id="appVer">έκδοση v42 · 16/11/2026 · <a href="index.html" style="color:inherit">🏠 Αρχική</a> · <a href="general.html" style="color:inherit">🗂️ General</a></div>
   </footer>
 </div>
 <script>
@@ -117,7 +132,7 @@ var $=function(i){return document.getElementById(i);};
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 var API='https://api.opap.gr/draws/v3.0/1110';
-var OPT={pred:true,auto:true,phrase:false,find:false,day:true,ts:false};
+var OPT={pred:true,auto:true,phrase:false,find:false,day:true,ts:false,grid:true,gonly:true};
 function tsPick(ts){ return seedOf(String(ts),M)+1; } // σκέτο timestamp (δευτερόλεπτα) → SHA-256 → mod 27
 Object.keys(OPT).forEach(function(k){var v=lsGet('ps2_'+k); if(v!==null) OPT[k]=v==='1';});
 
@@ -306,6 +321,24 @@ setInterval(tick,1000);
 
 /* ---------- έλεγχος ημερών ---------- */
 function isoAdd(iso,k){ var p=iso.split('-'), t=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]+k)); return t.toISOString().slice(0,10); }
+function gridHTML(G,DL){
+  var times=Object.keys(G).sort(), only=OPT.gonly, WD=['Κυ','Δε','Τρ','Τε','Πε','Πα','Σα'];
+  var head='<tr><th>Ώρα</th>'+DL.map(function(iso){ var p=iso.split('-'), w=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay(); return '<th class="gc">'+WD[w]+'<br>'+(+p[2])+'/'+(+p[1])+'</th>'; }).join('')+'<th class="gc">Σ</th></tr>';
+  var body='', colH=DL.map(function(){return 0;}), hourH={};
+  times.forEach(function(hm){ var row=G[hm], k=0, cells='';
+    DL.forEach(function(iso,j){ var c=row[iso];
+      if(!c){ cells+='<td class="gc"></td>'; return; }
+      var h=c.o===c.a; if(h){ k++; colH[j]++; }
+      cells+='<td class="gc'+(h?' gh':'')+'"><a href="#" data-id="'+c.id+'" title="beacon '+wname(c.o)+' · βγήκε '+wname(c.a)+'">'+(c.o>24?'★'+(c.o-24):c.o)+'</a></td>'; });
+    var hr=hm.slice(0,2); hourH[hr]=(hourH[hr]||0)+k;
+    if(!only||k) body+='<tr><td class="n">'+hm+'</td>'+cells+'<td class="gc"><b>'+(k||'')+'</b></td></tr>'; });
+  var foot='<tr><td><b>Σ</b></td>'+colH.map(function(x){return '<td class="gc"><b>'+x+'</b></td>';}).join('')+'<td class="gc"><b>'+colH.reduce(function(a,b){return a+b;},0)+'</b></td></tr>';
+  var hours=Object.keys(hourH).sort(), per=DL.length*15/27;
+  var hb='<div class="sub">Επιτυχίες ανά ώρα (όλες οι μέρες)</div><div class="hbars">'+hours.map(function(h){ var v=hourH[h];
+    return '<div class="hb"><div class="hbv" style="height:'+Math.min(100,v*100/Math.max(1,per*2.2))+'%"></div><div class="hbn">'+v+'</div><div class="hbl">'+h+'</div></div>'; }).join('')+'</div><div class="muted">Η τύχη δίνει περίπου '+per.toFixed(1).replace('.',',')+' ανά ώρα (15 κληρώσεις × '+DL.length+' μέρες ÷ 27).</div>';
+  return hb+'<div class="sub">Πίνακας ωρών · ο αριθμός του beacon, πράσινο = πέτυχε</div><div class="gwrap"><table class="grid">'+head+body+foot+'</table></div>'+
+    (only?'<div class="muted">Φαίνονται μόνο οι ώρες με επιτυχία. Κλείσε τον διακόπτη «Στον πίνακα μόνο ώρες με επιτυχία» στις Ρυθμίσεις για να τις δεις όλες.</div>':'');
+}
 function runDay(){
   if(!OPT.day){ $('day').innerHTML='<span class="muted">Ο έλεγχος είναι κλειστός στις Ρυθμίσεις.</span>'; return; }
   var iso=$('dd').value, nd=+$('dn').value; if(!iso) return; $('day').innerHTML='<div class="muted">Φόρτωση '+nd+' ημερών…</div>';
@@ -316,10 +349,11 @@ function runDay(){
     var done=0; var prog=setInterval(function(){ $('day').innerHTML='<div class="muted">Παλμοί NIST: '+done+' / '+c.length+'…</div>'; },500);
     return Promise.all([pool(c,12,function(d){ return pulseFor(d.drawTime).then(function(p){done++; return p;}); }), OPT.phrase?getDraw(c[0].drawId-1):Promise.resolve(null)]).then(function(R){
       clearInterval(prog);
-      var PS=R[0], first=R[1], n=0, hit=0, th=0, ph=0, np=0, rows='', prevW=first&&first.status==='results'?wheels(first).map(function(z){return z.v;}):null, last=c[0].drawId-1;
+      var PS=R[0], first=R[1], GRID={}, DLIST=[], n=0, hit=0, th=0, ph=0, np=0, rows='', prevW=first&&first.status==='results'?wheels(first).map(function(z){return z.v;}):null, last=c[0].drawId-1;
       c.forEach(function(d,i){
         var act=wheels(d).map(function(z){return z.v;}), P=PS[i];
-        if(P){ var o=beaconPick(P.out); n++; if(OPT.ts && tsPick(d.drawTime/1000)===act[0]) th++;
+        var t0=ath(d.drawTime/1000); if(DLIST.indexOf(t0.iso)<0) DLIST.push(t0.iso);
+        if(P){ var o=beaconPick(P.out); n++; (GRID[t0.hm]=GRID[t0.hm]||{})[t0.iso]={o:o,a:act[0],id:d.drawId}; if(OPT.ts && tsPick(d.drawTime/1000)===act[0]) th++;
           if(o===act[0]){ hit++; var tt=ath(d.drawTime/1000);
             rows+='<tr><td class="n"><a href="#" data-id="'+d.drawId+'">'+(nd>1?tt.d+'/'+tt.mo+' ':'')+tt.hm+'</a></td><td class="n">'+wname(o)+'</td></tr>'; } }
         if(OPT.phrase && prevW && d.drawId===last+1){ np++; if(seedOf(textOf(slots(d.drawId,d.drawTime/1000,prevW),d.drawId),M)+1===act[0]) ph++; }
@@ -333,14 +367,14 @@ function runDay(){
         (OPT.phrase?'<tr><td>Φράση-πρόβλεψη</td><td class="n"><b>'+ph+'</b> ('+pc(ph,np)+')</td><td class="n">'+f(np/27)+'</td></tr>':'')+
         (OPT.ts?'<tr><td>Σκέτο timestamp</td><td class="n"><b>'+th+'</b> ('+pc(th,n)+')</td><td class="n">'+f(exp)+'</td></tr>':'')+'</table>'+
         '<div class="muted" style="margin-top:6px">Beacon: '+(Math.abs(z)<2?'μέσα στη συνηθισμένη διακύμανση της τύχης':'έξω από τη συνηθισμένη διακύμανση')+' (απόκλιση '+(z>=0?'+':'')+f(z)+' τυπικές αποκλίσεις).</div>'+
-        (rows?'<div class="sub">Επιτυχίες του beacon</div><table><tr><th>Πότε</th><th>1ος τροχός</th></tr>'+rows+'</table>':'');
+        (nd>1 && OPT.grid ? gridHTML(GRID,DLIST) : (rows?'<div class="sub">Επιτυχίες του beacon</div><table><tr><th>Πότε</th><th>1ος τροχός</th></tr>'+rows+'</table>':''));
     });
   }).catch(function(e){ $('day').innerHTML='<div class="muted">Σφάλμα: '+e+'</div>'; });
 }
 
 /* ---------- σύνδεση ---------- */
-[['tPred','pred'],['tAuto','auto'],['tPhrase','phrase'],['tTs','ts'],['tFind','find'],['tDay','day']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
-  c.addEventListener('change',function(){ OPT[a[1]]=c.checked; lsSet('ps2_'+a[1],c.checked?'1':'0'); if(['pred','ts','phrase'].indexOf(a[1])>=0) loadNext(); if(['find','ts','phrase'].indexOf(a[1])>=0&&CUR) showDraw(CUR); }); });
+[['tPred','pred'],['tAuto','auto'],['tPhrase','phrase'],['tTs','ts'],['tFind','find'],['tDay','day'],['tGrid','grid'],['tGonly','gonly']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
+  c.addEventListener('change',function(){ OPT[a[1]]=c.checked; lsSet('ps2_'+a[1],c.checked?'1':'0'); if(['grid','gonly'].indexOf(a[1])>=0 && $('day').innerHTML) runDay(); if(['pred','ts','phrase'].indexOf(a[1])>=0) loadNext(); if(['find','ts','phrase'].indexOf(a[1])>=0&&CUR) showDraw(CUR); }); });
 Array.prototype.forEach.call(document.querySelectorAll('.card[id]'), function(c){ var k='ps_col_'+c.id, v=lsGet(k);
   if(v!==null) c.classList.toggle('collapsed', v==='1');
   c.querySelector('h2').addEventListener('click', function(){ c.classList.toggle('collapsed'); lsSet(k, c.classList.contains('collapsed')?'1':'0'); }); });
