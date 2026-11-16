@@ -77,7 +77,7 @@ table.grid td.n{text-align:left;white-space:nowrap}
 <body>
 <div class="wrap">
   <h1>🎡 Power Spin · NIST beacon</h1>
-  <p class="lead">Για κάθε κλήρωση του Power Spin παίρνουμε τον τυχαίο αριθμό 512 bit που δημοσίευσε το <b>NIST</b> (το Εθνικό Ινστιτούτο Προτύπων των ΗΠΑ, με το ατομικό ρολόι) <b>ένα λεπτό πριν</b> την κλήρωση. Το υπόλοιπο της διαίρεσής του με το 27 δίνει τον αριθμό του <b>1ου τροχού</b>.</p>
+  <p class="lead">Για κάθε κλήρωση του Power Spin παίρνουμε τον τυχαίο αριθμό 512 bit που δημοσίευσε το <b>NIST</b> (το Εθνικό Ινστιτούτο Προτύπων των ΗΠΑ, με το ατομικό ρολόι) <b>3 λεπτά πριν</b> την κλήρωση (τον δημοσιεύει ~1,5 λεπτό πριν γυρίσει ο τροχός). Το υπόλοιπο της διαίρεσής του με το 27 δίνει τον αριθμό του <b>1ου τροχού</b>.</p>
 
   <div class="card" id="cNext">
     <h2>🔮 Επόμενο γύρισμα</h2>
@@ -94,7 +94,7 @@ table.grid td.n{text-align:left;white-space:nowrap}
 
   <div class="card" id="cDay">
     <h2>📊 Έλεγχος ημερών</h2>
-    <div class="muted">Για κάθε κλήρωση παίρνεται ο παλμός του NIST ένα λεπτό πριν, και το beacon mod 27 συγκρίνεται με τον 1ο τροχό που βγήκε.</div>
+    <div class="muted">Για κάθε κλήρωση παίρνεται ο παλμός του NIST της ΗΗ:ΜΜ−3, και το beacon mod 27 συγκρίνεται με τον 1ο τροχό που βγήκε.</div>
     <div class="row" style="margin-top:8px"><input id="dd" type="date" aria-label="Ημέρα ελέγχου"><select id="dn" aria-label="Πλήθος ημερών" style="font:inherit;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text)"><option value="1">1 μέρα</option><option value="7">7 μέρες</option></select><button class="pri" id="goDay">Έλεγχος</button></div>
     <div id="day" style="margin-top:10px"></div>
   </div>
@@ -115,16 +115,16 @@ table.grid td.n{text-align:left;white-space:nowrap}
     <h2>❓ Πώς δουλεύει</h2>
     <ol>
       <li>Μετράει μόνο ο <b>1ος τροχός</b>. Έχει <b>27 θέσεις</b>: τα νούμερα 1–24 και 3 σύμβολα (στο σύστημα της Allwyn 25, 26, 27).</li>
-      <li>Το NIST Randomness Beacon δημοσιεύει κάθε λεπτό έναν αριθμό 512 bit από κβαντική πηγή τυχαιότητας. Για την κλήρωση της ώρας ΗΗ:ΜΜ παίρνουμε τον παλμό της ΗΗ:ΜΜ−1 (αν λείπει, τον αμέσως προηγούμενο). Πάντα είναι γνωστός <b>πριν</b> γυρίσει ο τροχός.</li>
+      <li>Το NIST Randomness Beacon δημοσιεύει κάθε λεπτό έναν αριθμό 512 bit από κβαντική πηγή τυχαιότητας. Το NIST δημοσιεύει τον παλμό με σφραγίδα ΗΗ:ΜΜ περίπου 80 δευτερόλεπτα αργότερα. Γι' αυτό, για την κλήρωση της ώρας ΗΗ:ΜΜ παίρνουμε τον παλμό της <b>ΗΗ:ΜΜ−3</b> (αν λείπει, τον αμέσως προηγούμενο). Βγαίνει περίπου 1,5 λεπτό πριν, άρα είναι πραγματικά γνωστός <b>πριν</b> γυρίσει ο τροχός.</li>
       <li>Αριθμός = (τιμή του παλμού) mod 27 + 1 · 25–27 = σύμβολα.</li>
       <li>Από τους διακόπτες ανοίγουν και οι παλιές μέθοδοι: φράση-πρόβλεψη, σκέτο timestamp, φράση κάθε κλήρωσης.</li>
     </ol>
-    <p class="muted">Ειλικρινά: σε 120 μέρες (18/7–15/11/2026) το beacon mod 27 έπιασε 1.066 στις 27.408, όταν η τύχη δίνει 1.015 ± 31 (+1,6). Σε άλλες 120 μέρες (20/3–17/7/2026) έπιασε 1.008 στις 26.146, όταν η τύχη δίνει 968 ± 31 (+1,3). Είναι λίγο πάνω από την τύχη και τις δύο φορές, αλλά όχι αρκετά για να είναι απόδειξη. Ο «Έλεγχος ημερών» συνεχίζει να το μετράει.</p>
+    <p class="muted">Ειλικρινά: ο τροχός της Allwyn δεν παίρνει σπόρο από το NIST. Είναι δύο ανεξάρτητες τυχαίες πηγές, οπότε κάθε αριθμός πετυχαίνει τον 1ο τροχό 1 φορά στις 27 (3,7%). Ο «Έλεγχος ημερών» το μετράει με πραγματικές κληρώσεις.</p>
   </div>
 
   <footer>
     <div><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα</div>
-    <div id="appVer">έκδοση v42 · 16/11/2026 · <a href="index.html" style="color:inherit">🏠 Αρχική</a> · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+    <div id="appVer">έκδοση v43 · 16/11/2026 · <a href="index.html" style="color:inherit">🏠 Αρχική</a> · <a href="general.html" style="color:inherit">🗂️ General</a></div>
   </footer>
 </div>
 <script>
@@ -219,11 +219,13 @@ var M=27; // μόνο ο 1ος τροχός: 24 νούμερα + 3 σύμβολ�
 /* ---------- NIST beacon ---------- */
 var NB='https://beacon.nist.gov/beacon/2.0', PCACHE={};
 function jget(u){ return fetch(u).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }); }
-// ο παλμός του NIST ένα λεπτό πριν την κλήρωση (πάντα με χρόνο < ώρα κλήρωσης)
+// Το NIST δημοσιεύει τον παλμό της ΗΗ:ΜΜ περίπου 80΄΄ αργότερα. Γι' αυτό παίρνουμε τον παλμό της ΗΗ:ΜΜ−3:
+// βγαίνει ~1,5 λεπτό πριν την κλήρωση, άρα είναι πραγματικά γνωστός πριν γυρίσει ο τροχός.
+var OFF=180000;
 function pulseFor(T){ // T σε ms
   if(PCACHE[T]) return Promise.resolve(PCACHE[T]);
-  return jget(NB+'/pulse/time/'+(T-60000)).then(function(j){ var p=j.pulse;
-    if(Date.parse(p.timeStamp)>=T) return jget(NB+'/chain/'+p.chainIndex+'/pulse/'+(p.pulseIndex-1)).then(function(k){return k.pulse;});
+  return jget(NB+'/pulse/time/'+(T-OFF)).then(function(j){ var p=j.pulse;
+    if(Date.parse(p.timeStamp)>T-OFF) return jget(NB+'/chain/'+p.chainIndex+'/pulse/'+(p.pulseIndex-1)).then(function(k){return k.pulse;});
     return p; }).then(function(p){ var r={idx:p.pulseIndex, ts:Date.parse(p.timeStamp), out:p.outputValue}; PCACHE[T]=r; return r; });
 }
 function beaconPick(out){ return Number(BigInt('0x'+out)%27n)+1; }
@@ -292,29 +294,32 @@ function loadNext(){
   if(!OPT.pred){ $('next').innerHTML='<span class="muted">Η πρόβλεψη είναι κλειστή στις Ρυθμίσεις.</span>'; return; }
   jget(API+'/last-result-and-active').then(function(j){
     var L=j.last, A=j.active; CACHE[L.drawId]=L;
-    var prev=wheels(L).map(function(z){return z.v;}), id=A.drawId, T=A.drawTime, ts=T/1000, t=ath(ts), pt=ath(ts-60);
-    NEXT={id:id, ts:ts}; WAITP=Date.now()<T-60000+8000;
+    var prev=wheels(L).map(function(z){return z.v;}), id=A.drawId, T=A.drawTime, ts=T/1000, t=ath(ts), pt=ath(ts-OFF/1000);
+    NEXT={id:id, ts:ts}; WAITP=Date.now()<T-OFF+88000;
     var head='<div class="meta"><span class="big">#'+dots(id)+'</span><span>'+DAYS[t.wd]+' '+t.d+'/'+t.mo+' · '+t.hm+' · σε <span class="cd" id="cd">…</span></span></div>';
     var extra='';
     if(OPT.phrase){ var S=slots(id,ts,prev), txt=textOf(S,id); extra+='<div class="sub">Φράση-πρόβλεψη · διατύπωση #'+dots(id)+'</div><div class="phrase">'+txt+'</div>'+wheelHTML([seedOf(txt,M)+1]); }
     if(OPT.ts) extra+='<div class="sub">Σκέτο timestamp · SHA-256("'+ts+'")</div>'+wheelHTML([tsPick(ts)]);
     if(WAITP){
-      $('next').innerHTML=head+'<div class="sub">🛰️ NIST beacon mod 27</div><div class="phrase muted">⏳ Περιμένει τον παλμό του NIST της <b>'+pt.hm+'</b>, ένα λεπτό πριν την κλήρωση. Θα εμφανιστεί μόνος του.</div>'+extra;
+      $('next').innerHTML=head+'<div class="sub">🛰️ NIST beacon mod 27</div><div class="phrase muted">⏳ Περιμένει τον παλμό του NIST της <b>'+pt.hm+'</b>. Το NIST τον δημοσιεύει περίπου 1,5 λεπτό πριν την κλήρωση, και θα εμφανιστεί μόνος του.</div>'+extra;
       tick(); return;
     }
     return pulseFor(T).then(function(P){
-      if(P.ts<T-60000 && Date.now()<T){ delete PCACHE[T]; setTimeout(loadNext,5000); // ο παλμός της ΗΗ:ΜΜ−1 δεν βγήκε ακόμα
+      if(P.ts<T-OFF && Date.now()<T){ delete PCACHE[T]; setTimeout(loadNext,5000); // ο παλμός της ΗΗ:ΜΜ−1 δεν βγήκε ακόμα
         $('next').innerHTML=head+'<div class="sub">🛰️ NIST beacon mod 27</div><div class="phrase muted">⏳ Περιμένει τον παλμό του NIST της <b>'+pt.hm+'</b>…</div>'+extra; tick(); return; }
       $('next').innerHTML=head+'<div class="sub">🛰️ NIST beacon mod 27</div>'+wheelHTML([beaconPick(P.out)])+pulseHTML(P)+
-        '<div class="muted" style="margin-top:4px">Ο αριθμός είναι γνωστός από τις '+ath(P.ts/1000).hm+', πριν γυρίσει ο τροχός.</div>'+extra;
+        '<div class="muted" style="margin-top:4px">Παλμός με σφραγίδα '+ath(P.ts/1000).hm+', που το NIST δημοσίευσε περίπου 1,5 λεπτό πριν γυρίσει ο τροχός.</div>'+extra;
       tick();
     });
-  }).catch(function(e){ $('next').textContent='Σφάλμα: '+e; });
+  }).catch(function(e){
+    if(NEXT && Date.now()<NEXT.ts*1000){ setTimeout(loadNext,5000);
+      $('next').innerHTML='<div class="muted">⏳ Περιμένει τον παλμό του NIST… (ξαναδοκιμάζει σε 5΄΄)</div>'; return; }
+    $('next').textContent='Σφάλμα: '+e; });
 }
 function tick(){
   if(!NEXT||!$('cd')) return; var s=Math.round(NEXT.ts-Date.now()/1000);
   $('cd').textContent= s<=0 ? 'τώρα' : (s>=3600 ? Math.floor(s/3600)+'ω '+('0'+Math.floor(s/60)%60).slice(-2)+'΄' : Math.floor(s/60)+':'+('0'+s%60).slice(-2));
-  if(WAITP && s<=52 && s>0){ WAITP=false; loadNext(); return; }
+  if(WAITP && s<=(OFF/1000-88) && s>0){ WAITP=false; loadNext(); return; }
   if(s<-25 && OPT.auto){ NEXT=null; loadNext(); }
 }
 setInterval(tick,1000);
