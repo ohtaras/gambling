@@ -7,42 +7,45 @@
 <style>
 :root{
   --bg:#071a21; --bg2:#0c2a33; --board:#1d4757; --board2:#163a47; --cell:#24586b; --line:#2e6a80;
-  --tq:#27e2cc; --tqD:#12b3a0; --text:#eafffb; --muted:#8fbcc4; --red:#ff4d5e; --gold:#ffd166;
+  --tq:#27e2cc; --tqD:#12b3a0; --yel:#ffd60a; --grn:#2ecc40; --text:#eafffb; --muted:#8fbcc4; --red:#ff4d5e; --gold:#ffd166;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:radial-gradient(1200px 600px at 50% -10%,#123b47 0%,var(--bg) 60%);background-color:var(--bg);color:var(--text);
   font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh}
-header{display:flex;align-items:center;gap:12px;padding:12px 16px 4px;flex-wrap:wrap}
-header img{width:38px;height:38px;border-radius:9px}
-header h1{font-size:20px;margin:0;letter-spacing:.02em}
+header{display:flex;align-items:center;gap:12px;padding:8px 16px 2px;flex-wrap:wrap}
+header img{width:30px;height:30px;border-radius:8px}
+header h1{font-size:19px;margin:0;letter-spacing:.02em}
 header .st{margin-left:auto;font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--tq);display:inline-block;box-shadow:0 0 8px var(--tq);animation:pulse 1.6s infinite}
 @keyframes pulse{50%{opacity:.35}}
-.stage{display:grid;grid-template-columns:170px 1fr 170px;gap:10px;padding:6px 10px 10px;align-items:start}
+.stage{display:grid;grid-template-columns:150px 1fr 150px;gap:10px;padding:4px 10px 6px;align-items:start}
 .side{position:sticky;top:8px;display:flex;flex-direction:column;align-items:center}
 .side .name{font-weight:800;color:var(--tq);margin-top:2px;font-size:14px;letter-spacing:.03em}
-.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-.bd{background:linear-gradient(180deg,var(--board) 0%,var(--board2) 100%);border:1px solid var(--line);border-radius:10px;padding:6px 6px 5px;
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:0 auto;width:100%}
+.bd{container-type:inline-size}
+.bd{background:linear-gradient(180deg,var(--board) 0%,var(--board2) 100%);border:1px solid var(--line);border-radius:10px;padding:4px 5px 4px;
   box-shadow:0 4px 14px rgba(0,0,0,.35);position:relative}
 .bd.new{animation:newIn 1.4s ease-out}
 @keyframes newIn{0%{transform:scale(.85);opacity:0;box-shadow:0 0 0 0 var(--tq)}40%{opacity:1}100%{transform:none;box-shadow:0 0 0 0 transparent}}
 .bd.new::after{content:'ΝΕΑ';position:absolute;top:-7px;right:8px;background:var(--tq);color:#06302a;font-size:10px;font-weight:900;padding:1px 6px;border-radius:6px}
-.bh{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;font-size:12.5px;margin:0 2px 4px;font-variant-numeric:tabular-nums}
+.bh{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;font-size:12.5px;font-size:max(9px,6.4cqw);margin:0 2px 4px;font-variant-numeric:tabular-nums}
 .bh .id{color:var(--tq)} .bh .tm{color:#fff}
-.nums{display:grid;grid-template-columns:repeat(10,1fr);gap:2px}
-.n{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:clamp(8px,0.72vw,11px);font-weight:700;
+.nums{display:grid;grid-template-columns:repeat(10,1fr);gap:1px}
+.n{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:clamp(8px,0.72vw,11px);font-size:max(7px,5.3cqw);font-weight:700;
   color:#b9dde3;background:var(--cell);font-variant-numeric:tabular-nums}
-.n.on{background:var(--tq);color:#05302b;box-shadow:inset 0 -2px 0 rgba(0,0,0,.18)}
+.n.on{background:var(--yel);color:#2a2100;box-shadow:inset 0 -2px 0 rgba(0,0,0,.18)}
+.n.sc{background:var(--grn);color:#062b0c}
+.n.on.scr{box-shadow:inset 0 0 0 2px var(--grn)}
 .n.bon{background:var(--red);color:#fff}
 .n.hotm{outline:1.5px solid var(--red);outline-offset:-1px}
-.bf{display:flex;justify-content:space-between;align-items:center;margin:4px 2px 0;font-size:10.5px;font-weight:800;gap:3px}
+.bf{display:flex;justify-content:space-between;align-items:center;margin:4px 2px 0;font-size:10.5px;font-size:max(8px,5.4cqw);font-weight:800;gap:3px}
 .pill{background:#0a2f38;border:1px solid var(--line);border-radius:6px;padding:0 5px;color:var(--text);white-space:nowrap}
 .pill.b{color:var(--red)}
-.hot{margin:4px 2px 0;font-size:11.5px;color:var(--red);font-weight:800;line-height:1.3;min-height:15px;font-variant-numeric:tabular-nums;border-top:1px dashed rgba(255,77,94,.35);padding-top:3px}
+.hot{margin:3px 2px 0;font-size:11.5px;font-size:max(7px,5.2cqw);color:var(--red);font-weight:800;line-height:1.25;height:calc(2.5em + 4px);overflow:hidden;font-variant-numeric:tabular-nums;border-top:1px dashed rgba(255,77,94,.35);padding-top:3px}
 .hot span{color:var(--muted);font-weight:600}
 /* φιγούρες */
-.pup{position:relative;width:150px}
+.pup{position:relative;width:135px}
 .pup .pz{display:block;width:100%;height:auto;visibility:hidden}
 .pup .pp{position:absolute;inset:0;pointer-events:none}
 .pup .pp img{position:absolute;left:0;top:0;width:100%;height:auto;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 0 1.3px rgba(255,255,255,.45))}
@@ -61,9 +64,11 @@ header .st{margin-left:auto;font-size:13px;color:var(--muted);display:flex;gap:1
 @keyframes armWave{0%,100%{transform:rotate(0)}30%{transform:rotate(-14deg)}60%{transform:rotate(-6deg)}}
 @keyframes step{0%,100%{transform:none}30%{transform:translateY(-6px) rotate(-1.5deg)}60%{transform:translateY(0) rotate(1deg)}}
 .bub{position:relative;background:#fff;color:#0b2a31;border-radius:14px;padding:8px 10px;font-size:13.5px;font-weight:700;line-height:1.3;
-  width:165px;min-height:20px;margin-bottom:8px;opacity:0;transform:translateY(6px) scale(.96);transition:opacity .3s,transform .3s;text-align:center}
+  width:148px;min-height:20px;margin-bottom:8px;opacity:0;transform:translateY(6px) scale(.96);transition:opacity .3s,transform .3s;text-align:center}
 .bub.on{opacity:1;transform:none}
 .bub::after{content:'';position:absolute;bottom:-8px;left:50%;margin-left:-8px;border:8px solid transparent;border-top-color:#fff;border-bottom:0}
+#gear{background:var(--bg2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:2px 7px;cursor:pointer;font-size:14px}
+.controls.hide{display:none}
 .controls{display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:center;padding:4px 16px 0;font-size:13px;color:var(--muted)}
 .controls label{display:flex;align-items:center;gap:5px;cursor:pointer}
 .controls select{font:inherit;background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:7px;padding:2px 6px}
@@ -92,13 +97,14 @@ body.nofig .side{display:none}
 <header>
   <img src="img/allwyn.png" alt="">
   <h1>ΚΙΝΟ · οι 20 τελευταίες κληρώσεις</h1>
-  <div class="st"><span><span class="dot"></span> <span id="st">Φόρτωση…</span></span><span id="nx"></span></div>
+  <div class="st"><span><span class="dot"></span> <span id="st">Φόρτωση…</span></span><span id="nx"></span><button id="gear" title="Ρυθμίσεις">⚙️</button></div>
 </header>
-<div class="controls">
+<div class="controls" id="ctl">
   <label><input type="checkbox" id="tAuto"> 🔄 Αυτόματη ανανέωση</label>
   <label><input type="checkbox" id="tFig"> 🎭 Σπύρος &amp; Ηρακλής</label>
   <label><input type="checkbox" id="tTalk"> 💬 Ατάκες</label>
   <label><input type="checkbox" id="tHotOn"> 🔴 Hot και πάνω στον πίνακα</label>
+  <label><input type="checkbox" id="tFit"> 🖥️ Όλα σε μία οθόνη</label>
   <label>🔥 Hot στις τελευταίες <select id="hx"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="50">50</option></select> κληρώσεις</label>
 </div>
 <div class="stage">
@@ -107,15 +113,15 @@ body.nofig .side{display:none}
   <div class="side r"><div class="bub" id="bubR"></div><div id="figR"></div><div class="name">ΗΡΑΚΛΗΣ</div></div>
 </div>
 <footer>
-  <div>🟢 τυρκουάζ = βγήκε · 🔴 κόκκινη μπάλα = KINO Bonus · <b style="color:var(--red)">κόκκινα νούμερα κάτω από κάθε πίνακα = τα hot εκείνη τη στιγμή</b> (βγήκαν ≥ <span id="thr">8</span> φορές στις <span id="hxl">20</span> κληρώσεις μέχρι και εκείνη · ο μέσος όρος είναι 1 στις 4) · B = KINO Bonus · Στ. = στήλη που κέρδισε</div>
-  <div><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v45 · 17/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a></div>
+  <div>🟡 κίτρινο = βγήκε · 🟢 πράσινο = Δεύτερη Ευκαιρία · 🔴 κόκκινο = KINO Bonus · <b style="color:var(--red)">κόκκινα νούμερα κάτω από κάθε πίνακα = τα hot εκείνη τη στιγμή</b> (βγήκαν ≥ <span id="thr">8</span> φορές στις <span id="hxl">20</span> κληρώσεις μέχρι και εκείνη · ο μέσος όρος είναι 1 στις 4) · B = KINO Bonus · Στ. = στήλη που κέρδισε</div>
+  <div><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v46 · 17/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a></div>
 </footer>
 <script>
 var $=function(i){return document.getElementById(i);};
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 var API='https://api.opap.gr/draws/v3.0/1100';
-var OPT={auto:true,fig:true,talk:true,hotOn:false};
+var OPT={auto:true,fig:true,talk:true,hotOn:false,fit:true};
 Object.keys(OPT).forEach(function(k){var v=lsGet('k20_'+k); if(v!==null) OPT[k]=v==='1';});
 var HX=+(lsGet('k20_hx')||20);
 var DRAWS=[], ACTIVE=null, LASTID=0, NEWID=0;
@@ -137,14 +143,15 @@ function render(){
   for(var i=0;i<Math.min(20,DRAWS.length);i++){
     var d=DRAWS[i], w=d.winningNumbers, on={}, hot=hotAt(i), hs={};
     w.list.forEach(function(x){on[x]=1;}); (hot||[]).forEach(function(x){hs[x]=1;});
-    var b=w.bonus&&w.bonus[0], sb=w.sidebets||{};
-    var cells=''; for(var x=1;x<=80;x++) cells+='<div class="n'+(on[x]?(x===b?' bon':' on'):'')+(OPT.hotOn&&hs[x]?' hotm':'')+'">'+x+'</div>';
+    var b=w.bonus&&w.bonus[0], sb=w.sidebets||{}, sc={}; (w.secondChance||[]).forEach(function(x){sc[x]=1;});
+    var cells=''; for(var x=1;x<=80;x++) cells+='<div class="n'+(on[x]?(x===b?' bon':' on'+(sc[x]?' scr':'')):(sc[x]?' sc':''))+(OPT.hotOn&&hs[x]?' hotm':'')+'">'+x+'</div>';
     h+='<div class="bd'+(d.drawId===NEWID?' new':'')+'"><div class="bh"><span class="id">'+d.drawId+'</span><span class="tm">'+hm(d.drawTime)+'</span></div>'+
       '<div class="nums">'+cells+'</div>'+
       '<div class="bf"><span class="pill">'+par(sb.winningParity)+'</span><span class="pill b">B '+(b||'–')+'</span><span class="pill">Στ. '+(sb.winningColumn||'–')+'η</span></div>'+
       '<div class="hot">'+(hot===null?'<span>hot: χρειάζονται παλαιότερες κληρώσεις</span>':(hot.length?'🔥 '+hot.join(' · '):'<span>κανένα hot</span>'))+'</div></div>';
   }
   $('grid').innerHTML=h||'<div class="err">Δεν βρέθηκαν κληρώσεις.</div>';
+  if(typeof fit==='function') fit();
 }
 function load(){
   return fetch(API+'/last/80',{cache:'no-store'}).then(function(r){return r.json();}).then(function(a){
@@ -234,11 +241,25 @@ function onNew(isNew){
 
 /* ---------- ρυθμίσεις ---------- */
 function applyFig(){ document.body.classList.toggle('nofig',!OPT.fig); }
-[['tAuto','auto'],['tFig','fig'],['tTalk','talk'],['tHotOn','hotOn']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
+[['tAuto','auto'],['tFig','fig'],['tTalk','talk'],['tHotOn','hotOn'],['tFit','fit']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
   c.addEventListener('change',function(){ OPT[a[1]]=c.checked; lsSet('k20_'+a[1],c.checked?'1':'0');
-    if(a[1]==='auto') schedule(); if(a[1]==='fig') applyFig(); if(a[1]==='fig'||a[1]==='talk') convo(); if(a[1]==='hotOn') render(); }); });
+    if(a[1]==='auto') schedule(); if(a[1]==='fig') applyFig(); if(a[1]==='fig'||a[1]==='talk') convo(); if(a[1]==='hotOn') render(); if(a[1]==='fit'||a[1]==='fig') fit(); }); });
 $('hx').value=String(HX); $('hx').addEventListener('change',function(){ HX=+this.value; lsSet('k20_hx',this.value); render(); });
+$('gear').addEventListener('click',function(){ var c=$('ctl'); c.classList.toggle('hide'); lsSet('k20_ctl',c.classList.contains('hide')?'0':'1'); fit(); });
+if(lsGet('k20_ctl')!=='1') $('ctl').classList.add('hide');
 applyFig();
+/* όλοι οι 20 πίνακες σε μία οθόνη: μικραίνει το πλάτος του πλέγματος ώσπου να χωράει στο ύψος */
+function fit(){
+  var g=$('grid'); g.style.width=''; g.style.gridTemplateColumns='';
+  if(!OPT.fit || window.innerWidth<=980) return;
+  function over(){ var R=g.getBoundingClientRect(), bs=g.querySelectorAll('.bd'); if(!bs.length) return 0;
+    return bs[bs.length-1].getBoundingClientRect().bottom - (window.innerHeight-6); }
+  /* πρώτα δοκιμάζει περισσότερες στήλες (4→10) με όλο το πλάτος, ώστε οι πίνακες να μένουν όσο γίνεται μεγάλοι */
+  var cols=[4,5,6,7,8,10];
+  for(var c=0;c<cols.length;c++){ g.style.gridTemplateColumns='repeat('+cols[c]+',minmax(0,1fr))'; if(over()<=0) return; }
+  for(var k=0;k<6 && over()>0;k++){ var R=g.getBoundingClientRect(), o=over(); g.style.width=Math.floor(R.width*Math.max(0.5,(R.height-o)/R.height))+'px'; }
+}
+window.addEventListener('resize',function(){ clearTimeout(window._ft); window._ft=setTimeout(fit,150); });
 load().then(function(){ schedule(); setTimeout(convo,1500); });
 document.addEventListener('visibilitychange',function(){ if(!document.hidden){ load().then(schedule); } });
 </script>
