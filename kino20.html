@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ΚΙΝΟ 20 κληρώσεις</title>
+<title>ΚΙΝΟ 19 κληρώσεις</title>
 <style>
 :root{
   --bg:#071a21; --bg2:#0c2a33; --board:#1d4757; --board2:#163a47; --cell:#24586b; --line:#2e6a80;
@@ -21,11 +21,14 @@ header .st{margin-left:auto;font-size:13px;color:var(--muted);display:flex;gap:1
 .dot{width:9px;height:9px;border-radius:50%;background:var(--tq);display:inline-block;box-shadow:0 0 8px var(--tq)}
 .dot.busy{animation:pulse .6s infinite;background:var(--gold);box-shadow:0 0 8px var(--gold)}
 @keyframes pulse{50%{opacity:.35}}
-.stage{display:grid;grid-template-columns:150px 1fr 150px;gap:10px;padding:4px 10px 6px;align-items:start}
-.side{position:sticky;top:8px;display:flex;flex-direction:column;align-items:center;padding-top:104px}
-.side .bub{position:absolute;left:50%;margin-left:-74px;bottom:calc(100% - 98px);margin-bottom:0}
-.side .name{font-weight:800;color:var(--tq);margin-top:2px;font-size:14px;letter-spacing:.03em}
-.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:0 auto;width:100%}
+.stage{padding:4px 10px 6px}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:0 auto;width:100%}
+.slot:empty{display:none}
+/* Σπύρος & Ηρακλής μέσα στο πλέγμα: 3η σειρά, αριστερά και δεξιά από τους 5 πίνακες */
+.chr{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:100%}
+.chr .pup{width:70%;max-width:160px}
+.chr .bub{position:absolute;top:0;left:2px;right:2px;width:auto;margin:0;z-index:5;font-size:12px;padding:6px 8px}
+.chr .name{font-weight:800;color:var(--tq);font-size:12px;letter-spacing:.03em;margin-top:1px}
 .bd{container-type:inline-size}
 .bd{background:linear-gradient(180deg,var(--board) 0%,var(--board2) 100%);border:1px solid var(--line);border-radius:10px;padding:4px 5px 4px;
   box-shadow:0 4px 14px rgba(0,0,0,.35);position:relative}
@@ -56,7 +59,7 @@ header .st{margin-left:auto;font-size:13px;color:var(--muted);display:flex;gap:1
 .pup .iT{animation:breath 3.4s ease-in-out infinite}
 .pup .hb{position:absolute;inset:0;animation:breathH 3.4s ease-in-out infinite}
 .pup .iH{animation:headIdle 6.5s ease-in-out infinite}
-.side.r .iH{animation-delay:-2.3s}.side.r .iT,.side.r .hb{animation-delay:-1.2s}
+#chrR .iH{animation-delay:-2.3s}#chrR .iT,#chrR .hb{animation-delay:-1.2s}
 .pup.talk .iH{animation:headTalk .5s ease-in-out infinite}
 .pup.talk .pA{animation:armWave 1.1s ease-in-out infinite}
 .pup.step{animation:step .9s ease-in-out}
@@ -79,28 +82,19 @@ header .st{margin-left:auto;font-size:13px;color:var(--muted);display:flex;gap:1
 footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 16px 18px;line-height:1.7}
 footer a{color:inherit}
 .err{grid-column:1/-1;color:var(--muted);text-align:center;padding:30px}
-body.nofig .stage{grid-template-columns:1fr}
-body.nofig .side{display:none}
-@media (max-width:1200px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))} .n{font-size:clamp(8px,0.9vw,11px)}}
+body.nofig .chr{visibility:hidden}
 @media (max-width:980px){
-  .side{padding-top:0} .side .bub{position:relative;left:auto;bottom:auto;margin-left:0}
-  .stage{grid-template-columns:1fr 1fr}
-  .side{position:static;grid-row:1;flex-direction:row;align-items:flex-end;gap:6px;justify-content:center}
-  .side.l{grid-column:1}.side.r{grid-column:2;flex-direction:row-reverse}
-  .pup{width:92px}.bub{width:auto;flex:1;max-width:190px;font-size:12.5px;margin-bottom:28px}
-  .bub::after{left:auto;right:-8px;bottom:12px;margin:0;border:8px solid transparent;border-left-color:#fff;border-right:0}
-  .side.r .bub::after{right:auto;left:-8px;border-left-color:transparent;border-right:8px solid #fff;border-left:0}
-  .side .name{display:none}
-  .grid{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .chr{order:-1;min-height:150px} .chr .pup{width:46%}
   .n{font-size:clamp(8px,2.2vw,11px)}
 }
-@media (max-width:620px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))} .n{font-size:clamp(7px,2.3vw,11px)} header h1{font-size:17px} header .st{margin-left:0} .controls{gap:8px 12px}}
+@media (max-width:620px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))} .chr{min-height:170px} .n{font-size:clamp(7px,2.3vw,11px)} header h1{font-size:17px} header .st{margin-left:0} .controls{gap:8px 12px}}
 </style>
 </head>
 <body>
 <header>
   <img src="img/allwyn.png" alt="">
-  <h1>ΚΙΝΟ · οι 20 τελευταίες κληρώσεις</h1>
+  <h1>ΚΙΝΟ · οι 19 τελευταίες κληρώσεις</h1>
   <div class="st"><span><span class="dot" id="dot"></span> <span id="st">Φόρτωση…</span></span><span id="nx"></span><button id="gear" title="Ρυθμίσεις">⚙️</button></div>
 </header>
 <div class="controls" id="ctl">
@@ -112,13 +106,11 @@ body.nofig .side{display:none}
   <label>🔥 Hot στις τελευταίες <select id="hx"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="50">50</option></select> κληρώσεις</label>
 </div>
 <div class="stage">
-  <div class="side l"><div class="bub" id="bubL"></div><div id="figL"></div><div class="name">ΣΠΥΡΟΣ</div></div>
-  <div class="grid" id="grid"><div class="err">Φόρτωση κληρώσεων…</div></div>
-  <div class="side r"><div class="bub" id="bubR"></div><div id="figR"></div><div class="name">ΗΡΑΚΛΗΣ</div></div>
+  <div class="grid" id="grid"><div class="slot" id="b0"></div><div class="slot" id="b1"></div><div class="slot" id="b2"></div><div class="slot" id="b3"></div><div class="slot" id="b4"></div><div class="slot" id="b5"></div><div class="slot" id="b6"></div><div class="slot" id="b7"></div><div class="slot" id="b8"></div><div class="slot" id="b9"></div><div class="slot" id="b10"></div><div class="slot" id="b11"></div><div class="slot" id="b12"></div><div class="slot" id="b13"></div><div class="chr" id="chrL"><div class="bub" id="bubL"></div><div id="figL"></div><div class="name">ΣΠΥΡΟΣ</div></div><div class="slot" id="b14"></div><div class="slot" id="b15"></div><div class="slot" id="b16"></div><div class="slot" id="b17"></div><div class="slot" id="b18"></div><div class="chr" id="chrR"><div class="bub" id="bubR"></div><div id="figR"></div><div class="name">ΗΡΑΚΛΗΣ</div></div></div>
 </div>
 <footer>
   <div>🟡 κίτρινο = βγήκε · 🟢 πράσινο = Δεύτερη Ευκαιρία · 🔴 κόκκινο = KINO Bonus · <b style="color:var(--red)">κόκκινα νούμερα κάτω από κάθε πίνακα = τα hot εκείνη τη στιγμή</b> (βγήκαν ≥ <span id="thr">8</span> φορές στις <span id="hxl">20</span> κληρώσεις μέχρι και εκείνη · ο μέσος όρος είναι 1 στις 4) · B = KINO Bonus · Στ. = στήλη που κέρδισε</div>
-  <div><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v48 · 17/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a></div>
+  <div><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v49 · 17/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a></div>
 </footer>
 <script>
 var $=function(i){return document.getElementById(i);};
@@ -143,18 +135,18 @@ function hotAt(i){
 }
 function render(){
   $('thr').textContent=Math.ceil(HX*0.25*1.5); $('hxl').textContent=HX;
-  var h='';
-  for(var i=0;i<Math.min(20,DRAWS.length);i++){
+  for(var i=0;i<19;i++){ var el=$('b'+i);
+    if(i>=DRAWS.length){ el.className='slot'; el.innerHTML=''; continue; }
     var d=DRAWS[i], w=d.winningNumbers, on={}, hot=hotAt(i), hs={};
     w.list.forEach(function(x){on[x]=1;}); (hot||[]).forEach(function(x){hs[x]=1;});
     var b=w.bonus&&w.bonus[0], sb=w.sidebets||{}, sc={}; (w.secondChance||[]).forEach(function(x){sc[x]=1;});
     var cells=''; for(var x=1;x<=80;x++) cells+='<div class="n'+(on[x]?(x===b?' bon':' on'+(sc[x]?' scr':'')):(sc[x]?' sc':''))+(OPT.hotOn&&hs[x]?' hotm':'')+'">'+x+'</div>';
-    h+='<div class="bd'+(d.drawId===NEWID?' new':'')+'"><div class="bh"><span class="id">'+d.drawId+'</span><span class="tm">'+hm(d.drawTime)+'</span></div>'+
+    el.className='slot bd'+(d.drawId===NEWID?' new':'');
+    el.innerHTML='<div class="bh"><span class="id">'+d.drawId+'</span><span class="tm">'+hm(d.drawTime)+'</span></div>'+
       '<div class="nums">'+cells+'</div>'+
       '<div class="bf"><span class="pill">'+par(sb.winningParity)+'</span><span class="pill b">B '+(b||'–')+'</span><span class="pill">Στ. '+(sb.winningColumn||'–')+'η</span></div>'+
-      '<div class="hot">'+(hot===null?'<span>hot: χρειάζονται παλαιότερες κληρώσεις</span>':(hot.length?'🔥 '+hot.join(' · '):'<span>κανένα hot</span>'))+'</div></div>';
+      '<div class="hot">'+(hot===null?'<span>hot: χρειάζονται παλαιότερες κληρώσεις</span>':(hot.length?'🔥 '+hot.join(' · '):'<span>κανένα hot</span>'))+'</div>';
   }
-  $('grid').innerHTML=h||'<div class="err">Δεν βρέθηκαν κληρώσεις.</div>';
   if(typeof fit==='function') fit();
 }
 function load(){
@@ -256,14 +248,11 @@ if(lsGet('k20_ctl')!=='1') $('ctl').classList.add('hide');
 applyFig();
 /* όλοι οι 20 πίνακες σε μία οθόνη: μικραίνει το πλάτος του πλέγματος ώσπου να χωράει στο ύψος */
 function fit(){
-  var g=$('grid'); g.style.width=''; g.style.gridTemplateColumns='';
+  var g=$('grid'); g.style.width='';
   if(!OPT.fit || window.innerWidth<=980) return;
-  function over(){ var R=g.getBoundingClientRect(), bs=g.querySelectorAll('.bd'); if(!bs.length) return 0;
-    return bs[bs.length-1].getBoundingClientRect().bottom - (window.innerHeight-6); }
-  /* πρώτα δοκιμάζει περισσότερες στήλες (4→10) με όλο το πλάτος, ώστε οι πίνακες να μένουν όσο γίνεται μεγάλοι */
-  var cols=[4,5,6,7,8,10];
-  for(var c=0;c<cols.length;c++){ g.style.gridTemplateColumns='repeat('+cols[c]+',minmax(0,1fr))'; if(over()<=0) return; }
-  for(var k=0;k<6 && over()>0;k++){ var R=g.getBoundingClientRect(), o=over(); g.style.width=Math.floor(R.width*Math.max(0.5,(R.height-o)/R.height))+'px'; }
+  var bs=g.querySelectorAll('.bd'); if(!bs.length) return;
+  var R=g.getBoundingClientRect(), over=bs[bs.length-1].getBoundingClientRect().bottom-(window.innerHeight-6);
+  if(over>0) g.style.width=Math.floor(R.width*Math.max(0.55,(R.height-over)/R.height))+'px';
 }
 window.addEventListener('resize',function(){ clearTimeout(window._ft); window._ft=setTimeout(fit,150); });
 load().then(function(){ schedule(); setTimeout(convo,1500); });
