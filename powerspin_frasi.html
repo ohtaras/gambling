@@ -103,6 +103,7 @@ table.grid td.n{text-align:left;white-space:nowrap}
     <h2>⚙️ Ρυθμίσεις</h2>
     <label class="tg"><span>🔮 Πρόβλεψη επόμενου γυρίσματος</span><span class="sw"><input type="checkbox" id="tPred"><span></span></span></label>
     <label class="tg"><span>🔄 Αυτόματη ανανέωση (κάθε 4΄)</span><span class="sw"><input type="checkbox" id="tAuto"><span></span></span></label>
+    <label class="tg"><span>📌 Φράση σταθερού φορμάτ</span><span class="sw"><input type="checkbox" id="tFix"><span></span></span></label>
     <label class="tg"><span>✍️ Και φράση-πρόβλεψη</span><span class="sw"><input type="checkbox" id="tPhrase"><span></span></span></label>
     <label class="tg"><span>⏱️ Και πρόβλεψη από σκέτο timestamp</span><span class="sw"><input type="checkbox" id="tTs"><span></span></span></label>
     <label class="tg"><span>🔍 Βρες και τη φράση κάθε κλήρωσης στο Ευρετήριο</span><span class="sw"><input type="checkbox" id="tFind"><span></span></span></label>
@@ -117,6 +118,7 @@ table.grid td.n{text-align:left;white-space:nowrap}
       <li>Μετράει μόνο ο <b>1ος τροχός</b>. Έχει <b>27 θέσεις</b>: τα νούμερα 1–24 και 3 σύμβολα (στο σύστημα της Allwyn 25, 26, 27).</li>
       <li>Το NIST Randomness Beacon δημοσιεύει κάθε λεπτό έναν αριθμό 512 bit από κβαντική πηγή τυχαιότητας. Το NIST δημοσιεύει τον παλμό με σφραγίδα ΗΗ:ΜΜ περίπου 80 δευτερόλεπτα αργότερα. Γι' αυτό, για την κλήρωση της ώρας ΗΗ:ΜΜ παίρνουμε τον παλμό της <b>ΗΗ:ΜΜ−3</b> (αν λείπει, τον αμέσως προηγούμενο). Βγαίνει περίπου 1,5 λεπτό πριν, άρα είναι πραγματικά γνωστός <b>πριν</b> γυρίσει ο τροχός.</li>
       <li>Αριθμός = (τιμή του παλμού) mod 27 + 1 · 25–27 = σύμβολα.</li>
+      <li><b>📌 Σταθερό φορμάτ</b>: πάντα η ίδια διατύπωση (#0) με τα δεδομένα της κάθε κλήρωσης: «Ημέρα ηη/μμ/εεεε, ΩΩ:ΛΛ. Ο ήλιος στην Πάτρα είναι Χ° … Η Νη μέρα του εεεε.» → SHA-256 → mod 27. Στο πλήρες ιστορικό (555.749 κληρώσεις, 2020–2026) πέτυχε 20.594 φορές (3,706%), όταν η τύχη δίνει 20.583 ± 141.</li>
       <li>Από τους διακόπτες ανοίγουν και οι παλιές μέθοδοι: φράση-πρόβλεψη, σκέτο timestamp, φράση κάθε κλήρωσης.</li>
     </ol>
     <p class="muted">Ειλικρινά: ο τροχός της Allwyn δεν παίρνει σπόρο από το NIST. Είναι δύο ανεξάρτητες τυχαίες πηγές, οπότε κάθε αριθμός πετυχαίνει τον 1ο τροχό 1 φορά στις 27 (3,7%). Ο «Έλεγχος ημερών» το μετράει με πραγματικές κληρώσεις.</p>
@@ -124,7 +126,7 @@ table.grid td.n{text-align:left;white-space:nowrap}
 
   <footer>
     <div><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα</div>
-    <div id="appVer">έκδοση v43 · 16/11/2026 · <a href="index.html" style="color:inherit">🏠 Αρχική</a> · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+    <div id="appVer">έκδοση v44 · 17/11/2026 · <a href="index.html" style="color:inherit">🏠 Αρχική</a> · <a href="general.html" style="color:inherit">🗂️ General</a></div>
   </footer>
 </div>
 <script>
@@ -132,7 +134,7 @@ var $=function(i){return document.getElementById(i);};
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 var API='https://api.opap.gr/draws/v3.0/1110';
-var OPT={pred:true,auto:true,phrase:false,find:false,day:true,ts:false,grid:true,gonly:true};
+var OPT={pred:true,auto:true,fix:true,phrase:false,find:false,day:true,ts:false,grid:true,gonly:true};
 function tsPick(ts){ return seedOf(String(ts),M)+1; } // σκέτο timestamp (δευτερόλεπτα) → SHA-256 → mod 27
 Object.keys(OPT).forEach(function(k){var v=lsGet('ps2_'+k); if(v!==null) OPT[k]=v==='1';});
 
@@ -253,7 +255,7 @@ function showDraw(id){
   CUR=id; $('out').innerHTML='<div class="muted">Φόρτωση #'+id+'…</div>';
   getDraw(id).then(function(d){
     if(d.status!=='results'){ $('out').innerHTML='<div class="muted">Η κλήρωση #'+id+' δεν έχει γίνει ακόμα.</div>'; return; }
-    return Promise.all([pulseFor(d.drawTime).catch(function(){return null;}), (OPT.phrase||OPT.find)&&id>1?getDraw(id-1):Promise.resolve(null)]).then(function(x){
+    return Promise.all([pulseFor(d.drawTime).catch(function(){return null;}), (OPT.phrase||OPT.find||OPT.fix)&&id>1?getDraw(id-1):Promise.resolve(null)]).then(function(x){
     var P=x[0], pd=x[1], w=wheels(d), ts=d.drawTime/1000, t=ath(ts), m=M;
     $('qd').value=t.iso; $('qt').value=t.hm;
     var h='<div class="meta"><span class="big">#'+dots(id)+'</span><span>'+DAYS[t.wd]+' '+t.d+'/'+t.mo+'/'+t.y+' · '+t.hm+'</span></div>'+wheelHTML(w);
@@ -261,6 +263,8 @@ function showDraw(id){
       h+='<div class="sub">🛰️ NIST beacon mod 27</div>'+wheelHTML([bv],[bok])+pulseHTML(P)+'<div class="muted" style="margin-top:4px">'+(bok?'✅ Πέτυχε τον 1ο τροχό!':'Δεν πέτυχε (βγήκε '+wname(w[0].v)+').')+'</div>'; }
     else h+='<div class="muted">Δεν βρέθηκε παλμός του NIST για αυτή την ώρα.</div>';
     var prev=pd&&pd.status==='results'?wheels(pd).map(function(z){return z.v;}):null;
+    if(prev && OPT.fix){ var S0=slots(id,ts,prev), fx=textOf(S0,0), fv=seedOf(fx,M)+1, fok=fv===w[0].v;
+      h+='<div class="sub">📌 Σταθερό φορμάτ</div><div class="phrase">'+fx+'</div>'+wheelHTML([fv],[fok])+'<div class="muted">'+(fok?'✅ Πέτυχε τον 1ο τροχό!':'Δεν πέτυχε (βγήκε '+wname(w[0].v)+').')+'</div>'; }
     if(prev && (OPT.phrase||OPT.find)){ var S=slots(id,ts,prev), target=w[0].v-1;
       if(OPT.phrase){ var pv=seedOf(textOf(S,id),M)+1, ok=pv===w[0].v;
         h+='<div class="sub">Φράση-πρόβλεψη · διατύπωση #'+dots(id)+'</div><div class="phrase">'+textOf(S,id)+'</div>'+wheelHTML([pv],[ok])+'<div class="muted">'+(ok?'✅ Πέτυχε τον 1ο τροχό!':'Δεν πέτυχε.')+'</div>'; }
@@ -297,17 +301,18 @@ function loadNext(){
     var prev=wheels(L).map(function(z){return z.v;}), id=A.drawId, T=A.drawTime, ts=T/1000, t=ath(ts), pt=ath(ts-OFF/1000);
     NEXT={id:id, ts:ts}; WAITP=Date.now()<T-OFF+88000;
     var head='<div class="meta"><span class="big">#'+dots(id)+'</span><span>'+DAYS[t.wd]+' '+t.d+'/'+t.mo+' · '+t.hm+' · σε <span class="cd" id="cd">…</span></span></div>';
-    var extra='';
+    var extra='', fixH='';
+    if(OPT.fix){ var fx=textOf(slots(id,ts,prev),0); fixH='<div class="sub">📌 Σταθερό φορμάτ</div><div class="phrase">'+fx+'</div>'+wheelHTML([seedOf(fx,M)+1])+'<div class="muted">Γνωστό από τη στιγμή που βγήκε η προηγούμενη κλήρωση.</div>'; }
     if(OPT.phrase){ var S=slots(id,ts,prev), txt=textOf(S,id); extra+='<div class="sub">Φράση-πρόβλεψη · διατύπωση #'+dots(id)+'</div><div class="phrase">'+txt+'</div>'+wheelHTML([seedOf(txt,M)+1]); }
     if(OPT.ts) extra+='<div class="sub">Σκέτο timestamp · SHA-256("'+ts+'")</div>'+wheelHTML([tsPick(ts)]);
     if(WAITP){
-      $('next').innerHTML=head+'<div class="sub">🛰️ NIST beacon mod 27</div><div class="phrase muted">⏳ Περιμένει τον παλμό του NIST της <b>'+pt.hm+'</b>. Το NIST τον δημοσιεύει περίπου 1,5 λεπτό πριν την κλήρωση, και θα εμφανιστεί μόνος του.</div>'+extra;
+      $('next').innerHTML=head+fixH+'<div class="sub">🛰️ NIST beacon mod 27</div><div class="phrase muted">⏳ Περιμένει τον παλμό του NIST της <b>'+pt.hm+'</b>. Το NIST τον δημοσιεύει περίπου 1,5 λεπτό πριν την κλήρωση, και θα εμφανιστεί μόνος του.</div>'+extra;
       tick(); return;
     }
     return pulseFor(T).then(function(P){
       if(P.ts<T-OFF && Date.now()<T){ delete PCACHE[T]; setTimeout(loadNext,5000); // ο παλμός της ΗΗ:ΜΜ−1 δεν βγήκε ακόμα
-        $('next').innerHTML=head+'<div class="sub">🛰️ NIST beacon mod 27</div><div class="phrase muted">⏳ Περιμένει τον παλμό του NIST της <b>'+pt.hm+'</b>…</div>'+extra; tick(); return; }
-      $('next').innerHTML=head+'<div class="sub">🛰️ NIST beacon mod 27</div>'+wheelHTML([beaconPick(P.out)])+pulseHTML(P)+
+        $('next').innerHTML=head+fixH+'<div class="sub">🛰️ NIST beacon mod 27</div><div class="phrase muted">⏳ Περιμένει τον παλμό του NIST της <b>'+pt.hm+'</b>…</div>'+extra; tick(); return; }
+      $('next').innerHTML=head+fixH+'<div class="sub">🛰️ NIST beacon mod 27</div>'+wheelHTML([beaconPick(P.out)])+pulseHTML(P)+
         '<div class="muted" style="margin-top:4px">Παλμός με σφραγίδα '+ath(P.ts/1000).hm+', που το NIST δημοσίευσε περίπου 1,5 λεπτό πριν γυρίσει ο τροχός.</div>'+extra;
       tick();
     });
@@ -352,15 +357,16 @@ function runDay(){
     var c=[].concat.apply([],L).sort(function(a,b){return a.drawId-b.drawId;});
     if(!c.length){ $('day').innerHTML='<div class="muted">Καμία κλήρωση.</div>'; return; }
     var done=0; var prog=setInterval(function(){ $('day').innerHTML='<div class="muted">Παλμοί NIST: '+done+' / '+c.length+'…</div>'; },500);
-    return Promise.all([pool(c,12,function(d){ return pulseFor(d.drawTime).then(function(p){done++; return p;}); }), OPT.phrase?getDraw(c[0].drawId-1):Promise.resolve(null)]).then(function(R){
+    return Promise.all([pool(c,12,function(d){ return pulseFor(d.drawTime).then(function(p){done++; return p;}); }), (OPT.phrase||OPT.fix)?getDraw(c[0].drawId-1):Promise.resolve(null)]).then(function(R){
       clearInterval(prog);
-      var PS=R[0], first=R[1], GRID={}, DLIST=[], n=0, hit=0, th=0, ph=0, np=0, rows='', prevW=first&&first.status==='results'?wheels(first).map(function(z){return z.v;}):null, last=c[0].drawId-1;
+      var PS=R[0], first=R[1], GRID={}, DLIST=[], fh=0, nf=0, n=0, hit=0, th=0, ph=0, np=0, rows='', prevW=first&&first.status==='results'?wheels(first).map(function(z){return z.v;}):null, last=c[0].drawId-1;
       c.forEach(function(d,i){
         var act=wheels(d).map(function(z){return z.v;}), P=PS[i];
         var t0=ath(d.drawTime/1000); if(DLIST.indexOf(t0.iso)<0) DLIST.push(t0.iso);
         if(P){ var o=beaconPick(P.out); n++; (GRID[t0.hm]=GRID[t0.hm]||{})[t0.iso]={o:o,a:act[0],id:d.drawId}; if(OPT.ts && tsPick(d.drawTime/1000)===act[0]) th++;
           if(o===act[0]){ hit++; var tt=ath(d.drawTime/1000);
             rows+='<tr><td class="n"><a href="#" data-id="'+d.drawId+'">'+(nd>1?tt.d+'/'+tt.mo+' ':'')+tt.hm+'</a></td><td class="n">'+wname(o)+'</td></tr>'; } }
+        if(OPT.fix && prevW && d.drawId===last+1){ nf++; if(seedOf(textOf(slots(d.drawId,d.drawTime/1000,prevW),0),M)+1===act[0]) fh++; }
         if(OPT.phrase && prevW && d.drawId===last+1){ np++; if(seedOf(textOf(slots(d.drawId,d.drawTime/1000,prevW),d.drawId),M)+1===act[0]) ph++; }
         prevW=act; last=d.drawId;
       });
@@ -369,6 +375,7 @@ function runDay(){
       $('day').innerHTML='<table><tr><th></th><th>Επιτυχίες</th><th>Τύχη</th></tr>'+
         '<tr><td>Κληρώσεις</td><td class="n">'+n+'</td><td></td></tr>'+
         '<tr><td>🛰️ NIST beacon mod 27</td><td class="n"><b>'+hit+'</b> ('+pc(hit,n)+')</td><td class="n">'+f(exp)+' ± '+f(sd)+' (3,7%)</td></tr>'+
+        (OPT.fix?'<tr><td>📌 Σταθερό φορμάτ</td><td class="n"><b>'+fh+'</b> ('+pc(fh,nf)+')</td><td class="n">'+f(nf/27)+'</td></tr>':'')+
         (OPT.phrase?'<tr><td>Φράση-πρόβλεψη</td><td class="n"><b>'+ph+'</b> ('+pc(ph,np)+')</td><td class="n">'+f(np/27)+'</td></tr>':'')+
         (OPT.ts?'<tr><td>Σκέτο timestamp</td><td class="n"><b>'+th+'</b> ('+pc(th,n)+')</td><td class="n">'+f(exp)+'</td></tr>':'')+'</table>'+
         '<div class="muted" style="margin-top:6px">Beacon: '+(Math.abs(z)<2?'μέσα στη συνηθισμένη διακύμανση της τύχης':'έξω από τη συνηθισμένη διακύμανση')+' (απόκλιση '+(z>=0?'+':'')+f(z)+' τυπικές αποκλίσεις).</div>'+
@@ -378,8 +385,8 @@ function runDay(){
 }
 
 /* ---------- σύνδεση ---------- */
-[['tPred','pred'],['tAuto','auto'],['tPhrase','phrase'],['tTs','ts'],['tFind','find'],['tDay','day'],['tGrid','grid'],['tGonly','gonly']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
-  c.addEventListener('change',function(){ OPT[a[1]]=c.checked; lsSet('ps2_'+a[1],c.checked?'1':'0'); if(['grid','gonly'].indexOf(a[1])>=0 && $('day').innerHTML) runDay(); if(['pred','ts','phrase'].indexOf(a[1])>=0) loadNext(); if(['find','ts','phrase'].indexOf(a[1])>=0&&CUR) showDraw(CUR); }); });
+[['tPred','pred'],['tAuto','auto'],['tFix','fix'],['tPhrase','phrase'],['tTs','ts'],['tFind','find'],['tDay','day'],['tGrid','grid'],['tGonly','gonly']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
+  c.addEventListener('change',function(){ OPT[a[1]]=c.checked; lsSet('ps2_'+a[1],c.checked?'1':'0'); if(['grid','gonly'].indexOf(a[1])>=0 && $('day').innerHTML) runDay(); if(['pred','ts','phrase','fix'].indexOf(a[1])>=0) loadNext(); if(['find','ts','phrase','fix'].indexOf(a[1])>=0&&CUR) showDraw(CUR); if(a[1]==='fix' && $('day').innerHTML) runDay(); }); });
 Array.prototype.forEach.call(document.querySelectorAll('.card[id]'), function(c){ var k='ps_col_'+c.id, v=lsGet(k);
   if(v!==null) c.classList.toggle('collapsed', v==='1');
   c.querySelector('h2').addEventListener('click', function(){ c.classList.toggle('collapsed'); lsSet(k, c.classList.contains('collapsed')?'1':'0'); }); });
