@@ -17,7 +17,8 @@ header{display:flex;align-items:center;gap:12px;padding:8px 16px 2px;flex-wrap:w
 header img{width:30px;height:30px;border-radius:8px}
 header h1{font-size:19px;margin:0;letter-spacing:.02em}
 header .st{margin-left:auto;font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.dot{width:9px;height:9px;border-radius:50%;background:var(--tq);display:inline-block;box-shadow:0 0 8px var(--tq);animation:pulse 1.6s infinite}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--tq);display:inline-block;box-shadow:0 0 8px var(--tq)}
+.dot.busy{animation:pulse .6s infinite;background:var(--gold);box-shadow:0 0 8px var(--gold)}
 @keyframes pulse{50%{opacity:.35}}
 .stage{display:grid;grid-template-columns:150px 1fr 150px;gap:10px;padding:4px 10px 6px;align-items:start}
 .side{position:sticky;top:8px;display:flex;flex-direction:column;align-items:center}
@@ -97,7 +98,7 @@ body.nofig .side{display:none}
 <header>
   <img src="img/allwyn.png" alt="">
   <h1>ΚΙΝΟ · οι 20 τελευταίες κληρώσεις</h1>
-  <div class="st"><span><span class="dot"></span> <span id="st">Φόρτωση…</span></span><span id="nx"></span><button id="gear" title="Ρυθμίσεις">⚙️</button></div>
+  <div class="st"><span><span class="dot" id="dot"></span> <span id="st">Φόρτωση…</span></span><span id="nx"></span><button id="gear" title="Ρυθμίσεις">⚙️</button></div>
 </header>
 <div class="controls" id="ctl">
   <label><input type="checkbox" id="tAuto"> 🔄 Αυτόματη ανανέωση</label>
@@ -114,7 +115,7 @@ body.nofig .side{display:none}
 </div>
 <footer>
   <div>🟡 κίτρινο = βγήκε · 🟢 πράσινο = Δεύτερη Ευκαιρία · 🔴 κόκκινο = KINO Bonus · <b style="color:var(--red)">κόκκινα νούμερα κάτω από κάθε πίνακα = τα hot εκείνη τη στιγμή</b> (βγήκαν ≥ <span id="thr">8</span> φορές στις <span id="hxl">20</span> κληρώσεις μέχρι και εκείνη · ο μέσος όρος είναι 1 στις 4) · B = KINO Bonus · Στ. = στήλη που κέρδισε</div>
-  <div><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v46 · 17/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a></div>
+  <div><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v47 · 17/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a></div>
 </footer>
 <script>
 var $=function(i){return document.getElementById(i);};
@@ -154,15 +155,17 @@ function render(){
   if(typeof fit==='function') fit();
 }
 function load(){
+  $('dot').classList.add('busy');
   return fetch(API+'/last/80',{cache:'no-store'}).then(function(r){return r.json();}).then(function(a){
     ACTIVE=a.filter(function(d){return d.status!=='results';})[0]||null;
     var res=a.filter(function(d){return d.status==='results'&&d.winningNumbers&&d.winningNumbers.list&&d.winningNumbers.list.length;});
     res.sort(function(x,y){return y.drawId-x.drawId;});
     var top=res.length?res[0].drawId:0;
     if(top!==LASTID){ NEWID=LASTID?top:0; LASTID=top; DRAWS=res; render(); onNew(LASTID&&NEWID); }
+    $('dot').classList.remove('busy');
     $('st').textContent=res.length?'Τελευταία: #'+res[0].drawId+' στις '+hm(res[0].drawTime):'—';
     return res.length;
-  }).catch(function(e){ $('st').textContent='Σφάλμα σύνδεσης – ξαναδοκιμάζω'; });
+  }).catch(function(e){ $('dot').classList.remove('busy'); $('st').textContent='Σφάλμα σύνδεσης – ξαναδοκιμάζω'; });
 }
 /* αυτόνομη ανανέωση: λίγο μετά την ώρα της επόμενης κλήρωσης, μετά ανά 10΄΄ μέχρι να έρθει */
 var waitT=null;
@@ -261,7 +264,7 @@ function fit(){
 }
 window.addEventListener('resize',function(){ clearTimeout(window._ft); window._ft=setTimeout(fit,150); });
 load().then(function(){ schedule(); setTimeout(convo,1500); });
-document.addEventListener('visibilitychange',function(){ if(!document.hidden){ load().then(schedule); } });
+document.addEventListener('visibilitychange',function(){ if(!document.hidden && ACTIVE && Date.now()>ACTIVE.drawTime+12000){ load().then(schedule); } });
 </script>
 </body>
 </html>
