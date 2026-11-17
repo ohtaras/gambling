@@ -11,6 +11,7 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0}
+html{scrollbar-gutter:stable}
 body{background:radial-gradient(1200px 600px at 50% -10%,#123b47 0%,var(--bg) 60%);background-color:var(--bg);color:var(--text);
   font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh}
 header{display:flex;align-items:center;gap:12px;padding:8px 16px 2px;flex-wrap:wrap}
@@ -21,7 +22,8 @@ header .st{margin-left:auto;font-size:13px;color:var(--muted);display:flex;gap:1
 .dot.busy{animation:pulse .6s infinite;background:var(--gold);box-shadow:0 0 8px var(--gold)}
 @keyframes pulse{50%{opacity:.35}}
 .stage{display:grid;grid-template-columns:150px 1fr 150px;gap:10px;padding:4px 10px 6px;align-items:start}
-.side{position:sticky;top:8px;display:flex;flex-direction:column;align-items:center}
+.side{position:sticky;top:8px;display:flex;flex-direction:column;align-items:center;padding-top:104px}
+.side .bub{position:absolute;left:50%;margin-left:-74px;bottom:calc(100% - 98px);margin-bottom:0}
 .side .name{font-weight:800;color:var(--tq);margin-top:2px;font-size:14px;letter-spacing:.03em}
 .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:0 auto;width:100%}
 .bd{container-type:inline-size}
@@ -81,6 +83,7 @@ body.nofig .stage{grid-template-columns:1fr}
 body.nofig .side{display:none}
 @media (max-width:1200px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))} .n{font-size:clamp(8px,0.9vw,11px)}}
 @media (max-width:980px){
+  .side{padding-top:0} .side .bub{position:relative;left:auto;bottom:auto;margin-left:0}
   .stage{grid-template-columns:1fr 1fr}
   .side{position:static;grid-row:1;flex-direction:row;align-items:flex-end;gap:6px;justify-content:center}
   .side.l{grid-column:1}.side.r{grid-column:2;flex-direction:row-reverse}
@@ -115,7 +118,7 @@ body.nofig .side{display:none}
 </div>
 <footer>
   <div>🟡 κίτρινο = βγήκε · 🟢 πράσινο = Δεύτερη Ευκαιρία · 🔴 κόκκινο = KINO Bonus · <b style="color:var(--red)">κόκκινα νούμερα κάτω από κάθε πίνακα = τα hot εκείνη τη στιγμή</b> (βγήκαν ≥ <span id="thr">8</span> φορές στις <span id="hxl">20</span> κληρώσεις μέχρι και εκείνη · ο μέσος όρος είναι 1 στις 4) · B = KINO Bonus · Στ. = στήλη που κέρδισε</div>
-  <div><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v47 · 17/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a></div>
+  <div><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v48 · 17/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a></div>
 </footer>
 <script>
 var $=function(i){return document.getElementById(i);};
