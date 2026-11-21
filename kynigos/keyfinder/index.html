@@ -158,11 +158,17 @@ textarea{width:100%;font-family:var(--body);font-size:1.05rem;padding:12px;borde
         <input id="f-onesmax" type="number" min="0" inputmode="numeric" value="43" style="width:58px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
         <button id="f-balance" style="font-family:var(--body);font-weight:800;font-size:.82rem;cursor:pointer;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:9px;padding:7px 10px">ίσα 0/1</button>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.86rem">
-        <span>Μέγιστο σερί ίδιων bit:</span>
-        <input id="f-maxrun" type="number" min="0" inputmode="numeric" value="10" style="width:110px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
+      <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.86rem;flex-wrap:wrap">
+        <span>Σερί ίδιων bit:</span>
+        <select id="f-runmode" style="font-family:var(--body);font-weight:800;font-size:.82rem;padding:7px 8px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink)">
+          <option value="le">≤ το πολύ</option>
+          <option value="eq">= ακριβώς</option>
+          <option value="ge">≥ τουλάχιστον</option>
+        </select>
+        <input id="f-maxrun" type="number" min="0" inputmode="numeric" value="10" style="width:80px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
+        <span>συνεχόμενα</span>
       </div>
-      <div class="note" id="f-info" style="margin-top:8px">Default (για #71): 27–43 άσσοι & σερί ≤10 → ~96% να περιέχει το σωστό. Τσέκαρε «ενεργά» για να ισχύσουν. (Σε μικρά παζλ άφησέ τα ανενεργά.)</div>
+      <div class="note" id="f-info" style="margin-top:8px">Default (για #71): 27–43 άσσοι & σερί <b>≤10</b> → ~96% να περιέχει το σωστό. <b>≤</b>=άνω όριο (ασφαλές). <b>=/≥</b>=απαιτεί σερί τόσου μήκους — προσοχή: αν το αληθινό κλειδί δεν το έχει, το αποκλείεις εντελώς. Τσέκαρε «ενεργά» για να ισχύσουν. (Σε μικρά παζλ άφησέ τα ανενεργά.)</div>
     </div>
     <div class="note" id="autostat" style="margin-top:6px;text-align:center"></div>
     <div class="gout">
@@ -687,7 +693,7 @@ $("bstart").onclick = function(){
   var locked=false, peeking=false, curKey=null, lockMode=false, puzzleActive=false;
   var autoRun=false, autoTimer=null, autoTries=0, autoT0=0;
   var seqMode=false, seqCounter=0n, seqMax=0n, freePos=[], fixedBase=0n;
-  var freeCount=0, onesMin=0, onesMax=256, maxRunAllowed=0;
+  var freeCount=0, onesMin=0, onesMax=256, maxRunAllowed=0, runMode="le";
   var fixedMask=new Array(256).fill(false);
   var PUZZLES=[
     {n:6,  key:42n,          label:"🎓 Δοκιμαστικό — κλειδί 42 (6 bit)", fixMSB:false},
@@ -857,7 +863,12 @@ $("bstart").onclick = function(){
   function freeCountNow(){ var c=0; for(var p=0;p<256;p++) if(!fixedMask[p]) c++; return c; }
   function popcnt(x){ var c=0; while(x>0n){ if(x&1n)c++; x>>=1n; } return c; }
   function maxRunBits(x,n){ if(n<=0) return 0; var mr=1,cur=1,prev=(x&1n); for(var i=1;i<n;i++){ var bit=(x>>BigInt(i))&1n; if(bit===prev){cur++; if(cur>mr)mr=cur;} else {cur=1;prev=bit;} } return mr; }
-  function passFilter(fv){ var ones=popcnt(fv); if(ones<onesMin||ones>onesMax) return false; if(maxRunAllowed>0 && maxRunBits(fv,freeCount)>maxRunAllowed) return false; return true; }
+  function passFilter(fv){ var ones=popcnt(fv); if(ones<onesMin||ones>onesMax) return false;
+    if(maxRunAllowed>0){ var mrun=maxRunBits(fv,freeCount);
+      if(runMode==="eq"){ if(mrun!==maxRunAllowed) return false; }
+      else if(runMode==="ge"){ if(mrun<maxRunAllowed) return false; }
+      else { if(mrun>maxRunAllowed) return false; } }
+    return true; }
   function buildK(fv){ var k=fixedBase; for(var j=0;j<freePos.length;j++){ if((fv>>BigInt(j))&1n) k|=(1n<<BigInt(freePos[j])); } return k; }
   function randFreeVal(){ var nb=Math.ceil(freeCount/8)||1; var b=new Uint8Array(nb); crypto.getRandomValues(b); var v=0n; for(var i=0;i<nb;i++) v=(v<<8n)|BigInt(b[i]); return v & ((1n<<BigInt(freeCount))-1n); }
   function randExactOnes(k){ var pos=[],i; for(i=0;i<freeCount;i++)pos.push(i); for(i=0;i<k;i++){ var j=i+Math.floor(Math.random()*(freeCount-i)); var t=pos[i];pos[i]=pos[j];pos[j]=t; } var v=0n; for(i=0;i<k;i++) v|=(1n<<BigInt(pos[i])); return v; }
@@ -869,13 +880,14 @@ $("bstart").onclick = function(){
   }
   function readFilters(){
     var en=$("f-enable");
-    if(en && !en.checked){ onesMin=0; onesMax=freeCount; maxRunAllowed=0; return; }
-    var mn=$("f-onesmin"), mx=$("f-onesmax"), mr=$("f-maxrun");
+    if(en && !en.checked){ onesMin=0; onesMax=freeCount; maxRunAllowed=0; runMode="le"; return; }
+    var mn=$("f-onesmin"), mx=$("f-onesmax"), mr=$("f-maxrun"), rmo=$("f-runmode");
     onesMin = (mn && mn.value!=="") ? Math.max(0, parseInt(mn.value,10)||0) : 0;
     onesMax = (mx && mx.value!=="") ? (parseInt(mx.value,10)) : freeCount;
     if(isNaN(onesMax)) onesMax=freeCount;
     onesMin=Math.min(onesMin,freeCount); onesMax=Math.min(onesMax,freeCount);
     maxRunAllowed = (mr && mr.value!=="") ? Math.max(0, parseInt(mr.value,10)||0) : 0;
+    runMode = (rmo && rmo.value) ? rmo.value : "le";
   }
   function autoDone(){
     stopAuto();

@@ -100,11 +100,17 @@ h1{font-family:var(--disp);font-weight:700;font-size:2.1rem;margin:6px 0 2px;let
       <span>έως</span>
       <input id="f-onesmax" type="number" min="0" max="70" inputmode="numeric" value="43" style="width:56px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
     </div>
-    <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.85rem">
-      <span>Μέγιστο σερί:</span>
-      <input id="f-maxrun" type="number" min="0" inputmode="numeric" value="10" style="width:90px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
+    <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.85rem;flex-wrap:wrap">
+      <span>Σερί:</span>
+      <select id="f-runmode" style="font-family:inherit;font-weight:800;font-size:.82rem;padding:7px 8px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink)">
+        <option value="le">≤ το πολύ</option>
+        <option value="eq">= ακριβώς</option>
+        <option value="ge">≥ τουλάχιστον</option>
+      </select>
+      <input id="f-maxrun" type="number" min="0" inputmode="numeric" value="10" style="width:70px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
+      <span>συνεχόμενα</span>
     </div>
-    <div class="odds" style="margin:8px 0 0;text-align:left">Default: 27–43 άσσοι &amp; σερί ≤10 → ~96% να «περιέχει» το σωστό κλειδί.</div>
+    <div class="odds" style="margin:8px 0 0;text-align:left">Default: 27–43 άσσοι &amp; σερί <b>≤10</b> → ~96% να «περιέχει» το σωστό. <b>≤</b>=ασφαλές άνω όριο· <b>=/≥</b> απαιτεί σερί τόσου μήκους — αν το αληθινό κλειδί δεν το έχει, το αποκλείεις.</div>
   </div>
 
   <div class="speeds">
@@ -217,7 +223,7 @@ var FREE=70, cells=[], running=false, locked=false, tries=0, timer=null, t0=0, d
 var seqMode=false, seqCounter=0n;
 var rangeMode=false, chunkStart=0n, chunkEnd=(1n<<70n), chunkIdx=0;
 var CHUNK=(1n<<70n)/666n;
-var filtEnabled=false, onesMin=0, onesMax=70, maxRunAllowed=0;
+var filtEnabled=false, onesMin=0, onesMax=70, maxRunAllowed=0, runMode="le";
 
 (function(){ var box=$("bitbox"); for(var i=0;i<FREE;i++){ var d=document.createElement("div"); d.className="bc"; d.textContent="0"; box.appendChild(d); cells.push(d);} })();
 
@@ -227,7 +233,12 @@ function randomFree(){ var b=new Uint8Array(9); crypto.getRandomValues(b); var r
 function randInChunk(){ var size=chunkEnd-chunkStart; var b=new Uint8Array(8); crypto.getRandomValues(b); var v=0n; for(var i=0;i<8;i++) v=(v<<8n)|BigInt(b[i]); return chunkStart + (v % size); }
 function popcnt(x){ var c=0; while(x>0n){ if(x&1n)c++; x>>=1n; } return c; }
 function maxRunBits(x,n){ if(n<=0)return 0; var mr=1,cur=1,prev=(x&1n); for(var i=1;i<n;i++){ var b=(x>>BigInt(i))&1n; if(b===prev){cur++; if(cur>mr)mr=cur;} else {cur=1;prev=b;} } return mr; }
-function passFilter(r){ if(!filtEnabled) return true; var o=popcnt(r); if(o<onesMin||o>onesMax) return false; if(maxRunAllowed>0 && maxRunBits(r,70)>maxRunAllowed) return false; return true; }
+function passFilter(r){ if(!filtEnabled) return true; var o=popcnt(r); if(o<onesMin||o>onesMax) return false;
+  if(maxRunAllowed>0){ var mrun=maxRunBits(r,70);
+    if(runMode==="eq"){ if(mrun!==maxRunAllowed) return false; }
+    else if(runMode==="ge"){ if(mrun<maxRunAllowed) return false; }
+    else { if(mrun>maxRunAllowed) return false; } }
+  return true; }
 
 async function attempt(){
   var r=null;
@@ -255,12 +266,13 @@ async function loop(){ if(!running)return; try{ if(await attempt()) return; }cat
 function start(){ if(running||locked)return;
   seqMode=$("seqmode")&&$("seqmode").checked;
   var en=$("f-enable"); filtEnabled=!!(en&&en.checked);
-  if(filtEnabled){ var mn=$("f-onesmin"),mx=$("f-onesmax"),mr=$("f-maxrun");
+  if(filtEnabled){ var mn=$("f-onesmin"),mx=$("f-onesmax"),mr=$("f-maxrun"),rmo=$("f-runmode");
     onesMin=(mn&&mn.value!=="")?Math.max(0,parseInt(mn.value,10)||0):0;
     onesMax=(mx&&mx.value!=="")?parseInt(mx.value,10):70; if(isNaN(onesMax))onesMax=70;
     onesMin=Math.min(onesMin,70); onesMax=Math.min(onesMax,70);
     maxRunAllowed=(mr&&mr.value!=="")?Math.max(0,parseInt(mr.value,10)||0):0;
-  }
+    runMode=(rmo&&rmo.value)?rmo.value:"le";
+  } else { runMode="le"; }
   rangeMode=$("rangemode")&&$("rangemode").checked;
   if(rangeMode){ chunkIdx=Math.floor(Math.random()*666); chunkStart=BigInt(chunkIdx)*CHUNK; chunkEnd=(chunkIdx===665)?(1n<<70n):(chunkStart+CHUNK); var ci=$("chunkinfo"); if(ci) ci.innerHTML="🎯 Κομμάτι <b>"+(chunkIdx+1)+"</b> / 666"; }
   else { chunkStart=0n; chunkEnd=(1n<<70n); var ci0=$("chunkinfo"); if(ci0) ci0.innerHTML=""; }
