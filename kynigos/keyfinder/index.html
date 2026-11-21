@@ -825,6 +825,28 @@ $("bstart").onclick = function(){
     }
   }
   (function(){ var sel=$("puzsel"); if(!sel) return; var ph=document.createElement("option"); ph.value=""; ph.textContent="— διάλεξε παζλ —"; sel.appendChild(ph); PUZZLES.forEach(function(pz,ix){ var o=document.createElement("option"); o.value=String(ix); o.textContent=pz.label; sel.appendChild(o); }); sel.onchange=function(){ if(sel.value==="")return; applyPuzzle(PUZZLES[parseInt(sel.value,10)]); }; })();
+  /* --- Άνοιγμα απευθείας σε συγκεκριμένο παζλ μέσω URL: ?pz=N&addr=...&key=hex --- */
+  (function(){
+    try{
+      var q=new URLSearchParams(location.search);
+      var pn=parseInt(q.get("pz")||q.get("n")||"",10);
+      if(!pn||pn<1||pn>160) return;
+      var addr=(q.get("addr")||"").trim();
+      var keyhex=(q.get("key")||"").trim();
+      var pz={ n:pn,
+               key:(keyhex && /^[0-9a-fA-F]+$/.test(keyhex))?BigInt("0x"+keyhex):null,
+               addr:addr||null, fixMSB:true,
+               label:"Puzzle #"+pn };
+      if(!pz.addr && pz.key==null){
+        for(var i=0;i<PUZZLES.length;i++){ if(PUZZLES[i].n===pn){ pz=PUZZLES[i]; break; } }
+      }
+      applyPuzzle(pz);
+      var sel=$("puzsel");
+      if(sel){ for(var j=0;j<PUZZLES.length;j++){ if(PUZZLES[j].n===pn){ sel.value=String(j); break; } } }
+      // φέρε τον στόχο στο πεδίο θέασης
+      setTimeout(function(){ try{ document.querySelector(".wrap,main,body").scrollTop=0; }catch(e){} },30);
+    }catch(e){}
+  })();
   $("gzero").onclick=function(){ stopAuto(); var anyFix=fixedMask.indexOf(true)>=0; if(!anyFix)$("ghint").textContent=""; var k=0n; for(var p=0;p<256;p++){ if(fixedMask[p]&&bits[p]) k|=(1n<<BigInt(255-p)); } setFromBig(k); };
   $("grand").onclick=function(){ stopAuto(); var rnd=new Uint8Array(32); crypto.getRandomValues(rnd); var k=0n; for(var p=0;p<256;p++){ var v=fixedMask[p]?bits[p]:((rnd[p>>3]>>(p&7))&1); if(v) k|=(1n<<BigInt(255-p)); } setFromBig(k); };
   $("target").addEventListener("input",recompute);
