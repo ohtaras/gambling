@@ -41,6 +41,7 @@ h1{font-family:var(--disp);font-weight:700;font-size:1.9rem;margin:6px 0 2px;let
 .try{display:inline-block;margin-top:10px;padding:9px 14px;border-radius:11px;font-weight:800;font-size:.9rem;text-decoration:none;background:var(--acc);color:#07140c;border:1px solid var(--acc)}
 .card.unsolved .try{background:transparent;color:var(--warn);border:1px solid var(--warn)}
 .try:active{transform:scale(.97)}
+.try.kang{display:block;margin-top:8px;background:transparent;color:var(--acc);border:1px dashed var(--acc)}
 .top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .pz{font-family:var(--disp);font-weight:700;font-size:1.15rem}
 .badge{font-size:.68rem;font-weight:800;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.03em}
@@ -135,6 +136,7 @@ function render(){
     var href="../keyfinder/?pz="+p.n+(p.addr?("&addr="+encodeURIComponent(p.addr)):"")+(p.hex?("&key="+p.hex):"");
     var lbl=p.solved?"🔎 Δες το λυμένο στον Κυνηγό":"🎯 Δοκίμασε μόνος σου";
     inner+='<a class="try" href="'+href+'">'+lbl+' ›</a>';
+    if(p.pub && !p.solved){ inner+='<a class="try kang" href="../kangaroo/?pz='+p.n+'">🦘 Δοκίμασε με Kangaroo ›</a>'; }
     html+='<div class="card '+cls+'">'+inner+'</div>';
   }
   list.innerHTML=html;

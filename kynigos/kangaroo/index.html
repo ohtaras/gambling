@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pollard Kangaroo</title>
+<style>
+:root{--bg:#0c130f;--panel:#121b15;--panel2:#16211a;--line:#24362a;--ink:#e7f0ea;--soft:#8fa699;--acc:#49d17f;--warn:#e0a44a;--bad:#e5704b;--body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+@media (prefers-color-scheme:light){:root{--bg:#eef3ef;--panel:#fff;--panel2:#f3f8f4;--line:#d7e3da;--ink:#13201a;--soft:#5c7064;--acc:#1f9d55;--warn:#b5781f;--bad:#c24a28}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);padding:0 0 env(safe-area-inset-bottom,0)}
+.wrap{max-width:640px;margin:0 auto;padding:20px 15px 60px}
+h1{font-size:1.4rem;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.lead{color:var(--soft);font-size:.92rem;margin:0 0 18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:14px}
+.lab{font-weight:800;font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--soft);margin:0 0 9px}
+.seg{display:flex;gap:8px;margin-bottom:12px}
+.seg button{flex:1;font:inherit;font-weight:800;font-size:.9rem;padding:11px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.seg button.on{background:var(--acc);color:#07140c;border-color:var(--acc)}
+select,input[type=range]{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--ink)}
+input[type=range]{padding:0}
+.row{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:.9rem}
+.big{width:100%;font:inherit;font-weight:800;font-size:1rem;padding:14px;border-radius:13px;border:none;cursor:pointer;background:var(--acc);color:#07140c;margin-top:6px}
+.big.stop{background:var(--bad);color:#fff}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:.82rem;word-break:break-all}
+.warnbox{background:rgba(224,164,74,.12);border:1px solid var(--warn);border-radius:12px;padding:11px 12px;font-size:.86rem;color:var(--ink);margin-top:10px}
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.stat .b{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:10px}
+.stat .k{font-size:.72rem;color:var(--soft);text-transform:uppercase;letter-spacing:.04em}
+.stat .v{font-weight:800;font-size:1.05rem;font-variant-numeric:tabular-nums;margin-top:2px}
+.bar{height:8px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:12px}
+.bar>i{display:block;height:100%;width:0;background:var(--acc);transition:width .25s}
+.win{display:none;background:rgba(73,209,127,.12);border:1px solid var(--acc);border-radius:14px;padding:15px;margin-top:12px}
+.win.show{display:block}
+.win h2{margin:0 0 10px;font-size:1.1rem;color:var(--acc)}
+.kv{margin:9px 0}
+.kv .l{font-size:.74rem;color:var(--soft);text-transform:uppercase}
+.note{color:var(--soft);font-size:.82rem;line-height:1.55}
+.ok{color:var(--acc);font-weight:800}
+.bad{color:var(--bad);font-weight:800}
+a.home{color:var(--soft);font-size:.85rem;text-decoration:none}
+details{margin-top:10px}summary{cursor:pointer;font-weight:700;font-size:.9rem;color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="../puzzles/">‹ πίσω στα παζλ</a>
+  <h1>🦘 Pollard Kangaroo</h1>
+  <p class="lead">Ο αλγόριθμος που επιτίθεται σε γρίφους με <b>εκτεθειμένο δημόσιο κλειδί</b>. Δουλεύει μόνο όταν ξέρουμε το δημόσιο κλειδί (όχι μόνο τη διεύθυνση) — δηλαδή στα #140–#160. 100% τοπικά.</p>
+
+  <div class="card">
+    <div class="lab">Τι θες να τρέξεις;</div>
+    <div class="seg">
+      <button id="m-demo" class="on" onclick="setMode('demo')">🎓 Δοκιμαστικό</button>
+      <button id="m-real" onclick="setMode('real')">💰 Αληθινά #140–160</button>
+    </div>
+
+    <div id="demopanel">
+      <div class="row"><span>Μέγεθος κλειδιού:</span> <b id="bitsv">24</b> <span>bit</span></div>
+      <input id="bits" type="range" min="16" max="42" value="24" oninput="onBits()">
+      <p class="note">Φτιάχνει ένα <b>τυχαίο</b> κλειδί αυτού του μεγέθους, κρύβει το κλειδί και αφήνει τον Kangaroo να το βρει από το δημόσιο κλειδί — για να <b>δεις με τα μάτια σου</b> ότι δουλεύει. Ως ~30 bit λύνεται σε δευτερόλεπτα· τα 36–42 θέλουν λεπτά.</p>
+    </div>
+
+    <div id="realpanel" style="display:none">
+      <select id="puz" onchange="onPuz()">
+        <option value="140">#140 · 14 BTC</option>
+        <option value="145">#145 · 14.5 BTC</option>
+        <option value="150">#150 · 15 BTC</option>
+        <option value="155">#155 · 15.5 BTC</option>
+        <option value="160">#160 · 16 BTC</option>
+      </select>
+      <div class="kv"><div class="l">Δημόσιο κλειδί (στόχος)</div><div class="mono" id="rpub"></div></div>
+      <div class="kv"><div class="l">Διεύθυνση</div><div class="mono" id="raddr"></div></div>
+      <div class="warnbox" id="realwarn"></div>
+    </div>
+
+    <button id="go" class="big" onclick="toggle()">▶️ Ξεκίνα</button>
+  </div>
+
+  <div class="card">
+    <div class="lab">Πρόοδος</div>
+    <div class="stat">
+      <div class="b"><div class="k">Άλματα (hops)</div><div class="v" id="s-hops">0</div></div>
+      <div class="b"><div class="k">Ταχύτητα</div><div class="v" id="s-rate">0 /δευτ</div></div>
+      <div class="b"><div class="k">Σημεία-ορόσημα</div><div class="v" id="s-dps">0</div></div>
+      <div class="b"><div class="k">Χρόνος</div><div class="v" id="s-time">0s</div></div>
+    </div>
+    <div class="bar"><i id="pbar"></i></div>
+    <div class="note" id="s-exp" style="margin-top:8px"></div>
+  </div>
+
+  <div class="win card" id="win">
+    <h2>🎉 Βρέθηκε το κλειδί!</h2>
+    <div class="kv"><div class="l">Ιδιωτικό κλειδί (hex)</div><div class="mono" id="w-hex"></div></div>
+    <div class="kv"><div class="l">Ιδιωτικό κλειδί (δεκαδικό)</div><div class="mono" id="w-dec"></div></div>
+    <div class="kv"><div class="l">WIF (για import σε πορτοφόλι)</div><div class="mono" id="w-wif"></div></div>
+    <div class="kv"><div class="l">Επαλήθευση</div><div id="w-ver"></div></div>
+  </div>
+
+  <details>
+    <summary>Πώς δουλεύει & γιατί δεν «πιάνει» τα #140+</summary>
+    <p class="note">Ο Kangaroo χρειάζεται περίπου <b>2 × √(εύρος)</b> βήματα. Στο #140 το εύρος είναι 2¹³⁹, άρα ~2⁷⁰ βήματα — όσο και η ωμή αναζήτηση του #71. Ένα κινητό/υπολογιστής κάνει μερικές χιλιάδες βήματα το δευτερόλεπτο, οπότε θα χρειαζόταν <b>δισεκατομμύρια χρόνια</b>. Γι' αυτό το «Δοκιμαστικό» (μικρό εύρος) τελειώνει, ενώ τα αληθινά τρέχουν για να <b>καταλάβεις τον μηχανισμό</b>, όχι για να λυθούν εδώ.</p>
+    <p class="note">Ο σκέτος Pollard rho + Brent λύνει ολόκληρη την ομάδα (~2¹²⁸) και <b>αγνοεί</b> το γνωστό εύρος — γι' αυτό εδώ βάλαμε τον Kangaroo (lambda), που είναι η παραλλαγή που εκμεταλλεύεται το εύρος.</p>
+  </details>
+</div>
+
+<script>
+/* ---------- secp256k1 engine ---------- */
+function ripemd160(data){function rotl(x,n){return (x<<n)|(x>>>(32-n));}var h0=0x67452301,h1=0xEFCDAB89,h2=0x98BADCFE,h3=0x10325476,h4=0xC3D2E1F0;var zl=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,7,4,13,1,10,6,15,3,12,0,9,5,2,14,11,8,3,10,14,4,9,15,8,1,2,7,0,6,13,11,5,12,1,9,11,10,0,8,12,4,13,3,7,15,14,5,6,2,4,0,5,9,7,12,2,10,14,1,3,8,11,6,15,13];var zr=[5,14,7,0,9,2,11,4,13,6,15,8,1,10,3,12,6,11,3,7,0,13,5,10,14,15,8,12,4,9,1,2,15,5,1,3,7,14,6,9,11,8,12,2,10,0,4,13,8,6,4,1,3,11,15,0,5,12,2,13,9,7,10,14,12,15,10,4,1,5,8,7,6,2,13,14,0,3,9,11];var sl=[11,14,15,12,5,8,7,9,11,13,14,15,6,7,9,8,7,6,8,13,11,9,7,15,7,12,15,9,11,7,13,12,11,13,6,7,14,9,13,15,14,8,13,6,5,12,7,5,11,12,14,15,14,15,9,8,9,14,5,6,8,6,5,12,9,15,5,11,6,8,13,12,5,12,13,14,11,8,5,6];var sr=[8,9,9,11,13,15,15,5,7,7,8,11,14,14,12,6,9,13,15,7,12,8,9,11,7,7,12,7,6,15,13,11,9,7,15,11,8,6,6,14,12,13,5,14,13,13,7,5,15,5,8,11,14,14,6,14,6,9,12,9,12,5,15,8,8,5,12,9,12,5,14,6,8,13,6,5,15,13,11,11];var hl=[0x00000000,0x5A827999,0x6ED9EBA1,0x8F1BBCDC,0xA953FD4E];var hr=[0x50A28BE6,0x5C4DD124,0x6D703EF3,0x7A6D76E9,0x00000000];function f(j,x,y,z){if(j<16)return x^y^z;if(j<32)return (x&y)|(~x&z);if(j<48)return (x|~y)^z;if(j<64)return (x&z)|(y&~z);return x^(y|~z);}var len=data.length,paddedLen=(((len+8)>>6)+1)<<6;var m=new Uint8Array(paddedLen);m.set(data);m[len]=0x80;var bitLen=len*8;m[paddedLen-8]=bitLen&0xff;m[paddedLen-7]=(bitLen>>>8)&0xff;m[paddedLen-6]=(bitLen>>>16)&0xff;m[paddedLen-5]=(bitLen>>>24)&0xff;var X=new Int32Array(16);for(var i=0;i<paddedLen;i+=64){for(var j=0;j<16;j++)X[j]=m[i+j*4]|(m[i+j*4+1]<<8)|(m[i+j*4+2]<<16)|(m[i+j*4+3]<<24);var al=h0,bl=h1,cl=h2,dl=h3,el=h4,ar=h0,br=h1,cr=h2,dr=h3,er=h4,t;for(var jj=0;jj<80;jj++){var rnd=jj>>4;t=(rotl((al+f(jj,bl,cl,dl)+X[zl[jj]]+hl[rnd])|0,sl[jj])+el)|0;al=el;el=dl;dl=rotl(cl,10)|0;cl=bl;bl=t;t=(rotl((ar+f(79-jj,br,cr,dr)+X[zr[jj]]+hr[rnd])|0,sr[jj])+er)|0;ar=er;er=dr;dr=rotl(cr,10)|0;cr=br;br=t;}t=(h1+cl+dr)|0;h1=(h2+dl+er)|0;h2=(h3+el+ar)|0;h3=(h4+al+br)|0;h4=(h0+bl+cr)|0;h0=t;}var out=new Uint8Array(20),hs=[h0,h1,h2,h3,h4];for(var k=0;k<5;k++){out[k*4]=hs[k]&0xff;out[k*4+1]=(hs[k]>>>8)&0xff;out[k*4+2]=(hs[k]>>>16)&0xff;out[k*4+3]=(hs[k]>>>24)&0xff;}return out;}
+var P=(1n<<256n)-(1n<<32n)-977n;
+var Gx=0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798n;
+var Gy=0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8n;
+var NN=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141n;
+function mod(a){return ((a%P)+P)%P;}
+function modpow(b,e){b=mod(b);var r=1n;while(e>0n){if(e&1n)r=mod(r*b);b=mod(b*b);e>>=1n;}return r;}
+function inv(a){return modpow(mod(a),P-2n);}
+function padd(p,q){if(!p)return q;if(!q)return p;var x1=p[0],y1=p[1],x2=q[0],y2=q[1];if(x1===x2&&mod(y1+y2)===0n)return null;var m;if(x1===x2&&y1===y2)m=mod(3n*x1*x1*inv(2n*y1));else m=mod((y2-y1)*inv(x2-x1));var x3=mod(m*m-x1-x2),y3=mod(m*(x1-x3)-y1);return [x3,y3];}
+function pmul(k){var r=null,a=[Gx,Gy];k=((k%NN)+NN)%NN;while(k>0n){if(k&1n)r=padd(r,a);a=padd(a,a);k>>=1n;}return r;}
+function bytesToBig(b){var x=0n;for(var i=0;i<b.length;i++)x=(x<<8n)|BigInt(b[i]);return x;}
+function bigTo32(x){var b=new Uint8Array(32);for(var i=31;i>=0;i--){b[i]=Number(x&0xffn);x>>=8n;}return b;}
+var B58="123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+function base58(bytes){var x=bytesToBig(bytes),s="";while(x>0n){var r=Number(x%58n);x/=58n;s=B58[r]+s;}for(var i=0;i<bytes.length;i++){if(bytes[i]===0)s="1"+s;else break;}return s;}
+async function sha256(bytes){var d=await crypto.subtle.digest("SHA-256",bytes);return new Uint8Array(d);}
+function concatU8(){var t=0,a=arguments,i;for(i=0;i<a.length;i++)t+=a[i].length;var out=new Uint8Array(t),o=0;for(i=0;i<a.length;i++){out.set(a[i],o);o+=a[i].length;}return out;}
+async function h160a(bytes){return ripemd160(await sha256(bytes));}
+async function b58check(payload){var chk=(await sha256(await sha256(payload))).slice(0,4);var full=new Uint8Array(payload.length+4);full.set(payload);full.set(chk,payload.length);return base58(full);}
+function liftX(x){var ys=mod(modpow(x,3n)+7n);var y=modpow(ys,(P+1n)/4n);if(mod(y*y)!==mod(ys))throw new Error("no sqrt");if(y%2n!==0n)y=P-y;return [x,y];}
+function compPub(k){var pt=pmul(k);var out=new Uint8Array(33);out[0]=(pt[1]%2n===0n)?2:3;out.set(bigTo32(pt[0]),1);return out;}
+async function legacyAddr(k){return await b58check(concatU8(new Uint8Array([0x00]),await h160a(compPub(k))));}
+async function wifEnc(k){return await b58check(concatU8(new Uint8Array([0x80]),bigTo32(k),new Uint8Array([0x01])));}
+
+/* ---------- real exposed-pubkey puzzles ---------- */
+var REAL={
+ 140:{pub:"031f6a332d3c5c4f2de2378c012f429cd109ba07d69690c6c701b6bb87860d6640",addr:"1QKBaU6WAeycb3DbKbLBkX7vJiaS8r42Xo"},
+ 145:{pub:"03afdda497369e219a2c1c369954a930e4d3740968e5e4352475bcffce3140dae5",addr:"19GpszRNUej5yYqxXoLnbZWKew3KdVLkXg"},
+ 150:{pub:"03137807790ea7dc6e97901c2bc87411f45ed74a5629315c4e4b03a0a102250c49",addr:"1MUJSJYtGPVGkBCTqGspnxyHahpt5Te8jy"},
+ 155:{pub:"035cd1854cae45391ca4ec428cc7e6c7d9984424b954209a8eea197b9e364c05f6",addr:"1AoeP37TmHdFh8uN72fu9AqgtLrUwcv2wJ"},
+ 160:{pub:"02e0a8b039282faf6fe0fd769cfbc4b6b4cf8758ba68220eac420e32b91ddfa673",addr:"1NBC8uXJy1GiJ6drkiZa1WuKn51ps7EPTv"}
+};
+
+/* ---------- helpers ---------- */
+var $=function(id){return document.getElementById(id);};
+function isqrt(n){if(n<2n)return n;var x=n,y=(x+1n)/2n;while(y<x){x=y;y=(x+n/x)/2n;}return x;}
+function log2big(n){var b=0;while(n>1n){n>>=1n;b++;}return b;}
+function fmt(n){return n.toLocaleString("el-GR");}
+function pubToPoint(hex){var pre=hex.slice(0,2),x=BigInt("0x"+hex.slice(2));var Q=liftX(x);if(pre==="03"&&Q[1]%2n===0n)Q=[x,P-Q[1]];if(pre==="02"&&Q[1]%2n!==0n)Q=[x,P-Q[1]];return Q;}
+
+/* ---------- state ---------- */
+var mode="demo", running=false, timer=null;
+var a=0n,b=0n,w=0n,Q=null,hiddenKey=null,targetAddr="";
+var K=0,js=[],jp=[],dpm=0n,tbl=null,ts=0n,Tp=null,wd=0n,Wp=null,hops=0,dps=0,t0=0,expected=0n;
+
+function setMode(m){mode=m;$("m-demo").classList.toggle("on",m==="demo");$("m-real").classList.toggle("on",m==="real");$("demopanel").style.display=m==="demo"?"block":"none";$("realpanel").style.display=m==="real"?"block":"none";if(m==="real")onPuz();stop();resetStats();}
+function onBits(){$("bitsv").textContent=$("bits").value;}
+function onPuz(){var n=+$("puz").value;$("rpub").textContent=REAL[n].pub;$("raddr").textContent=REAL[n].addr;var ww=(1n<<BigInt(n-1));var hb=Math.ceil(log2big(isqrt(ww)));$("realwarn").innerHTML="⚠️ Εύρος 2<sup>"+(n-1)+"</sup>. Χρειάζονται ~2<sup>"+hb+"</sup> βήματα (δισεκατομμύρια χρόνια σε κινητό). Τρέχει για επίδειξη — <b>δεν</b> πρόκειται να τελειώσει εδώ.";}
+
+function setupTarget(){
+  if(mode==="demo"){
+    var n=+$("bits").value; a=(1n<<BigInt(n-1)); b=(1n<<BigInt(n))-1n; w=b-a;
+    var by=Math.ceil((n)/8),buf=new Uint8Array(by);crypto.getRandomValues(buf);var v=0n;for(var i=0;i<by;i++)v=(v<<8n)|BigInt(buf[i]);
+    hiddenKey=a+(v%w); Q=pmul(hiddenKey); targetAddr="";
+  } else {
+    var pn=+$("puz").value; a=(1n<<BigInt(pn-1)); b=(1n<<BigInt(pn))-1n; w=b-a;
+    Q=pubToPoint(REAL[pn].pub); hiddenKey=null; targetAddr=REAL[pn].addr;
+  }
+  var sq=isqrt(w); expected=2n*sq;
+  K=4;while(((1n<<BigInt(K))-1n)/BigInt(K) < sq && K<50)K++;
+  js=[];jp=[];for(var k=0;k<K;k++){var d=(1n<<BigInt(k));js.push(d);jp.push(pmul(d));}
+  var dpbits=Math.max(0,log2big(sq)-3);dpm=(1n<<BigInt(dpbits))-1n;
+  tbl=new Map(); ts=((b%NN)+NN)%NN; Tp=pmul(b); wd=0n; Wp=Q; hops=0; dps=0; t0=Date.now();
+}
+
+function tick(){
+  if(!running)return;
+  var budget=1200, foundX=null;
+  while(budget-->0){
+    var h=Number(Tp[0]%BigInt(K)); Tp=padd(Tp,jp[h]); ts=(ts+js[h])%NN; hops++;
+    if((Tp[0]&dpm)===0n){dps++;var kk=Tp[0].toString(36);var e=tbl.get(kk);
+      if(e&&e.t===1){var x=((ts-e.d)%NN+NN)%NN;if(x>=a&&x<=b){foundX=x;break;}}
+      else tbl.set(kk,{d:ts,t:0});}
+    var h2=Number(Wp[0]%BigInt(K)); Wp=padd(Wp,jp[h2]); wd=(wd+js[h2])%NN; hops++;
+    if((Wp[0]&dpm)===0n){dps++;var k2=Wp[0].toString(36);var e2=tbl.get(k2);
+      if(e2&&e2.t===0){var x2=((e2.d-wd)%NN+NN)%NN;if(x2>=a&&x2<=b){foundX=x2;break;}}
+      else tbl.set(k2,{d:wd,t:1});}
+  }
+  updateStats();
+  if(foundX!==null){ var chk=pmul(foundX); if(chk&&chk[0]===Q[0]&&chk[1]===Q[1]){ onFound(foundX); return; } }
+  timer=setTimeout(tick,0);
+}
+
+function updateStats(){
+  $("s-hops").textContent=fmt(hops);
+  var s=(Date.now()-t0)/1000; $("s-time").textContent=s.toFixed(0)+"s";
+  $("s-rate").textContent=(s>0?Math.round(hops/s):0).toLocaleString("el-GR")+" /δευτ";
+  $("s-dps").textContent=fmt(dps);
+  var pct=0; try{ pct=Number((BigInt(hops)*100n)/(expected>0n?expected:1n)); }catch(e){}
+  if(mode==="real")pct=Math.min(pct,0.0001);
+  $("pbar").style.width=Math.min(100,pct)+"%";
+}
+
+async function onFound(x){
+  running=false; clearTimeout(timer); $("go").textContent="▶️ Ξεκίνα"; $("go").classList.remove("stop");
+  $("w-hex").textContent=x.toString(16).padStart(mode==="demo"?0:40,"0");
+  $("w-dec").textContent=x.toString(10);
+  $("w-wif").textContent=await wifEnc(x);
+  var addr=await legacyAddr(x);
+  var ver="";
+  if(mode==="demo"){ ver=(x===hiddenKey?'<span class="ok">✔ Ίδιο με το κρυμμένο κλειδί</span>':'<span class="bad">✘ σφάλμα</span>')+'<br>Διεύθυνση: <span class="mono">'+addr+'</span>'; }
+  else { ver=(addr===targetAddr?'<span class="ok">✔ Η διεύθυνση ταιριάζει με τον στόχο!</span>':'<span class="bad">✘ δεν ταιριάζει</span>')+'<br><span class="mono">'+addr+'</span>'; }
+  $("w-ver").innerHTML=ver;
+  $("win").classList.add("show");
+}
+
+function resetStats(){$("s-hops").textContent="0";$("s-rate").textContent="0 /δευτ";$("s-dps").textContent="0";$("s-time").textContent="0s";$("pbar").style.width="0";$("win").classList.remove("show");
+  if(mode==="demo"){var n=+$("bits").value;var sq=isqrt((1n<<BigInt(n))-(1n<<BigInt(n-1)));$("s-exp").innerHTML="Αναμενόμενα βήματα ≈ 2 × √εύρος ≈ <b>"+fmt(2n*sq)+"</b>.";}
+  else {var pn=+$("puz").value;var hb=Math.ceil(log2big(isqrt(1n<<BigInt(pn-1))));$("s-exp").innerHTML="Αναμενόμενα βήματα ≈ <b>2<sup>"+hb+"</sup></b> — πρακτικά ανέφικτο.";}
+}
+
+function toggle(){ if(running){stop();return;} start(); }
+function start(){ try{setupTarget();}catch(e){alert("Σφάλμα: "+e.message);return;} running=true; $("go").textContent="⏹️ Stop"; $("go").classList.add("stop"); $("win").classList.remove("show"); resetStats(); tick(); }
+function stop(){ running=false; clearTimeout(timer); $("go").textContent="▶️ Ξεκίνα"; $("go").classList.remove("stop"); }
+
+onBits(); resetStats();
+(function(){ try{ var pn=parseInt(new URLSearchParams(location.search).get("pz")||"",10); if(REAL[pn]){ $("puz").value=String(pn); setMode("real"); } }catch(e){} })();
+</script>
+</body>
+</html>
