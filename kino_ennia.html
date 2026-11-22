@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Εννιάδα της ημέρας</title>
+<style>
+:root{
+  --bg:#071a21; --bg2:#0c2a33; --board:#1d4757; --board2:#163a47; --cell:#24586b; --line:#2e6a80;
+  --tq:#27e2cc; --text:#eafffb; --muted:#8fbcc4; --red:#ff4d5e; --yel:#ffd60a; --grn:#2ecc40; --gold:#ffd166;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:radial-gradient(1000px 500px at 50% -10%,#123b47 0%,var(--bg) 60%);background-color:var(--bg);color:var(--text);
+  font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+.wrap{max-width:720px;margin:0 auto;padding:16px 16px 40px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+header img{width:32px;height:32px;border-radius:8px}
+h1{font-size:21px;margin:0}
+.lead{color:var(--muted);font-size:14px;margin:4px 0 14px}
+.card{background:linear-gradient(180deg,var(--board) 0%,var(--board2) 100%);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:12px}
+.card h2{font-size:15px;margin:0 0 8px;color:var(--tq)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted)}
+select,button{font:inherit;font-size:14.5px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--text);padding:8px 10px}
+button.pri{background:var(--tq);border-color:var(--tq);color:#05302b;font-weight:800;cursor:pointer}
+.balls{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 6px}
+.b{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;
+  background:var(--yel);color:#2a2100;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18);font-variant-numeric:tabular-nums}
+.b.sm{width:30px;height:30px;font-size:13px}
+.big{font-size:17px;font-weight:800}
+.muted{color:var(--muted);font-size:13.5px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+td,th{padding:5px 4px;border-bottom:1px solid var(--line);text-align:left;font-variant-numeric:tabular-nums}
+th{color:var(--muted);font-weight:600;font-size:12.5px}
+.up{color:var(--grn);font-weight:800}.fl{color:var(--muted)}.dn{color:var(--red);font-weight:800}
+.dist{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.dist span{background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:3px 8px;font-size:13px}
+.dist span.w{border-color:var(--yel);color:var(--yel);font-weight:800}
+.last{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.last span{min-width:38px;text-align:center;border-radius:8px;padding:3px 6px;font-weight:800;font-size:13px;background:var(--bg2);border:1px solid var(--line)}
+.last span.w{background:var(--yel);color:#2a2100;border-color:var(--yel)}
+.lv{display:grid;grid-template-columns:repeat(20,1fr);gap:2px;margin:3px 0 8px}
+.lv i{font-style:normal;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(8px,2.1vw,11px);font-weight:800;background:var(--cell);color:#b9dde3}
+.lv i.h{background:var(--yel);color:#2a2100}
+.lvh{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.lvh b{color:var(--text)}
+.alt{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer}
+.alt:last-child{border-bottom:0}
+.alt b{font-variant-numeric:tabular-nums}
+.st{font-size:12.5px;color:var(--muted);margin-top:6px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--tq);margin-right:4px}
+.dot.busy{background:var(--gold);animation:p .6s infinite}@keyframes p{50%{opacity:.3}}
+.tg{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:14px}
+.tg:first-of-type{border-top:0}
+.sw{position:relative;width:46px;height:27px;flex:0 0 auto}
+.sw input{opacity:0;width:0;height:0}
+.sw span{position:absolute;inset:0;border-radius:27px;background:var(--line);transition:.15s}
+.sw span::before{content:'';position:absolute;width:21px;height:21px;left:3px;top:3px;border-radius:50%;background:#fff;transition:.15s}
+.sw input:checked+span{background:var(--tq)}
+.sw input:checked+span::before{transform:translateX(19px)}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:14px;line-height:1.7}
+footer a{color:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><img src="img/allwyn.png" alt=""><h1>🎯 Εννιάδα της ημέρας</h1></header>
+  <p class="lead">Βρίσκει τους αριθμούς που <b>σήμερα</b> έφεραν τις περισσότερες επιτυχίες και <b>αυτή τη στιγμή</b> είναι hot ή ανεβαίνουν. Ξαναϋπολογίζει μόνη της σε κάθε νέα κλήρωση.</p>
+
+  <div class="card">
+    <div class="row">
+      <label class="f">Πόσοι αριθμοί<select id="k"></select></label>
+      <label class="f">Επιτυχία θεωρείται<select id="t"></select></label>
+      <label class="f">Αριθμοί που<select id="mode">
+        <option value="rise">ανεβαίνουν προς το hot</option>
+        <option value="hot">είναι ήδη hot</option>
+      </select></label>
+      <label class="f">&nbsp;<button class="pri" id="go">Υπολογισμός</button></label>
+    </div>
+    <div class="st"><span class="dot" id="dot"></span><span id="st">Φόρτωση…</span></div>
+  </div>
+
+  <div class="card" id="res"><div class="muted">Φόρτωση κληρώσεων…</div></div>
+  <div class="card" id="live" style="display:none"></div>
+  <div class="card" id="trend" style="display:none"></div>
+  <div class="card" id="alts" style="display:none"></div>
+
+  <div class="card">
+    <h2>⚙️ Ρυθμίσεις</h2>
+    <label class="tg"><span>🔄 Αυτόματος υπολογισμός σε κάθε νέα κλήρωση</span><span class="sw"><input type="checkbox" id="tAuto"><span></span></span></label>
+    <label class="tg"><span>📺 Ζωντανές κληρώσεις (οι 10 τελευταίες με τις επιτυχίες της στήλης)</span><span class="sw"><input type="checkbox" id="tLive"><span></span></span></label>
+    <label class="tg"><span>📈 Πίνακας με το πώς κινείται κάθε αριθμός</span><span class="sw"><input type="checkbox" id="tTrend"><span></span></span></label>
+    <label class="tg"><span>🔁 Εναλλακτικές στήλες</span><span class="sw"><input type="checkbox" id="tAlt"><span></span></span></label>
+  </div>
+
+  <div class="card">
+    <h2>❓ Πώς δουλεύει</h2>
+    <div class="muted">
+      <b>Σήμερα</b> = οι κληρώσεις από τα μεσάνυχτα (ώρα Ελλάδας).<br>
+      <b>Hot</b> = βγήκε στις 20 τελευταίες κληρώσεις ≥ 8 φορές (ο μέσος όρος είναι 5).<br>
+      <b>Ανεβαίνει προς το hot</b> = στις 20 τελευταίες βγήκε ≥ 6 φορές (πάνω από τον μέσο όρο) και στις 10 πιο πρόσφατες όσες ή περισσότερες φορές από τις 10 πριν.<br>
+      Από αυτούς τους αριθμούς δοκιμάζονται όλοι οι συνδυασμοί, και κρατιέται αυτός με τις περισσότερες σημερινές επιτυχίες.<br><br>
+      Ειλικρινά: η στήλη διαλέγεται <b>εκ των υστέρων</b> πάνω στις σημερινές κληρώσεις, γι' αυτό δείχνει πάντα πολλές επιτυχίες. Στις επόμενες κληρώσεις η πιθανότητα είναι ίδια με κάθε άλλη στήλη (η «Τύχη» που γράφει δίπλα). Η σειρά «Μετά τον υπολογισμό» δείχνει πώς πάει από τη στιγμή που βγήκε.
+    </div>
+  </div>
+
+  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v54 · 22/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino20.html">📋 ΚΙΝΟ 19</a></footer>
+</div>
+<script>
+var $=function(i){return document.getElementById(i);};
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+var API='https://api.opap.gr/draws/v3.0/1100';
+var OPT={auto:true,live:true,trend:true,alt:true};
+Object.keys(OPT).forEach(function(k){var v=lsGet('en_'+k); if(v!==null) OPT[k]=v==='1';});
+var DEF_T={3:3,4:3,5:3,6:3,7:4,8:4,9:4,10:5,11:5,12:6};
+var K=+(lsGet('en_k')||9), TH=+(lsGet('en_t')||DEF_T[K]), MODE=lsGet('en_mode')||'rise';
+var TODAY=[], ACTIVE=null, LASTID=0, PICK=null; /* PICK = {nums, fromId} για το «μετά τον υπολογισμό» */
+try{ PICK=JSON.parse(lsGet('en_pick')||'null'); }catch(e){}
+
+function athDate(ms){ return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Athens',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms)); }
+function hm(ms){ return new Intl.DateTimeFormat('el-GR',{timeZone:'Europe/Athens',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(ms)); }
+function comb(n,k){ if(k<0||k>n) return 0; var r=1; for(var i=1;i<=k;i++) r=r*(n-k+i)/i; return r; }
+function pAtLeast(k,t){ var s=0; for(var i=t;i<=Math.min(k,20);i++) s+=comb(20,i)*comb(60,k-i); return s/comb(80,k); }
+function fmt(x,d){ return x.toFixed(d).replace('.',','); }
+
+/* σημερινές κληρώσεις: δύο ημερομηνίες του API (UTC) και κρατάμε όσες είναι «σήμερα» ώρα Ελλάδας */
+function pages(day){
+  var out=[];
+  function pg(p){ return fetch(API+'/draw-date/'+day+'/'+day+'/?limit=150&page='+p,{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+      out=out.concat(j.content||[]); if(p+1<(j.totalPages||1)) return pg(p+1); return out; }); }
+  return pg(0);
+}
+function load(){
+  $('dot').classList.add('busy');
+  var now=Date.now(), t=athDate(now), y=new Date(now-86400000).toISOString().slice(0,10), u=new Date(now).toISOString().slice(0,10);
+  var days=[y,u].filter(function(v,i,a){return a.indexOf(v)===i;});
+  return Promise.all(days.map(pages).concat([fetch(API+'/last/2',{cache:'no-store'}).then(function(r){return r.json();})])).then(function(R){
+    var lastArr=R.pop(); ACTIVE=lastArr.filter(function(d){return d.status!=='results';})[0]||null;
+    var all=[].concat.apply([],R).filter(function(d){return d.status==='results'&&d.winningNumbers&&d.winningNumbers.list&&d.winningNumbers.list.length===20;});
+    var seen={}; all=all.filter(function(d){ if(seen[d.drawId]) return false; seen[d.drawId]=1; return true; });
+    all.sort(function(a,b){return a.drawId-b.drawId;});
+    TODAY=all.filter(function(d){return athDate(d.drawTime)===t;});
+    window.RECENT=all.slice(-20); /* για τα hot χρειάζονται 20 κληρώσεις, ακόμα κι αν «σήμερα» έχει λιγότερες */
+    $('dot').classList.remove('busy');
+    var top=all.length?all[all.length-1].drawId:0, isNew=top!==LASTID; LASTID=top;
+    return isNew;
+  }).catch(function(e){ $('dot').classList.remove('busy'); $('st').textContent='Σφάλμα σύνδεσης – ξαναδοκιμάζω'; return false; });
+}
+
+/* μάσκες 80 bit σε 3 λέξεις των 32 */
+function mask(list){ var m=[0,0,0]; list.forEach(function(v){ var i=v-1; m[i>>5]|=(1<<(i&31)); }); return m; }
+function pc(x){ x=x-((x>>>1)&0x55555555); x=(x&0x33333333)+((x>>>2)&0x33333333); return (((x+(x>>>4))&0x0F0F0F0F)*0x01010101)>>>24; }
+function stats(){
+  var R=window.RECENT||[], l20=new Array(81).fill(0), l10=new Array(81).fill(0), p10=new Array(81).fill(0), n=R.length;
+  R.forEach(function(d,i){ d.winningNumbers.list.forEach(function(v){ l20[v]++; if(i>=n-10) l10[v]++; else p10[v]++; }); });
+  return {l20:l20,l10:l10,p10:p10};
+}
+function compute(){
+  if(!TODAY.length){ $('res').innerHTML='<div class="muted">Δεν έχει γίνει ακόμα καμία κλήρωση σήμερα.</div>'; return; }
+  var st=stats(), pool=[];
+  for(var v=1;v<=80;v++){
+    if(MODE==='hot' ? st.l20[v]>=8 : (st.l20[v]>=6 && st.l10[v]>=st.p10[v])) pool.push(v);
+  }
+  pool.sort(function(a,b){ return st.l20[b]-st.l20[a]||a-b; });
+  var note='';
+  if(pool.length>22){ pool=pool.slice(0,22); note='Κράτησα τους 22 πιο συχνούς για ταχύτητα. '; }
+  if(pool.length<K){
+    $('res').innerHTML='<div class="big">Δεν φτάνουν οι αριθμοί</div><div class="muted">Αυτή τη στιγμή '+(MODE==='hot'?'είναι hot':'ανεβαίνουν προς το hot')+' μόνο <b>'+pool.length+'</b>: '+pool.join(', ')+
+      '. Διάλεξε λιγότερους αριθμούς'+(MODE==='hot'?' ή «ανεβαίνουν προς το hot».':'.')+'</div>';
+    $('trend').style.display='none'; $('alts').style.display='none'; return;
+  }
+  var M=TODAY.map(function(d){ return mask(d.winningNumbers.list); }), D=M.length;
+  var PM=pool.map(function(v){ return mask([v]); });
+  var best=[], idx=[], i;
+  for(i=0;i<K;i++) idx.push(i);
+  var t0=performance.now(), cnt=0;
+  while(true){
+    var m=[0,0,0]; for(i=0;i<K;i++){ var q=PM[idx[i]]; m[0]|=q[0]; m[1]|=q[1]; m[2]|=q[2]; }
+    var s=0, s2=0;
+    for(var d=0;d<D;d++){ var x=M[d], h=pc(m[0]&x[0])+pc(m[1]&x[1])+pc(m[2]&x[2]); if(h>=TH){ s++; s2+=h; } }
+    if(best.length<6 || s>best[best.length-1].s || (s===best[best.length-1].s && s2>best[best.length-1].s2)){
+      best.push({s:s,s2:s2,nums:idx.map(function(j){return pool[j];}).sort(function(a,b){return a-b;})});
+      best.sort(function(a,b){return b.s-a.s||b.s2-a.s2;}); if(best.length>6) best.pop();
+    }
+    cnt++;
+    /* επόμενος συνδυασμός */
+    for(i=K-1;i>=0 && idx[i]===pool.length-K+i;i--);
+    if(i<0) break;
+    idx[i]++; for(var j=i+1;j<K;j++) idx[j]=idx[j-1]+1;
+  }
+  var B=best[0], bm=mask(B.nums), dist={};
+  TODAY.forEach(function(d){ var x=mask(d.winningNumbers.list), h=pc(bm[0]&x[0])+pc(bm[1]&x[1])+pc(bm[2]&x[2]); dist[h]=(dist[h]||0)+1; });
+  var p=pAtLeast(K,TH), exp=p*D;
+  if(!PICK || PICK.nums.join()!==B.nums.join()) { PICK={nums:B.nums, fromId:LASTID, at:Date.now()}; lsSet('en_pick',JSON.stringify(PICK)); }
+  var after=(window.RECENT||[]).filter(function(d){return d.drawId>PICK.fromId;}).map(function(d){ var x=mask(d.winningNumbers.list); return pc(bm[0]&x[0])+pc(bm[1]&x[1])+pc(bm[2]&x[2]); });
+  var ks=Object.keys(dist).map(Number).sort(function(a,b){return a-b;});
+  $('res').innerHTML='<h2>'+(K===9?'Η εννιάδα':'Η στήλη των '+K)+' τώρα</h2><div class="balls">'+B.nums.map(function(v){return '<div class="b">'+v+'</div>';}).join('')+'</div>'+
+    '<div class="big">'+B.s+' φορές '+TH+'+ στις '+D+' σημερινές κληρώσεις</div>'+
+    '<div class="muted">Τύχη: '+fmt(exp,1)+' φορές ('+fmt(p*100,1)+'% ανά κλήρωση) · '+cnt.toLocaleString('el-GR')+' συνδυασμοί από '+pool.length+' αριθμούς σε '+Math.round(performance.now()-t0)+' ms. '+note+'</div>'+
+    '<div class="dist">'+ks.map(function(h){return '<span'+(h>=TH?' class="w"':'')+'>'+h+'/'+K+': '+dist[h]+'</span>';}).join('')+'</div>'+
+    '<div class="muted" style="margin-top:10px"><b>Μετά τον υπολογισμό</b> (από τις '+hm(PICK.at)+'):</div>'+
+    '<div class="last">'+(after.length?after.map(function(h){return '<span'+(h>=TH?' class="w"':'')+'>'+h+'/'+K+'</span>';}).join(''):'<span>καμία κλήρωση ακόμα</span>')+'</div>';
+  /* ζωντανές κληρώσεις: οι 10 τελευταίες, με κίτρινο όσοι αριθμοί της στήλης βγήκαν */
+  if(OPT.live){
+    $('live').style.display='';
+    $('live').innerHTML='<h2>📺 Ζωντανές κληρώσεις</h2>'+TODAY.slice(-10).reverse().map(function(d){
+      var w=d.winningNumbers.list.slice().sort(function(a,b){return a-b;}), h=w.filter(function(v){return B.nums.indexOf(v)>=0;}).length;
+      return '<div class="lvh"><span><b>#'+d.drawId+'</b> · '+hm(d.drawTime)+'</span><span'+(h>=TH?' style="color:var(--yel);font-weight:800"':'')+'>'+h+'/'+K+(h>=TH?' ✓':'')+'</span></div>'+
+        '<div class="lv">'+w.map(function(v){return '<i'+(B.nums.indexOf(v)>=0?' class="h"':'')+'>'+v+'</i>';}).join('')+'</div>'; }).join('')+
+      '<div class="muted">Κίτρινα = αριθμοί της στήλης που βγήκαν. Η λίστα ανανεώνεται μόνη της σε κάθε νέα κλήρωση.</div>';
+  } else $('live').style.display='none';
+  /* κίνηση αριθμών */
+  if(OPT.trend){
+    $('trend').style.display='';
+    $('trend').innerHTML='<h2>📈 Πώς κινείται κάθε αριθμός</h2><table><tr><th>Αριθμός</th><th>Στις 20</th><th>10 πριν → 10 τελευταίες</th><th></th></tr>'+
+      B.nums.map(function(v){ var a=st.p10[v], b=st.l10[v], c=b>a?'up':(b<a?'dn':'fl');
+        return '<tr><td><div class="b sm">'+v+'</div></td><td>'+st.l20[v]+' φορές</td><td>'+a+' → '+b+'</td><td class="'+c+'">'+(c==='up'?'▲ ανεβαίνει':(c==='dn'?'▼ πέφτει':'■ σταθερός'))+'</td></tr>'; }).join('')+
+      '</table><div class="muted" style="margin-top:6px">Μέσος όρος: 5 φορές στις 20, 2,5 στις 10.</div>';
+  } else $('trend').style.display='none';
+  if(OPT.alt && best.length>1){
+    $('alts').style.display='';
+    $('alts').innerHTML='<h2>🔁 Εναλλακτικές στήλες</h2>'+best.slice(1).map(function(x){ return '<div class="alt"><b>'+x.nums.join(' · ')+'</b><span class="muted">'+x.s+' φορές '+TH+'+</span></div>'; }).join('');
+  } else $('alts').style.display='none';
+  var lt=TODAY[TODAY.length-1];
+  $('st').textContent='Σήμερα '+D+' κληρώσεις · τελευταία #'+lt.drawId+' στις '+hm(lt.drawTime);
+}
+
+/* ρυθμίσεις */
+for(var k=3;k<=12;k++) $('k').insertAdjacentHTML('beforeend','<option value="'+k+'">'+k+' αριθμοί</option>');
+function fillT(){ $('t').innerHTML=''; for(var t=1;t<=Math.min(K,8);t++) $('t').insertAdjacentHTML('beforeend','<option value="'+t+'">'+t+'/'+K+' και πάνω</option>'); $('t').value=String(Math.min(TH,K)); }
+$('k').value=String(K); fillT(); $('mode').value=MODE;
+$('k').onchange=function(){ K=+this.value; TH=DEF_T[K]; lsSet('en_k',K); lsSet('en_t',TH); fillT(); compute(); };
+$('t').onchange=function(){ TH=+this.value; lsSet('en_t',TH); compute(); };
+$('mode').onchange=function(){ MODE=this.value; lsSet('en_mode',MODE); compute(); };
+$('go').onclick=function(){ load().then(compute); };
+[['tAuto','auto'],['tLive','live'],['tTrend','trend'],['tAlt','alt']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
+  c.addEventListener('change',function(){ OPT[a[1]]=c.checked; lsSet('en_'+a[1],c.checked?'1':'0'); if(a[1]==='auto') schedule(); else compute(); }); });
+
+/* αυτόματα σε κάθε νέα κλήρωση (12΄΄ μετά την ώρα της, μετά ανά 10΄΄) */
+var waitT=null;
+function schedule(){
+  clearTimeout(waitT); if(!OPT.auto) return;
+  var t=ACTIVE?ACTIVE.drawTime:Date.now()+300000, wait=Math.max(8000,t-Date.now()+12000);
+  waitT=setTimeout(function poll(){ load().then(function(isNew){ if(isNew){ compute(); schedule(); } else waitT=setTimeout(poll,10000); }); }, wait);
+}
+load().then(function(){ compute(); schedule(); });
+</script>
+</body>
+</html>
