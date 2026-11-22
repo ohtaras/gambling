@@ -88,7 +88,7 @@ button:disabled{opacity:.45;cursor:default}
     <div class="leg" style="margin:8px 0 0"><span class="dot" style="background:#f5b301"></span>βγήκε στην κλήρωση που βλέπεις &nbsp; <span class="dot" style="background:#22c55e"></span>οι αριθμοί που διάλεξες (πάτα ή γράψ' τους)</div>
     <input type="text" id="txt" inputmode="numeric" autocomplete="off" placeholder="π.χ. 31 32 33 41 43 51 52 53">
     <label class="chk"><input type="checkbox" id="any"> Το ίδιο σχήμα οπουδήποτε στον πίνακα</label>
-    <label class="chk"><input type="checkbox" id="naOn"> 🎯 Στήλη με όσους δεν βγήκαν σε καμία από τις επόμενες</label>
+    <label class="chk"><input type="checkbox" id="naOn"> 🔥 Στήλη με τους hot των επόμενων κληρώσεων</label>
     <div class="row">
       <select id="ord"><option value="old">Πιο παλιές πρώτα</option><option value="new">Πιο πρόσφατες πρώτα</option></select>
       <button id="go" class="pri" disabled>Αναζήτηση</button>
@@ -377,24 +377,24 @@ if(typeof module !== 'undefined') module.exports = KC;
     if(!keepPage) page = 0;
     saveHash(); summary(shapes.length, any); render();
   }
-  /* 🎯 στήλη Χ αριθμών που δεν εμφανίστηκαν σε καμία από τις «επόμενες» κληρώσεις */
+  /* 🔥 στήλη Χ αριθμών: οι hot (πιο συχνοί) στις «επόμενες» κληρώσεις */
   var NA_CNT = null, NA_M = 0, NA_SEED = 0, NA_COL = [];
   function naOn(){ try{ return localStorage.getItem('evr_na') !== '0'; }catch(e){ return true; } }
   function naX(){ try{ return Math.min(12, Math.max(1, +(localStorage.getItem('evr_nax') || 5))); }catch(e){ return 5; } }
   function naRender(){
     var out = $('naout'); if(!out || !NA_CNT) return;
-    var X = naX(), zero = [], rest = [], n;
-    for(n = 1; n <= 80; n++) (NA_CNT[n] === 0 ? zero : rest).push(n);
-    var rnd = function(a){ var r = a.slice(), sd = NA_SEED; for(var i = r.length - 1; i > 0; i--){ sd = (sd * 1103515245 + 12345) >>> 0; var j = sd % (i + 1), t = r[i]; r[i] = r[j]; r[j] = t; } return r; };
-    var col;
-    if(zero.length >= X) col = (NA_SEED ? rnd(zero) : zero).slice(0, X);
-    else { rest.sort(function(a, b){ return NA_CNT[a] - NA_CNT[b] || a - b; }); col = zero.concat(rest.slice(0, X - zero.length)); }
-    NA_COL = col.sort(function(a, b){ return a - b; });
-    var msg = zero.length >= X
-      ? 'Δεν εμφανίστηκαν ποτέ στις επόμενες κληρώσεις <b>' + zero.length + '</b> αριθμοί' + (zero.length > X ? ' · πήρα ' + X + ' από αυτούς' + (NA_SEED ? ' (άλλος συνδυασμός)' : '') : '') + '.'
-      : (zero.length ? 'Μόνο <b>' + zero.length + '</b> δεν εμφανίστηκαν ποτέ' : 'Όλοι οι αριθμοί εμφανίστηκαν τουλάχιστον μία φορά') + ' · συμπλήρωσα με όσους βγήκαν τις λιγότερες φορές.';
-    out.innerHTML = '<div class="chips" style="margin:8px 0 4px">' + NA_COL.map(function(v){ return '<i class="h" title="βγήκε ' + NA_CNT[v] + ' φορές">' + v + '</i>'; }).join('') + '</div>' +
-      '<div class="lbl" style="margin:0">' + msg + (zero.length < X ? ' Φορές: ' + NA_COL.map(function(v){ return v + '→' + NA_CNT[v]; }).join(', ') : '') + '</div>';
+    var X = naX(), all = [], n;
+    for(n = 1; n <= 80; n++) all.push(n);
+    /* hot = όσοι βγήκαν τις περισσότερες φορές στις επόμενες κληρώσεις· στις ισοβαθμίες, το 🔀 αλλάζει ποιοι μπαίνουν */
+    var sd = NA_SEED, key = {};
+    all.forEach(function(v){ sd = (sd * 1103515245 + 12345) >>> 0; key[v] = NA_SEED ? sd : v; });
+    all.sort(function(a, b){ return NA_CNT[b] - NA_CNT[a] || key[a] - key[b]; });
+    NA_COL = all.slice(0, X).sort(function(a, b){ return a - b; });
+    var edge = NA_CNT[all[X - 1]], tied = all.filter(function(v){ return NA_CNT[v] === edge; }).length, inCol = all.slice(0, X).filter(function(v){ return NA_CNT[v] === edge; }).length;
+    out.innerHTML = '<div class="chips" style="margin:8px 0 4px">' + NA_COL.map(function(v){ return '<i class="h" style="background:#dc2626;color:#fff" title="βγήκε ' + NA_CNT[v] + ' φορές">' + v + '</i>'; }).join('') + '</div>' +
+      '<div class="lbl" style="margin:0">Οι ' + X + ' πιο συχνοί στις ' + fmtN(NA_M) + ' επόμενες κληρώσεις · φορές: ' +
+      NA_COL.map(function(v){ return v + '→' + NA_CNT[v]; }).join(', ') + ' · μέσος όρος ' + (NA_M / 4).toFixed(1).replace('.', ',') + '.' +
+      (tied > inCol ? ' Στα ' + edge + ' ισοβαθμούν ' + tied + ' αριθμοί· το 🔀 αλλάζει ποιοι μπαίνουν.' : '') + '</div>';
   }
   function summary(nShapes, any){
     var k = sel.length, N = R.length, el = $('sum');
@@ -416,7 +416,7 @@ if(typeof module !== 'undefined') module.exports = KC;
       (M ? '<div class="cap"><b>Τι ακολούθησε συνολικά</b> · πόσες φορές βγήκε κάθε αριθμός στην επόμενη κλήρωση (σε ' + fmtN(M) + ')</div><div class="grid sel">' + b + '</div>' +
       '<div class="leg"><span class="dot" style="background:#dc2626"></span>τα 10 πιο συχνά &nbsp; <span class="dot" style="background:#2563eb"></span>τα 10 πιο σπάνια &nbsp; <span class="dot" style="box-shadow:0 0 0 2px #22c55e"></span>στο δελτίο</div>' +
       '<div class="tksel" id="sumsel"></div><div class="row"><button id="sumplay" class="pri">🎫 Παίξε δελτίο με αυτούς</button><button id="sumclr">Καθάρισμα</button></div>' +
-      (naOn() ? '<div class="cap" style="margin-top:14px"><b>🎯 Στήλη με όσους δεν εμφανίστηκαν</b> σε καμία από τις ' + fmtN(M) + ' επόμενες κληρώσεις</div>' +
+      (naOn() ? '<div class="cap" style="margin-top:14px"><b>🔥 Στήλη με τους hot</b> · όσοι βγήκαν τις περισσότερες φορές στις ' + fmtN(M) + ' επόμενες κληρώσεις</div>' +
         '<div class="row"><select id="nax" aria-label="Πόσοι αριθμοί">' + [1,2,3,4,5,6,7,8,9,10,11,12].map(function(x){ return '<option value="' + x + '"' + (x === naX() ? ' selected' : '') + '>' + x + (x === 1 ? ' αριθμός' : ' αριθμοί') + '</option>'; }).join('') + '</select>' +
         '<button id="nashuf">🔀 Άλλος συνδυασμός</button><button id="nause" class="pri">Βάλ\' τη στο δελτίο</button></div><div id="naout"></div>' : '') : '') + '</div>';
     paintTkSel(); naRender();
@@ -493,6 +493,6 @@ if(typeof module !== 'undefined') module.exports = KC;
   }).catch(function(e){ $('st').innerHTML = '<span class="err">Δεν φορτώθηκε το ιστορικό (' + e.message + '). Ξαναφόρτωσε τη σελίδα.</span>'; });
 })();
 </script>
-<div id="appVer" style="text-align:center;font-size:11px;color:#64748b;padding:10px 0 90px">έκδοση v52 · 22/11/2026</div>
+<div id="appVer" style="text-align:center;font-size:11px;color:#64748b;padding:10px 0 90px">έκδοση v53 · 22/11/2026</div>
 </body>
 </html>
