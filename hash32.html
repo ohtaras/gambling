@@ -58,7 +58,7 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
   <label class="muted" style="font-size:13px;flex:1 1 150px">Hash (32 bit)<br><select id="hAlg" style="width:100%;margin-top:3px;background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px;font-size:15px"></select></label>
   <label class="muted" style="font-size:13px;flex:1 1 150px">Τι μπαίνει μέσα<br><select id="hIn" style="width:100%;margin-top:3px;background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px;font-size:15px"></select></label></div>
   <label class="muted" style="font-size:13px;display:block;margin-top:8px">🏠 Τρόποι hash<br><select id="hOnly" style="width:100%;margin-top:3px;background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px;font-size:15px"><option value="1">Μόνο ο Οχτάρας — οι άλλοι 7 σε αναστολή (ON)</option><option value="0">Όλοι οι 8 τρόποι (OFF)</option></select></label>
-  <label class="muted" style="font-size:13px;display:block;margin-top:8px">🎯 Πόσοι αριθμοί<br><select id="hEight" style="width:100%;margin-top:3px;background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px;font-size:15px"><option value="1">Οχτάδα: ξανά hash όσες φορές χρειαστεί μέχρι να γίνουν 8 (ON)</option><option value="0">Όσοι βγουν από ένα hash (OFF)</option></select></label>
+  <label class="muted" style="font-size:13px;display:block;margin-top:8px">🎯 Πόσοι αριθμοί<br><select id="hEight" style="width:100%;margin-top:3px;background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px;font-size:15px"><option value="8">Οχτάδα: ξανά hash όσες φορές χρειαστεί μέχρι να γίνουν 8</option><option value="7">Εφτάδα: ξανά hash όσες φορές χρειαστεί μέχρι να γίνουν 7</option><option value="6">Εξάδα: ξανά hash όσες φορές χρειαστεί μέχρι να γίνουν 6</option><option value="5">Πεντάδα: ξανά hash όσες φορές χρειαστεί μέχρι να γίνουν 5</option><option value="4">Τετράδα: ξανά hash όσες φορές χρειαστεί μέχρι να γίνουν 4</option><option value="3">Τριάδα: ξανά hash όσες φορές χρειαστεί μέχρι να γίνουν 3</option><option value="0">Όσοι βγουν από ένα hash (OFF)</option></select></label>
   <label class="muted" style="font-size:13px;display:block;margin-top:8px">🔁 Κάθε πρόβλεψη παίζεται για<br><select id="hRun" style="width:100%;margin-top:3px;background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px;font-size:15px"></select></label>
   <div class="muted" style="font-size:12px;margin-top:6px" id="cfgEx"></div></details></div>
 <div class="card" id="cdCard" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px"><span class="muted" style="font-size:13px" id="cdLbl">Επόμενη κλήρωση</span><b id="cd" style="font-size:22px;font-variant-numeric:tabular-nums">—</b></div>
@@ -78,7 +78,7 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
 <div class="card"><details id="dSum" open><summary><b id="lblSum">📊 Σύνοψη ημέρας</b> <span class="muted" id="lblSumW" style="font-size:13px"></span></summary><div id="sum"></div></details></div>
 <div class="card"><details id="dList"><summary><b id="lblList">📋 Όλες οι κληρώσεις της ημέρας</b> <span class="muted" id="cnt" style="font-size:13px"></span></summary>
   <div class="scroll" style="margin-top:6px"><table id="tbl"></table></div></details></div>
-<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v61 · 23/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v62 · 23/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
 </div>
 <div id="nav"><button data-v="dprev" class="dy" title="Προηγούμενη μέρα">◀📅</button><button data-v="-10">⏪10</button><button data-v="-1">◀</button><button data-v="live" class="live">🟢</button><button data-v="1">▶</button><button data-v="10">10⏩</button><button data-v="dnext" class="dy" title="Επόμενη μέρα">📅▶</button></div>
 <script>
@@ -123,15 +123,16 @@ var INS={
   sortedTime:{n:'Ταξινομημένοι + ημερομηνία & ώρα', f:function(d,s){ var t=new Date(d.t); return s.join('')+fmtD.format(t).replace(/-/g,'')+fmtT.format(t).replace(':',''); }}
 };
 /* 🎯 Οχτάδα: ξανά hash (του προηγούμενου αποτελέσματος) όσες φορές χρειαστεί μέχρι να μαζευτούν 8 αριθμοί */
-function predMake(f, str){ var h=f(str); if(!EIGHT) { var P0=predOf(h); P0.chain=[h]; return P0; }
-  var chain=[h], P=predOf(h), out=P.n.slice(0,8), parts=P.parts.slice(), g=0;
-  while(out.length<8 && g++<60){ h=f(String(h)); chain.push(h); var q=predOf(h); parts=parts.concat(['|']).concat(q.parts); q.n.forEach(function(x){ if(out.length<8 && out.indexOf(x)<0) out.push(x); }); }
+function predMake(f, str){ var h=f(str); if(!CNT) { var P0=predOf(h); P0.chain=[h]; return P0; }
+  var chain=[h], P=predOf(h), out=P.n.slice(0,CNT), parts=P.parts.slice(), g=0;
+  while(out.length<CNT && g++<60){ h=f(String(h)); chain.push(h); var q=predOf(h); parts=parts.concat(['|']).concat(q.parts); q.n.forEach(function(x){ if(out.length<CNT && out.indexOf(x)<0) out.push(x); }); }
   return {parts:parts, n:out, chain:chain}; }
 /* 🏠 Μόνο Οχτάρας: οι υπόλοιποι 7 τρόποι σε αναστολή (κρυμμένοι από τη λίστα και τη σύγκριση) */
 var ONLY=lsGet('h32_only')!=='0';
 function algKeys(){ return ONLY ? ['ochtaras'] : Object.keys(ALGS); }
 if(ONLY) lsSet('h32_alg','ochtaras');
-var EIGHT=lsGet('h32_eight')===null ? true : lsGet('h32_eight')==='1';
+/* πόσοι αριθμοί: 0 = όσοι βγουν από ένα hash, αλλιώς 3–8 με ξανά hash όσες φορές χρειαστεί */
+var CNT=lsGet('h32_cnt')!==null ? +lsGet('h32_cnt') : (lsGet('h32_eight')==='0' ? 0 : 8); if(!(CNT===0||(CNT>=3&&CNT<=8))) CNT=8;
 if(lsGet('h32_eight')===null){ lsSet('h32_eight','1'); lsSet('h32_in','order'); }
 var RUN=Math.max(1,Math.min(20,+(lsGet('h32_run')||1)||1)), ALG=ALGS[lsGet('h32_alg')]?lsGet('h32_alg'):'crc32', INP=INS[lsGet('h32_in')]?lsGet('h32_in'):'sorted';
 function mk(d){ var s=d.arr.slice().sort(function(a,b){ return a-b; }), str=INS[INP].f(d,s), P=predMake(ALGS[ALG].f, str); return {id:d.id, t:d.t, arr:d.arr.slice(), s:s, str:str, h:P.chain[0], P:P}; }
@@ -174,7 +175,7 @@ function render(){ chipsRender(); var nbx=$('nav').children; for(var z=0;z<nbx.l
   var h='<tr><th>Κλήρωση</th><th>Πρόβλεψη</th><th>Έπιασε</th>'+(RUN>1?'<th>Για '+RUN+' κληρώσεις</th>':'')+'</tr>', dist={}, tk=0, th=0, tn=0;
   for(var q=N;q>=1;q--){ var x=L[q], P=L[q-1].P, hs=hitsOf(P,x); if(inWin(x)){ dist[hs.length]=(dist[hs.length]||0)+1; tk+=P.n.length; th+=hs.length; tn++; }
     h+='<tr data-i="'+q+'"'+(q===i?' class="sel"':'')+'><td style="white-space:nowrap"><b>'+tL(x.t)+'</b><br><span class="muted" style="font-size:11px">#'+x.id+'<br>'+x.h+'</span></td><td class="m">'+P.n.slice().sort(function(a,b){ return a-b; }).map(function(z){ return x.s.indexOf(z)>=0?'<b style="color:var(--hit)">'+z+'</b>':z; }).join(' ')+'</td><td><b>'+hs.length+'</b>/'+P.n.length+'</td>'+(RUN>1?runCell(P,q):'')+'</tr>'; }
-  $('tbl').innerHTML=h; $('hName').textContent=ALGS[ALG].n+' · ψηφία'; $('cfgLbl').textContent='· '+ALGS[ALG].n+' · '+INS[INP].n+(EIGHT?' · 🎯 8άδα':''); $('cfgEx').innerHTML='Μέσα στο hash: <code style="word-break:break-all">'+d.str+'</code>'; if($('dCmp').open) cmpRender();
+  $('tbl').innerHTML=h; $('hName').textContent=ALGS[ALG].n+' · ψηφία'; $('cfgLbl').textContent='· '+ALGS[ALG].n+' · '+INS[INP].n+(CNT?' · 🎯 '+CNT+' αριθμοί':''); $('cfgEx').innerHTML='Μέσα στο hash: <code style="word-break:break-all">'+d.str+'</code>'; if($('dCmp').open) cmpRender();
   /* 💶 σύνοψη ανά πλήθος αριθμών της πρόβλεψης: κατανομή k/K και χρήματα (απλή στήλη 0,50€) */
   var G={}, ST=0, WN=0, BIG=[];
   for(var q0=1;q0<=N;q0++){ if(!inWin(L[q0])) continue; var P2=L[q0-1].P, K=P2.n.length; if(K<1||K>12) continue; for(var rr=0;rr<RUN && q0+rr<=N;rr++){ var q2=q0+rr, hh2=hitsOf(P2,L[q2]).length, w=(PAYS[K]||{})[hh2]||0, g=G[K]||(G[K]={n:0,d:{},st:0,w:0});
@@ -249,7 +250,7 @@ poll();
 (function(){ var A=$('hAlg'), I=$('hIn'); function fillA(){ A.innerHTML=algKeys().map(function(k){ return '<option value="'+k+'">'+ALGS[k].n+'</option>'; }).join(''); A.value=ALG; } fillA(); I.innerHTML=Object.keys(INS).map(function(k){ return '<option value="'+k+'">'+INS[k].n+'</option>'; }).join(''); A.value=ALG; I.value=INP;
   var RS=$('hRun'); var ro=''; for(var x=1;x<=20;x++) ro+='<option value="'+x+'">'+(x===1?'1 κλήρωση (μόνο την επόμενη)':x+' συνεχόμενες κληρώσεις')+'</option>'; RS.innerHTML=ro; RS.value=String(RUN); RS.addEventListener('change', function(){ RUN=+this.value; lsSet('h32_run',String(RUN)); render(); });
   var OC=$('hOnly'); OC.value=ONLY?'1':'0'; OC.addEventListener('change', function(){ ONLY=this.value==='1'; lsSet('h32_only',ONLY?'1':'0'); if(ONLY){ ALG='ochtaras'; lsSet('h32_alg',ALG); } fillA(); rehash(); });
-  var E8=$('hEight'); E8.value=EIGHT?'1':'0'; E8.addEventListener('change', function(){ EIGHT=this.value==='1'; lsSet('h32_eight',EIGHT?'1':'0'); if(EIGHT && INP!=='order'){ INP='order'; I.value=INP; lsSet('h32_in',INP); } rehash(); });
+  var E8=$('hEight'); E8.value=String(CNT); E8.addEventListener('change', function(){ var was=CNT; CNT=+this.value; lsSet('h32_cnt',String(CNT)); if(CNT && !was && INP!=='order'){ INP='order'; I.value=INP; lsSet('h32_in',INP); } rehash(); });
   A.addEventListener('change', function(){ ALG=this.value; lsSet('h32_alg',ALG); rehash(); }); I.addEventListener('change', function(){ INP=this.value; lsSet('h32_in',INP); rehash(); });
   $('cmp').addEventListener('click', function(e){ var r=e.target.closest('tr[data-a]'); if(!r) return; ALG=r.dataset.a; INP=r.dataset.k; A.value=ALG; I.value=INP; lsSet('h32_alg',ALG); lsSet('h32_in',INP); rehash(); });
   function cw(){ CW.a=$('cFrom').value||'00:00'; CW.b=$('cTo').value||'23:55'; if(CW.b<CW.a){ var t=CW.a; CW.a=CW.b; CW.b=t; } CW.all=false; $('cAll').classList.remove('on'); $('cNight').classList.toggle('on', CW.a==='00:00'&&CW.b==='08:00'); render(); }
