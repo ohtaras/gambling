@@ -22,7 +22,7 @@ h1{font-size:21px;margin:0}
 .card h2{font-size:15px;margin:0 0 8px;color:var(--tq)}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 label.f{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted)}
-select,button{font:inherit;font-size:14.5px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--text);padding:8px 10px}
+select,button{max-width:100%;font:inherit;font-size:14.5px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--text);padding:8px 10px}
 .muted{color:var(--muted);font-size:13.5px}
 .big{font-size:17px;font-weight:800}
 .grid{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin:8px 0}
@@ -31,6 +31,8 @@ select,button{font:inherit;font-size:14.5px;border-radius:10px;border:1px solid 
 .grid i.in{background:#3a3410;color:var(--gold);border-color:var(--gold)}
 .grid i.w{background:var(--yel);color:#2a2100}
 .grid i.in.w{background:var(--yel);color:#2a2100;border-color:#fff;box-shadow:0 0 0 2px var(--gold)}
+.grid i{position:relative}
+.grid i.tr::after{content:'';position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 1.5px #fff}
 .grid i.lw{box-shadow:inset 0 0 0 2px rgba(255,214,10,.55)}
 .verdict{font-size:20px;font-weight:900;margin:4px 0}
 .ok{color:var(--grn)}.no{color:var(--red)}
@@ -71,6 +73,7 @@ footer a{color:inherit}
   <div class="card">
     <div class="row">
       <label class="f">Πώς διαλέγει<select id="mode">
+        <option value="trend">Τείνουν να γίνουν καυτοί</option>
         <option value="rise">Κουτί που ανεβαίνει</option>
         <option value="hot">Κουτί που καίει τώρα</option>
         <option value="cold">Κουτί που άργησε (έρχεται η σειρά του)</option>
@@ -90,6 +93,7 @@ footer a{color:inherit}
     <h2>⚙️ Ρυθμίσεις</h2>
     <label class="tg"><span>🔄 Αυτόματα σε κάθε νέα κλήρωση</span><span class="sw"><input type="checkbox" id="tAuto"><span></span></span></label>
     <label class="tg"><span>🟡 Δείξε στον πίνακα και τους αριθμούς της τελευταίας κλήρωσης</span><span class="sw"><input type="checkbox" id="tLast"><span></span></span></label>
+    <label class="tg"><span>🔴 Σημάδι στους αριθμούς που τείνουν να γίνουν καυτοί</span><span class="sw"><input type="checkbox" id="tTrend"><span></span></span></label>
     <label class="tg"><span>✅ Αξιολόγηση της προηγούμενης πρόβλεψης</span><span class="sw"><input type="checkbox" id="tPrev"><span></span></span></label>
     <label class="tg"><span>📋 Όλες οι σημερινές προβλέψεις με το αποτέλεσμά τους</span><span class="sw"><input type="checkbox" id="tToday"><span></span></span></label>
     <label class="tg"><span>🌡️ Χάρτης των 42 κουτιών</span><span class="sw"><input type="checkbox" id="tHeat"><span></span></span></label>
@@ -98,6 +102,7 @@ footer a{color:inherit}
   <div class="card">
     <h2>❓ Πώς δουλεύει</h2>
     <div class="muted">
+      <b>Αριθμοί που τείνουν να γίνουν καυτοί</b> (κόκκινη τελεία) = στις 20 τελευταίες κληρώσεις βγήκαν 6+ φορές (ο μέσος όρος είναι 5) και στις 10 πιο πρόσφατες όσες ή περισσότερες φορές από τις 10 πριν. Το <b>κουτί με τους αριθμούς που τείνουν να γίνουν καυτοί</b> είναι αυτό που περιέχει τους περισσότερους (σε ισοπαλία, όποιο ανεβαίνει πιο γρήγορα).<br>
       <b>Κουτί που ανεβαίνει</b> = πόσα έφερε στις 3 τελευταίες κληρώσεις μείον πόσα στις 3 πριν. Κερδίζει αυτό που ανεβαίνει περισσότερο.<br>
       <b>Κουτί που καίει</b> = τα περισσότερα στις 3 τελευταίες. <b>Που άργησε</b> = τα λιγότερα στις 10 τελευταίες. <b>Τελευταία</b> = όπου έπεσαν τα περισσότερα της τελευταίας κλήρωσης.<br>
       Οι σημερινές προβλέψεις υπολογίζονται κάθε φορά <b>μόνο με τις κληρώσεις που είχαν γίνει πριν</b>, οπότε η αξιολόγηση είναι δίκαιη.<br><br>
@@ -105,16 +110,16 @@ footer a{color:inherit}
     </div>
   </div>
 
-  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v55 · 23/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_ennia.html">🎯 Εννιάδα</a></footer>
+  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v56 · 23/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_ennia.html">🎯 Εννιάδα</a></footer>
 </div>
 <script>
 var $=function(i){return document.getElementById(i);};
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 var API='https://api.opap.gr/draws/v3.0/1100';
-var OPT={auto:true,last:true,prev:true,today:true,heat:true};
+var OPT={auto:true,last:true,trend:true,prev:true,today:true,heat:true};
 Object.keys(OPT).forEach(function(k){var v=lsGet('k43_'+k); if(v!==null) OPT[k]=v==='1';});
-var MODE=lsGet('k43_mode')||'rise', TH=+(lsGet('k43_t')||6);
+var MODE=lsGet('k43_mode')||'trend', TH=+(lsGet('k43_t')||6);
 var ALL=[], ACTIVE=null, LASTID=0;
 
 function athDate(ms){ return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Athens',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms)); }
@@ -131,19 +136,27 @@ function cnt(g,s){ var k=0; for(var i=0;i<12;i++) if(s[g.n[i]]) k++; return k; }
 function sets(draws){ return draws.map(function(d){ var s={}; d.winningNumbers.list.forEach(function(n){s[n]=1;}); return s; }); }
 
 /* διάλεξε κουτί με βάση τις κληρώσεις H (σετ), την πιο πρόσφατη τελευταία */
-function score(g,H,mode){
+/* αριθμοί που τείνουν να γίνουν καυτοί: στις 20 τελευταίες ≥6 φορές (μέσος όρος 5) και στις 10 πιο πρόσφατες όσες ή περισσότερες από τις 10 πριν */
+function trendNums(H){
+  var L=H.length, out={};
+  for(var n=1;n<=80;n++){ var a=0,b=0; for(var i=Math.max(0,L-10);i<L;i++) if(H[i][n]) a++; for(i=Math.max(0,L-20);i<L-10;i++) if(H[i][n]) b++;
+    if(a+b>=6&&a>=b) out[n]={a:a,b:b}; }
+  return out;
+}
+function score(g,H,mode,T){
+  if(mode==='trend'){ T=T||trendNums(H); var k=0,w=0; g.n.forEach(function(n){ if(T[n]){k++; w+=T[n].a-T[n].b;} }); var L3=0; for(var i=H.length-3;i<H.length;i++) L3+=cnt(g,H[i]); return k*10000+w*100+L3; }
   var L=H.length, sum=function(a,b){ var t=0; for(var i=Math.max(0,L-a);i<L-b;i++) t+=cnt(g,H[i]); return t; };
   if(mode==='rise') return (sum(3,0)-sum(6,3))*100+sum(3,0);
   if(mode==='hot') return sum(3,0)*100+sum(10,0);
   if(mode==='cold') return -sum(10,0)*100-sum(3,0);
   return cnt(g,H[L-1])*100+sum(3,0);
 }
-function pick(H,mode){ var best=null,bs=-1e9; REG.forEach(function(g){ var s=score(g,H,mode); if(s>bs){bs=s;best=g;} }); return best; }
+function pick(H,mode){ var best=null,bs=-1e9,T=mode==='trend'?trendNums(H):null; REG.forEach(function(g){ var s=score(g,H,mode,T); if(s>bs){bs=s;best=g;} }); return best; }
 
-function board(g,s,lastS){
+function board(g,s,lastS,T){
   var h='<div class="grid">';
   for(var n=1;n<=80;n++){
-    var cl=[]; if(g.n.indexOf(n)>=0) cl.push('in'); if(s&&s[n]) cl.push('w'); else if(lastS&&lastS[n]) cl.push('lw');
+    var cl=[]; if(g.n.indexOf(n)>=0) cl.push('in'); if(s&&s[n]) cl.push('w'); else if(lastS&&lastS[n]) cl.push('lw'); if(T&&T[n]) cl.push('tr');
     h+='<i class="'+cl.join(' ')+'">'+n+'</i>';
   }
   return h+'</div>';
@@ -172,14 +185,15 @@ function load(){
 function compute(){
   if(ALL.length<12) return;
   var S=sets(ALL), L=S.length, last=ALL[L-1], lastS=S[L-1];
-  var g=pick(S,MODE);
+  var g=pick(S,MODE), TN=trendNums(S), tIn=g.n.filter(function(n){return TN[n];}), tAll=Object.keys(TN).map(Number);
   /* σειρά του κουτιού στις 8 τελευταίες */
   var seq=[]; for(var i=Math.max(0,L-8);i<L;i++) seq.push(cnt(g,S[i]));
   var nextId=ACTIVE?ACTIVE.drawId:last.drawId+1, nextT=ACTIVE?hm(ACTIVE.drawTime):hm(last.drawTime+300000);
   $('next').innerHTML='<h2>🔮 Κουτί για την κλήρωση #'+nextId+' στις '+nextT+'</h2>'+
     '<div class="big nums">'+numsTxt(g)+'</div><div class="muted">'+label(g)+'</div>'+
-    board(g,null,OPT.last?lastS:null)+
+    board(g,null,OPT.last?lastS:null,OPT.trend?TN:null)+
     '<div class="muted">Πόσα έφερε το κουτί στις 8 τελευταίες κληρώσεις (η πιο πρόσφατη δεξιά): <b class="nums">'+seq.join(' · ')+'</b>'+
+    '<br>🔴 Τείνουν να γίνουν καυτοί: <b class="nums">'+tAll.length+'</b> αριθμοί σε όλο τον πίνακα, <b class="nums">'+tIn.length+'</b> μέσα στο κουτί'+(tIn.length?' (<b class="nums">'+tIn.join(' ')+'</b>)':'')+'.'+
     (OPT.last?'<br>Με κίτρινο περίγραμμα: οι αριθμοί της τελευταίας κλήρωσης (#'+last.drawId+', '+hm(last.drawTime)+').':'')+'</div>';
 
   /* σημερινή αξιολόγηση: πρόβλεψη για κάθε κλήρωση μόνο με τις προηγούμενες */
@@ -228,7 +242,7 @@ for(var k=4;k<=9;k++) $('t').insertAdjacentHTML('beforeend','<option value="'+k+
 $('t').value=String(TH); $('mode').value=MODE;
 $('t').onchange=function(){ TH=+this.value; lsSet('k43_t',TH); compute(); };
 $('mode').onchange=function(){ MODE=this.value; lsSet('k43_mode',MODE); compute(); };
-[['tAuto','auto'],['tLast','last'],['tPrev','prev'],['tToday','today'],['tHeat','heat']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
+[['tAuto','auto'],['tLast','last'],['tTrend','trend'],['tPrev','prev'],['tToday','today'],['tHeat','heat']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
   c.addEventListener('change',function(){ OPT[a[1]]=c.checked; lsSet('k43_'+a[1],c.checked?'1':'0'); if(a[1]==='auto') schedule(); else compute(); }); });
 
 var waitT=null;
