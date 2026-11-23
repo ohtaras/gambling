@@ -22,6 +22,10 @@ h1{font-size:21px;margin:0}
 .card h2{font-size:15px;margin:0 0 8px;color:var(--tq)}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 label.f{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted)}
+input{font:inherit;font-size:14.5px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--text);padding:7px 9px;color-scheme:dark}
+button{cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
+#today tr.go{cursor:pointer}
 select,button{max-width:100%;font:inherit;font-size:14.5px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--text);padding:8px 10px}
 .muted{color:var(--muted);font-size:13.5px}
 .big{font-size:17px;font-weight:800}
@@ -86,6 +90,20 @@ footer a{color:inherit}
 
   <div class="card" id="next"><div class="muted">Φόρτωση κληρώσεων…</div></div>
   <div class="card" id="prev" style="display:none"></div>
+  <div class="card" id="nav" style="display:none">
+    <h2>🧭 Πλοήγηση σε παλαιότερες κληρώσεις</h2>
+    <div class="row">
+      <button id="nPrev">◀ Προηγ.</button>
+      <button id="nNext">Επόμ. ▶</button>
+      <button id="nNow">⏱ Τελευταία</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="f">Ημέρα<input type="date" id="nDate"></label>
+      <label class="f">Αριθμός κλήρωσης<input type="number" id="nId" inputmode="numeric" placeholder="π.χ. 1354100" style="width:140px"></label>
+      <label class="f">&nbsp;<button id="nGo">Πήγαινε</button></label>
+    </div>
+    <div id="nView" style="margin-top:8px"><div class="muted">Φόρτωση…</div></div>
+  </div>
   <div class="card" id="today" style="display:none"></div>
   <div class="card" id="heat" style="display:none"></div>
 
@@ -95,6 +113,7 @@ footer a{color:inherit}
     <label class="tg"><span>🟡 Δείξε στον πίνακα και τους αριθμούς της τελευταίας κλήρωσης</span><span class="sw"><input type="checkbox" id="tLast"><span></span></span></label>
     <label class="tg"><span>🔴 Σημάδι στους αριθμούς που τείνουν να γίνουν καυτοί</span><span class="sw"><input type="checkbox" id="tTrend"><span></span></span></label>
     <label class="tg"><span>✅ Αξιολόγηση της προηγούμενης πρόβλεψης</span><span class="sw"><input type="checkbox" id="tPrev"><span></span></span></label>
+    <label class="tg"><span>🧭 Πλοήγηση σε παλαιότερες κληρώσεις</span><span class="sw"><input type="checkbox" id="tNav"><span></span></span></label>
     <label class="tg"><span>📋 Όλες οι σημερινές προβλέψεις με το αποτέλεσμά τους</span><span class="sw"><input type="checkbox" id="tToday"><span></span></span></label>
     <label class="tg"><span>🌡️ Χάρτης των 42 κουτιών</span><span class="sw"><input type="checkbox" id="tHeat"><span></span></span></label>
   </div>
@@ -110,14 +129,14 @@ footer a{color:inherit}
     </div>
   </div>
 
-  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v56 · 23/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_ennia.html">🎯 Εννιάδα</a></footer>
+  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v57 · 23/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_ennia.html">🎯 Εννιάδα</a></footer>
 </div>
 <script>
 var $=function(i){return document.getElementById(i);};
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 var API='https://api.opap.gr/draws/v3.0/1100';
-var OPT={auto:true,last:true,trend:true,prev:true,today:true,heat:true};
+var OPT={auto:true,last:true,trend:true,prev:true,nav:true,today:true,heat:true};
 Object.keys(OPT).forEach(function(k){var v=lsGet('k43_'+k); if(v!==null) OPT[k]=v==='1';});
 var MODE=lsGet('k43_mode')||'trend', TH=+(lsGet('k43_t')||6);
 var ALL=[], ACTIVE=null, LASTID=0;
@@ -222,7 +241,7 @@ function compute(){
     for(k=0;k<=12;k++) if(dist[k]||k<=7) h+='<tr><td>'+k+'/12</td><td><span class="bar'+(k>=TH?' hi':'')+'" style="width:'+(dist[k]?Math.max(4,160*dist[k]/mx):0)+'px"></span> '+dist[k]+'</td></tr>';
     h+='</table><table><tr><th>Ώρα</th><th>Κλήρωση</th><th>Κουτί</th><th class="c">Μέσα</th></tr>';
     rows.slice().reverse().slice(0,40).forEach(function(r){
-      h+='<tr><td>'+hm(r.d.drawTime)+'</td><td>#'+r.d.drawId+'</td><td class="nums">'+r.g.n[0]+'–'+r.g.n[11]+'</td><td class="c '+(r.h>=TH?'ok':'')+'"><b>'+r.h+'</b>'+(r.h>=TH?' 🎉':'')+'</td></tr>';
+      h+='<tr class="go" data-id="'+r.d.drawId+'"><td>'+hm(r.d.drawTime)+'</td><td>#'+r.d.drawId+'</td><td class="nums">'+r.g.n[0]+'–'+r.g.n[11]+'</td><td class="c '+(r.h>=TH?'ok':'')+'"><b>'+r.h+'</b>'+(r.h>=TH?' 🎉':'')+'</td></tr>';
     });
     $('today').style.display=''; $('today').innerHTML=h+'</table>'+(rows.length>40?'<div class="muted">Φαίνονται οι 40 πιο πρόσφατες.</div>':'');
   } else $('today').style.display='none';
@@ -242,7 +261,7 @@ for(var k=4;k<=9;k++) $('t').insertAdjacentHTML('beforeend','<option value="'+k+
 $('t').value=String(TH); $('mode').value=MODE;
 $('t').onchange=function(){ TH=+this.value; lsSet('k43_t',TH); compute(); };
 $('mode').onchange=function(){ MODE=this.value; lsSet('k43_mode',MODE); compute(); };
-[['tAuto','auto'],['tLast','last'],['tTrend','trend'],['tPrev','prev'],['tToday','today'],['tHeat','heat']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
+[['tAuto','auto'],['tLast','last'],['tTrend','trend'],['tNav','nav'],['tPrev','prev'],['tToday','today'],['tHeat','heat']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
   c.addEventListener('change',function(){ OPT[a[1]]=c.checked; lsSet('k43_'+a[1],c.checked?'1':'0'); if(a[1]==='auto') schedule(); else compute(); }); });
 
 var waitT=null;
@@ -251,6 +270,57 @@ function schedule(){
   var t=ACTIVE?ACTIVE.drawTime:Date.now()+300000, wait=Math.max(8000,t-Date.now()+12000);
   waitT=setTimeout(function poll(){ load().then(function(isNew){ if(isNew){ compute(); schedule(); } else waitT=setTimeout(poll,10000); }); }, wait);
 }
+/* ---------- πλοήγηση ---------- */
+var NAV={all:[],cache:{},id:null};
+function valid(d){ return d.status==='results'&&d.winningNumbers&&d.winningNumbers.list&&d.winningNumbers.list.length===20; }
+function addDays(d,k){ var x=new Date(d+'T12:00:00Z'); x.setUTCDate(x.getUTCDate()+k); return x.toISOString().slice(0,10); }
+function merge(arr){ var m={}; NAV.all.concat(arr).forEach(function(d){ m[d.drawId]=d; }); NAV.all=Object.keys(m).map(function(k){return m[k];}).sort(function(a,b){return a.drawId-b.drawId;}); }
+function utcDay(u){ if(NAV.cache[u]) return Promise.resolve(); NAV.cache[u]=1; return pages(u).then(function(c){ merge(c.filter(valid)); }).catch(function(){ delete NAV.cache[u]; }); }
+/* ημέρα Ελλάδας ad = UTC ad-1 (βράδυ) + UTC ad· η ad-1 δίνει και το ιστορικό για τις πρώτες κληρώσεις */
+function athDay(ad){ return Promise.all([utcDay(addDays(ad,-1)),utcDay(ad)]); }
+function idx(id){ for(var i=0;i<NAV.all.length;i++) if(NAV.all[i].drawId===id) return i; return -1; }
+function ensure(id){
+  var i=idx(id);
+  if(i>=20&&i<NAV.all.length-1) return Promise.resolve();
+  if(i<0) return fetch(API+'/'+id,{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){ if(!valid(d)) throw 0; return athDay(athDate(d.drawTime)); });
+  var ad=athDate(NAV.all[i].drawTime), p=[];
+  if(i<20) p.push(utcDay(addDays(ad,-2)));
+  if(i>=NAV.all.length-1&&id<LASTID) p.push(utcDay(addDays(ad,1)));
+  return Promise.all(p);
+}
+function showNav(id){
+  if(!OPT.nav) return;
+  NAV.id=id; $('nView').innerHTML='<div class="muted">Φόρτωση…</div>';
+  ensure(id).then(function(){
+    var i=idx(id);
+    if(i<0){ $('nView').innerHTML='<div class="muted">Δεν βρέθηκε η κλήρωση #'+id+'.</div>'; return; }
+    if(i<12){ $('nView').innerHTML='<div class="muted">Δεν υπάρχουν αρκετές προηγούμενες κληρώσεις για πρόβλεψη.</div>'; return; }
+    var d=NAV.all[i], H=sets(NAV.all.slice(Math.max(0,i-40),i)), g=pick(H,MODE), TN=trendNums(H), sd=sets([d])[0], h=cnt(g,sd), ok=h>=TH;
+    var tIn=g.n.filter(function(n){return TN[n];});
+    $('nDate').value=athDate(d.drawTime); $('nId').value=d.drawId;
+    $('nView').innerHTML='<div class="big">#'+d.drawId+' · '+new Intl.DateTimeFormat('el-GR',{timeZone:'Europe/Athens',weekday:'short',day:'numeric',month:'numeric'}).format(new Date(d.drawTime))+' · '+hm(d.drawTime)+'</div>'+
+      '<div class="verdict '+(ok?'ok':'no')+'">'+(ok?'🎉 ΕΠΙΤΥΧΙΑ ':'✗ ')+h+'/12 μέσα στο κουτί</div>'+
+      '<div class="muted">Το κουτί που θα είχε διαλέξει πριν από αυτή την κλήρωση: <b class="nums">'+numsTxt(g)+'</b>'+
+      (OPT.trend?'<br>🔴 Τότε έτειναν να γίνουν καυτοί '+Object.keys(TN).length+' αριθμοί, '+tIn.length+' μέσα στο κουτί'+(tIn.length?' ('+tIn.join(' ')+')':'')+'.':'')+'</div>'+
+      board(g,sd,null,OPT.trend?TN:null)+
+      '<div class="muted">Βγήκαν: <b class="nums">'+d.winningNumbers.list.slice().sort(function(a,b){return a-b;}).join(' ')+'</b></div>';
+    $('nNext').disabled=d.drawId>=LASTID; $('nPrev').disabled=false;
+  }).catch(function(){ $('nView').innerHTML='<div class="muted">Δεν βρέθηκε η κλήρωση #'+id+'.</div>'; });
+}
+function navRender(){ $('nav').style.display=OPT.nav?'':'none'; if(OPT.nav) showNav(NAV.id||LASTID); }
+$('nPrev').onclick=function(){ showNav((NAV.id||LASTID)-1); };
+$('nNext').onclick=function(){ showNav(Math.min(LASTID,(NAV.id||LASTID)+1)); };
+$('nNow').onclick=function(){ showNav(LASTID); };
+$('nGo').onclick=function(){ var v=+$('nId').value; if(v) showNav(v); };
+$('nDate').onchange=function(){ var ad=this.value; if(!ad) return; $('nView').innerHTML='<div class="muted">Φόρτωση…</div>';
+  athDay(ad).then(function(){ var f=NAV.all.filter(function(d){return athDate(d.drawTime)===ad;}); if(f.length) showNav(f[f.length-1].drawId); else $('nView').innerHTML='<div class="muted">Δεν υπάρχουν κληρώσεις για '+ad+'.</div>'; }); };
+$('today').addEventListener('click',function(e){ var tr=e.target.closest('tr.go'); if(!tr) return; NAV.id=+tr.dataset.id; navRender(); $('nav').scrollIntoView({behavior:'smooth'}); });
+$('nDate').max=athDate(Date.now());
+var _compute=compute;
+compute=function(){ _compute(); merge(ALL); var follow=!NAV.id||NAV.id===NAV.lastSeen; NAV.lastSeen=LASTID; if(follow) NAV.id=LASTID; navRender(); };
+$('mode').onchange=function(){ MODE=this.value; lsSet('k43_mode',MODE); compute(); };
+$('t').onchange=function(){ TH=+this.value; lsSet('k43_t',TH); compute(); };
+
 load().then(function(){ compute(); schedule(); });
 </script>
 </body>
