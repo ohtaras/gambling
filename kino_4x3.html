@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Κουτί 4×3</title>
+<style>
+:root{
+  --bg:#071a21; --bg2:#0c2a33; --board:#1d4757; --board2:#163a47; --cell:#24586b; --line:#2e6a80;
+  --tq:#27e2cc; --text:#eafffb; --muted:#8fbcc4; --red:#ff4d5e; --yel:#ffd60a; --grn:#2ecc40; --gold:#ffd166;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:radial-gradient(1000px 500px at 50% -10%,#123b47 0%,var(--bg) 60%);background-color:var(--bg);color:var(--text);
+  font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+.wrap{max-width:720px;margin:0 auto;padding:16px 16px 40px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+header img{width:32px;height:32px;border-radius:8px}
+h1{font-size:21px;margin:0}
+.lead{color:var(--muted);font-size:14px;margin:4px 0 14px}
+.card{background:linear-gradient(180deg,var(--board) 0%,var(--board2) 100%);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:12px}
+.card h2{font-size:15px;margin:0 0 8px;color:var(--tq)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted)}
+select,button{font:inherit;font-size:14.5px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--text);padding:8px 10px}
+.muted{color:var(--muted);font-size:13.5px}
+.big{font-size:17px;font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin:8px 0}
+.grid i{font-style:normal;aspect-ratio:1;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;
+  font-size:clamp(11px,3.2vw,16px);background:var(--cell);color:#b9dde3;font-variant-numeric:tabular-nums;border:2px solid transparent}
+.grid i.in{background:#3a3410;color:var(--gold);border-color:var(--gold)}
+.grid i.w{background:var(--yel);color:#2a2100}
+.grid i.in.w{background:var(--yel);color:#2a2100;border-color:#fff;box-shadow:0 0 0 2px var(--gold)}
+.grid i.lw{box-shadow:inset 0 0 0 2px rgba(255,214,10,.55)}
+.verdict{font-size:20px;font-weight:900;margin:4px 0}
+.ok{color:var(--grn)}.no{color:var(--red)}
+.nums{font-weight:800;letter-spacing:.3px;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+td,th{padding:5px 4px;border-bottom:1px solid var(--line);text-align:left;font-variant-numeric:tabular-nums}
+th{color:var(--muted);font-weight:600;font-size:12.5px}
+td.c,th.c{text-align:center}
+.bar{display:inline-block;height:9px;border-radius:5px;background:var(--tq);vertical-align:middle}
+.bar.hi{background:var(--grn)}
+.heat{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:6px}
+.heat span{border-radius:6px;padding:5px 0;text-align:center;font-size:12.5px;font-weight:800;background:var(--bg2);border:1px solid var(--line)}
+.heat span.sel{border:2px solid var(--gold);color:var(--gold)}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.stats div{flex:1 1 120px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.stats b{display:block;font-size:19px}
+.stats small{color:var(--muted);font-size:12px}
+.st{font-size:12.5px;color:var(--muted);margin-top:6px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--tq);margin-right:4px}
+.dot.busy{background:var(--gold);animation:p .6s infinite}@keyframes p{50%{opacity:.3}}
+.tg{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:14px}
+.tg:first-of-type{border-top:0}
+.sw{position:relative;width:46px;height:27px;flex:0 0 auto}
+.sw input{opacity:0;width:0;height:0}
+.sw span{position:absolute;inset:0;border-radius:27px;background:var(--line);transition:.15s}
+.sw span::before{content:'';position:absolute;width:21px;height:21px;left:3px;top:3px;border-radius:50%;background:#fff;transition:.15s}
+.sw input:checked+span{background:var(--tq)}
+.sw input:checked+span::before{transform:translateX(19px)}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:14px;line-height:1.7}
+footer a{color:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><img src="img/allwyn.png" alt=""><h1>🔲 Κουτί 4×3</h1></header>
+  <p class="lead">Ο πίνακας του ΚΙΝΟ χωρίζεται σε <b>42 κουτιά</b> των 12 αριθμών (4 στήλες × 3 σειρές). Πριν από κάθε κλήρωση η εφαρμογή διαλέγει ένα κουτί, και όταν βγει η κλήρωση το αξιολογεί. <b>Στόχος: 6 ή περισσότεροι αριθμοί μέσα στο κουτί.</b></p>
+
+  <div class="card">
+    <div class="row">
+      <label class="f">Πώς διαλέγει<select id="mode">
+        <option value="rise">Κουτί που ανεβαίνει</option>
+        <option value="hot">Κουτί που καίει τώρα</option>
+        <option value="cold">Κουτί που άργησε (έρχεται η σειρά του)</option>
+        <option value="last">Εκεί που έπεσε η τελευταία</option>
+      </select></label>
+      <label class="f">Επιτυχία θεωρείται<select id="t"></select></label>
+    </div>
+    <div class="st"><span class="dot" id="dot"></span><span id="st">Φόρτωση…</span></div>
+  </div>
+
+  <div class="card" id="next"><div class="muted">Φόρτωση κληρώσεων…</div></div>
+  <div class="card" id="prev" style="display:none"></div>
+  <div class="card" id="today" style="display:none"></div>
+  <div class="card" id="heat" style="display:none"></div>
+
+  <div class="card">
+    <h2>⚙️ Ρυθμίσεις</h2>
+    <label class="tg"><span>🔄 Αυτόματα σε κάθε νέα κλήρωση</span><span class="sw"><input type="checkbox" id="tAuto"><span></span></span></label>
+    <label class="tg"><span>🟡 Δείξε στον πίνακα και τους αριθμούς της τελευταίας κλήρωσης</span><span class="sw"><input type="checkbox" id="tLast"><span></span></span></label>
+    <label class="tg"><span>✅ Αξιολόγηση της προηγούμενης πρόβλεψης</span><span class="sw"><input type="checkbox" id="tPrev"><span></span></span></label>
+    <label class="tg"><span>📋 Όλες οι σημερινές προβλέψεις με το αποτέλεσμά τους</span><span class="sw"><input type="checkbox" id="tToday"><span></span></span></label>
+    <label class="tg"><span>🌡️ Χάρτης των 42 κουτιών</span><span class="sw"><input type="checkbox" id="tHeat"><span></span></span></label>
+  </div>
+
+  <div class="card">
+    <h2>❓ Πώς δουλεύει</h2>
+    <div class="muted">
+      <b>Κουτί που ανεβαίνει</b> = πόσα έφερε στις 3 τελευταίες κληρώσεις μείον πόσα στις 3 πριν. Κερδίζει αυτό που ανεβαίνει περισσότερο.<br>
+      <b>Κουτί που καίει</b> = τα περισσότερα στις 3 τελευταίες. <b>Που άργησε</b> = τα λιγότερα στις 10 τελευταίες. <b>Τελευταία</b> = όπου έπεσαν τα περισσότερα της τελευταίας κλήρωσης.<br>
+      Οι σημερινές προβλέψεις υπολογίζονται κάθε φορά <b>μόνο με τις κληρώσεις που είχαν γίνει πριν</b>, οπότε η αξιολόγηση είναι δίκαιη.<br><br>
+      Ειλικρινά: ένα κουτί 12 αριθμών πιάνει κατά μέσο όρο <b>3</b> αριθμούς, και <b>6+</b> συμβαίνει περίπου στο <b>4%</b> των κληρώσεων (1 στις 25), όποιο κουτί κι αν διαλέξεις. Σε δοκιμή 1.005 κληρώσεων (20–23/11/2026) όλοι οι τρόποι έδωσαν 3,0–4,0% επιτυχίες. Η σελίδα το δείχνει όπως είναι.
+    </div>
+  </div>
+
+  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v55 · 23/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_ennia.html">🎯 Εννιάδα</a></footer>
+</div>
+<script>
+var $=function(i){return document.getElementById(i);};
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+var API='https://api.opap.gr/draws/v3.0/1100';
+var OPT={auto:true,last:true,prev:true,today:true,heat:true};
+Object.keys(OPT).forEach(function(k){var v=lsGet('k43_'+k); if(v!==null) OPT[k]=v==='1';});
+var MODE=lsGet('k43_mode')||'rise', TH=+(lsGet('k43_t')||6);
+var ALL=[], ACTIVE=null, LASTID=0;
+
+function athDate(ms){ return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Athens',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms)); }
+function hm(ms){ return new Intl.DateTimeFormat('el-GR',{timeZone:'Europe/Athens',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(ms)); }
+function comb(n,k){ if(k<0||k>n) return 0; var r=1; for(var i=1;i<=k;i++) r=r*(n-k+i)/i; return r; }
+function pAtLeast(t){ var s=0; for(var i=t;i<=12;i++) s+=comb(20,i)*comb(60,12-i); return s/comb(80,12); }
+function fmt(x,d){ return x.toFixed(d).replace('.',','); }
+
+/* τα 42 κουτιά: 6 θέσεις κάθετα × 7 οριζόντια */
+var REG=[];
+for(var r0=0;r0<6;r0++) for(var c0=0;c0<7;c0++){ var g=[]; for(var r=0;r<3;r++) for(var c=0;c<4;c++) g.push((r0+r)*10+c0+c+1); REG.push({r0:r0,c0:c0,n:g}); }
+function label(g){ return 'σειρές '+(g.r0+1)+'–'+(g.r0+3)+' · στήλες '+(g.c0+1)+'–'+(g.c0+4); }
+function cnt(g,s){ var k=0; for(var i=0;i<12;i++) if(s[g.n[i]]) k++; return k; }
+function sets(draws){ return draws.map(function(d){ var s={}; d.winningNumbers.list.forEach(function(n){s[n]=1;}); return s; }); }
+
+/* διάλεξε κουτί με βάση τις κληρώσεις H (σετ), την πιο πρόσφατη τελευταία */
+function score(g,H,mode){
+  var L=H.length, sum=function(a,b){ var t=0; for(var i=Math.max(0,L-a);i<L-b;i++) t+=cnt(g,H[i]); return t; };
+  if(mode==='rise') return (sum(3,0)-sum(6,3))*100+sum(3,0);
+  if(mode==='hot') return sum(3,0)*100+sum(10,0);
+  if(mode==='cold') return -sum(10,0)*100-sum(3,0);
+  return cnt(g,H[L-1])*100+sum(3,0);
+}
+function pick(H,mode){ var best=null,bs=-1e9; REG.forEach(function(g){ var s=score(g,H,mode); if(s>bs){bs=s;best=g;} }); return best; }
+
+function board(g,s,lastS){
+  var h='<div class="grid">';
+  for(var n=1;n<=80;n++){
+    var cl=[]; if(g.n.indexOf(n)>=0) cl.push('in'); if(s&&s[n]) cl.push('w'); else if(lastS&&lastS[n]) cl.push('lw');
+    h+='<i class="'+cl.join(' ')+'">'+n+'</i>';
+  }
+  return h+'</div>';
+}
+function numsTxt(g){ return [0,4,8].map(function(i){ return g.n.slice(i,i+4).join(' '); }).join(' · '); }
+
+function pages(day){
+  var out=[];
+  function pg(p){ return fetch(API+'/draw-date/'+day+'/'+day+'/?limit=150&page='+p,{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+      out=out.concat(j.content||[]); if(p+1<(j.totalPages||1)) return pg(p+1); return out; }); }
+  return pg(0);
+}
+function load(){
+  $('dot').classList.add('busy');
+  var now=Date.now(), y=new Date(now-86400000).toISOString().slice(0,10), u=new Date(now).toISOString().slice(0,10);
+  return Promise.all([pages(y),pages(u),fetch(API+'/last/2',{cache:'no-store'}).then(function(r){return r.json();})]).then(function(R){
+    var lastArr=R.pop(); ACTIVE=lastArr.filter(function(d){return d.status!=='results';})[0]||null;
+    var all=[].concat.apply([],R).concat(lastArr).filter(function(d){return d.status==='results'&&d.winningNumbers&&d.winningNumbers.list&&d.winningNumbers.list.length===20;});
+    var seen={}; all=all.filter(function(d){ if(seen[d.drawId]) return false; seen[d.drawId]=1; return true; });
+    all.sort(function(a,b){return a.drawId-b.drawId;});
+    ALL=all; $('dot').classList.remove('busy');
+    var top=all.length?all[all.length-1].drawId:0, isNew=top!==LASTID; LASTID=top; return isNew;
+  }).catch(function(){ $('dot').classList.remove('busy'); $('st').textContent='Σφάλμα σύνδεσης – ξαναδοκιμάζω'; return false; });
+}
+
+function compute(){
+  if(ALL.length<12) return;
+  var S=sets(ALL), L=S.length, last=ALL[L-1], lastS=S[L-1];
+  var g=pick(S,MODE);
+  /* σειρά του κουτιού στις 8 τελευταίες */
+  var seq=[]; for(var i=Math.max(0,L-8);i<L;i++) seq.push(cnt(g,S[i]));
+  var nextId=ACTIVE?ACTIVE.drawId:last.drawId+1, nextT=ACTIVE?hm(ACTIVE.drawTime):hm(last.drawTime+300000);
+  $('next').innerHTML='<h2>🔮 Κουτί για την κλήρωση #'+nextId+' στις '+nextT+'</h2>'+
+    '<div class="big nums">'+numsTxt(g)+'</div><div class="muted">'+label(g)+'</div>'+
+    board(g,null,OPT.last?lastS:null)+
+    '<div class="muted">Πόσα έφερε το κουτί στις 8 τελευταίες κληρώσεις (η πιο πρόσφατη δεξιά): <b class="nums">'+seq.join(' · ')+'</b>'+
+    (OPT.last?'<br>Με κίτρινο περίγραμμα: οι αριθμοί της τελευταίας κλήρωσης (#'+last.drawId+', '+hm(last.drawTime)+').':'')+'</div>';
+
+  /* σημερινή αξιολόγηση: πρόβλεψη για κάθε κλήρωση μόνο με τις προηγούμενες */
+  var t=athDate(Date.now()), rows=[];
+  for(var j=12;j<L;j++){ if(athDate(ALL[j].drawTime)!==t) continue; var pg=pick(S.slice(0,j),MODE); rows.push({d:ALL[j],g:pg,h:cnt(pg,S[j]),s:S[j]}); }
+
+  if(OPT.prev&&L>12){
+    var pg=pick(S.slice(0,L-1),MODE), h=cnt(pg,lastS), ok=h>=TH;
+    $('prev').style.display='';
+    $('prev').innerHTML='<h2>✅ Πώς πήγε η προηγούμενη · #'+last.drawId+' στις '+hm(last.drawTime)+'</h2>'+
+      '<div class="verdict '+(ok?'ok':'no')+'">'+(ok?'🎉 ΕΠΙΤΥΧΙΑ ':'✗ ')+h+'/12 μέσα στο κουτί</div>'+
+      '<div class="muted nums">'+numsTxt(pg)+'</div>'+board(pg,lastS,null);
+  } else $('prev').style.display='none';
+
+  if(OPT.today&&rows.length){
+    var hits=rows.filter(function(r){return r.h>=TH;}).length, avg=rows.reduce(function(a,r){return a+r.h;},0)/rows.length, best=Math.max.apply(null,rows.map(function(r){return r.h;}));
+    var exp=pAtLeast(TH);
+    var h='<h2>📋 Σήμερα</h2><div class="stats">'+
+      '<div><b>'+rows.length+'</b><small>κληρώσεις με πρόβλεψη</small></div>'+
+      '<div><b class="'+(hits?'ok':'')+'">'+hits+'</b><small>επιτυχίες '+TH+'+ ('+fmt(100*hits/rows.length,1)+'%)</small></div>'+
+      '<div><b>'+fmt(rows.length*exp,1)+'</b><small>αναμενόμενες από τύχη ('+fmt(100*exp,1)+'%)</small></div>'+
+      '<div><b>'+fmt(avg,2)+'</b><small>μέσος όρος (τύχη: 3,00) · καλύτερο '+best+'/12</small></div></div>';
+    var dist=[]; for(var k=0;k<=12;k++) dist[k]=0; rows.forEach(function(r){dist[r.h]++;});
+    var mx=Math.max.apply(null,dist);
+    h+='<table><tr><th>Μέσα στο κουτί</th><th>Φορές σήμερα</th></tr>';
+    for(k=0;k<=12;k++) if(dist[k]||k<=7) h+='<tr><td>'+k+'/12</td><td><span class="bar'+(k>=TH?' hi':'')+'" style="width:'+(dist[k]?Math.max(4,160*dist[k]/mx):0)+'px"></span> '+dist[k]+'</td></tr>';
+    h+='</table><table><tr><th>Ώρα</th><th>Κλήρωση</th><th>Κουτί</th><th class="c">Μέσα</th></tr>';
+    rows.slice().reverse().slice(0,40).forEach(function(r){
+      h+='<tr><td>'+hm(r.d.drawTime)+'</td><td>#'+r.d.drawId+'</td><td class="nums">'+r.g.n[0]+'–'+r.g.n[11]+'</td><td class="c '+(r.h>=TH?'ok':'')+'"><b>'+r.h+'</b>'+(r.h>=TH?' 🎉':'')+'</td></tr>';
+    });
+    $('today').style.display=''; $('today').innerHTML=h+'</table>'+(rows.length>40?'<div class="muted">Φαίνονται οι 40 πιο πρόσφατες.</div>':'');
+  } else $('today').style.display='none';
+
+  if(OPT.heat){
+    var hh='<h2>🌡️ Χάρτης των 42 κουτιών</h2><div class="muted">Πόσα έφερε κάθε κουτί στις 3 τελευταίες κληρώσεις (πάνω αριστερά = κουτί 1–34). Με χρυσό το κουτί που διαλέχτηκε.</div><div class="heat">';
+    REG.forEach(function(x){ var v=0; for(var i=L-3;i<L;i++) v+=cnt(x,S[i]); var a=Math.min(1,v/18);
+      hh+='<span class="'+(x===g?'sel':'')+'" style="background:rgba(39,226,204,'+fmt(a*.75,2).replace(',','.')+')" title="'+x.n[0]+'–'+x.n[11]+'">'+v+'</span>'; });
+    $('heat').style.display=''; $('heat').innerHTML=hh+'</div>';
+  } else $('heat').style.display='none';
+
+  $('st').textContent='Τελευταία κλήρωση #'+last.drawId+' στις '+hm(last.drawTime)+(ACTIVE?' · επόμενη στις '+hm(ACTIVE.drawTime):'');
+}
+
+/* ρυθμίσεις */
+for(var k=4;k<=9;k++) $('t').insertAdjacentHTML('beforeend','<option value="'+k+'">'+k+'/12 και πάνω ('+fmt(100*pAtLeast(k),1)+'% από τύχη)</option>');
+$('t').value=String(TH); $('mode').value=MODE;
+$('t').onchange=function(){ TH=+this.value; lsSet('k43_t',TH); compute(); };
+$('mode').onchange=function(){ MODE=this.value; lsSet('k43_mode',MODE); compute(); };
+[['tAuto','auto'],['tLast','last'],['tPrev','prev'],['tToday','today'],['tHeat','heat']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
+  c.addEventListener('change',function(){ OPT[a[1]]=c.checked; lsSet('k43_'+a[1],c.checked?'1':'0'); if(a[1]==='auto') schedule(); else compute(); }); });
+
+var waitT=null;
+function schedule(){
+  clearTimeout(waitT); if(!OPT.auto) return;
+  var t=ACTIVE?ACTIVE.drawTime:Date.now()+300000, wait=Math.max(8000,t-Date.now()+12000);
+  waitT=setTimeout(function poll(){ load().then(function(isNew){ if(isNew){ compute(); schedule(); } else waitT=setTimeout(poll,10000); }); }, wait);
+}
+load().then(function(){ compute(); schedule(); });
+</script>
+</body>
+</html>
