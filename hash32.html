@@ -49,7 +49,7 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
 </head>
 <body><div class="wrap">
 <h1>#️⃣ ΚΙΝΟ Hash 32</h1>
-<details class="muted" style="font-size:13px"><summary>ℹ️ Πώς δουλεύει</summary>Κάθε κλήρωση: οι 20 αριθμοί <b>ταξινομημένοι</b> κολλητά σε έναν αριθμό → <b>CRC32</b> (32 bit) σε ψηφία → χωρίζεται ανά δύο ψηφία (π.χ. 4255612109 → 42 55 61 21 9). Πάνω από 80 αντιστρέφεται (81→18)· αν πάλι δεν κάνει (98→89) γίνεται δύο μονοψήφιοι (8, 9)· το 99 γίνεται 9. Τα μηδενικά και τα διπλά φεύγουν. Αυτοί οι αριθμοί είναι η <b>πρόβλεψη για την επόμενη κλήρωση</b> και αξιολογούνται μόλις βγει. Με το «🔁 Κάθε πρόβλεψη παίζεται για» βλέπεις τι θα γινόταν αν την έπαιζες για 1 έως 20 συνεχόμενες κληρώσεις.</details>
+<details class="muted" style="font-size:13px"><summary>ℹ️ Πώς δουλεύει</summary>Κάθε κλήρωση: οι 20 αριθμοί <b>ταξινομημένοι</b> κολλητά σε έναν αριθμό → <b>CRC32</b> (32 bit) σε ψηφία → χωρίζεται ανά δύο ψηφία (π.χ. 4255612109 → 42 55 61 21 9). Πάνω από 80 αντιστρέφεται (81→18)· αν πάλι δεν κάνει (98→89) γίνεται δύο μονοψήφιοι (8, 9)· το 99 γίνεται 9. Τα μηδενικά και τα διπλά φεύγουν. Αυτοί οι αριθμοί είναι η <b>πρόβλεψη για την επόμενη κλήρωση</b> και αξιολογούνται μόλις βγει. Με το «🔁 Κάθε πρόβλεψη παίζεται για» βλέπεις τι θα γινόταν αν την έπαιζες για 1 έως 20 συνεχόμενες κληρώσεις.<br><br><b>🏠 Οχτάρας</b> = ο δικός μας τρόπος hash: ξεκινάει από τον αριθμό 0x08430843 (Οχτάρας «8» και Αγίας Τριάδος «43»), κάθε ψηφίο «ζυγίζεται» με τη θέση του, πολλαπλασιάζεται και γυρίζει κατά 8 bit (οχτώ), και στο τέλος ανακατεύεται καλά ώστε μια μικρή αλλαγή στην κλήρωση να αλλάζει όλο το αποτέλεσμα.</details>
 <div class="top"><input type="date" id="day"><button class="btn" id="today">Σήμερα</button><button class="btn" id="liveT" title="Αυτόματη ενημέρωση με κάθε νέα κλήρωση">🔄 Live</button><span class="muted" id="st" style="font-size:13px"></span></div>
 
 <div class="dchips" id="dayChips"></div>
@@ -77,7 +77,7 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
 <div class="card"><details id="dSum" open><summary><b id="lblSum">📊 Σύνοψη ημέρας</b> <span class="muted" id="lblSumW" style="font-size:13px"></span></summary><div id="sum"></div></details></div>
 <div class="card"><details id="dList"><summary><b id="lblList">📋 Όλες οι κληρώσεις της ημέρας</b> <span class="muted" id="cnt" style="font-size:13px"></span></summary>
   <div class="scroll" style="margin-top:6px"><table id="tbl"></table></div></details></div>
-<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v59 · 23/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v60 · 23/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
 </div>
 <div id="nav"><button data-v="dprev" class="dy" title="Προηγούμενη μέρα">◀📅</button><button data-v="-10">⏪10</button><button data-v="-1">◀</button><button data-v="live" class="live">🟢</button><button data-v="1">▶</button><button data-v="10">10⏩</button><button data-v="dnext" class="dy" title="Επόμενη μέρα">📅▶</button></div>
 <script>
@@ -97,7 +97,7 @@ function predOf(h){ var d=String(h), parts=[], out=[];
   parts.forEach(function(p){ var v=+p, put=function(x){ if(x>=1 && x<=80 && out.indexOf(x)<0) out.push(x); };
     if(v<=80){ put(v); return; } var r=+(p.split('').reverse().join('')); if(r<=80){ put(r); return; } put(+p[0]); put(+p[1]); });
   return {parts:parts, n:out}; }
-/* 7 διαφορετικοί τρόποι hash των 32 bit */
+/* 8 τρόποι hash των 32 bit (7 γνωστοί + ο δικός μας «Οχτάρας») */
 function u32(x){ return x>>>0; }
 var ALGS={
   crc32:{n:'CRC32', f:crc32},
@@ -108,7 +108,11 @@ var ALGS={
   adler:{n:'Adler-32', f:function(s){ var a=1, b=0; for(var i=0;i<s.length;i++){ a=(a+s.charCodeAt(i))%65521; b=(b+a)%65521; } return u32((b<<16)|a); }},
   djb2:{n:'DJB2', f:function(s){ var h=5381; for(var i=0;i<s.length;i++) h=(Math.imul(h,33)+s.charCodeAt(i))|0; return u32(h); }},
   oaat:{n:'Jenkins', f:function(s){ var h=0; for(var i=0;i<s.length;i++){ h=(h+s.charCodeAt(i))|0; h=(h+(h<<10))|0; h^=h>>>6; } h=(h+(h<<3))|0; h^=h>>>11; h=(h+(h<<15))|0; return u32(h); }},
-  sdbm:{n:'SDBM', f:function(s){ var h=0; for(var i=0;i<s.length;i++) h=(s.charCodeAt(i)+(h<<6)+(h<<16)-h)|0; return u32(h); }}
+  sdbm:{n:'SDBM', f:function(s){ var h=0; for(var i=0;i<s.length;i++) h=(s.charCodeAt(i)+(h<<6)+(h<<16)-h)|0; return u32(h); }},
+  /* 🏠 ο δικός μας: ξεκινάει από 0x08430843 (Οχτάρας «8» + Αγίας Τριάδος «43»)· κάθε ψηφίο ζυγίζεται με τη θέση του (+8), πολλαπλασιάζεται και γυρίζει 8 bit (οχτώ)· στο τέλος καλό ανακάτεμα */
+  ochtaras:{n:'🏠 Οχτάρας', f:function(s){ var h=0x08430843;
+    for(var i=0;i<s.length;i++){ var c=s.charCodeAt(i)-47; h^=Math.imul(c, i+8); h=Math.imul(h,0x2545F491); h=(h<<8)|(h>>>24); }
+    h^=s.length; h^=h>>>16; h=Math.imul(h,0x7feb352d); h^=h>>>15; h=Math.imul(h,0x846ca68b); h^=h>>>16; return u32(h); }}
 };
 var INS={
   sorted:{n:'Ταξινομημένοι κολλητά', f:function(d,s){ return s.join(''); }},
@@ -192,7 +196,7 @@ function cmpRender(){ if(L.length<2){ $('cmp').innerHTML=''; return; } var rows=
     var ks=Object.keys(C).sort(function(x,y){ var a1=x.split('/'), b1=y.split('/'); return (b1[0]-a1[0]) || (a1[1]-b1[1]); });
     rows.push({a:a, k:k, C:C, ks:ks, st:st, w:w, n:n}); }); });
   rows.sort(function(x,y){ return (y.w-y.st)-(x.w-x.st); });
-  $('cmp').innerHTML='<div class="muted" style="font-size:12px">Όλοι οι 35 συνδυασμοί σε <b>'+NW+' κληρώσεις</b> ('+cwLabel()+'): πόσες φορές έπιασε <b>3 και πάνω</b> (π.χ. 5/5 ×1 = μία φορά πέντε στα πέντε) και πόσα θα κέρδιζε με μία στήλη 0,50€ σε κάθε κλήρωση'+(RUN>1?' (κάθε πρόβλεψη για '+RUN+' κληρώσεις)':'')+'. Σειρά: από το καλύτερο καθαρό. Πάτα μια γραμμή για να τη διαλέξεις.<br>⚠️ Με 35 συνδυασμούς, κάποιος θα βγει πάντα «τυχερός» μέσα σε μία μέρα — κοίτα αν κρατάει και τις επόμενες μέρες.</div>'+
+  $('cmp').innerHTML='<div class="muted" style="font-size:12px">Όλοι οι '+rows.length+' συνδυασμοί σε <b>'+NW+' κληρώσεις</b> ('+cwLabel()+'): πόσες φορές έπιασε <b>3 και πάνω</b> (π.χ. 5/5 ×1 = μία φορά πέντε στα πέντε) και πόσα θα κέρδιζε με μία στήλη 0,50€ σε κάθε κλήρωση'+(RUN>1?' (κάθε πρόβλεψη για '+RUN+' κληρώσεις)':'')+'. Σειρά: από το καλύτερο καθαρό. Πάτα μια γραμμή για να τη διαλέξεις.<br>⚠️ Με '+rows.length+' συνδυασμούς, κάποιος θα βγει πάντα «τυχερός» μέσα σε μία μέρα — κοίτα αν κρατάει και τις επόμενες μέρες.</div>'+
     '<div class="scroll" style="max-height:420px"><table><tr><th>Hash</th><th>Τι μπαίνει</th><th>Τι έπιασε (3+)</th><th>Καθαρό</th></tr>'+
     rows.map(function(r){ var on=r.a===ALG&&r.k===INP, net=r.w-r.st; return '<tr data-a="'+r.a+'" data-k="'+r.k+'"'+(on?' class="sel"':'')+'><td>'+ALGS[r.a].n+'</td><td style="font-size:12px">'+INS[r.k].n+'</td><td>'+(r.ks.length ? r.ks.map(function(key){ var hk=key.split('/'), full=hk[0]===hk[1]; return '<span style="white-space:nowrap;'+(full?'color:var(--hit);font-weight:800':'')+'">'+key+' ×'+r.C[key]+'</span>'; }).join(' · ') : '<span class="muted">—</span>')+'</td><td style="white-space:nowrap;font-weight:700;color:'+(net>=0?'#22c55e':'#f87171')+'">'+(net>=0?'+':'')+eur(net)+'<br><span class="muted" style="font-weight:400;font-size:11px">'+eur(r.w)+' / '+eur(r.st)+'</span></td></tr>'; }).join('')+'</table></div>'; }
 function rehash(){ L=L.map(function(x){ return mk(x); }); render(); }
