@@ -57,6 +57,7 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
   <label class="muted" style="font-size:13px;flex:1 1 150px">Hash (32 bit)<br><select id="hAlg" style="width:100%;margin-top:3px;background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px;font-size:15px"></select></label>
   <label class="muted" style="font-size:13px;flex:1 1 150px">Τι μπαίνει μέσα<br><select id="hIn" style="width:100%;margin-top:3px;background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px;font-size:15px"></select></label></div>
+  <label class="muted" style="font-size:13px;display:block;margin-top:8px">🎯 Πόσοι αριθμοί<br><select id="hEight" style="width:100%;margin-top:3px;background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px;font-size:15px"><option value="1">Οχτάδα: ξανά hash όσες φορές χρειαστεί μέχρι να γίνουν 8 (ON)</option><option value="0">Όσοι βγουν από ένα hash (OFF)</option></select></label>
   <label class="muted" style="font-size:13px;display:block;margin-top:8px">🔁 Κάθε πρόβλεψη παίζεται για<br><select id="hRun" style="width:100%;margin-top:3px;background:var(--cell);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px;font-size:15px"></select></label>
   <div class="muted" style="font-size:12px;margin-top:6px" id="cfgEx"></div></details></div>
 <div class="card" id="cdCard" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px"><span class="muted" style="font-size:13px" id="cdLbl">Επόμενη κλήρωση</span><b id="cd" style="font-size:22px;font-variant-numeric:tabular-nums">—</b></div>
@@ -65,10 +66,10 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
   <div class="pr" id="pIn"></div>
   <details id="dBoard" open><summary class="muted" style="font-size:13px;margin-top:6px">🎯 Ταμπλό</summary><div class="board" id="board"></div>
   <div class="muted" style="font-size:11.5px;margin-top:4px">🟨 κλήρωση · <span style="outline:2px solid #22c55e;border-radius:4px;padding:0 3px">πράσινο πλαίσιο</span> = η πρόβλεψη από την προηγούμενη</div></details>
-  <details id="dHash"><summary class="muted" style="font-size:13px;margin-top:6px">#️⃣ Ο αριθμός και το CRC32</summary>
-  <div class="muted" style="font-size:12px;margin-top:6px">Ταξινομημένοι αριθμοί κολλητά (<span id="cLen">0</span> ψηφία):</div>
+  <details id="dHash"><summary class="muted" style="font-size:13px;margin-top:6px">#️⃣ Ο αριθμός και τα hash</summary>
+  <div class="muted" style="font-size:12px;margin-top:6px">Αυτό που μπαίνει στο hash (<span id="cLen">0</span> ψηφία):</div>
   <div class="big" id="cNum">—</div>
-  <div class="hash"><div><small id="hName">CRC32</small><b id="cDec">—</b></div><div><small>Χωρισμένο ανά δύο</small><b id="cSplit" style="font-size:16px">—</b></div></div></details>
+  <div class="hash"><div><small id="hName">CRC32</small><b id="cDec" style="font-size:15px;word-break:break-all">—</b></div><div><small>Χωρισμένο ανά δύο</small><b id="cSplit" style="font-size:16px">—</b></div></div></details>
   <div class="pr nx" id="pOut"></div>
 </div>
 
@@ -76,7 +77,7 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
 <div class="card"><details id="dSum" open><summary><b id="lblSum">📊 Σύνοψη ημέρας</b> <span class="muted" id="lblSumW" style="font-size:13px"></span></summary><div id="sum"></div></details></div>
 <div class="card"><details id="dList"><summary><b id="lblList">📋 Όλες οι κληρώσεις της ημέρας</b> <span class="muted" id="cnt" style="font-size:13px"></span></summary>
   <div class="scroll" style="margin-top:6px"><table id="tbl"></table></div></details></div>
-<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v33 · 15/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v59 · 23/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
 </div>
 <div id="nav"><button data-v="dprev" class="dy" title="Προηγούμενη μέρα">◀📅</button><button data-v="-10">⏪10</button><button data-v="-1">◀</button><button data-v="live" class="live">🟢</button><button data-v="1">▶</button><button data-v="10">10⏩</button><button data-v="dnext" class="dy" title="Επόμενη μέρα">📅▶</button></div>
 <script>
@@ -116,8 +117,15 @@ var INS={
   sortedId:{n:'Ταξινομημένοι + αριθμός κλήρωσης', f:function(d,s){ return s.join('')+String(d.id); }},
   sortedTime:{n:'Ταξινομημένοι + ημερομηνία & ώρα', f:function(d,s){ var t=new Date(d.t); return s.join('')+fmtD.format(t).replace(/-/g,'')+fmtT.format(t).replace(':',''); }}
 };
+/* 🎯 Οχτάδα: ξανά hash (του προηγούμενου αποτελέσματος) όσες φορές χρειαστεί μέχρι να μαζευτούν 8 αριθμοί */
+function predMake(f, str){ var h=f(str); if(!EIGHT) { var P0=predOf(h); P0.chain=[h]; return P0; }
+  var chain=[h], P=predOf(h), out=P.n.slice(0,8), parts=P.parts.slice(), g=0;
+  while(out.length<8 && g++<60){ h=f(String(h)); chain.push(h); var q=predOf(h); parts=parts.concat(['|']).concat(q.parts); q.n.forEach(function(x){ if(out.length<8 && out.indexOf(x)<0) out.push(x); }); }
+  return {parts:parts, n:out, chain:chain}; }
+var EIGHT=lsGet('h32_eight')===null ? true : lsGet('h32_eight')==='1';
+if(lsGet('h32_eight')===null){ lsSet('h32_eight','1'); lsSet('h32_in','order'); }
 var RUN=Math.max(1,Math.min(20,+(lsGet('h32_run')||1)||1)), ALG=ALGS[lsGet('h32_alg')]?lsGet('h32_alg'):'crc32', INP=INS[lsGet('h32_in')]?lsGet('h32_in'):'sorted';
-function mk(d){ var s=d.arr.slice().sort(function(a,b){ return a-b; }), str=INS[INP].f(d,s), h=ALGS[ALG].f(str); return {id:d.id, t:d.t, arr:d.arr.slice(), s:s, str:str, h:h, P:predOf(h)}; }
+function mk(d){ var s=d.arr.slice().sort(function(a,b){ return a-b; }), str=INS[INP].f(d,s), P=predMake(ALGS[ALG].f, str); return {id:d.id, t:d.t, arr:d.arr.slice(), s:s, str:str, h:P.chain[0], P:P}; }
 var PAYS={1:{1:1.25},2:{1:0.5,2:2.5},3:{2:1.25,3:12.5},4:{2:0.5,3:2,4:50},5:{3:1,4:10,5:225},6:{3:0.5,4:3.5,5:25,6:800},7:{3:0.5,4:1.5,5:10,6:50,7:2500},
  8:{4:1,5:5,6:25,7:500,8:7500},9:{4:0.5,5:2.5,6:12.5,7:100,8:2000,9:20000},10:{0:1,5:1,6:10,7:40,8:250,9:5000,10:50000},
  11:{0:1,5:0.5,6:5,7:25,8:125,9:750,10:7500,11:250000},12:{0:2,6:2.5,7:12.5,8:75,9:500,10:1250,11:12500,12:500000}}; /* κέρδη για στήλη 0,50€ */
@@ -151,13 +159,13 @@ function render(){ chipsRender(); var nbx=$('nav').children; for(var z=0;z<nbx.l
   $('cTtl').textContent='#'+d.id+' · '+tL(d.t); $('cSub').textContent=(i===N ? (DAY===today() ? '🟢 τελευταία' : '🔚 τελευταία της μέρας') : (N-i)+' πριν την τελευταία');
   var hh=hitsOf(pv.P, d);
   $('pIn').innerHTML='<div class="muted" style="font-size:13px">🔮 Πρόβλεψη από την #'+pv.id+' ('+ALGS[ALG].n+' '+pv.h+'):</div>'+chips(pv.P.n, d)+'<div style="margin-top:4px">Έπιασε <b>'+hh.length+'/'+pv.P.n.length+'</b> <span class="muted">· η τύχη δίνει κατά μέσο όρο '+(pv.P.n.length/4).toFixed(2).replace('.',',')+'</span></div>'+runBox(pv.P, i);
-  $('cNum').textContent=d.str; $('cLen').textContent=d.str.length; $('cDec').textContent=d.h; $('cSplit').textContent=d.P.parts.join(' ');
-  $('pOut').innerHTML='<div class="muted" style="font-size:13px">➡️ Πρόβλεψη για την <b>#'+(d.id+1)+'</b> από αυτήν ('+d.h+' → '+d.P.parts.join(' ')+'):</div>'+chips(d.P.n, L[i+1])+(L[i+1] ? '<div style="margin-top:4px">Έπιασε <b>'+hitsOf(d.P, L[i+1]).length+'/'+d.P.n.length+'</b></div>' : '<div class="muted" style="margin-top:4px">⏳ Περιμένει την κλήρωση.</div>');
+  $('cNum').textContent=d.str; $('cLen').textContent=d.str.length; $('cDec').textContent=d.P.chain.join(' → '); $('cSplit').textContent=d.P.parts.join(' ');
+  $('pOut').innerHTML='<div class="muted" style="font-size:13px">➡️ Πρόβλεψη για την <b>#'+(d.id+1)+'</b> από αυτήν ('+(d.P.chain.length>1?d.P.chain.length+' hash: ':'')+d.P.chain.join(' → ')+'):</div>'+chips(d.P.n, L[i+1])+(L[i+1] ? '<div style="margin-top:4px">Έπιασε <b>'+hitsOf(d.P, L[i+1]).length+'/'+d.P.n.length+'</b></div>' : '<div class="muted" style="margin-top:4px">⏳ Περιμένει την κλήρωση.</div>');
   var nb=$('nav').children; for(var k=0;k<nb.length;k++){ var v=nb[k].dataset.v; if(v==='dprev'||v==='dnext') continue; nb[k].disabled = v!=='live' && ((+v<0 && i<=1) || (+v>0 && i===N)); }
   var h='<tr><th>Κλήρωση</th><th>Πρόβλεψη</th><th>Έπιασε</th>'+(RUN>1?'<th>Για '+RUN+' κληρώσεις</th>':'')+'</tr>', dist={}, tk=0, th=0, tn=0;
   for(var q=N;q>=1;q--){ var x=L[q], P=L[q-1].P, hs=hitsOf(P,x); if(inWin(x)){ dist[hs.length]=(dist[hs.length]||0)+1; tk+=P.n.length; th+=hs.length; tn++; }
     h+='<tr data-i="'+q+'"'+(q===i?' class="sel"':'')+'><td style="white-space:nowrap"><b>'+tL(x.t)+'</b><br><span class="muted" style="font-size:11px">#'+x.id+'<br>'+x.h+'</span></td><td class="m">'+P.n.slice().sort(function(a,b){ return a-b; }).map(function(z){ return x.s.indexOf(z)>=0?'<b style="color:var(--hit)">'+z+'</b>':z; }).join(' ')+'</td><td><b>'+hs.length+'</b>/'+P.n.length+'</td>'+(RUN>1?runCell(P,q):'')+'</tr>'; }
-  $('tbl').innerHTML=h; $('hName').textContent=ALGS[ALG].n+' · ψηφία'; $('cfgLbl').textContent='· '+ALGS[ALG].n+' · '+INS[INP].n; $('cfgEx').innerHTML='Μέσα στο hash: <code style="word-break:break-all">'+d.str+'</code>'; if($('dCmp').open) cmpRender();
+  $('tbl').innerHTML=h; $('hName').textContent=ALGS[ALG].n+' · ψηφία'; $('cfgLbl').textContent='· '+ALGS[ALG].n+' · '+INS[INP].n+(EIGHT?' · 🎯 8άδα':''); $('cfgEx').innerHTML='Μέσα στο hash: <code style="word-break:break-all">'+d.str+'</code>'; if($('dCmp').open) cmpRender();
   /* 💶 σύνοψη ανά πλήθος αριθμών της πρόβλεψης: κατανομή k/K και χρήματα (απλή στήλη 0,50€) */
   var G={}, ST=0, WN=0, BIG=[];
   for(var q0=1;q0<=N;q0++){ if(!inWin(L[q0])) continue; var P2=L[q0-1].P, K=P2.n.length; if(K<1||K>12) continue; for(var rr=0;rr<RUN && q0+rr<=N;rr++){ var q2=q0+rr, hh2=hitsOf(P2,L[q2]).length, w=(PAYS[K]||{})[hh2]||0, g=G[K]||(G[K]={n:0,d:{},st:0,w:0});
@@ -179,7 +187,7 @@ function cwLabel(){ return CW.all ? 'όλη τη μέρα' : CW.a+'–'+CW.b; }
 function cmpRender(){ if(L.length<2){ $('cmp').innerHTML=''; return; } var rows=[], NW=0; for(var z=1;z<L.length;z++) if(inWin(L[z])) NW++;
   if(!NW){ $('cmp').innerHTML='<div class="muted" style="font-size:13px">Καμία κλήρωση στις ώρες '+cwLabel()+' ακόμα.</div>'; return; }
   Object.keys(ALGS).forEach(function(a){ Object.keys(INS).forEach(function(k){ var C={}, st=0, w=0, n=0;
-    for(var q0=1;q0<L.length;q0++){ if(!inWin(L[q0])) continue; var p0=L[q0-1], P=predOf(ALGS[a].f(INS[k].f(p0,p0.s))), K=P.n.length; if(K<1||K>12) continue; for(var rr=0;rr<RUN && q0+rr<L.length;rr++){ var q=q0+rr, hs=P.n.filter(function(x){ return L[q].s.indexOf(x)>=0; }).length, pay=(PAYS[K]||{})[hs]||0;
+    for(var q0=1;q0<L.length;q0++){ if(!inWin(L[q0])) continue; var p0=L[q0-1], P=predMake(ALGS[a].f, INS[k].f(p0,p0.s)), K=P.n.length; if(K<1||K>12) continue; for(var rr=0;rr<RUN && q0+rr<L.length;rr++){ var q=q0+rr, hs=P.n.filter(function(x){ return L[q].s.indexOf(x)>=0; }).length, pay=(PAYS[K]||{})[hs]||0;
       n++; st+=0.5; w+=pay; if(hs>=3 || (hs===K && K>=2)){ var key=hs+'/'+K; C[key]=(C[key]||0)+1; } } }
     var ks=Object.keys(C).sort(function(x,y){ var a1=x.split('/'), b1=y.split('/'); return (b1[0]-a1[0]) || (a1[1]-b1[1]); });
     rows.push({a:a, k:k, C:C, ks:ks, st:st, w:w, n:n}); }); });
@@ -231,6 +239,7 @@ setInterval(function(){ var el=$('cd'); if(!NEXT){ el.textContent='—'; return;
 poll();
 (function(){ var A=$('hAlg'), I=$('hIn'); A.innerHTML=Object.keys(ALGS).map(function(k){ return '<option value="'+k+'">'+ALGS[k].n+'</option>'; }).join(''); I.innerHTML=Object.keys(INS).map(function(k){ return '<option value="'+k+'">'+INS[k].n+'</option>'; }).join(''); A.value=ALG; I.value=INP;
   var RS=$('hRun'); var ro=''; for(var x=1;x<=20;x++) ro+='<option value="'+x+'">'+(x===1?'1 κλήρωση (μόνο την επόμενη)':x+' συνεχόμενες κληρώσεις')+'</option>'; RS.innerHTML=ro; RS.value=String(RUN); RS.addEventListener('change', function(){ RUN=+this.value; lsSet('h32_run',String(RUN)); render(); });
+  var E8=$('hEight'); E8.value=EIGHT?'1':'0'; E8.addEventListener('change', function(){ EIGHT=this.value==='1'; lsSet('h32_eight',EIGHT?'1':'0'); if(EIGHT && INP!=='order'){ INP='order'; I.value=INP; lsSet('h32_in',INP); } rehash(); });
   A.addEventListener('change', function(){ ALG=this.value; lsSet('h32_alg',ALG); rehash(); }); I.addEventListener('change', function(){ INP=this.value; lsSet('h32_in',INP); rehash(); });
   $('cmp').addEventListener('click', function(e){ var r=e.target.closest('tr[data-a]'); if(!r) return; ALG=r.dataset.a; INP=r.dataset.k; A.value=ALG; I.value=INP; lsSet('h32_alg',ALG); lsSet('h32_in',INP); rehash(); });
   function cw(){ CW.a=$('cFrom').value||'00:00'; CW.b=$('cTo').value||'23:55'; if(CW.b<CW.a){ var t=CW.a; CW.a=CW.b; CW.b=t; } CW.all=false; $('cAll').classList.remove('on'); $('cNight').classList.toggle('on', CW.a==='00:00'&&CW.b==='08:00'); render(); }
