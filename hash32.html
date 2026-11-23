@@ -49,7 +49,7 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
 </head>
 <body><div class="wrap">
 <h1>#️⃣ ΚΙΝΟ Hash 32</h1>
-<details class="muted" style="font-size:13px"><summary>ℹ️ Πώς δουλεύει</summary>Κάθε κλήρωση: οι 20 αριθμοί <b>ταξινομημένοι</b> κολλητά σε έναν αριθμό → <b>CRC32</b> (32 bit) σε ψηφία → χωρίζεται ανά δύο ψηφία (π.χ. 4255612109 → 42 55 61 21 9). Πάνω από 80 αντιστρέφεται (81→18)· αν πάλι δεν κάνει (98→89) γίνεται δύο μονοψήφιοι (8, 9)· το 99 γίνεται 9. Τα μηδενικά και τα διπλά φεύγουν. Αυτοί οι αριθμοί είναι η <b>πρόβλεψη για την επόμενη κλήρωση</b> και αξιολογούνται μόλις βγει. Με το «🔁 Κάθε πρόβλεψη παίζεται για» βλέπεις τι θα γινόταν αν την έπαιζες για 1 έως 20 συνεχόμενες κληρώσεις.<br><br><b>🏠 Οχτάρας 2</b> (ο νέος) = δουλεύει με τους ίδιους τους αριθμούς με τη σειρά που βγήκαν: ο αριθμός στη θέση 1, 2, … 20 γίνεται ένα μοναδικό κλειδί (αριθμός + 80 × θέση), οπότε το 17 ως 1η μπάλα μετράει διαφορετικά από το 17 ως 5η· ανακατεύεται με 0x08430843, τον «χρυσό» αριθμό, γυρίζει 8 bit και διπλώνει.<br><b>🏠 Οχτάρας 1</b> (ο πρώτος) =  ξεκινάει από τον αριθμό 0x08430843 (Οχτάρας «8» και Αγίας Τριάδος «43»), κάθε ψηφίο «ζυγίζεται» με τη θέση του, πολλαπλασιάζεται και γυρίζει κατά 8 bit (οχτώ), και στο τέλος ανακατεύεται καλά ώστε μια μικρή αλλαγή στην κλήρωση να αλλάζει όλο το αποτέλεσμα.</details>
+<details class="muted" style="font-size:13px"><summary>ℹ️ Πώς δουλεύει</summary>Κάθε κλήρωση: οι 20 αριθμοί <b>ταξινομημένοι</b> κολλητά σε έναν αριθμό → <b>CRC32</b> (32 bit) σε ψηφία → χωρίζεται ανά δύο ψηφία (π.χ. 4255612109 → 42 55 61 21 9). Πάνω από 80 αντιστρέφεται (81→18)· αν πάλι δεν κάνει (98→89) γίνεται δύο μονοψήφιοι (8, 9)· το 99 γίνεται 9. Τα μηδενικά και τα διπλά φεύγουν. Αυτοί οι αριθμοί είναι η <b>πρόβλεψη για την επόμενη κλήρωση</b> και αξιολογούνται μόλις βγει. Με το «🔁 Κάθε πρόβλεψη παίζεται για» βλέπεις τι θα γινόταν αν την έπαιζες για 1 έως 20 συνεχόμενες κληρώσεις.<br><br><b>🏠 Οχτάρας 3 (πίνακας)</b> (ο νέος) = κάθε μπάλα, με τη σειρά που βγήκε, μπαίνει ως θέση στον πίνακα του ΚΙΝΟ: σειρά (1–8) και στήλη (1–10). Δύο «χέρια» ανακατεύουν παράλληλα, το ένα τις σειρές και το άλλο τις στήλες, και μετά από κάθε μπάλα το ένα «κοιτάει» το άλλο· στο τέλος ενώνονται. (Ο Οχτάρας 2 σβήστηκε.)<br><b>🏠 Οχτάρας 1</b> (ο πρώτος) =  ξεκινάει από τον αριθμό 0x08430843 (Οχτάρας «8» και Αγίας Τριάδος «43»), κάθε ψηφίο «ζυγίζεται» με τη θέση του, πολλαπλασιάζεται και γυρίζει κατά 8 bit (οχτώ), και στο τέλος ανακατεύεται καλά ώστε μια μικρή αλλαγή στην κλήρωση να αλλάζει όλο το αποτέλεσμα.</details>
 <div class="top"><input type="date" id="day"><button class="btn" id="today">Σήμερα</button><button class="btn" id="liveT" title="Αυτόματη ενημέρωση με κάθε νέα κλήρωση">🔄 Live</button><span class="muted" id="st" style="font-size:13px"></span></div>
 
 <div class="dchips" id="dayChips"></div>
@@ -78,7 +78,7 @@ summary{cursor:pointer}details>summary{list-style:none}details>summary::-webkit-
 <div class="card"><details id="dSum" open><summary><b id="lblSum">📊 Σύνοψη ημέρας</b> <span class="muted" id="lblSumW" style="font-size:13px"></span></summary><div id="sum"></div></details></div>
 <div class="card"><details id="dList"><summary><b id="lblList">📋 Όλες οι κληρώσεις της ημέρας</b> <span class="muted" id="cnt" style="font-size:13px"></span></summary>
   <div class="scroll" style="margin-top:6px"><table id="tbl"></table></div></details></div>
-<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v64 · 23/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
+<div class="muted" style="text-align:center;font-size:11px;margin-top:14px">έκδοση v65 · 23/11/2026 · <a href="general.html" style="color:inherit">🗂️ General</a></div>
 </div>
 <div id="nav"><button data-v="dprev" class="dy" title="Προηγούμενη μέρα">◀📅</button><button data-v="-10">⏪10</button><button data-v="-1">◀</button><button data-v="live" class="live">🟢</button><button data-v="1">▶</button><button data-v="10">10⏩</button><button data-v="dnext" class="dy" title="Επόμενη μέρα">📅▶</button></div>
 <script>
@@ -110,12 +110,15 @@ var ALGS={
   djb2:{n:'DJB2', f:function(s){ var h=5381; for(var i=0;i<s.length;i++) h=(Math.imul(h,33)+s.charCodeAt(i))|0; return u32(h); }},
   oaat:{n:'Jenkins', f:function(s){ var h=0; for(var i=0;i<s.length;i++){ h=(h+s.charCodeAt(i))|0; h=(h+(h<<10))|0; h^=h>>>6; } h=(h+(h<<3))|0; h^=h>>>11; h=(h+(h<<15))|0; return u32(h); }},
   sdbm:{n:'SDBM', f:function(s){ var h=0; for(var i=0;i<s.length;i++) h=(s.charCodeAt(i)+(h<<6)+(h<<16)-h)|0; return u32(h); }},
-  /* 🏠 Οχτάρας 2 (νέος): δουλεύει με τους ίδιους τους αριθμούς με τη σειρά που βγήκαν (όχι ψηφίο-ψηφίο):
-     ο αριθμός n στη θέση i (1η μπάλα, 2η, … 20ή) γίνεται ένα μοναδικό «κλειδί» n + 80·i, που ανακατεύεται με 0x08430843 (8 + 43),
-     πολλαπλασιάζεται με τον «χρυσό» αριθμό 0x9E3779B1, γυρίζει 8 bit (οχτώ) και διπλώνει. Τα ξανά-hash (για να μαζευτούν οι αριθμοί) γίνονται ψηφίο-ψηφίο */
-  ochtaras:{n:'🏠 Οχτάρας 2', f:function(s, d){ var h=0x08430843, a=d&&d.arr ? d.arr : s.split('').map(function(c){ return c.charCodeAt(0)-47; });
-    for(var i=0;i<a.length;i++){ h^=a[i]+80*(i+1); h=Math.imul(h,0x9E3779B1); h=(h<<8)|(h>>>24); h^=h>>>13; }
-    h^=a.length; h^=h>>>16; h=Math.imul(h,0x85ebca6b); h^=h>>>13; h=Math.imul(h,0xc2b2ae35); h^=h>>>16; return u32(h); }},
+  /* 🏠 Οχτάρας 3 (πίνακας): κάθε μπάλα με τη σειρά που βγήκε μπαίνει ως θέση στον πίνακα του ΚΙΝΟ — σειρά (1–8) και στήλη (1–10).
+     Δύο «χέρια» ανακατεύουν παράλληλα: το ένα τις σειρές (ξεκινά από 0x08430843), το άλλο τις στήλες (ξεκινά από 0x43080843),
+     και μετά από κάθε μπάλα το ένα «κοιτάει» το άλλο. Στο τέλος ενώνονται και ανακατεύονται. Τα ξανά-hash γίνονται ψηφίο-ψηφίο */
+  ochtaras:{n:'🏠 Οχτάρας 3 (πίνακας)', f:function(s, d){ var a=0x08430843, b=0x43080843, A=d&&d.arr ? d.arr : s.split('').map(function(c){ return c.charCodeAt(0)-47; });
+    for(var i=0;i<A.length;i++){ var n=A[i], r=((n-1)/10|0)+1, c=(n-1)%10+1;
+      a^=Math.imul(r, i+8); a=(a+n)|0; a=Math.imul(a,0x01000193); a=(a<<8)|(a>>>24);
+      b^=Math.imul(c, i+43); b=Math.imul(b,0x5bd1e995); b=(b<<13)|(b>>>19);
+      a^=b>>>3; b^=a>>>5; }
+    var h=a^Math.imul(b,0x9E3779B1); h^=A.length; h^=h>>>16; h=Math.imul(h,0x7feb352d); h^=h>>>15; h=Math.imul(h,0x846ca68b); h^=h>>>16; return u32(h); }},
   /* 🏠 ο δικός μας: ξεκινάει από 0x08430843 (Οχτάρας «8» + Αγίας Τριάδος «43»)· κάθε ψηφίο ζυγίζεται με τη θέση του (+8), πολλαπλασιάζεται και γυρίζει 8 bit (οχτώ)· στο τέλος καλό ανακάτεμα */
   ochtaras1:{n:'🏠 Οχτάρας 1 (ο πρώτος)', f:function(s){ var h=0x08430843;
     for(var i=0;i<s.length;i++){ var c=s.charCodeAt(i)-47; h^=Math.imul(c, i+8); h=Math.imul(h,0x2545F491); h=(h<<8)|(h>>>24); }
