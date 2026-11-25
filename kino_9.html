@@ -44,6 +44,9 @@ select,button{max-width:100%;font:inherit;font-size:14.5px;border-radius:10px;bo
 input{font:inherit;font-size:14.5px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--text);padding:7px 9px;color-scheme:dark}
 button{cursor:pointer}button:disabled{opacity:.4;cursor:default}
 #day tr.go{cursor:pointer}
+.chip{display:inline-block;text-align:center;font-size:11.5px;line-height:1.25;padding:4px 6px;border-radius:8px;background:var(--bg2);border:1px solid var(--line);cursor:pointer;min-width:44px}
+.chip.cur{border-color:var(--gold);color:var(--gold)}
+.chip.good b{color:var(--grn)}
 #fbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));z-index:50;display:flex;align-items:center;gap:6px;background:rgba(12,42,51,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--tq);border-radius:16px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.45);max-width:calc(100% - 24px)}
 #fbar button{padding:8px 12px;font-size:16px;font-weight:800}
 #fbar .fi{min-width:0;text-align:center;font-size:12.5px;line-height:1.25;padding:0 6px;cursor:pointer;white-space:nowrap}
@@ -116,6 +119,7 @@ footer a{color:inherit}
     <h2>⚙️ Ρυθμίσεις</h2>
     <div class="row">
       <label class="f">«Έπιασε» θεωρείται (για την καθυστέρηση)<select id="T"><option value="4">4/9 και πάνω</option><option value="5">5/9 και πάνω</option><option value="6">6/9 και πάνω</option><option value="7">7/9 και πάνω</option><option value="8">8/9 και πάνω (προεπιλογή)</option><option value="9">9/9 (όλοι)</option></select></label>
+      <label class="f">🎟️ Παίζω την ίδια εννιάδα για<select id="NK"><option value="1">1 κλήρωση (OFF)</option><option value="2">2 κληρώσεις</option><option value="3">3 κληρώσεις</option><option value="4">4 κληρώσεις</option><option value="5">5 κληρώσεις</option><option value="6">6 κληρώσεις</option><option value="7">7 κληρώσεις</option><option value="8">8 κληρώσεις</option><option value="9">9 κληρώσεις</option><option value="10">10 κληρώσεις</option></select></label>
     </div>
     <label class="tg"><span>⚖️ Αναλογίες μονά/ζυγά, μικρά/μεγάλα, αριστερά/δεξιά</span><span class="sw"><input type="checkbox" id="tBal"><span></span></span></label>
     <label class="tg"><span>⏳ Επιλογή της εννιάδας με τη μεγαλύτερη καθυστέρηση</span><span class="sw"><input type="checkbox" id="tDel"><span></span></span></label>
@@ -133,13 +137,13 @@ footer a{color:inherit}
       <b>Η εννιάδα</b> = 1 από τα 2 πιο «ανεβασμένα» καυτά + 8 από τα 13 πιο ανεβασμένα που τείνουν. Δοκιμάζει όλους τους συνδυασμούς.<br>
       <b>Αναλογίες</b> = κρατάει μόνο όσους έχουν 4–5 μονά, 4–5 μικρά (1–40) και 4–5 αριστερά (στήλες 1–5). Αν δεν βγαίνει κανένας, χαλαρώνει σε 3–6, και αλλιώς χωρίς φίλτρο.<br>
       <b>Μέγιστη καθυστέρηση</b> = για κάθε εννιάδα που περνάει, ψάχνει σε <b>όλο το ιστορικό του ΚΙΝΟ από το 2018</b> πότε έπιασε τελευταία φορά <b>8+/9</b> (αλλάζει στις ρυθμίσεις), και κρατάει αυτή που αργεί περισσότερο. Σε ισοπαλία κρίνει το τελευταίο 5+/9.<br>
-      <b>Αξιολόγηση</b> = κάθε εννιάδα φτιάχνεται μόνο με τις κληρώσεις πριν από αυτήν. Κέρδη με μία στήλη 0,50€ των 9 αριθμών.<br><br>
+      <b>Αξιολόγηση</b> = κάθε εννιάδα φτιάχνεται μόνο με τις κληρώσεις πριν από αυτήν. Κέρδη με μία στήλη 0,50€ των 9 αριθμών.<br><b>🎟️ Δελτίο πολλών κληρώσεων</b> = η εννιάδα φτιάχνεται στην πρώτη κλήρωση του δελτίου και παίζεται ίδια για 2–10 συνεχόμενες κληρώσεις. Τα δελτία της ημέρας ξεκινούν από τις 08:00 και κάθε Ν κληρώσεις. Με 10 κληρώσεις η τύχη δίνει περίπου 1 στα 3 δελτία με τουλάχιστον ένα 5+/9.<br><br>
       Ειλικρινά: μια εννιάδα πιάνει κατά μέσο όρο <b>2,25</b> αριθμούς, όποια κι αν είναι, και το ΚΙΝΟ επιστρέφει κατά μέσο όρο κάτω από όσα παίζεις. Η σελίδα δείχνει δίπλα και τι δίνει η τύχη.
     </div>
   </div>
 
   <div id="fbar" style="display:none"><button id="fPrev" aria-label="Προηγούμενη">◀</button><div class="fi" id="fInfo">…</div><button id="fNext" aria-label="Επόμενη">▶</button><button id="fNow" aria-label="Επόμενη κλήρωση">⏱</button></div>
-  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v67 · 25/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_4x3.html">🔲 Κουτί 4×3</a></footer>
+  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v68 · 25/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_4x3.html">🔲 Κουτί 4×3</a></footer>
 </div>
 <script>
 /* ===== Εννιάδα 10/90 — πυρήνας (ίδιος στη σελίδα και στη δοκιμή) ===== */
@@ -258,6 +262,7 @@ var API='https://api.opap.gr/draws/v3.0/1100';
 var OPT={bal:true,del:true,mark:true,day:true,auto:true,fbar:true};
 Object.keys(OPT).forEach(function(k){var v=lsGet('n9_'+k); if(v!==null) OPT[k]=v==='1';});
 var T=+(lsGet('n9_T8')||8);
+var NK=+(lsGet('n9_N')||1); if(!(NK>=1&&NK<=10)) NK=1;
 var S=null, TIMES={}, DAYS={}, ACTIVE=null, LATEST=0, CUR=null, PCACHE={};
 var eur=function(v){return v.toLocaleString('el-GR',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';};
 function athDate(ms){return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Athens',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms));}
@@ -317,18 +322,25 @@ function board(p,dr,F){
     h+='<i class="'+cl.join(' ')+'">'+n+'</i>'; }
   return h+'</div>';
 }
+/* δελτία πολλών κληρώσεων: από την πρώτη κλήρωση των 08:00 της ημέρας, ένα νέο δελτίο κάθε NK κληρώσεις */
+function dayIds(ad){ return Object.keys(TIMES).map(Number).filter(function(i){ return athDate(TIMES[i])===ad&&inWin(TIMES[i]); }).sort(function(a,b){return a-b;}); }
+function ticketStart(id){ if(NK<=1||!TIMES[id]) return id; var L=dayIds(athDate(TIMES[id])); if(!L.length||id<L[0]) return id; return L[0]+Math.floor((id-L[0])/NK)*NK; }
+function ticket(s){ var p=pick(s), rows=[]; if(!p) return null; for(var k=0;k<NK;k++){ var id=s+k, dr=drawnOf(id), h=dr?p.c.filter(function(n){return dr.indexOf(n)>=0;}).length:null; rows.push({id:id,t:TIMES[id]||(TIMES[s]?TIMES[s]+k*300000:null),h:h,pay:h!=null?(N9.PAY9[h]||0):0}); } return {s:s,p:p,rows:rows}; }
 function show(id){
   CUR=id; $('nId').value=id;
-  var t=TIMES[id], p=pick(id), dr=drawnOf(id), isNext=ACTIVE&&id===ACTIVE.drawId;
+  var t=TIMES[id], TS=ticketStart(id), TK=NK>1?ticket(TS):null, p=TK?TK.p:pick(id), dr=drawnOf(id), isNext=ACTIVE&&id===ACTIVE.drawId;
   if(t) $('nDate').value=athDate(t);
   var head='<h2>'+(isNext?'🔮 Εννιάδα για την επόμενη κλήρωση':'📜 Κλήρωση')+' #'+id+(t?' · '+fmtDay(t)+' · '+hm(t):'')+'</h2>';
   if(t&&!inWin(t)) head+='<div class="muted">⏰ Εκτός ωραρίου 08:00–23:00 — η εννιάδα φαίνεται μόνο για σύγκριση.</div>';
   if(!p){ $('view').innerHTML=head+'<div class="muted">Δεν υπάρχουν ακόμα όλες οι προηγούμενες κληρώσεις για αυτή την πρόβλεψη.</div>'; bar(id,null,null); return; }
-  var g=pos(id), F=N9.classify(N9.freq(S,g)); F={hot:F.hot.map(function(x){return x.n;}),rise:F.rise.map(function(x){return x.n;})};
+  var g=pos(NK>1?TS:id), F=N9.classify(N9.freq(S,g)); F={hot:F.hot.map(function(x){return x.n;}),rise:F.rise.map(function(x){return x.n;})};
   var h=dr?p.c.filter(function(n){return dr.indexOf(n)>=0;}).length:null, pay=h!=null?(N9.PAY9[h]||0):0;
   var r=p.r, st=['4–5 σε όλα','χαλάρωσε σε 3–6','χωρίς φίλτρο'][p.stage]||'';
   var html=head;
   if(h!=null) html+='<div class="verdict '+(h>=5?'ok':'no')+'">'+(h>=5?'🎉 ':'')+h+'/9 · '+(pay?'κέρδος '+eur(pay):'χωρίς κέρδος')+'</div>';
+  if(TK){ var played=TK.rows.filter(function(r){return r.h!=null;}), won=played.reduce(function(a,r){return a+r.pay;},0), k0=id-TS+1;
+    html+='<div class="muted">🎟️ Δελτίο '+NK+' κληρώσεων από την #'+TS+(TIMES[TS]?' ('+hm(TIMES[TS])+')':'')+' · αυτή είναι η <b>'+k0+'η από '+NK+'</b> · παίχτηκαν '+played.length+' ('+eur(played.length*0.5)+') · κέρδη '+eur(won)+'</div>';
+    html+='<div class="row" style="gap:4px;margin:6px 0">'+TK.rows.map(function(r){ return '<span class="chip'+(r.id===id?' cur':'')+(r.h!=null&&r.h>=5?' good':'')+'" data-id="'+r.id+'">'+(r.t?hm(r.t):'#'+r.id)+'<br><b>'+(r.h==null?'—':r.h+'/9')+'</b></span>'; }).join('')+'</div>'; }
   html+='<div class="big nums">'+p.c.join(' ')+'</div>';
   html+='<div class="muted">🔥 Καυτό: <b class="nums">'+(p.hot.length?p.hot.join(' '):'κανένα (δεν υπήρχε)')+'</b> · 📈 Τείνουν: <b class="nums">'+p.c.filter(function(n){return p.hot.indexOf(n)<0;}).join(' ')+'</b></div>';
   html+=board(p,dr,F);
@@ -356,6 +368,7 @@ function renderDay(ad){
   athDayLoad(ad).then(function(){
     if(tok!==dayTok) return;
     var ids=Object.keys(TIMES).map(Number).filter(function(id){return athDate(TIMES[id])===ad&&inWin(TIMES[id]);}).sort(function(a,b){return a-b;});
+    if(NK>1){ return ticketsDay(ad,ids,tok); }
     var rows=[], i=0;
     function chunk(){
       if(tok!==dayTok) return;
@@ -367,6 +380,31 @@ function renderDay(ad){
     }
     chunk();
   });
+}
+function ticketsDay(ad,ids,tok){
+  var starts=ids.filter(function(id,i){ return i%NK===0; }), out=[], i=0;
+  function chunk(){ if(tok!==dayTok) return; var t0=Date.now();
+    for(;i<starts.length&&Date.now()-t0<40;i++){ var tk=ticket(starts[i]); if(tk&&tk.rows.some(function(r){return r.h!=null;})) out.push(tk); }
+    if(i<starts.length){ $('day').innerHTML='<h2>📊 Ημέρα '+ad+'</h2><div class="muted">Υπολογισμός δελτίων… '+i+'/'+starts.length+'</div>'; setTimeout(chunk,0); return; }
+    paintTickets(ad,out); }
+  chunk();
+}
+function paintTickets(ad,T2){
+  var h='<h2>📊 Αξιολόγηση ημέρας · '+ad.split('-').reverse().join('/')+' · δελτία '+NK+' κληρώσεων</h2>';
+  if(!T2.length){ $('day').innerHTML=h+'<div class="muted">Δεν υπάρχουν ακόμα δελτία με αποτέλεσμα.</div>'; return; }
+  var draws=0, win=0, with5=0, best=0, done=0;
+  T2.forEach(function(tk){ var pl=tk.rows.filter(function(r){return r.h!=null;}); draws+=pl.length; if(pl.length===NK) done++;
+    var mx=0; pl.forEach(function(r){ win+=r.pay; mx=Math.max(mx,r.h); }); tk.mx=mx; tk.win=pl.reduce(function(a,r){return a+r.pay;},0); if(mx>=5) with5++; best=Math.max(best,mx); });
+  var stake=draws*0.5, net=win-stake, chance=1-Math.pow(1-0.0389,NK);
+  h+='<div class="stats">'+
+    '<div><b>'+T2.length+'</b><small>δελτία ('+done+' ολοκληρωμένα) · '+draws+' κληρώσεις</small></div>'+
+    '<div><b class="'+(with5?'ok':'')+'">'+with5+'</b><small>δελτία με 5+/9 τουλάχιστον μία φορά (τύχη: '+Math.round(100*chance)+'% → '+(T2.length*chance).toFixed(1).replace('.',',')+')</small></div>'+
+    '<div><b>'+best+'/9</b><small>καλύτερο της ημέρας</small></div>'+
+    '<div><b class="'+(net>=0?'ok':'no')+'">'+(net>=0?'+':'')+eur(net)+'</b><small>καθαρό · παίχτηκαν '+eur(stake)+', κέρδη '+eur(win)+'</small></div></div>';
+  h+='<table><tr><th>Έναρξη</th><th>Εννιάδα · επιτυχίες ανά κλήρωση</th><th class="c">Κέρδος</th></tr>';
+  T2.slice().reverse().forEach(function(tk){
+    h+='<tr class="go" data-id="'+tk.s+'"><td>'+(TIMES[tk.s]?hm(TIMES[tk.s]):'')+'<br><small>#'+tk.s+'</small></td><td><span class="nums" style="font-size:12.5px">'+tk.p.c.join(' ')+'</span><br><span class="nums">'+tk.rows.map(function(r){ return r.h==null?'·':(r.h>=5?'<b class="ok">'+r.h+'</b>':r.h); }).join(' ')+'</span></td><td class="c '+(tk.win>=NK*0.5?'ok':'')+'"><b>'+eur(tk.win)+'</b><br><small>καλύτερο '+tk.mx+'/9</small></td></tr>'; });
+  $('day').innerHTML=h+'</table><div class="muted">Κάθε δελτίο ξεκινά από την πρώτη κλήρωση των 08:00 και κάθε '+NK+' κληρώσεις. Πάτα μια γραμμή για να ανοίξει.</div>';
 }
 function paintDay(ad,rows){
   var h='<h2>📊 Αξιολόγηση ημέρας · '+ad.split('-').reverse().join('/')+' · 08:00–23:00</h2>';
@@ -408,10 +446,12 @@ $('nGo').onclick=function(){ var v=+$('nId').value; if(v) go(v); };
 $('nDate').onchange=function(){ var ad=this.value; if(!ad) return; athDayLoad(ad).then(function(){
   var ids=Object.keys(TIMES).map(Number).filter(function(id){return athDate(TIMES[id])===ad&&inWin(TIMES[id])&&drawnOf(id);}).sort(function(a,b){return a-b;});
   if(ids.length) go(ids[ids.length-1]); else { renderDay.last=ad; renderDay(ad); } }); };
+$('view').addEventListener('click',function(e){ var c=e.target.closest('.chip'); if(c) go(+c.dataset.id); });
 $('day').addEventListener('click',function(e){ var tr=e.target.closest('tr.go'); if(!tr) return; go(+tr.dataset.id).then(function(){ $('view').scrollIntoView({behavior:'smooth'}); }); });
 
 /* ---------- ρυθμίσεις ---------- */
-$('T').value=String(T);
+$('T').value=String(T); $('NK').value=String(NK);
+$('NK').onchange=function(){ NK=+this.value; lsSet('n9_N',NK); refresh(); };
 $('T').onchange=function(){ T=+this.value; lsSet('n9_T8',T); refresh(); };
 [['tBal','bal'],['tDel','del'],['tMark','mark'],['tDay','day'],['tAuto','auto'],['tFbar','fbar']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
   c.addEventListener('change',function(){ OPT[a[1]]=c.checked; lsSet('n9_'+a[1],c.checked?'1':'0'); if(a[1]==='auto') schedule(); else refresh(); }); });
