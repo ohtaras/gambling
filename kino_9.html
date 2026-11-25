@@ -60,6 +60,7 @@ button{cursor:pointer}button:disabled{opacity:.4;cursor:default}
 .chip.good b{color:var(--grn)}
 #fbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));z-index:50;display:flex;align-items:center;gap:6px;background:rgba(12,42,51,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--tq);border-radius:16px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.45);max-width:calc(100% - 24px)}
 #fbar button{padding:8px 12px;font-size:16px;font-weight:800}
+#fbar #fdPrev,#fbar #fdNext{padding:8px 8px;font-size:14px}
 #fbar .fi{min-width:0;text-align:center;font-size:12.5px;line-height:1.25;padding:0 6px;cursor:pointer;white-space:nowrap}
 body.hasbar .wrap{padding-bottom:90px}
 .grid i.lw{box-shadow:inset 0 0 0 2px rgba(255,214,10,.55)}
@@ -118,6 +119,10 @@ footer a{color:inherit}
       <button id="nNow">⏱ Επόμενη κλήρωση</button>
     </div>
     <div class="row" style="margin-top:8px">
+      <button id="dPrev">⏪ Μέρα πίσω</button>
+      <button id="dNext">Μέρα μπροστά ⏩</button>
+    </div>
+    <div class="row" style="margin-top:8px">
       <label class="f">Ημέρα<input type="date" id="nDate"></label>
       <label class="f">Αριθμός κλήρωσης<input type="number" id="nId" inputmode="numeric" placeholder="π.χ. 1354700" style="width:140px"></label>
       <label class="f">&nbsp;<button id="nGo">Πήγαινε</button></label>
@@ -160,8 +165,8 @@ footer a{color:inherit}
   </div>
 
   <button id="netp" type="button" style="display:none" aria-label="Καθαρό ημέρας"></button>
-  <div id="fbar" style="display:none"><button id="fPrev" aria-label="Προηγούμενη">◀</button><div class="fi" id="fInfo">…</div><button id="fNext" aria-label="Επόμενη">▶</button><button id="fNow" aria-label="Επόμενη κλήρωση">⏱</button></div>
-  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v72 · 25/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_4x3.html">🔲 Κουτί 4×3</a></footer>
+  <div id="fbar" style="display:none"><button id="fdPrev" aria-label="Μέρα πίσω">⏪</button><button id="fPrev" aria-label="Προηγούμενη">◀</button><div class="fi" id="fInfo">…</div><button id="fNext" aria-label="Επόμενη">▶</button><button id="fNow" aria-label="Επόμενη κλήρωση">⏱</button><button id="fdNext" aria-label="Μέρα μπροστά">⏩</button></div>
+  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v73 · 25/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_4x3.html">🔲 Κουτί 4×3</a></footer>
 </div>
 <script>
 /* ===== Εννιάδα 10/90 — πυρήνας (ίδιος στη σελίδα και στη δοκιμή) ===== */
@@ -402,6 +407,7 @@ function show(id){
   $('view').innerHTML=html;
   bar(id,h,t,K);
   $('nNext').disabled=$('fNext').disabled=ACTIVE?id>=ACTIVE.drawId:id>=LATEST;
+  $('dNext').disabled=$('fdNext').disabled=!t||athDate(t)>=athDate(Date.now());
 }
 function bar(id,h,t,K){ K=K||KN;
   var fb=OPT.fbar; $('fbar').style.display=fb?'flex':'none'; document.body.classList.toggle('hasbar',fb);
@@ -499,6 +505,21 @@ function toTop(){ var r=$('view').getBoundingClientRect(); if(r.top<0||r.top>inn
 $('nPrev').onclick=function(){stepTo(-1);}; $('nNext').onclick=function(){stepTo(1);};
 $('fPrev').onclick=function(){stepTo(-1).then(toTop);}; $('fNext').onclick=function(){stepTo(1).then(toTop);};
 $('nNow').onclick=$('fNow').onclick=function(){ go(ACTIVE?ACTIVE.drawId:LATEST).then(toTop); };
+/* μέρα-μέρα: πάει στην ίδια ώρα της προηγούμενης / επόμενης ημέρας (ή στην πιο κοντινή κλήρωση) */
+function minsOf(ms){ var h=athHour(ms); return h*60; }
+function dayStep(dir){
+  var base=TIMES[CUR]||Date.now(), ad=addDays(athDate(base),dir), today=athDate(Date.now());
+  if(ad>today) return Promise.resolve();
+  return athDayLoad(ad).then(function(){
+    var want=minsOf(base), ids=dayIds(ad).filter(function(i){ return drawnOf(i)||(ACTIVE&&i===ACTIVE.drawId); });
+    if(ad===today&&ACTIVE&&ids.indexOf(ACTIVE.drawId)<0) ids.push(ACTIVE.drawId);
+    if(!ids.length){ renderDay.last=ad; renderDay(ad); $('nDate').value=ad; return; }
+    var best=ids[0]; ids.forEach(function(i){ if(Math.abs(minsOf(TIMES[i])-want)<Math.abs(minsOf(TIMES[best])-want)) best=i; });
+    return go(best);
+  });
+}
+$('dPrev').onclick=function(){ dayStep(-1); }; $('dNext').onclick=function(){ dayStep(1); };
+$('fdPrev').onclick=function(){ dayStep(-1).then(toTop); }; $('fdNext').onclick=function(){ dayStep(1).then(toTop); };
 $('fInfo').onclick=function(){ $('view').scrollIntoView({behavior:'smooth'}); };
 $('nGo').onclick=function(){ var v=+$('nId').value; if(v) go(v); };
 $('nDate').onchange=function(){ var ad=this.value; if(!ad) return; athDayLoad(ad).then(function(){
