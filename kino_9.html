@@ -90,7 +90,7 @@ footer a{color:inherit}
 <body>
 <div class="wrap">
   <header><img src="img/allwyn.png" alt=""><h1>🎯 Εννιάδα 10/90</h1></header>
-  <p class="lead">Για κάθε κλήρωση από τις <b>08:00 έως τις 23:00</b> φτιάχνει μια <b>εννιάδα</b>: <b>1 καυτό</b> (10%) και <b>8 που τείνουν να γίνουν καυτά</b> (90%), με ισορροπία <b>μονά/ζυγά, μικρά/μεγάλα, αριστερά/δεξιά</b> όταν γίνεται. Από όλες τις εννιάδες που περνούν το φίλτρο, κρατάει αυτή με τη <b>μεγαλύτερη καθυστέρηση σε όλο το ιστορικό</b> — που έχει περάσει περισσότερος καιρός από την τελευταία φορά που «έπιασε».</p>
+  <p class="lead">Για κάθε κλήρωση από τις <b>08:00 έως τις 23:00</b> φτιάχνει μια <b>εννιάδα</b>: <b>1 καυτό</b> (10%) και <b>8 που τείνουν να γίνουν καυτά</b> (90%), με ισορροπία <b>μονά/ζυγά, μικρά/μεγάλα, αριστερά/δεξιά</b> όταν γίνεται. Από όλες τις εννιάδες που περνούν το φίλτρο, κρατάει αυτή με τη <b>μεγαλύτερη καθυστέρηση σε όλο το ιστορικό</b> — που έχει περάσει περισσότερος καιρός από την τελευταία φορά που έπιασε <b>8+/9</b>.</p>
 
   <div class="card"><div class="st"><span class="dot" id="dot"></span><span id="st">Φόρτωση ιστορικού…</span></div><div id="pgw" style="height:4px;background:var(--bg2);border-radius:3px;margin-top:6px;overflow:hidden"><div id="pg" style="height:4px;width:0;background:var(--tq)"></div></div></div>
 
@@ -115,7 +115,7 @@ footer a{color:inherit}
   <div class="card">
     <h2>⚙️ Ρυθμίσεις</h2>
     <div class="row">
-      <label class="f">«Έπιασε» θεωρείται (για την καθυστέρηση)<select id="T"><option value="4">4/9 και πάνω</option><option value="5">5/9 και πάνω</option><option value="6">6/9 και πάνω</option><option value="7">7/9 και πάνω</option></select></label>
+      <label class="f">«Έπιασε» θεωρείται (για την καθυστέρηση)<select id="T"><option value="4">4/9 και πάνω</option><option value="5">5/9 και πάνω</option><option value="6">6/9 και πάνω</option><option value="7">7/9 και πάνω</option><option value="8">8/9 και πάνω (προεπιλογή)</option><option value="9">9/9 (όλοι)</option></select></label>
     </div>
     <label class="tg"><span>⚖️ Αναλογίες μονά/ζυγά, μικρά/μεγάλα, αριστερά/δεξιά</span><span class="sw"><input type="checkbox" id="tBal"><span></span></span></label>
     <label class="tg"><span>⏳ Επιλογή της εννιάδας με τη μεγαλύτερη καθυστέρηση</span><span class="sw"><input type="checkbox" id="tDel"><span></span></span></label>
@@ -132,14 +132,14 @@ footer a{color:inherit}
       <b>Τείνουν να γίνουν καυτά</b> = βγήκαν 6–7 φορές στις 20 και στις 10 πιο πρόσφατες όσες ή περισσότερες από τις 10 πριν. Αν δεν φτάνουν, συμπληρώνει με όσα ανεβαίνουν πιο έντονα.<br>
       <b>Η εννιάδα</b> = 1 από τα 2 πιο «ανεβασμένα» καυτά + 8 από τα 13 πιο ανεβασμένα που τείνουν. Δοκιμάζει όλους τους συνδυασμούς.<br>
       <b>Αναλογίες</b> = κρατάει μόνο όσους έχουν 4–5 μονά, 4–5 μικρά (1–40) και 4–5 αριστερά (στήλες 1–5). Αν δεν βγαίνει κανένας, χαλαρώνει σε 3–6, και αλλιώς χωρίς φίλτρο.<br>
-      <b>Μέγιστη καθυστέρηση</b> = για κάθε εννιάδα που περνάει, ψάχνει σε <b>όλο το ιστορικό του ΚΙΝΟ από το 2018</b> πότε έπιασε τελευταία φορά 5+/9, και κρατάει αυτή που αργεί περισσότερο.<br>
+      <b>Μέγιστη καθυστέρηση</b> = για κάθε εννιάδα που περνάει, ψάχνει σε <b>όλο το ιστορικό του ΚΙΝΟ από το 2018</b> πότε έπιασε τελευταία φορά <b>8+/9</b> (αλλάζει στις ρυθμίσεις), και κρατάει αυτή που αργεί περισσότερο. Σε ισοπαλία κρίνει το τελευταίο 5+/9.<br>
       <b>Αξιολόγηση</b> = κάθε εννιάδα φτιάχνεται μόνο με τις κληρώσεις πριν από αυτήν. Κέρδη με μία στήλη 0,50€ των 9 αριθμών.<br><br>
       Ειλικρινά: μια εννιάδα πιάνει κατά μέσο όρο <b>2,25</b> αριθμούς, όποια κι αν είναι, και το ΚΙΝΟ επιστρέφει κατά μέσο όρο κάτω από όσα παίζεις. Η σελίδα δείχνει δίπλα και τι δίνει η τύχη.
     </div>
   </div>
 
   <div id="fbar" style="display:none"><button id="fPrev" aria-label="Προηγούμενη">◀</button><div class="fi" id="fInfo">…</div><button id="fNext" aria-label="Επόμενη">▶</button><button id="fNow" aria-label="Επόμενη κλήρωση">⏱</button></div>
-  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v66 · 25/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_4x3.html">🔲 Κουτί 4×3</a></footer>
+  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v67 · 25/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_4x3.html">🔲 Κουτί 4×3</a></footer>
 </div>
 <script>
 /* ===== Εννιάδα 10/90 — πυρήνας (ίδιος στη σελίδα και στη δοκιμή) ===== */
@@ -202,7 +202,7 @@ N9.delay = function(S, combo, g, T){
   for(; w >= 0; w--, mask = 0xFFFFFFFF){
     var c0 = 0, c1 = 0, c2 = 0, c3 = 0;
     for(var i = 0; i < A.length; i++){ var x = A[i][w], t; t = c0 & x; c0 ^= x; x = t; t = c1 & x; c1 ^= x; x = t; t = c2 & x; c2 ^= x; x = t; c3 ^= x; }
-    var ge = T <= 4 ? (c3 | c2) : T === 5 ? (c3 | (c2 & (c1 | c0))) : T === 6 ? (c3 | (c2 & c1)) : (c3 | (c2 & c1 & c0));
+    var ge = T <= 4 ? (c3 | c2) : T === 5 ? (c3 | (c2 & (c1 | c0))) : T === 6 ? (c3 | (c2 & c1)) : T === 7 ? (c3 | (c2 & c1 & c0)) : T === 8 ? c3 : (c3 & c0);
     ge &= mask;
     if(ge){ var p = w * 32 + (31 - Math.clz32(ge)); return last - p; }
   }
@@ -233,6 +233,8 @@ N9.pick = function(S, g, opt){
         if(r.odd < lo || r.odd > hi || r.low < lo || r.low > hi || r.left < lo || r.left > hi) return;
         tried++;
         var d = N9.delay(S, c, g, T), dd = d < 0 ? 1e9 : d;
+        /* ισοπαλία (π.χ. 9/9 που δεν έχει βγει ποτέ): κρίνει η καθυστέρηση στο 5+/9 */
+        if(best && opt.del !== false && dd === best.dd && T !== 5){ var d2 = N9.delay(S, c, g, 5); if(best.d2 == null) best.d2 = N9.delay(S, best.c, g, 5); if((d2 < 0 ? 1e9 : d2) > (best.d2 < 0 ? 1e9 : best.d2)){ best = {c: c.slice().sort(function(x, y){ return x - y; }), d: d, dd: dd, d2: d2, r: r, hot: hc.slice()}; } return; }
         if(!best || (opt.del !== false && dd > best.dd)){ best = {c: c.slice().sort(function(x, y){ return x - y; }), d: d, dd: dd, r: r, hot: hc.slice()}; }
       });
     });
@@ -255,7 +257,7 @@ function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 var API='https://api.opap.gr/draws/v3.0/1100';
 var OPT={bal:true,del:true,mark:true,day:true,auto:true,fbar:true};
 Object.keys(OPT).forEach(function(k){var v=lsGet('n9_'+k); if(v!==null) OPT[k]=v==='1';});
-var T=+(lsGet('n9_T')||5);
+var T=+(lsGet('n9_T8')||8);
 var S=null, TIMES={}, DAYS={}, ACTIVE=null, LATEST=0, CUR=null, PCACHE={};
 var eur=function(v){return v.toLocaleString('el-GR',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';};
 function athDate(ms){return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Athens',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms));}
@@ -331,7 +333,7 @@ function show(id){
   html+='<div class="muted">🔥 Καυτό: <b class="nums">'+(p.hot.length?p.hot.join(' '):'κανένα (δεν υπήρχε)')+'</b> · 📈 Τείνουν: <b class="nums">'+p.c.filter(function(n){return p.hot.indexOf(n)<0;}).join(' ')+'</b></div>';
   html+=board(p,dr,F);
   html+='<div class="stats">'+
-    '<div><b>'+(p.d<0?'ποτέ':p.d)+'</b><small>'+(p.d<0?'δεν έπιασε ποτέ '+p.T+'+/9 σε όλο το ιστορικό':'κληρώσεις από την τελευταία φορά που έπιασε '+p.T+'+/9')+'</small></div>'+
+    '<div><b>'+(p.d<0?'ποτέ':p.d.toLocaleString('el-GR'))+'</b><small>'+(p.d<0?'δεν έπιασε ποτέ '+(p.T===9?'9/9':p.T+'+/9')+' σε όλο το ιστορικό (650 χιλ. κληρώσεις)':'κληρώσεις από την τελευταία φορά που έπιασε '+(p.T===9?'9/9':p.T+'+/9'))+'</small></div>'+(p.d2!=null&&p.T!==5?'<div><b>'+(p.d2<0?'ποτέ':p.d2.toLocaleString('el-GR'))+'</b><small>κληρώσεις από το τελευταίο 5+/9 (κρίνει όταν ισοπαλία)</small></div>':'')+
     '<div><b>'+r.odd+'/'+(9-r.odd)+'</b><small>μονά / ζυγά</small></div>'+
     '<div><b>'+r.low+'/'+(9-r.low)+'</b><small>μικρά (1–40) / μεγάλα</small></div>'+
     '<div><b>'+r.left+'/'+(9-r.left)+'</b><small>αριστερά / δεξιά</small></div></div>';
@@ -410,7 +412,7 @@ $('day').addEventListener('click',function(e){ var tr=e.target.closest('tr.go');
 
 /* ---------- ρυθμίσεις ---------- */
 $('T').value=String(T);
-$('T').onchange=function(){ T=+this.value; lsSet('n9_T',T); refresh(); };
+$('T').onchange=function(){ T=+this.value; lsSet('n9_T8',T); refresh(); };
 [['tBal','bal'],['tDel','del'],['tMark','mark'],['tDay','day'],['tAuto','auto'],['tFbar','fbar']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
   c.addEventListener('change',function(){ OPT[a[1]]=c.checked; lsSet('n9_'+a[1],c.checked?'1':'0'); if(a[1]==='auto') schedule(); else refresh(); }); });
 function refresh(){ if(CUR) show(CUR); renderDay.last=null; if(CUR&&TIMES[CUR]){ renderDay.last=athDate(TIMES[CUR]); renderDay(renderDay.last); } }
