@@ -41,6 +41,7 @@ select,button{max-width:100%;font:inherit;font-size:14.5px;border-radius:10px;bo
 .grid i.hot::after,.grid i.tr::after{content:'';position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;box-shadow:0 0 0 1.5px #fff}
 .grid i.hot::after{background:var(--red)}
 .grid i.tr::after{background:#ff9f1c}
+.grid i.cld::after{content:'';position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;box-shadow:0 0 0 1.5px #4da3ff;background:#e8f4ff}
 .grid i.stb::after{content:'';position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;box-shadow:0 0 0 1.5px #fff;background:#4da3ff}
 input{font:inherit;font-size:14.5px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--text);padding:7px 9px;color-scheme:dark}
 button{cursor:pointer}button:disabled{opacity:.4;cursor:default}
@@ -119,7 +120,7 @@ footer a{color:inherit}
   <div class="card">
     <h2>⚙️ Ρυθμίσεις</h2>
     <div class="row">
-      <label class="f">🧪 Συνταγή<select id="MIX"><option value="h1">1 καυτό + 8 τείνουν (10/90)</option><option value="s1">8 τείνουν + 1 σταθερό προς κρύο</option><option value="s3">6 τείνουν + 3 σταθερά προς κρύα</option><option value="s4">5 τείνουν + 4 σταθερά προς κρύα</option></select></label>
+      <label class="f">🧪 Συνταγή<select id="MIX"><option value="h1">1 καυτό + 8 τείνουν (10/90)</option><option value="s1">8 τείνουν + 1 σταθερό προς κρύο</option><option value="s3">6 τείνουν + 3 σταθερά προς κρύα</option><option value="s4">5 τείνουν + 4 σταθερά προς κρύα</option><option value="c1">8 τείνουν + 1 κρύο</option><option value="c3">6 τείνουν + 3 κρύα</option><option value="c4">5 τείνουν + 4 κρύα</option><option value="c9">9 κρύα</option></select></label>
       <label class="f">«Έπιασε» θεωρείται (για την καθυστέρηση)<select id="T"><option value="4">4/9 και πάνω</option><option value="5">5/9 και πάνω</option><option value="6">6/9 και πάνω</option><option value="7">7/9 και πάνω</option><option value="8">8/9 και πάνω (προεπιλογή)</option><option value="9">9/9 (όλοι)</option></select></label>
       <label class="f">🎟️ Παίζω την ίδια εννιάδα για<select id="NK"><option value="1">1 κλήρωση (OFF)</option><option value="2">2 κληρώσεις</option><option value="3">3 κληρώσεις</option><option value="4">4 κληρώσεις</option><option value="5">5 κληρώσεις</option><option value="6">6 κληρώσεις</option><option value="7">7 κληρώσεις</option><option value="8">8 κληρώσεις</option><option value="9">9 κληρώσεις</option><option value="10">10 κληρώσεις</option></select></label>
     </div>
@@ -137,7 +138,8 @@ footer a{color:inherit}
       <b>Καυτά</b> = βγήκαν 8+ φορές στις 20 τελευταίες κληρώσεις (ο μέσος όρος είναι 5).<br>
       <b>Τείνουν να γίνουν καυτά</b> = βγήκαν 6–7 φορές στις 20 και στις 10 πιο πρόσφατες όσες ή περισσότερες από τις 10 πριν. Αν δεν φτάνουν, συμπληρώνει με όσα ανεβαίνουν πιο έντονα.<br>
       <b>Σταθερά προς κρύα</b> = βγήκαν 3–5 φορές στις 20 και δεν ανεβαίνουν. Όχι τα «μπούζι» (0–2 φορές).<br>
-      <b>Συνταγή</b> = τι μπαίνει δίπλα στα «τείνουν»: 1 καυτό (10/90), ή 1, 3 ή 4 σταθερά προς κρύα.<br>
+      <b>Κρύα</b> = βγήκαν 0–2 φορές στις 20. Πρώτα μπαίνουν όσα αρχίζουν να ξυπνάνε (βγήκαν στις 10 πιο πρόσφατες).<br>
+      <b>Συνταγή</b> = τι μπαίνει δίπλα στα «τείνουν»: 1 καυτό (10/90), ή 1, 3 ή 4 σταθερά προς κρύα, ή 1, 3 ή 4 κρύα — ή εννιάδα μόνο από κρύα.<br>
       <b>Η εννιάδα</b> = 1 από τα 2 πιο «ανεβασμένα» καυτά + 8 από τα 13 πιο ανεβασμένα που τείνουν. Δοκιμάζει όλους τους συνδυασμούς.<br>
       <b>Αναλογίες</b> = κρατάει μόνο όσους έχουν 4–5 μονά, 4–5 μικρά (1–40) και 4–5 αριστερά (στήλες 1–5). Αν δεν βγαίνει κανένας, χαλαρώνει σε 3–6, και αλλιώς χωρίς φίλτρο.<br>
       <b>Μέγιστη καθυστέρηση</b> = για κάθε εννιάδα που περνάει, ψάχνει σε <b>όλο το ιστορικό του ΚΙΝΟ από το 2018</b> πότε έπιασε τελευταία φορά <b>8+/9</b> (αλλάζει στις ρυθμίσεις), και κρατάει αυτή που αργεί περισσότερο. Σε ισοπαλία κρίνει το τελευταίο 5+/9.<br>
@@ -147,7 +149,7 @@ footer a{color:inherit}
   </div>
 
   <div id="fbar" style="display:none"><button id="fPrev" aria-label="Προηγούμενη">◀</button><div class="fi" id="fInfo">…</div><button id="fNext" aria-label="Επόμενη">▶</button><button id="fNow" aria-label="Επόμενη κλήρωση">⏱</button></div>
-  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v69 · 25/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_4x3.html">🔲 Κουτί 4×3</a></footer>
+  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v70 · 25/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_4x3.html">🔲 Κουτί 4×3</a></footer>
 </div>
 <script>
 /* ===== Εννιάδα 10/90 — πυρήνας (ίδιος στη σελίδα και στη δοκιμή) ===== */
@@ -197,10 +199,12 @@ N9.classify = function(F){
   var extra = F.filter(function(x){ return x.c < 8 && rise.indexOf(x) < 0 && x.a > x.b; }).sort(function(x, y){ return (y.a - y.b) - (x.a - x.b) || y.c - x.c || x.n - y.n; });
   /* σταθερά προς κρύα: 3–5 φορές στις 20 (γύρω ή λίγο κάτω από το μέσο) και δεν ανεβαίνουν· όχι τα «μπούζι» (0–2) */
   var stab = F.filter(function(x){ return x.c >= 3 && x.c <= 5 && x.a <= x.b; }).sort(function(x, y){ return y.c - x.c || (x.b - x.a) - (y.b - y.a) || x.n - y.n; });
-  return {hot: hot, rise: rise, extra: extra, stab: stab};
+  /* κρύα («μπούζι»): 0–2 φορές στις 20 — πρώτα όσα αρχίζουν να ξυπνάνε (βγήκαν στις 10 πιο πρόσφατες) */
+  var cold = F.filter(function(x){ return x.c <= 2; }).sort(function(x, y){ return y.a - x.a || y.c - x.c || x.n - y.n; });
+  return {hot: hot, rise: rise, extra: extra, stab: stab, cold: cold};
 };
 /* συνταγές: τι μπαίνει δίπλα στα «τείνουν» — ns από την άλλη κατηγορία, pool υποψήφιοι από αυτήν, rp υποψήφιοι τείνουν */
-N9.MIX = {h1: {cat: 'hot', ns: 1, pool: 2, rp: 13}, s1: {cat: 'stab', ns: 1, pool: 6, rp: 12}, s3: {cat: 'stab', ns: 3, pool: 6, rp: 10}, s4: {cat: 'stab', ns: 4, pool: 7, rp: 9}};
+N9.MIX = {h1: {cat: 'hot', ns: 1, pool: 2, rp: 13}, s1: {cat: 'stab', ns: 1, pool: 6, rp: 12}, s3: {cat: 'stab', ns: 3, pool: 6, rp: 10}, s4: {cat: 'stab', ns: 4, pool: 7, rp: 9}, c1: {cat: 'cold', ns: 1, pool: 6, rp: 12}, c3: {cat: 'cold', ns: 3, pool: 6, rp: 10}, c4: {cat: 'cold', ns: 4, pool: 7, rp: 9}, c9: {cat: 'cold', ns: 9, pool: 12, rp: 0}};
 N9.odd = function(n){ return n & 1; };
 N9.low = function(n){ return n <= 40; };
 N9.left = function(n){ return (n - 1) % 10 < 5; };
@@ -228,7 +232,7 @@ function combos(arr, k, cb){ var n = arr.length, idx = []; for(var i = 0; i < k;
 N9.pick = function(S, g, opt){
   opt = opt || {}; var MX = N9.MIX[opt.mix] || N9.MIX.h1, T = opt.T || 5, HOTK = MX.pool, RISEK = MX.rp, NH = MX.ns;
   var F = N9.freq(S, g), C = N9.classify(F);
-  var hotP = (MX.cat === 'stab' ? C.stab : C.hot).slice(0, HOTK).map(function(x){ return x.n; });
+  var hotP = (MX.cat === 'stab' ? C.stab : MX.cat === 'cold' ? C.cold : C.hot).slice(0, HOTK).map(function(x){ return x.n; });
   var riseAll = C.rise.concat(C.extra);
   var nh = Math.min(NH, hotP.length), nr = 9 - nh;
   var riseP = riseAll.slice(0, Math.max(RISEK, nr)).map(function(x){ return x.n; });
@@ -253,7 +257,7 @@ N9.pick = function(S, g, opt){
   }
   if(!best) return null;
   best.cat = MX.cat; best.stage = stage - 1; best.tried = tried; best.T = T;
-  best.nHot = C.hot.length; best.nStab = C.stab.length; best.nRise = C.rise.length;
+  best.nHot = C.hot.length; best.nStab = C.stab.length; best.nCold = C.cold.length; best.nRise = C.rise.length;
   best.hotAll = C.hot.map(function(x){ return x.n; }); best.riseAll = C.rise.map(function(x){ return x.n; });
   return best;
 };
@@ -327,7 +331,7 @@ function drawnOf(id){ var g=pos(id); if(g>=S.total) return null; var a=N9.draw(S
 function board(p,dr,F){
   var h='<div class="grid">';
   for(var n=1;n<=80;n++){ var cl=[]; if(p&&p.c.indexOf(n)>=0) cl.push('in'); if(dr&&dr.indexOf(n)>=0) cl.push('w');
-    if(OPT.mark&&F){ if(F.hot.indexOf(n)>=0) cl.push('hot'); else if(F.rise.indexOf(n)>=0) cl.push('tr'); else if(p&&p.cat==='stab'&&F.stab.indexOf(n)>=0) cl.push('stb'); }
+    if(OPT.mark&&F){ if(F.hot.indexOf(n)>=0) cl.push('hot'); else if(F.rise.indexOf(n)>=0) cl.push('tr'); else if(p&&p.cat==='stab'&&F.stab.indexOf(n)>=0) cl.push('stb'); else if(p&&p.cat==='cold'&&F.cold.indexOf(n)>=0) cl.push('cld'); }
     h+='<i class="'+cl.join(' ')+'">'+n+'</i>'; }
   return h+'</div>';
 }
@@ -342,7 +346,7 @@ function show(id){
   var head='<h2>'+(isNext?'🔮 Εννιάδα για την επόμενη κλήρωση':'📜 Κλήρωση')+' #'+id+(t?' · '+fmtDay(t)+' · '+hm(t):'')+'</h2>';
   if(t&&!inWin(t)) head+='<div class="muted">⏰ Εκτός ωραρίου 08:00–23:00 — η εννιάδα φαίνεται μόνο για σύγκριση.</div>';
   if(!p){ $('view').innerHTML=head+'<div class="muted">Δεν υπάρχουν ακόμα όλες οι προηγούμενες κληρώσεις για αυτή την πρόβλεψη.</div>'; bar(id,null,null); return; }
-  var g=pos(NK>1?TS:id), F=N9.classify(N9.freq(S,g)); F={hot:F.hot.map(function(x){return x.n;}),rise:F.rise.map(function(x){return x.n;}),stab:F.stab.map(function(x){return x.n;})};
+  var g=pos(NK>1?TS:id), F=N9.classify(N9.freq(S,g)); F={hot:F.hot.map(function(x){return x.n;}),rise:F.rise.map(function(x){return x.n;}),stab:F.stab.map(function(x){return x.n;}),cold:F.cold.map(function(x){return x.n;})};
   var h=dr?p.c.filter(function(n){return dr.indexOf(n)>=0;}).length:null, pay=h!=null?(N9.PAY9[h]||0):0;
   var r=p.r, st=['4–5 σε όλα','χαλάρωσε σε 3–6','χωρίς φίλτρο'][p.stage]||'';
   var html=head;
@@ -351,15 +355,15 @@ function show(id){
     html+='<div class="muted">🎟️ Δελτίο '+NK+' κληρώσεων από την #'+TS+(TIMES[TS]?' ('+hm(TIMES[TS])+')':'')+' · αυτή είναι η <b>'+k0+'η από '+NK+'</b> · παίχτηκαν '+played.length+' ('+eur(played.length*0.5)+') · κέρδη '+eur(won)+'</div>';
     html+='<div class="row" style="gap:4px;margin:6px 0">'+TK.rows.map(function(r){ return '<span class="chip'+(r.id===id?' cur':'')+(r.h!=null&&r.h>=5?' good':'')+'" data-id="'+r.id+'">'+(r.t?hm(r.t):'#'+r.id)+'<br><b>'+(r.h==null?'—':r.h+'/9')+'</b></span>'; }).join('')+'</div>'; }
   html+='<div class="big nums">'+p.c.join(' ')+'</div>';
-  html+='<div class="muted">'+(p.cat==='stab'?'🧊 Σταθερά προς κρύα: ':'🔥 Καυτό: ')+'<b class="nums">'+(p.hot.length?p.hot.join(' '):'κανένα (δεν υπήρχε)')+'</b> · 📈 Τείνουν: <b class="nums">'+p.c.filter(function(n){return p.hot.indexOf(n)<0;}).join(' ')+'</b></div>';
+  html+='<div class="muted">'+(p.cat==='stab'?'🧊 Σταθερά προς κρύα: ':p.cat==='cold'?'❄️ Κρύα: ':'🔥 Καυτό: ')+'<b class="nums">'+(p.hot.length?p.hot.join(' '):'κανένα (δεν υπήρχε)')+'</b> · 📈 Τείνουν: <b class="nums">'+p.c.filter(function(n){return p.hot.indexOf(n)<0;}).join(' ')+'</b></div>';
   html+=board(p,dr,F);
   html+='<div class="stats">'+
     '<div><b>'+(p.d<0?'ποτέ':p.d.toLocaleString('el-GR'))+'</b><small>'+(p.d<0?'δεν έπιασε ποτέ '+(p.T===9?'9/9':p.T+'+/9')+' σε όλο το ιστορικό (650 χιλ. κληρώσεις)':'κληρώσεις από την τελευταία φορά που έπιασε '+(p.T===9?'9/9':p.T+'+/9'))+'</small></div>'+(p.d2!=null&&p.T!==5?'<div><b>'+(p.d2<0?'ποτέ':p.d2.toLocaleString('el-GR'))+'</b><small>κληρώσεις από το τελευταίο 5+/9 (κρίνει όταν ισοπαλία)</small></div>':'')+
     '<div><b>'+r.odd+'/'+(9-r.odd)+'</b><small>μονά / ζυγά</small></div>'+
     '<div><b>'+r.low+'/'+(9-r.low)+'</b><small>μικρά (1–40) / μεγάλα</small></div>'+
     '<div><b>'+r.left+'/'+(9-r.left)+'</b><small>αριστερά / δεξιά</small></div></div>';
-  html+='<div class="muted" style="margin-top:6px">'+(p.cat==='stab'?'Σταθερά προς κρύα τότε: '+p.nStab+' · ':'')+'Καυτά τότε: '+p.nHot+' · τείνουν: '+p.nRise+' · εννιάδες που πέρασαν το φίλτρο: '+p.tried.toLocaleString('el-GR')+' ('+st+')'+(dr?'<br>Βγήκαν: <b class="nums">'+dr.join(' ')+'</b>':'')+'</div>';
-  if(OPT.mark) html+='<div class="muted">Χρυσό περίγραμμα = η εννιάδα · κίτρινο = βγήκε · 🔴 τελεία = καυτό · 🟠 τελεία = τείνει να γίνει καυτό'+(p.cat==='stab'?' · 🔵 τελεία = σταθερό προς κρύο':'')+'</div>';
+  html+='<div class="muted" style="margin-top:6px">'+(p.cat==='stab'?'Σταθερά προς κρύα τότε: '+p.nStab+' · ':p.cat==='cold'?'Κρύα τότε: '+p.nCold+' · ':'')+'Καυτά τότε: '+p.nHot+' · τείνουν: '+p.nRise+' · εννιάδες που πέρασαν το φίλτρο: '+p.tried.toLocaleString('el-GR')+' ('+st+')'+(dr?'<br>Βγήκαν: <b class="nums">'+dr.join(' ')+'</b>':'')+'</div>';
+  if(OPT.mark) html+='<div class="muted">Χρυσό περίγραμμα = η εννιάδα · κίτρινο = βγήκε · 🔴 τελεία = καυτό · 🟠 τελεία = τείνει να γίνει καυτό'+(p.cat==='stab'?' · 🔵 τελεία = σταθερό προς κρύο':p.cat==='cold'?' · ⚪ τελεία = κρύο':'')+'</div>';
   $('view').innerHTML=html;
   bar(id,h,t);
   $('nNext').disabled=$('fNext').disabled=ACTIVE?id>=ACTIVE.drawId:id>=LATEST;
