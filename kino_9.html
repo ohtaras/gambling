@@ -46,6 +46,15 @@ select,button{max-width:100%;font:inherit;font-size:14.5px;border-radius:10px;bo
 input{font:inherit;font-size:14.5px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--text);padding:7px 9px;color-scheme:dark}
 button{cursor:pointer}button:disabled{opacity:.4;cursor:default}
 #day tr.go{cursor:pointer}
+/* εμφάνιση / απόκρυψη μπλοκ: πάτημα στον τίτλο */
+.card>h2{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;user-select:none}
+.card>h2::after{content:'▾';font-size:14px;color:var(--muted);flex:0 0 auto;transition:transform .15s}
+.card.closed>h2::after{transform:rotate(-90deg)}
+.card.closed>h2{margin-bottom:0}
+.card.closed>:not(h2){display:none!important}
+/* αιωρούμενο καθαρό ημέρας */
+#netp{position:fixed;top:calc(8px + env(safe-area-inset-top));right:10px;z-index:51;border-radius:14px;padding:6px 10px;font-size:12.5px;line-height:1.25;text-align:right;background:rgba(12,42,51,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--tq);box-shadow:0 6px 18px rgba(0,0,0,.45);max-width:62vw}
+#netp b{font-size:16px;display:block}
 .chip{display:inline-block;text-align:center;font-size:11.5px;line-height:1.25;padding:4px 6px;border-radius:8px;background:var(--bg2);border:1px solid var(--line);cursor:pointer;min-width:44px}
 .chip.cur{border-color:var(--gold);color:var(--gold)}
 .chip.good b{color:var(--grn)}
@@ -117,7 +126,7 @@ footer a{color:inherit}
 
   <div class="card" id="day" style="display:none"></div>
 
-  <div class="card">
+  <div class="card" id="set">
     <h2>⚙️ Ρυθμίσεις</h2>
     <div class="row">
       <label class="f">🧪 Συνταγή<select id="MIX"><option value="h1">1 καυτό + 8 τείνουν (10/90)</option><option value="s1">8 τείνουν + 1 σταθερό προς κρύο</option><option value="s3">6 τείνουν + 3 σταθερά προς κρύα</option><option value="s4">5 τείνουν + 4 σταθερά προς κρύα</option><option value="c1">8 τείνουν + 1 κρύο</option><option value="c3">6 τείνουν + 3 κρύα</option><option value="c4">5 τείνουν + 4 κρύα</option><option value="c9">9 κρύα</option></select></label>
@@ -130,10 +139,11 @@ footer a{color:inherit}
     <label class="tg"><span>🔴 Σημάδια για καυτά και για όσα τείνουν να γίνουν καυτά</span><span class="sw"><input type="checkbox" id="tMark"><span></span></span></label>
     <label class="tg"><span>📊 Αξιολόγηση και στατιστικά όλης της ημέρας</span><span class="sw"><input type="checkbox" id="tDay"><span></span></span></label>
     <label class="tg"><span>🔄 Αυτόματα σε κάθε νέα κλήρωση</span><span class="sw"><input type="checkbox" id="tAuto"><span></span></span></label>
+    <label class="tg"><span>💶 Καθαρό ημέρας πάντα ορατό (πάνω δεξιά)</span><span class="sw"><input type="checkbox" id="tNetp"><span></span></span></label>
     <label class="tg"><span>📌 Αιωρούμενα κουμπιά πλοήγησης</span><span class="sw"><input type="checkbox" id="tFbar"><span></span></span></label>
   </div>
 
-  <div class="card">
+  <div class="card" id="how">
     <h2>❓ Πώς δουλεύει</h2>
     <div class="muted">
       <b>Καυτά</b> = βγήκαν 8+ φορές στις 20 τελευταίες κληρώσεις (ο μέσος όρος είναι 5).<br>
@@ -149,8 +159,9 @@ footer a{color:inherit}
     </div>
   </div>
 
+  <button id="netp" type="button" style="display:none" aria-label="Καθαρό ημέρας"></button>
   <div id="fbar" style="display:none"><button id="fPrev" aria-label="Προηγούμενη">◀</button><div class="fi" id="fInfo">…</div><button id="fNext" aria-label="Επόμενη">▶</button><button id="fNow" aria-label="Επόμενη κλήρωση">⏱</button></div>
-  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v71 · 25/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_4x3.html">🔲 Κουτί 4×3</a></footer>
+  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v72 · 25/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_4x3.html">🔲 Κουτί 4×3</a></footer>
 </div>
 <script>
 /* ===== Εννιάδα 10/90 — πυρήνας (ίδιος στη σελίδα και στη δοκιμή) ===== */
@@ -293,7 +304,7 @@ var $=function(i){return document.getElementById(i);};
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 var API='https://api.opap.gr/draws/v3.0/1100';
-var OPT={bal:true,del:true,mark:true,day:true,auto:true,fbar:true};
+var OPT={bal:true,del:true,mark:true,day:true,auto:true,fbar:true,netp:true};
 Object.keys(OPT).forEach(function(k){var v=lsGet('n9_'+k); if(v!==null) OPT[k]=v==='1';});
 var KN=+(lsGet('n9_K')||9); if(!(KN>=1&&KN<=12)) KN=9;
 var RT=+(lsGet('n9_r')||1); if(!(RT>=0&&RT<=4)) RT=1;
@@ -400,7 +411,7 @@ function bar(id,h,t,K){ K=K||KN;
 /* ---------- όλη η ημέρα ---------- */
 var dayTok=0;
 function renderDay(ad){
-  if(!OPT.day){ $('day').style.display='none'; return; }
+  if(!OPT.day){ $('day').style.display='none'; paintNet(); return; }
   var tok=++dayTok; $('day').style.display=''; $('day').innerHTML='<h2>📊 Ημέρα '+ad+'</h2><div class="muted">Υπολογισμός…</div>';
   athDayLoad(ad).then(function(){
     if(tok!==dayTok) return;
@@ -441,8 +452,17 @@ function paintTickets(ad,T2){
   h+='<table><tr><th>Έναρξη</th><th>Αριθμοί · επιτυχίες ανά κλήρωση</th><th class="c">Κέρδος</th></tr>';
   T2.slice().reverse().forEach(function(tk){
     h+='<tr class="go" data-id="'+tk.s+'"><td>'+(TIMES[tk.s]?hm(TIMES[tk.s]):'')+'<br><small>#'+tk.s+'</small></td><td><span class="nums" style="font-size:12.5px">'+tk.p.c.join(' ')+'</span><br><span class="nums">'+tk.rows.map(function(r){ return r.h==null?'·':(N9.good(K,r.h)?'<b class="ok">'+r.h+'</b>':r.h); }).join(' ')+'</span></td><td class="c '+(tk.win>=NK*0.5?'ok':'')+'"><b>'+eur(tk.win)+'</b><br><small>καλύτερο '+tk.mx+'/'+K+'</small></td></tr>'; });
+  setNet(ad,net,stake,win,NK+' κληρ.');
   $('day').innerHTML=h+'</table><div class="muted">Κάθε δελτίο ξεκινά από την πρώτη κλήρωση των 08:00 και κάθε '+NK+' κληρώσεις. Πάτα μια γραμμή για να ανοίξει.</div>';
 }
+var NET=null;
+function setNet(ad,net,stake,win,tag){ NET={ad:ad,net:net,stake:stake,win:win,tag:tag}; paintNet(); }
+function paintNet(){ var e=$('netp'); if(!OPT.netp||!OPT.day||!NET){ e.style.display='none'; return; }
+  e.style.display='block'; e.innerHTML='<span class="muted">'+NET.ad.split('-').reverse().slice(0,2).join('/')+' · '+KN+' αρ.'+(NET.tag?' · '+NET.tag:'')+'</span><b class="'+(NET.net>=0?'ok':'no')+'">'+(NET.net>=0?'+':'')+eur(NET.net)+'</b><span class="muted">παίχτηκαν '+eur(NET.stake)+' · κέρδη '+eur(NET.win)+'</span>'; }
+$('netp').onclick=function(){ var c=$('day'); c.classList.remove('closed'); try{localStorage.setItem('n9_c_day','0');}catch(e){} c.scrollIntoView({behavior:'smooth'}); };
+/* εμφάνιση / απόκρυψη μπλοκ */
+['view','nav','day','set','how'].forEach(function(id){ if(lsGet('n9_c_'+id)==='1') $(id).classList.add('closed'); });
+document.addEventListener('click',function(e){ var h=e.target.closest('.card>h2'); if(!h) return; var c=h.parentNode; c.classList.toggle('closed'); lsSet('n9_c_'+c.id,c.classList.contains('closed')?'1':'0'); });
 function paintDay(ad,rows){
   var h='<h2>📊 Αξιολόγηση ημέρας · '+ad.split('-').reverse().join('/')+' · 08:00–23:00</h2>';
   if(!rows.length){ $('day').innerHTML=h+'<div class="muted">Δεν υπάρχουν ακόμα κληρώσεις με αποτέλεσμα.</div>'; return; }
@@ -458,6 +478,7 @@ function paintDay(ad,rows){
   for(k=0;k<=K;k++) if(d[k]||k<=Math.min(K,GM+1)) h+='<tr><td>'+k+'/'+K+'</td><td><span class="bar'+(N9.good(K,k)?' hi':'')+'" style="width:'+(d[k]?Math.max(4,160*d[k]/mx):0)+'px"></span> '+(d[k]||0)+'</td></tr>';
   h+='</table><table><tr><th>Ώρα</th><th>Κλήρωση</th><th>Αριθμοί</th><th class="c">/'+K+'</th></tr>';
   rows.slice().reverse().forEach(function(r){ h+='<tr class="go" data-id="'+r.id+'"><td>'+hm(r.t)+'</td><td>#'+r.id+'</td><td class="nums" style="font-size:12.5px">'+r.p.c.join(' ')+'</td><td class="c '+(N9.good(K,r.h)?'ok':'')+'"><b>'+r.h+'</b>'+(r.pay?'<br><small>'+eur(r.pay)+'</small>':'')+'</td></tr>'; });
+  setNet(ad,net,stake,win,'');
   $('day').innerHTML=h+'</table><div class="muted">Πάτα μια γραμμή για να ανοίξει η κλήρωση.</div>';
 }
 
@@ -492,9 +513,9 @@ $('T').value=String(RT); $('KN').value=String(KN);
 $('KN').onchange=function(){ KN=+this.value; lsSet('n9_K',KN); T=Math.max(1,KN-RT); refresh(); }; $('NK').value=String(NK);
 $('NK').onchange=function(){ NK=+this.value; lsSet('n9_N',NK); refresh(); };
 $('T').onchange=function(){ RT=+this.value; lsSet('n9_r',RT); T=Math.max(1,KN-RT); refresh(); };
-[['tBal','bal'],['tDel','del'],['tMark','mark'],['tDay','day'],['tAuto','auto'],['tFbar','fbar']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
+[['tBal','bal'],['tDel','del'],['tMark','mark'],['tDay','day'],['tAuto','auto'],['tFbar','fbar'],['tNetp','netp']].forEach(function(a){ var c=$(a[0]); c.checked=OPT[a[1]];
   c.addEventListener('change',function(){ OPT[a[1]]=c.checked; lsSet('n9_'+a[1],c.checked?'1':'0'); if(a[1]==='auto') schedule(); else refresh(); }); });
-function refresh(){ if(CUR) show(CUR); renderDay.last=null; if(CUR&&TIMES[CUR]){ renderDay.last=athDate(TIMES[CUR]); renderDay(renderDay.last); } }
+function refresh(){ paintNet(); if(CUR) show(CUR); renderDay.last=null; if(CUR&&TIMES[CUR]){ renderDay.last=athDate(TIMES[CUR]); renderDay(renderDay.last); } }
 
 /* ---------- ζωντανά ---------- */
 var tm=null;
