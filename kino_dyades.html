@@ -73,7 +73,7 @@ footer a{color:inherit}
 <body>
 <div class="wrap">
   <header><img src="img/allwyn.png" alt=""><h1>✌️ Δυάδες ΚΙΝΟ</h1></header>
-  <p class="lead">Και οι <b>3.160 δυάδες</b> των 80 αριθμών σε έναν πίνακα: <b>σειρά = ο πρώτος αριθμός, στήλη = ο δεύτερος</b> (η 12-34 είναι στη σειρά 12, στήλη 34). Κάθε κλήρωση ανάβει τις 190 δυάδες της. Πρόβλεψη: <b>4 κουτάκια με τις 4 πιο καυτές δυάδες</b> εκείνης της στιγμής.</p>
+  <p class="lead">Και οι <b>3.160 δυάδες</b> των 80 αριθμών σε έναν πίνακα: <b>σειρά = ο πρώτος αριθμός, στήλη = ο δεύτερος</b> (η 12-34 είναι στη σειρά 12, στήλη 34). Κάθε κλήρωση ανάβει τις 190 δυάδες της. Πρόβλεψη: <b>4 κουτάκια με τις 4 πιο καυτές δυάδες</b> εκείνης της στιγμής, που μαζί παίζονται ως <b>μία στήλη</b> (οκτάδα, ή εφτάδα κ.λπ. αν έχουν κοινό αριθμό).</p>
 
   <div class="card"><div class="st"><span class="dot" id="dot"></span><span id="st">Φόρτωση κληρώσεων…</span></div></div>
 
@@ -104,7 +104,7 @@ footer a{color:inherit}
       <label class="f">🔥 Καυτές = πιο συχνές στις<select id="HW"><option value="20">20 τελευταίες</option><option value="50">50 τελευταίες</option><option value="100">100 τελευταίες</option><option value="288">288 τελευταίες (1 μέρα)</option></select></label>
       <label class="f">🎟️ Παίζεται για<select id="NK"></select></label>
     </div>
-    <p class="muted" style="margin:10px 0 0">Κάθε κουτάκι παίζεται ως στήλη 2 αριθμών με 0,50€ (2/2 = 2,50€, 1/2 = 0,50€), δηλαδή 2€ ανά κλήρωση για τα 4. Τα δελτία της ημέρας ξεκινούν στις 00:00 και ανανεώνονται κάθε Ν κληρώσεις. Οι καυτές δυάδες κάθε δελτίου βρίσκονται μόνο με τις κληρώσεις πριν από αυτό.</p>
+    <p class="muted" style="margin:10px 0 0">Τα 4 κουτάκια μαζί παίζονται ως μία στήλη με 0,50€: οκτάδα όταν οι 8 αριθμοί είναι διαφορετικοί, εφτάδα, εξάδα κ.λπ. όταν κάποιες δυάδες έχουν κοινό αριθμό, με τον πίνακα κερδών του αντίστοιχου παιχνιδιού (οκτάδα: 4/8 = 1€, 5/8 = 5€, 6/8 = 25€, 7/8 = 500€, 8/8 = 7.500€). Τα δελτία της ημέρας ξεκινούν στις 00:00 και ανανεώνονται κάθε Ν κληρώσεις. Οι καυτές δυάδες κάθε δελτίου βρίσκονται μόνο με τις κληρώσεις πριν από αυτό.</p>
   </div>
 
   <div class="card" id="day"><div class="muted">Φόρτωση ημέρας…</div></div>
@@ -113,12 +113,12 @@ footer a{color:inherit}
     <h2>ℹ️ Πώς δουλεύει</h2>
     <div class="muted">
       <b>Δυάδες κλήρωσης</b> = όλα τα ζευγάρια ανάμεσα στους 20 αριθμούς που βγήκαν: 190 σε κάθε κλήρωση.<br>
-      <b>Καυτή δυάδα</b> = όσο περισσότερες φορές βγήκε μαζί στις τελευταίες κληρώσεις, τόσο πιο κόκκινο το κελί. Οι 4 πιο καυτές γίνονται η πρόβλεψη· σε ισοπαλία, αυτή που βγήκε πιο πρόσφατα.<br>
-      <b>Η τύχη</b> = μια δυάδα βγαίνει ολόκληρη κατά μέσο όρο 1 φορά στις 16,6 κληρώσεις, όποια κι αν είναι. Μια στήλη 2 αριθμών επιστρέφει κατά μέσο όρο περίπου 0,34€ στα 0,50€. Σε 150.000 κληρώσεις, η πιο καυτή δυάδα της ημέρας έπιασε 2/2 στο 5,94% και μια τυχαία στο 6,02%.
+      <b>Καυτή δυάδα</b> = όσο περισσότερες φορές βγήκε μαζί στις τελευταίες κληρώσεις, τόσο πιο κόκκινο το κελί. Οι 4 πιο καυτές γίνονται η πρόβλεψη, όπως είναι· αν έχουν κοινούς αριθμούς, η στήλη γίνεται εφτάδα, εξάδα κ.λπ. Σε ισοπαλία, αυτή που βγήκε πιο πρόσφατα.<br>
+      <b>Η τύχη</b> = μια δυάδα βγαίνει ολόκληρη κατά μέσο όρο 1 φορά στις 16,6 κληρώσεις, όποια κι αν είναι. Μια στήλη 4–8 αριθμών επιστρέφει κατά μέσο όρο περίπου 0,34–0,35€ στα 0,50€, όποιοι κι αν είναι οι αριθμοί. Σε 150.000 κληρώσεις, η πιο καυτή δυάδα της ημέρας έπιασε 2/2 στο 5,94% και μια τυχαία στο 6,02%.
     </div>
   </div>
 
-  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v79 · 27/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_systada.html">🧩 Συστάδα</a></footer>
+  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v80 · 27/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_systada.html">🧩 Συστάδα</a></footer>
 </div>
 <script>
 (function(){
@@ -128,7 +128,13 @@ function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 var API='https://api.opap.gr/draws/v3.0/1100', NP=3160;
 var PA=[],PB=[],PID=[];(function(){ var k=0; for(var a=1;a<=79;a++){ PID[a]=[]; for(var b=a+1;b<=80;b++){ PA[k]=a; PB[k]=b; PID[a][b]=k; k++; } } })();
 function pid(a,b){ return a<b?PID[a][b]:PID[b][a]; }
-var PAY2={1:0.5,2:2.5}, EV2=(PAY2[1]*2*20*60+PAY2[2]*20*19)/(80*79);
+/* κέρδη για στήλη 0,50€ (ίδιος πίνακας με τις άλλες εφαρμογές) */
+var PAYS={4:{2:0.5,3:2,4:50},5:{3:1,4:10,5:225},6:{3:0.5,4:3.5,5:25,6:800},7:{3:0.5,4:1.5,5:10,6:50,7:2500},8:{4:1,5:5,6:25,7:500,8:7500}};
+function pay(K,h){ return (PAYS[K]||{})[h]||0; }
+function Cn(n,k){ if(k<0||k>n) return 0; var r=1; for(var i=1;i<=k;i++) r=r*(n-k+i)/i; return r; }
+function pH(K,k){ return Cn(20,k)*Cn(60,K-k)/Cn(80,K); }
+function evK(K){ var e=0; for(var k=0;k<=K;k++) e+=pay(K,k)*pH(K,k); return e; }
+var NAME={4:'τετράδα',5:'πεντάδα',6:'εξάδα',7:'εφτάδα',8:'οκτάδα'};
 var NK=+(lsGet('dy_N')||1); if(!(NK>=1&&NK<=20)) NK=1;
 var HW=+(lsGet('dy_hw')||50); if([20,50,100,288].indexOf(HW)<0) HW=50;
 var Z=+(lsGet('dy_Z')||0); if([0,8,12].indexOf(Z)<0) Z=0;
@@ -159,8 +165,12 @@ function heatAt(s){ var cnt=new Uint16Array(NP), last=new Int32Array(NP), have=0
 function predict(s){ var h=heatAt(s); if(h.have<Math.min(HW,15)) return null;
   var idx=[]; for(var k=0;k<NP;k++) if(h.cnt[k]) idx.push(k);
   idx.sort(function(a,b){ return h.cnt[b]-h.cnt[a]||h.last[b]-h.last[a]||a-b; });
-  return {p:idx.slice(0,4).map(function(k){ return {k:k,a:PA[k],b:PB[k],c:h.cnt[k]}; }), heat:h}; }
+  var out=idx.slice(0,4).map(function(k){ return {k:k,a:PA[k],b:PB[k],c:h.cnt[k]}; }), set={};
+  out.forEach(function(q){ set[q.a]=1; set[q.b]=1; });
+  var eight=Object.keys(set).map(Number).sort(function(a,b){return a-b;});
+  return {p:out, eight:eight, K:eight.length, heat:h}; }
 function hits2(q,id){ var d=NUMS[id]; return d?(d.indexOf(q.a)>=0)+(d.indexOf(q.b)>=0):null; }
+function hitsK(pr,id){ var d=NUMS[id]; return d?pr.eight.filter(function(n){ return d.indexOf(n)>=0; }).length:null; }
 
 /* ---------- πίνακας ---------- */
 var LAST=null;
@@ -192,34 +202,35 @@ function show(id){
   var s=ticketStart(id), pr=predict(s), dr=NUMS[id], t=TIMES[id];
   var h='<div class="big">Κλήρωση #'+id+'</div><div class="muted">'+(t?fmtDay(t)+' · '+hm(t):'')+(dr?'':' · <b style="color:var(--gold)">δεν έχει γίνει ακόμα</b>')+'</div>';
   if(!pr){ $('view').innerHTML=h+'<div class="muted">Δεν υπάρχουν αρκετές προηγούμενες κληρώσεις.</div>'; drawBoard(null,id); return; }
-  var tot=0, won=0;
   h+='<div class="muted" style="margin-top:8px">🎯 Οι 4 πιο καυτές δυάδες στις '+pr.heat.have+' κληρώσεις πριν από το δελτίο:</div><div class="picks">';
-  pr.p.forEach(function(q){ var x=dr?hits2(q,id):null; if(dr){ won+=PAY2[x]||0; }
+  pr.p.forEach(function(q){ var x=dr?hits2(q,id):null;
     var na=dr&&dr.indexOf(q.a)>=0, nb=dr&&dr.indexOf(q.b)>=0;
     h+='<button class="pk'+(x===2?' h2':x===1?' h1':'')+'" data-a="'+q.a+'" data-b="'+q.b+'" style="font:inherit;color:inherit;cursor:pointer"><b><span class="'+(na?'y':'')+'">'+q.a+'</span>-<span class="'+(nb?'y':'')+'">'+q.b+'</span></b><small>'+q.c+' φορές'+(dr?' · '+x+'/2':'')+'</small></button>'; });
   h+='</div>';
-  if(dr){ var n2=pr.p.filter(function(q){ return hits2(q,id)===2; }).length;
-    h+='<div class="verdict '+(won>2?'ok':won<2?'no':'')+'">'+(n2?n2+(n2===1?' δυάδα':' δυάδες')+' 2/2 · ':'')+'κέρδη '+eur(won)+' από 2,00€</div>'; }
+  h+='<div class="muted">Παίζεται ως <b>'+NAME[pr.K]+'</b>'+(pr.K<8?' (οι δυάδες έχουν κοινούς αριθμούς)':'')+': <span class="nums">'+pr.eight.join(' ')+'</span></div>';
+  if(dr){ var xk=hitsK(pr,id); h+='<div class="verdict '+(pay(pr.K,xk)>0.5?'ok':'')+'">'+xk+'/'+pr.K+(pay(pr.K,xk)?' · '+eur(pay(pr.K,xk)):'')+'</div>'; }
   else h+='<div class="verdict" style="color:var(--gold)">Παίζεται τώρα</div>';
-  if(NK>1){ var rows=[],w2=0; for(var i=s;i<s+NK;i++){ if(!NUMS[i]) continue; var ww=0; pr.p.forEach(function(q){ ww+=PAY2[hits2(q,i)]||0; }); w2+=ww; rows.push('<span class="chip'+(i===id?' cur':'')+(ww>2?' good':'')+'" data-id="'+i+'">'+(TIMES[i]?hm(TIMES[i]):'#'+i)+'<br><b>'+eur(ww)+'</b></span>'); }
-    h+='<div class="muted">🎟️ Δελτίο '+NK+' κληρώσεων από την #'+s+(TIMES[s]?' ('+hm(TIMES[s])+')':'')+' · αυτή είναι η <b>'+(id-s+1)+'η από '+NK+'</b> · παίχτηκαν '+rows.length+' ('+eur(rows.length*2)+') · κέρδη '+eur(w2)+'</div><div class="chips">'+rows.join('')+'</div>'; }
+  if(NK>1){ var rows=[],w2=0; for(var i=s;i<s+NK;i++){ if(!NUMS[i]) continue; var q8=hitsK(pr,i); w2+=pay(pr.K,q8); rows.push('<span class="chip'+(i===id?' cur':'')+(pay(pr.K,q8)>0.5?' good':'')+'" data-id="'+i+'">'+(TIMES[i]?hm(TIMES[i]):'#'+i)+'<br><b>'+q8+'</b></span>'); }
+    h+='<div class="muted">🎟️ Δελτίο '+NK+' κληρώσεων από την #'+s+(TIMES[s]?' ('+hm(TIMES[s])+')':'')+' · αυτή είναι η <b>'+(id-s+1)+'η από '+NK+'</b> · παίχτηκαν '+rows.length+' ('+eur(rows.length*0.5)+') · κέρδη '+eur(w2)+'</div><div class="chips">'+rows.join('')+'</div>'; }
   h+='<div class="muted" style="margin-top:6px">Πάτα ένα κουτάκι για να το δεις στον πίνακα.</div>';
   $('view').innerHTML=h; drawBoard(pr,id);
 }
 function renderDay(ad){
   var all=dayIds(ad), ids=all.filter(function(i){ return NUMS[i]; });
   if(!ids.length){ $('day').innerHTML='<h2>📊 Αξιολόγηση ημέρας</h2><div class="muted">Καμία κλήρωση αυτή τη μέρα.</div>'; return; }
-  var f=all[0], T={}, d2=0, d1=0, d0=0, win=0, n=0;
-  ids.forEach(function(i){ var s=f+Math.floor((i-f)/NK)*NK; if(!T[s]) T[s]={s:s,pr:predict(s),rows:[],win:0};
-    var tk=T[s]; if(!tk.pr) return; var ww=0, h2=0; tk.pr.p.forEach(function(q){ var x=hits2(q,i); ww+=PAY2[x]||0; if(x===2){h2++;d2++;} else if(x===1) d1++; else d0++; });
-    tk.rows.push(h2); tk.win+=ww; win+=ww; n++; });
-  var stake=n*2, net=win-stake, tks=Object.keys(T).map(function(k){return T[k];}).filter(function(t){return t.pr;});
-  var p2=20*19/(80*79), p1=2*20*60/(80*79);
+  var f=all[0], T={}, win=0, n=0, ev=0, byK={};
+  ids.forEach(function(i){ var s=f+Math.floor((i-f)/NK)*NK; if(!T[s]) T[s]={s:s,pr:predict(s),rows:[],win:0,mx:0};
+    var tk=T[s]; if(!tk.pr) return; var K=tk.pr.K, q=hitsK(tk.pr,i), w=pay(K,q); tk.rows.push(q); tk.win+=w; tk.mx=Math.max(tk.mx,q); win+=w; n++; ev+=evK(K);
+    var B=byK[K]||(byK[K]={n:0,d:new Array(K+1).fill(0)}); B.n++; B.d[q]++; });
+  var stake=n*0.5, net=win-stake, tks=Object.keys(T).map(function(k){return T[k];}).filter(function(t){return t.pr;});
   var h='<h2>📊 Αξιολόγηση ημέρας · '+esc(fmtDay(TIMES[ids[0]]))+'</h2>';
-  h+='<div class="stats"><div><small>Καθαρό</small><b class="'+(net>=0?'ok':'no')+'">'+(net>=0?'+':'')+eur(net)+'</b></div><div><small>Παίχτηκαν</small><b>'+eur(stake)+'</b><small>'+n+' κληρώσεις × 4 δυάδες</small></div><div><small>Κέρδη</small><b>'+eur(win)+'</b><small>η τύχη δίνει κατά μέσο όρο '+eur(EV2*4*n)+'</small></div></div>';
-  h+='<table><tr><th>Δυάδες</th><th>Φορές</th><th>Η τύχη</th></tr><tr><td>2/2 (2,50€)</td><td><b class="ok">'+d2+'</b></td><td>'+(p2*4*n).toFixed(1).replace('.',',')+'</td></tr><tr><td>1/2 (0,50€)</td><td>'+d1+'</td><td>'+(p1*4*n).toFixed(1).replace('.',',')+'</td></tr><tr><td>0/2</td><td>'+d0+'</td><td>'+((1-p1-p2)*4*n).toFixed(1).replace('.',',')+'</td></tr></table>';
-  h+='<table><tr><th>Ώρα</th><th>Δυάδες · πόσες 2/2 ανά κλήρωση</th><th class="c">Κέρδη</th></tr>';
-  tks.slice().reverse().forEach(function(tk){ h+='<tr class="go" data-id="'+tk.s+'"><td>'+(TIMES[tk.s]?hm(TIMES[tk.s]):'')+'<br><small>#'+tk.s+'</small></td><td><span class="nums" style="font-size:12.5px">'+tk.pr.p.map(function(q){return q.a+'-'+q.b;}).join(' · ')+'</span><br><span class="nums">'+tk.rows.map(function(q){ return q?'<b class="ok">'+q+'</b>':q; }).join(' ')+'</span></td><td class="c '+(tk.win>tk.rows.length*2?'ok':'')+'"><b>'+eur(tk.win)+'</b></td></tr>'; });
+  h+='<div class="stats"><div><small>Καθαρό</small><b class="'+(net>=0?'ok':'no')+'">'+(net>=0?'+':'')+eur(net)+'</b></div><div><small>Παίχτηκαν</small><b>'+eur(stake)+'</b><small>'+n+' κληρώσεις · μία στήλη 0,50€</small></div><div><small>Κέρδη</small><b>'+eur(win)+'</b><small>η τύχη δίνει κατά μέσο όρο '+eur(ev)+'</small></div></div>';
+  Object.keys(byK).map(Number).sort(function(a,b){return b-a;}).forEach(function(K){ var B=byK[K], mx=Math.max.apply(null,B.d.concat([1]));
+    h+='<table><tr><th>'+NAME[K].charAt(0).toUpperCase()+NAME[K].slice(1)+' · '+B.n+' κληρώσεις</th><th>Κληρώσεις</th></tr>';
+    for(var k=0;k<=K;k++) if(B.d[k]||pay(K,k)) h+='<tr><td>'+k+'/'+K+(pay(K,k)?' <small class="muted">'+eur(pay(K,k))+'</small>':'')+'</td><td><span class="bar'+(pay(K,k)>0.5?' hi':'')+'" style="width:'+(B.d[k]?Math.max(4,150*B.d[k]/mx):0)+'px"></span> '+B.d[k]+' <small class="muted">(τύχη '+(pH(K,k)*B.n).toFixed(1).replace('.',',')+')</small></td></tr>';
+    h+='</table>'; });
+  h+='<table><tr><th>Ώρα</th><th>Δυάδες · επιτυχίες ανά κλήρωση</th><th class="c">Κέρδη</th></tr>';
+  tks.slice().reverse().forEach(function(tk){ var K=tk.pr.K; h+='<tr class="go" data-id="'+tk.s+'"><td>'+(TIMES[tk.s]?hm(TIMES[tk.s]):'')+'<br><small>#'+tk.s+'</small></td><td><span class="nums" style="font-size:12.5px">'+tk.pr.p.map(function(q){return q.a+'-'+q.b;}).join(' · ')+'</span> <small class="muted">· '+NAME[K]+'</small><br><span class="nums">'+tk.rows.map(function(q){ return pay(K,q)>0.5?'<b class="ok">'+q+'</b>':q; }).join(' ')+'</span></td><td class="c '+(tk.win>tk.rows.length*0.5?'ok':'')+'"><b>'+eur(tk.win)+'</b><br><small>καλύτερο '+tk.mx+'/'+K+'</small></td></tr>'; });
   $('day').innerHTML=h+'</table><div class="muted">Πάτα μια γραμμή για να ανοίξει το δελτίο.</div>';
 }
 
