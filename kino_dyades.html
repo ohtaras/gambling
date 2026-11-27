@@ -68,6 +68,11 @@ footer a{color:inherit}
 .pk.h1 b .y{color:var(--yel)}
 @media(max-width:420px){.picks{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .tip{font-size:13.5px;min-height:1.5em;margin-top:6px}
+.g45{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px;margin:8px 0}
+.g45 i{font-style:normal;aspect-ratio:1;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(11px,3.2vw,16px);background:var(--cell);color:#6f99a3;border:2px solid transparent;font-variant-numeric:tabular-nums}
+.g45 i.m{border-color:var(--tq);color:var(--text)}
+.g45 i.w{background:#3b2a2e;color:#ff8f9a}
+.g45 i.m.w{background:var(--yel);color:#2a2100;border-color:#fff}
 </style>
 </head>
 <body>
@@ -78,6 +83,8 @@ footer a{color:inherit}
   <div class="card"><div class="st"><span class="dot" id="dot"></span><span id="st">Φόρτωση κληρώσεων…</span></div></div>
 
   <div class="card" id="view"><div class="muted">Φόρτωση…</div></div>
+
+  <div class="card" id="c45"><div class="muted">Φόρτωση…</div></div>
 
   <div class="card">
     <h2>🧭 Πλοήγηση</h2>
@@ -110,7 +117,7 @@ footer a{color:inherit}
     </div>
   </div>
 
-  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v81 · 27/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_systada.html">🧩 Συστάδα</a></footer>
+  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v82 · 27/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_systada.html">🧩 Συστάδα</a></footer>
 </div>
 <script>
 (function(){
@@ -163,10 +170,25 @@ function predict(s){ var h=heatAt(s); if(h.have<Math.min(HW,15)) return null;
 function hits2(q,id){ var d=NUMS[id]; return d?(d.indexOf(q.a)>=0)+(d.indexOf(q.b)>=0):null; }
 function hitsK(pr,id){ var d=NUMS[id]; return d?pr.eight.filter(function(n){ return d.indexOf(n)>=0; }).length:null; }
 
+
+/* ---------- οι 45: η μικρότερη ομάδα που σε όλο το ιστορικό (651.211 κληρώσεις, 2018 – 27/11/2026) έβγαλε πάντα τουλάχιστον 4 ---------- */
+var S45=[27,28,30,31,33,34,35,36,37,40,41,44,45,46,47,48,49,50,51,53,54,55,56,57,58,59,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79];
+function show45(id){ var d=NUMS[id], inS={}; S45.forEach(function(n){ inS[n]=1; });
+  var h='<h2>4️⃣ Οι 45 αριθμοί</h2><div class="muted">Η πιο μικρή ομάδα που σε όλες τις 651.211 κληρώσεις του ιστορικού έβγαλε κάθε φορά τουλάχιστον 4 αριθμούς (σημειωμένοι με περίγραμμα).</div><div class="g45">';
+  for(var n=1;n<=80;n++) h+='<i class="'+(inS[n]?'m':'')+(d&&d.indexOf(n)>=0?' w':'')+'">'+n+'</i>';
+  h+='</div>';
+  if(d){ var k=d.filter(function(n){ return inS[n]; }).length; h+='<div class="verdict '+(k>=4?'ok':'no')+'">'+k+' από τους 45 σε αυτή την κλήρωση'+(k>=4?' ✓':' ✗')+'</div>';
+    var ids=dayIds(athDate(TIMES[id])).filter(function(i){ return NUMS[i]; }), low=0, mn=99, sum=0;
+    ids.forEach(function(i){ var c=NUMS[i].filter(function(n){ return inS[n]; }).length; if(c<4) low++; if(c<mn) mn=c; sum+=c; });
+    h+='<div class="muted">Σήμερα: '+ids.length+' κληρώσεις · μέσος όρος '+(sum/ids.length).toFixed(1).replace('.',',')+' · ελάχιστο '+mn+' · κάτω από 4: <b class="'+(low?'no':'ok')+'">'+low+'</b></div>'; }
+  else h+='<div class="muted">Η κλήρωση δεν έχει γίνει ακόμα.</div>';
+  h+='<div class="muted" style="margin-top:6px">Η ομάδα βρέθηκε από το παρελθόν· στο μέλλον αναμένεται να πέσει κάτω από 4 περίπου 2 φορές τον χρόνο. Μαθηματική εγγύηση δίνουν μόνο 64 αριθμοί.</div>';
+  $('c45').innerHTML=h; }
+
 /* ---------- εμφάνιση ---------- */
 function ticketStart(id){ var ids=dayIds(athDate(TIMES[id])), f=ids[0]; return f+Math.floor((id-f)/NK)*NK; }
 function show(id){
-  CUR=id; $('nId').value=id;
+  CUR=id; $('nId').value=id; show45(id);
   var s=ticketStart(id), pr=predict(s), dr=NUMS[id], t=TIMES[id];
   var h='<div class="big">Κλήρωση #'+id+'</div><div class="muted">'+(t?fmtDay(t)+' · '+hm(t):'')+(dr?'':' · <b style="color:var(--gold)">δεν έχει γίνει ακόμα</b>')+'</div>';
   if(!pr){ $('view').innerHTML=h+'<div class="muted">Δεν υπάρχουν αρκετές προηγούμενες κληρώσεις.</div>'; return; }
