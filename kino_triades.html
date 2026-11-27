@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Τριάδες ΚΙΝΟ</title>
+<style>
+:root{
+  --bg:#071a21; --bg2:#0c2a33; --board:#1d4757; --board2:#163a47; --cell:#24586b; --line:#2e6a80;
+  --tq:#27e2cc; --text:#eafffb; --muted:#8fbcc4; --red:#ff4d5e; --yel:#ffd60a; --grn:#2ecc40; --gold:#ffd166;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:radial-gradient(1000px 500px at 50% -10%,#123b47 0%,var(--bg) 60%);background-color:var(--bg);color:var(--text);
+  font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+.wrap{max-width:720px;margin:0 auto;padding:16px 16px 40px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+header img{width:32px;height:32px;border-radius:8px}
+h1{font-size:21px;margin:0}
+.lead{color:var(--muted);font-size:14px;margin:4px 0 14px}
+.card{background:linear-gradient(180deg,var(--board) 0%,var(--board2) 100%);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:12px}
+.card h2{font-size:15px;margin:0 0 8px;color:var(--tq)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted)}
+input,select,button{max-width:100%;font:inherit;font-size:14.5px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--text);padding:8px 10px;color-scheme:dark}
+button{cursor:pointer}button:disabled{opacity:.4;cursor:default}
+.muted{color:var(--muted);font-size:13.5px}
+.big{font-size:17px;font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin:8px 0}
+.grid i{font-style:normal;aspect-ratio:1;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;position:relative;
+  font-size:clamp(11px,3.2vw,16px);background:var(--cell);color:#b9dde3;font-variant-numeric:tabular-nums;border:2px solid transparent}
+.grid i.in{background:#3a3410;color:var(--gold);border-color:var(--gold)}
+.grid i.w{background:var(--yel);color:#2a2100}
+.grid i.in.w{background:var(--yel);color:#2a2100;border-color:#fff;box-shadow:0 0 0 2px var(--gold)}
+.grid i.hot::after{content:'';position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 1.5px #fff}
+.verdict{font-size:20px;font-weight:900;margin:4px 0}
+.ok{color:var(--grn)}.no{color:var(--red)}
+.nums{font-weight:800;letter-spacing:.3px;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+td,th{padding:5px 4px;border-bottom:1px solid var(--line);text-align:left;font-variant-numeric:tabular-nums}
+th{color:var(--muted);font-weight:600;font-size:12.5px}
+td.c,th.c{text-align:center}
+tr.go{cursor:pointer}
+.bar{display:inline-block;height:9px;border-radius:5px;background:var(--tq);vertical-align:middle}
+.bar.hi{background:var(--grn)}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.stats div{flex:1 1 120px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.stats b{display:block;font-size:19px}
+.stats small{color:var(--muted);font-size:12px}
+.st{font-size:12.5px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--tq);margin-right:4px}
+.dot.busy{background:var(--gold);animation:p .6s infinite}@keyframes p{50%{opacity:.3}}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.chip{display:inline-block;text-align:center;font-size:11.5px;line-height:1.25;padding:4px 6px;border-radius:8px;background:var(--bg2);border:1px solid var(--line);cursor:pointer;min-width:44px}
+.chip.cur{border-color:var(--gold);color:var(--gold)}
+.chip.good b{color:var(--grn)}
+.key{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.key i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:14px;line-height:1.7}
+footer a{color:inherit}
+.bwrap{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:10px;background:#04141a;margin-top:8px;-webkit-overflow-scrolling:touch}
+.bwrap canvas{display:block;image-rendering:pixelated;touch-action:manipulation}
+.tl{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:8px}
+.tl button{text-align:left;padding:7px 9px;font-size:13.5px;line-height:1.3}
+.tl button b{font-size:15px;letter-spacing:.3px}
+.tl button small{color:var(--muted);display:block}
+.tl .y{border-color:var(--yel)}.tl .o{border-color:#ff9f1c}.tl .g{border-color:var(--grn)}.tl .p{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.tip{font-size:13.5px;min-height:1.5em;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><img src="img/allwyn.png" alt=""><h1>🔺 Τριάδες ΚΙΝΟ</h1></header>
+  <p class="lead">Και οι <b>82.160 τριάδες</b> των 80 αριθμών, σταθερές σε πίνακα <b>316 × 260</b> (1-2-3 πάνω αριστερά … 78-79-80 κάτω δεξιά). Κάθε κλήρωση ανάβει τις τριάδες της: <b>6 με τη σειρά που βγήκαν</b> οι μπάλες (1η-2η-3η … 16η-17η-18η), την <b>19η-20ή με το ΚΙΝΟ Bonus</b> και τα <b>3 πράσινα της 2ης ευκαιρίας</b>. Η πρόβλεψη είναι η τριάδα που έχει βγει τις περισσότερες φορές μέχρι εκείνη τη στιγμή.</p>
+
+  <div class="card"><div class="st"><span class="dot" id="dot"></span><span id="st">Φόρτωση…</span></div></div>
+
+  <div class="card" id="view"><div class="muted">Φόρτωση…</div></div>
+
+  <div class="card">
+    <h2>🗺️ Πίνακας 316 × 260</h2>
+    <div class="row"><label class="f">Ζουμ<select id="Z"><option value="0">Όλος ο πίνακας</option><option value="3">× 3</option><option value="6">× 6</option><option value="10">× 10</option></select></label>
+      <div class="key" style="margin-top:14px"><span><i style="background:var(--yel)"></i>τριάδες σειράς</span><span><i style="background:#ff9f1c"></i>με Bonus</span><span><i style="background:var(--grn)"></i>πράσινα</span><span><i style="background:transparent;box-shadow:inset 0 0 0 2px var(--gold)"></i>πρόβλεψη</span></div></div>
+    <div class="bwrap" id="bw"><canvas id="cv"></canvas></div>
+    <div class="tip muted" id="tip">Πάτα ένα σημείο του πίνακα για να δεις ποια τριάδα είναι. Πιο φωτεινό = βγήκε περισσότερες φορές στο ιστορικό.</div>
+  </div>
+
+  <div class="card">
+    <h2>🧭 Πλοήγηση</h2>
+    <div class="row"><button id="nPrev">◀ Προηγ.</button><button id="nNext">Επόμ. ▶</button><button id="nNow">⏱ Επόμενη κλήρωση</button></div>
+    <div class="row" style="margin-top:8px"><button id="dPrev">⏪ Μέρα πίσω</button><button id="dNext">Μέρα μπροστά ⏩</button></div>
+    <div class="row" style="margin-top:8px">
+      <label class="f">Ημέρα<input type="date" id="nDate"></label>
+      <label class="f">Αριθμός κλήρωσης<input type="number" id="nId" inputmode="numeric" placeholder="π.χ. 1355254" style="width:140px"></label>
+      <label class="f">&nbsp;<button id="nGo">Πήγαινε</button></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>⚙️ Ρυθμίσεις</h2>
+    <div class="row"><label class="f">🎟️ Η πρόβλεψη παίζεται για<select id="NK"></select></label></div>
+    <p class="muted" style="margin:10px 0 0">Η τριάδα της πρόβλεψης παίζεται ως στήλη 3 αριθμών (0,50€: 2/3 = 1,25€, 3/3 = 12,50€). Τα δελτία της ημέρας ξεκινούν στις 00:00 και ανανεώνονται κάθε Ν κληρώσεις· η τριάδα κάθε δελτίου διαλέγεται με τις κληρώσεις πριν από αυτό.</p>
+  </div>
+
+  <div class="card" id="day"><div class="muted">Φόρτωση ημέρας…</div></div>
+
+  <div class="card">
+    <h2>ℹ️ Πώς δουλεύει</h2>
+    <div class="muted">
+      <b>Θέση στον πίνακα</b> = η τριάδα με τη σειρά (1-2-3, 1-2-4 … 1-79-80, 2-3-4 …), 316 σε κάθε σειρά.<br>
+      <b>Ιστορικό</b> = πόσες φορές βγήκε η τριάδα ως τριάδα κλήρωσης από το 2018: οι 6 τριάδες της σειράς και τα πράσινα (από τις 7/10/2026). Η τριάδα με το Bonus μετράει μόνο στις κληρώσεις που φορτώνονται ζωντανά, γιατί το Bonus δεν υπάρχει στο αρχείο. Αν το Bonus είναι η 19η ή η 20ή μπάλα, η τριάδα με το Bonus δεν σχηματίζεται.<br>
+      <b>Πιο συχνή μέχρι εκείνη τη στιγμή</b> = μετράει μόνο τις κληρώσεις πριν από το δελτίο, ανάμεσα στις 400 πιο συχνές τριάδες. Σε ισοπαλία, αυτή που βγήκε πιο πρόσφατα.<br>
+      <b>Η τύχη</b> = κάθε τριάδα βγαίνει ως τριάδα κλήρωσης κατά μέσο όρο 47,7 φορές σε 8 χρόνια, και η διαφορά ανάμεσα στις πιο συχνές και τις πιο σπάνιες είναι όση δίνει η τύχη (±6,9). Μια στήλη 3 αριθμών επιστρέφει κατά μέσο όρο περίπου 0,35€ στα 0,50€, όποια τριάδα κι αν είναι.
+    </div>
+  </div>
+
+  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v78 · 27/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a> · <a href="kino_systada.html">🧩 Συστάδα</a></footer>
+</div>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i);};
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+var API='https://api.opap.gr/draws/v3.0/1100', COLS=316, ROWS=260;
+
+/* λεξικογραφικός αριθμός τριάδας (ίδιος με tools/archive.py) */
+var OFFA=[0],OFFB=[];(function(){ var s=0; for(var a=1;a<=78;a++){ OFFA[a]=s; s+=(80-a)*(79-a)/2; } })();
+function tIdx(t){ var x=t.slice().sort(function(p,q){return p-q;}), a=x[0],b=x[1],c=x[2], i=OFFA[a]; for(var y=a+1;y<b;y++) i+=80-y; return i+(c-b-1); }
+var TRI=null; function tOf(i){ return TRI[i]; }
+function buildTri(){ TRI=new Array(82160); var k=0; for(var a=1;a<=78;a++) for(var b=a+1;b<=79;b++) for(var c=b+1;c<=80;c++) TRI[k++]=[a,b,c]; }
+
+var PAY3={2:1.25,3:12.5}, EV3=(3*20*19*60/6)/(80*79*78/6)*0, NK=+(lsGet('tr_N')||1); if(!(NK>=1&&NK<=20)) NK=1;
+(function(){ var C=function(n,k){var r=1;for(var i=1;i<=k;i++)r=r*(n-k+i)/i;return r;}; EV3=(PAY3[2]*C(20,2)*C(60,1)+PAY3[3]*C(20,3))/C(80,3); })();
+var CNT=null, TOP=null, TOPMAX=0, ORD={}, BON={}, SC={}, TIMES={}, DAYS={}, ACTIVE=null, LATEST=0, CUR=null, Z=+(lsGet('tr_Z')||0);
+var eur=function(v){return v.toLocaleString('el-GR',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';};
+function athDate(ms){return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Athens',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms));}
+function hm(ms){return new Intl.DateTimeFormat('el-GR',{timeZone:'Europe/Athens',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(ms));}
+function fmtDay(ms){return new Intl.DateTimeFormat('el-GR',{timeZone:'Europe/Athens',weekday:'long',day:'numeric',month:'numeric'}).format(new Date(ms));}
+function addDays(d,k){var x=new Date(d+'T12:00:00Z');x.setUTCDate(x.getUTCDate()+k);return x.toISOString().slice(0,10);}
+function valid(d){return d&&d.status==='results'&&d.winningNumbers&&d.winningNumbers.list&&d.winningNumbers.list.length===20;}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+/* ---------- κληρώσεις ---------- */
+function addDraws(arr){ arr.forEach(function(d){ if(!d||typeof d.drawId!=='number') return; TIMES[d.drawId]=d.drawTime;
+  if(valid(d)){ var w=d.winningNumbers; ORD[d.drawId]=w.list.map(Number); BON[d.drawId]=(w.bonus||[])[0]; SC[d.drawId]=(w.secondChance||[]).map(Number); if(d.drawId>LATEST) LATEST=d.drawId; } }); }
+function utcDay(u){ if(DAYS[u]) return DAYS[u]; var out=[];
+  function pg(p){return fetch(API+'/draw-date/'+u+'/'+u+'/?limit=150&page='+p,{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){out=out.concat(j.content||[]);if(p+1<(j.totalPages||1))return pg(p+1);return out;});}
+  return DAYS[u]=pg(0).then(function(a){ addDraws(a); return a; }).catch(function(){delete DAYS[u];return [];}); }
+function athDayLoad(ad){ return Promise.all([utcDay(addDays(ad,-1)),utcDay(ad)]); }
+function dayIds(ad){ return Object.keys(TIMES).map(Number).filter(function(id){ return athDate(TIMES[id])===ad; }).sort(function(a,b){return a-b;}); }
+
+/* οι τριάδες μιας κλήρωσης: [{t:[..], k:'y'|'o'|'g', i:δείκτης, lbl}] */
+var TCACHE={};
+function triadsOf(id){ if(TCACHE[id]) return TCACHE[id]; var L=ORD[id]; if(!L) return null; var out=[];
+  for(var j=0;j<18;j+=3) out.push({t:L.slice(j,j+3),k:'y',lbl:(j+1)+'η–'+(j+3)+'η μπάλα'});
+  var b=BON[id]; if(b&&L.indexOf(b)<18) out.push({t:[L[18],L[19],b],k:'o',lbl:'19η–20ή + Bonus'});
+  var s=SC[id]; if(s&&s.length===3) out.push({t:s,k:'g',lbl:'2η ευκαιρία'});
+  out.forEach(function(x){ x.i=tIdx(x.t); }); return TCACHE[id]=out; }
+
+/* πόσες φορές είχε βγει η τριάδα πριν από το id: αρχείο (μόνο για τις 400 πιο συχνές) + ζωντανές κληρώσεις */
+function liveTo(id){ var m={}; Object.keys(ORD).forEach(function(k){ k=+k; if(k<id&&(k>TOPMAX||BON[k])) (triadsOf(k)||[]).forEach(function(x){ if(k>TOPMAX||x.k==='o') m[x.i]=(m[x.i]||[]).concat([k]); }); }); return m; }
+function predict(s){ var live=liveTo(s), best=null;
+  TOP.forEach(function(e){ var i=e[0], at=e[1], n=0, last=0; for(var q=0;q<at.length;q++){ if(at[q]<s){ n++; last=at[q]; } }
+    var lv=live[i]||[]; n+=lv.length; if(lv.length) last=Math.max(last,lv[lv.length-1]);
+    if(!best||n>best.n||(n===best.n&&last>best.last)) best={i:i,n:n,last:last}; });
+  return best?{i:best.i,t:tOf(best.i),n:best.n}:null; }
+function hits3(t,id){ var L=ORD[id]; return L?t.filter(function(n){ return L.indexOf(n)>=0; }).length:null; }
+
+/* ---------- πίνακας ---------- */
+var HEAT=null, MARK=[];
+function makeHeat(){ var c=document.createElement('canvas'); c.width=COLS; c.height=ROWS; var x=c.getContext('2d'), im=x.createImageData(COLS,ROWS), mn=1e9, mx=0;
+  for(var i=0;i<82160;i++){ if(CNT[i]<mn) mn=CNT[i]; if(CNT[i]>mx) mx=CNT[i]; }
+  for(i=0;i<82160;i++){ var v=(CNT[i]-mn)/(mx-mn||1), p=i*4; im.data[p]=18+v*40; im.data[p+1]=50+v*120; im.data[p+2]=62+v*110; im.data[p+3]=255; }
+  x.putImageData(im,0,0); HEAT=c; }
+function cellPx(){ var W=$('bw').clientWidth||340; return Z?Z:W/COLS; }
+function drawBoard(){ if(!HEAT) return; var cs=cellPx(), cv=$('cv'), dpr=Z>3?1:(window.devicePixelRatio||1), W=COLS*cs, H=ROWS*cs;
+  cv.style.width=W+'px'; cv.style.height=H+'px'; cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+  var x=cv.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.imageSmoothingEnabled=false; x.drawImage(HEAT,0,0,W,H);
+  var col={y:'#ffd60a',o:'#ff9f1c',g:'#2ecc40',p:'#ffd166'}, r=Math.max(5,cs*1.6);
+  MARK.forEach(function(m){ var X=(m.i%COLS+.5)*cs, Y=(Math.floor(m.i/COLS)+.5)*cs; x.lineWidth=m.k==='p'?3:2; x.strokeStyle=col[m.k];
+    x.beginPath(); if(m.k==='p') x.rect(X-r-2,Y-r-2,2*r+4,2*r+4); else x.arc(X,Y,r,0,7); x.stroke(); if(cs>=6){ x.fillStyle=col[m.k]; x.fillRect(X-cs/2,Y-cs/2,cs,cs); } }); }
+function focusCell(i){ if(!Z){ Z=6; $('Z').value='6'; lsSet('tr_Z',6); drawBoard(); } var cs=cellPx(), bw=$('bw');
+  bw.scrollLeft=(i%COLS)*cs-bw.clientWidth/2; bw.scrollTop=Math.floor(i/COLS)*cs-bw.clientHeight/2; }
+$('cv').addEventListener('click',function(e){ var r=this.getBoundingClientRect(), cs=cellPx(), c=Math.floor((e.clientX-r.left)/cs), q=Math.floor((e.clientY-r.top)/cs);
+  if(c<0||c>=COLS||q<0||q>=ROWS) return; var i=q*COLS+c, t=tOf(i);
+  $('tip').innerHTML='Σειρά '+(q+1)+', στήλη '+(c+1)+': <b class="nums">'+t.join('-')+'</b> · βγήκε <b>'+CNT[i]+'</b> φορές ως τριάδα κλήρωσης από το 2018'; });
+
+/* ---------- εμφάνιση ---------- */
+function ticketStart(id){ var ids=dayIds(athDate(TIMES[id])), f=ids[0]; return f+Math.floor((id-f)/NK)*NK; }
+function show(id){
+  CUR=id; $('nId').value=id;
+  var s=ticketStart(id), p=predict(s), tr=triadsOf(id), t=TIMES[id];
+  var h='<div class="big">Κλήρωση #'+id+'</div><div class="muted">'+(t?fmtDay(t)+' · '+hm(t):'')+(tr?'':' · <b style="color:var(--gold)">δεν έχει γίνει ακόμα</b>')+'</div>';
+  MARK=[];
+  if(p){ var x=tr?hits3(p.t,id):null, inTri=tr&&tr.some(function(z){ return z.i===p.i; });
+    h+='<div style="margin-top:8px">🎯 Πρόβλεψη: <b class="nums" style="font-size:18px">'+p.t.join(' - ')+'</b> <span class="muted">· είχε βγει '+p.n+' φορές μέχρι τότε</span></div>';
+    h+=tr?'<div class="verdict '+(x>=2?'ok':'')+'">'+x+'/3'+(PAY3[x]?' · '+eur(PAY3[x]):'')+(inTri?' · βγήκε ως τριάδα!':'')+'</div>':'<div class="verdict" style="color:var(--gold)">Παίζεται τώρα</div>';
+    if(NK>1){ var rows=[],won=0; for(var i=s;i<s+NK;i++){ if(!ORD[i]) continue; var q=hits3(p.t,i); won+=PAY3[q]||0; rows.push('<span class="chip'+(i===id?' cur':'')+(q>=2?' good':'')+'" data-id="'+i+'">'+(TIMES[i]?hm(TIMES[i]):'#'+i)+'<br><b>'+q+'</b></span>'); }
+      h+='<div class="muted">🎟️ Δελτίο '+NK+' κληρώσεων από την #'+s+(TIMES[s]?' ('+hm(TIMES[s])+')':'')+' · αυτή είναι η <b>'+(id-s+1)+'η από '+NK+'</b> · παίχτηκαν '+rows.length+' ('+eur(rows.length*0.5)+') · κέρδη '+eur(won)+'</div><div class="chips">'+rows.join('')+'</div>'; }
+    MARK.push({i:p.i,k:'p'}); }
+  if(tr){ h+='<div class="tl">'+tr.map(function(z){ MARK.push({i:z.i,k:z.k}); return '<button class="'+z.k+(p&&z.i===p.i?' p':'')+'" data-i="'+z.i+'"><b class="nums">'+z.t.join(' - ')+'</b><small>'+z.lbl+' · σειρά '+(Math.floor(z.i/COLS)+1)+', στήλη '+(z.i%COLS+1)+' · '+CNT[z.i]+' φορές</small></button>'; }).join('')+'</div>';
+    if(BON[id]&&ORD[id].indexOf(BON[id])>=18) h+='<div class="muted" style="margin-top:6px">Το Bonus ('+BON[id]+') ήταν η '+(ORD[id].indexOf(BON[id])+1)+'η μπάλα, οπότε η τριάδα με το Bonus δεν σχηματίστηκε.</div>';
+    h+='<div class="muted" style="margin-top:6px">Πάτα μια τριάδα για να τη δεις στον πίνακα.</div>'; }
+  $('view').innerHTML=h; drawBoard();
+}
+function renderDay(ad){
+  var all=dayIds(ad), ids=all.filter(function(i){ return ORD[i]; });
+  if(!ids.length){ $('day').innerHTML='<h2>📊 Αξιολόγηση ημέρας</h2><div class="muted">Καμία κλήρωση αυτή τη μέρα.</div>'; return; }
+  var f=all[0], T={}, dist=[0,0,0,0], win=0, n=0, as=0;
+  ids.forEach(function(i){ var s=f+Math.floor((i-f)/NK)*NK; if(!T[s]) T[s]={s:s,p:predict(s),rows:[],win:0};
+    var tk=T[s]; if(!tk.p) return; var q=hits3(tk.p.t,i); tk.rows.push(q); tk.win+=PAY3[q]||0; dist[q]++; win+=PAY3[q]||0; n++;
+    if((triadsOf(i)||[]).some(function(z){ return z.i===tk.p.i; })) as++; });
+  var stake=n*0.5, net=win-stake, tks=Object.keys(T).map(function(k){return T[k];}).filter(function(t){return t.p;}), mx=Math.max.apply(null,dist.concat([1]));
+  var C=function(a,k){var r=1;for(var i=1;i<=k;i++)r=r*(a-k+i)/i;return r;}, ph=function(k){ return C(20,k)*C(60,3-k)/C(80,3); };
+  var h='<h2>📊 Αξιολόγηση ημέρας · '+esc(fmtDay(TIMES[ids[0]]))+'</h2>';
+  h+='<div class="stats"><div><small>Καθαρό</small><b class="'+(net>=0?'ok':'no')+'">'+(net>=0?'+':'')+eur(net)+'</b></div><div><small>Παίχτηκαν</small><b>'+eur(stake)+'</b><small>'+n+' κληρώσεις · '+tks.length+' δελτία</small></div><div><small>Κέρδη</small><b>'+eur(win)+'</b><small>η τύχη δίνει κατά μέσο όρο '+eur(EV3*n)+'</small></div><div><small>Βγήκε ως τριάδα</small><b>'+as+'</b><small>φορές σήμερα</small></div></div>';
+  h+='<table><tr><th>Επιτυχίες</th><th>Κληρώσεις</th></tr>';
+  for(var k=0;k<=3;k++) h+='<tr><td>'+k+'/3'+(PAY3[k]?' <small class="muted">'+eur(PAY3[k])+'</small>':'')+'</td><td><span class="bar'+(k>=2?' hi':'')+'" style="width:'+(dist[k]?Math.max(4,150*dist[k]/mx):0)+'px"></span> '+dist[k]+' <small class="muted">(τύχη '+(ph(k)*n).toFixed(1).replace('.',',')+')</small></td></tr>';
+  h+='</table><table><tr><th>Ώρα</th><th>Τριάδα · επιτυχίες ανά κλήρωση</th><th class="c">Κέρδη</th></tr>';
+  tks.slice().reverse().forEach(function(tk){ h+='<tr class="go" data-id="'+tk.s+'"><td>'+(TIMES[tk.s]?hm(TIMES[tk.s]):'')+'<br><small>#'+tk.s+'</small></td><td><span class="nums">'+tk.p.t.join('-')+'</span><br><span class="nums">'+tk.rows.map(function(q){ return q>=2?'<b class="ok">'+q+'</b>':q; }).join(' ')+'</span></td><td class="c '+(tk.win>tk.rows.length*0.5?'ok':'')+'"><b>'+eur(tk.win)+'</b></td></tr>'; });
+  $('day').innerHTML=h+'</table><div class="muted">Πάτα μια γραμμή για να ανοίξει το δελτίο.</div>';
+}
+
+/* ---------- πλοήγηση ---------- */
+function go(id){
+  var ensure=TIMES[id]?athDayLoad(athDate(TIMES[id])):fetch(API+'/'+id,{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){ if(d&&d.drawTime){ TIMES[id]=d.drawTime; return athDayLoad(athDate(d.drawTime)); } }).catch(function(){});
+  return ensure.then(function(){ if(!TIMES[id]) return; show(id); var ad=athDate(TIMES[id]); if(ad!==go.day){ go.day=ad; renderDay(ad); } $('nDate').value=ad; });
+}
+function stepTo(dir){ var id=CUR+dir, max=ACTIVE?ACTIVE.drawId:LATEST; if(id>max) return Promise.resolve();
+  if(!TIMES[id]&&TIMES[CUR]) return athDayLoad(athDate(TIMES[CUR]+dir*300000)).then(function(){ return go(id); }); return go(id); }
+function dayStep(dir){ var base=TIMES[CUR]||Date.now(), ad=addDays(athDate(base),dir); if(ad>athDate(Date.now())) return;
+  athDayLoad(ad).then(function(){ var want=(base+7200000)%86400000, ids=dayIds(ad).filter(function(i){ return ORD[i]||(ACTIVE&&i===ACTIVE.drawId); }); if(!ids.length) return;
+    var best=ids[0]; ids.forEach(function(i){ if(Math.abs((TIMES[i]+7200000)%86400000-want)<Math.abs((TIMES[best]+7200000)%86400000-want)) best=i; }); go(best); }); }
+$('nPrev').onclick=function(){ stepTo(-1); }; $('nNext').onclick=function(){ stepTo(1); };
+$('nNow').onclick=function(){ go(ACTIVE?ACTIVE.drawId:LATEST); };
+$('dPrev').onclick=function(){ dayStep(-1); }; $('dNext').onclick=function(){ dayStep(1); };
+$('nGo').onclick=function(){ var v=+$('nId').value; if(v) go(v); };
+$('nDate').onchange=function(){ var ad=this.value; if(!ad) return; athDayLoad(ad).then(function(){ var ids=dayIds(ad).filter(function(i){ return ORD[i]; }); if(ids.length) go(ids[ids.length-1]); }); };
+$('view').addEventListener('click',function(e){ var c=e.target.closest('.chip'); if(c){ go(+c.dataset.id); return; } var b=e.target.closest('.tl button'); if(b){ focusCell(+b.dataset.i); $('bw').scrollIntoView({behavior:'smooth',block:'center'}); } });
+$('day').addEventListener('click',function(e){ var tr=e.target.closest('tr.go'); if(!tr) return; go(+tr.dataset.id).then(function(){ $('view').scrollIntoView({behavior:'smooth'}); }); });
+for(var j=1;j<=20;j++) $('NK').insertAdjacentHTML('beforeend','<option value="'+j+'">'+(j===1?'1 κλήρωση':j+' κληρώσεις')+'</option>');
+$('NK').value=String(NK); $('NK').onchange=function(){ NK=+this.value; lsSet('tr_N',NK); go.day=null; if(CUR) go(CUR); };
+$('Z').value=String(Z); $('Z').onchange=function(){ Z=+this.value; lsSet('tr_Z',Z); drawBoard(); };
+var ro=new ResizeObserver(function(){ if(!Z) drawBoard(); }); ro.observe($('bw'));
+
+/* ---------- ζωντανά ---------- */
+var tm=null;
+function status(){ $('st').textContent='Τελευταία κλήρωση #'+LATEST+(TIMES[LATEST]?' στις '+hm(TIMES[LATEST]):'')+(ACTIVE?' · επόμενη #'+ACTIVE.drawId+' στις '+hm(ACTIVE.drawTime):'')+' · ενημερώνεται μόνη της'; }
+function schedule(){ clearTimeout(tm); var t=ACTIVE?ACTIVE.drawTime:Date.now()+300000, wait=Math.max(8000,t-Date.now()+15000);
+  tm=setTimeout(function poll(){ var before=LATEST; $('dot').classList.add('busy');
+    fetch(API+'/last/2',{cache:'no-store'}).then(function(r){return r.json();}).then(function(a){ $('dot').classList.remove('busy');
+      ACTIVE=a.filter(function(d){return d.status!=='results';})[0]||ACTIVE; addDraws(a);
+      if(LATEST>before){ status(); var follow=CUR===before+1||CUR===before; if(follow){ go.day=null; go(ACTIVE?ACTIVE.drawId:LATEST); } else if(CUR&&TIMES[CUR]&&athDate(TIMES[CUR])===athDate(Date.now())) renderDay(athDate(TIMES[CUR])); schedule(); }
+      else tm=setTimeout(poll,10000); }).catch(function(){ $('dot').classList.remove('busy'); tm=setTimeout(poll,15000); }); }, wait); }
+$('nDate').max=athDate(Date.now());
+buildTri();
+Promise.all([fetch('data/kino/triades.bin?t='+Date.now()).then(function(r){ if(!r.ok) throw new Error('triades.bin'); return r.arrayBuffer(); }),
+             fetch('data/kino/triades_top.json?t='+Date.now()).then(function(r){ if(!r.ok) throw new Error('triades_top.json'); return r.json(); }),
+             fetch(API+'/last/2',{cache:'no-store'}).then(function(r){return r.json();})])
+.then(function(R){ var dv=new DataView(R[0]); CNT=new Uint16Array(82160); for(var i=0;i<82160;i++) CNT[i]=dv.getUint16(i*2,true);
+  TOP=R[1].top; TOPMAX=R[1].max; makeHeat(); var a=R[2]; ACTIVE=a.filter(function(d){return d.status!=='results';})[0]||null; addDraws(a);
+  return athDayLoad(athDate(Date.now())); })
+.then(function(){ status(); return go(ACTIVE?ACTIVE.drawId:LATEST); }).then(schedule)
+.catch(function(e){ $('st').textContent='Σφάλμα φόρτωσης: '+e.message; });
+})();
+</script>
+</body>
+</html>

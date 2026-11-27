@@ -46,8 +46,33 @@ def save_all(d):
         if not os.path.exists(pb) or open(pb, 'rb').read() != bits: open(pb, 'wb').write(bits)
         files.append({'f': m + '.bin', 'n': len(rows), 'min': rows[0][0], 'max': rows[-1][0]})
     total = sum(f['n'] for f in files)
+    save_triads(d)
     json.dump({'v': 1, 'rec': REC.size, 'total': total, 'updated': int(time.time()), 'files': files}, open(os.path.join(ROOT, 'index.json'), 'w'), separators=(',', ':'))
     return total
+
+def tri_index(a, b, c):
+    """λεξικογραφικός αριθμός της τριάδας a<b<c (1..80) μέσα στις 82.160: 1-2-3 = 0 … 78-79-80 = 82159"""
+    a, b, c = sorted((a, b, c)); idx = 0
+    for x in range(1, a): idx += (80 - x) * (79 - x) // 2
+    for y in range(a + 1, b): idx += 80 - y
+    return idx + (c - b - 1)
+
+def save_triads(d):
+    """triades.bin: για κάθε μία από τις 82.160 τριάδες πόσες φορές βγήκε ως τριάδα κλήρωσης (uint16 LE)·
+    triades_top.json: οι 400 πιο συχνές με τα id των κληρώσεων που βγήκαν (για «πιο συχνή μέχρι εκείνη τη στιγμή»).
+    Τριάδες κλήρωσης = 1η-2η-3η, 4η-5η-6η … 16η-17η-18η μπάλα και τα 3 πράσινα της 2ης ευκαιρίας (το Bonus δεν είναι στο αρχείο)."""
+    cnt = [0] * 82160; at = {}
+    for k in sorted(d):
+        x = d[k]; L = x[2]
+        if len(L) != 20: continue
+        ts = [L[i:i + 3] for i in range(0, 18, 3)]
+        if len(x[3]) == 3: ts.append(x[3])
+        for t in ts:
+            if len(set(t)) < 3: continue
+            i = tri_index(*t); cnt[i] += 1; at.setdefault(i, []).append(k)
+    open(os.path.join(ROOT, 'triades.bin'), 'wb').write(struct.pack('<82160H', *[min(c, 65535) for c in cnt]))
+    top = sorted(range(82160), key=lambda i: (-cnt[i], i))[:400]
+    json.dump({'v': 1, 'max': max(d), 'top': [[i, at.get(i, [])] for i in top]}, open(os.path.join(ROOT, 'triades_top.json'), 'w'), separators=(',', ':'))
 
 def add(d, rows):
     n = 0
