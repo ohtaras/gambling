@@ -32,6 +32,7 @@ button{cursor:pointer}button:disabled{opacity:.4;cursor:default}
 .grid i.in{background:#3a3410;color:var(--gold);border-color:var(--gold)}
 .grid i.w{background:var(--yel);color:#2a2100}
 .grid i.in.w{background:var(--yel);color:#2a2100;border-color:#fff;box-shadow:0 0 0 2px var(--gold)}
+.grid.g8{grid-template-columns:repeat(8,1fr)}
 .grid i.up::before{content:"↑";position:absolute;bottom:1px;left:4px;font-size:10px;color:var(--tq)}
 .grid i.hot::after{content:'';position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 1.5px #fff}
 .verdict{font-size:20px;font-weight:900;margin:4px 0}
@@ -70,7 +71,7 @@ footer a{color:inherit}
 
   <div class="card" id="view"><div class="muted">Φόρτωση…</div></div>
 
-  <div class="card" id="c41"><div class="muted">Φόρτωση…</div></div>
+  <div class="card" id="c40"><div class="muted">Φόρτωση…</div></div>
 
   <div class="card">
     <h2>🧭 Πλοήγηση</h2>
@@ -111,7 +112,7 @@ footer a{color:inherit}
     </div>
   </div>
 
-  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v84 · 28/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a></footer>
+  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v85 · 28/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a></footer>
 </div>
 <script>
 (function(){
@@ -186,22 +187,22 @@ function board(p,dr){
   return h+'</div>';
 }
 
-/* ---------- οι 41: μέσα από τους 45, η μικρότερη ομάδα που σε όλο το ιστορικό έβγαλε πάντα τουλάχιστον 3 ---------- */
-var S41=[27,28,30,31,33,34,35,36,37,41,44,45,46,47,48,49,50,51,53,54,55,56,57,58,59,61,62,63,64,65,66,68,70,71,72,73,74,75,76,78,79];
-var IN41={}; S41.forEach(function(n){ IN41[n]=1; });
-function show41(id){ var d=NUMS[id];
-  var h='<h2>3️⃣ Οι 41 (τουλάχιστον 3 σε κάθε κλήρωση)</h2><div class="muted">Μέσα από τους 45, η πιο μικρή ομάδα που σε όλες τις 651.211 κληρώσεις του ιστορικού έβγαλε κάθε φορά τουλάχιστον 3. Έξω μένουν το 40, το 67, το 69 και το 77.</div><div class="grid">';
-  S41.forEach(function(n){ h+='<i class="'+(d&&d.indexOf(n)>=0?'w':'')+'">'+n+'</i>'; });
+/* ---------- οι 40: από τους 41 έφυγε και το 44· σε όλο το ιστορικό μόνο 2 κληρώσεις έφεραν λιγότερους από 3 ---------- */
+var S40=[27,28,30,31,33,34,35,36,37,41,45,46,47,48,49,50,51,53,54,55,56,57,58,59,61,62,63,64,65,66,68,70,71,72,73,74,75,76,78,79];
+var IN40={}; S40.forEach(function(n){ IN40[n]=1; });
+function show40(id){ var d=NUMS[id];
+  var h='<h2>3️⃣ Οι 40 (τουλάχιστον 3 σχεδόν σε κάθε κλήρωση)</h2><div class="muted">Οι 41 χωρίς το 44. Σε όλες τις 651.223 κληρώσεις του ιστορικού έβγαλαν τουλάχιστον 3, εκτός από 2 κληρώσεις που έβγαλαν 2 (20/04/2023 και 14/04/2024). Έξω από τους 45 μένουν και το 40, το 67, το 69 και το 77.</div><div class="grid g8">';
+  S40.forEach(function(n){ h+='<i class="'+(d&&d.indexOf(n)>=0?'w':'')+'">'+n+'</i>'; });
   h+='</div>';
-  if(d){ var k=d.filter(function(n){ return IN41[n]; }).length; h+='<div class="verdict '+(k>=3?'ok':'no')+'">'+k+' από τους 41'+(k>=3?' ✓':' ✗')+'</div>';
+  if(d){ var k=d.filter(function(n){ return IN40[n]; }).length; h+='<div class="verdict '+(k>=3?'ok':'no')+'">'+k+' από τους 40'+(k>=3?' ✓':' ✗')+'</div>';
     var ids=dayIds(athDate(TIMES[id])).filter(function(i){ return NUMS[i]; }), low=0, mn=99, sum=0;
-    ids.forEach(function(i){ var c=NUMS[i].filter(function(n){ return IN41[n]; }).length; if(c<3) low++; if(c<mn) mn=c; sum+=c; });
+    ids.forEach(function(i){ var c=NUMS[i].filter(function(n){ return IN40[n]; }).length; if(c<3) low++; if(c<mn) mn=c; sum+=c; });
     h+='<div class="muted">Σήμερα: '+ids.length+' κληρώσεις · μέσος όρος '+(sum/ids.length).toFixed(1).replace('.',',')+' · ελάχιστο '+mn+' · κάτω από 3: <b class="'+(low?'no':'ok')+'">'+low+'</b></div>'; }
   else h+='<div class="muted">Η κλήρωση δεν έχει γίνει ακόμα.</div>';
-  h+='<div class="muted" style="margin-top:6px">Βγαίνουν κατά μέσο όρο 10,25 από τους 41. Η ομάδα βρέθηκε από το παρελθόν· στο μέλλον αναμένεται να φέρει λιγότερους από 3 περίπου 1–2 φορές τον χρόνο.</div>';
-  $('c41').innerHTML=h; }
+  h+='<div class="muted" style="margin-top:6px">Βγαίνουν κατά μέσο όρο 10 από τους 40, όσο και από οποιουσδήποτε 40 αριθμούς. Στο μέλλον αναμένεται να φέρουν λιγότερους από 3 περίπου 2–3 φορές τον χρόνο.</div>';
+  $('c40').innerHTML=h; }
 function show(id){
-  CUR=id; $('nId').value=id; show41(id);
+  CUR=id; $('nId').value=id; show40(id);
   var s=ticketStart(id), p=predict(s), dr=NUMS[id]||null, t=TIMES[id], k0=id-s+1;
   var in45=dr?dr.filter(function(n){ return IN45[n]; }):null;
   var h='<div class="big">Κλήρωση #'+id+'</div><div class="muted">'+(t?fmtDay(t)+' · '+hm(t):'')+(dr?' · βγήκαν <b>'+in45.length+'</b> από τους 45':' · <b style="color:var(--gold)">δεν έχει γίνει ακόμα</b>')+'</div>';
