@@ -33,6 +33,7 @@ button{cursor:pointer}button:disabled{opacity:.4;cursor:default}
 .grid i.w{background:var(--yel);color:#2a2100}
 .grid i.in.w{background:var(--yel);color:#2a2100;border-color:#fff;box-shadow:0 0 0 2px var(--gold)}
 .grid.g8{grid-template-columns:repeat(8,1fr)}
+.grid i.cold::after{content:"❄";position:absolute;top:1px;right:4px;font-size:10px}
 .grid i.up::before{content:"↑";position:absolute;bottom:1px;left:4px;font-size:10px;color:var(--tq)}
 .grid i.hot::after{content:'';position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 1.5px #fff}
 .verdict{font-size:20px;font-weight:900;margin:4px 0}
@@ -65,7 +66,7 @@ footer a{color:inherit}
 <body>
 <div class="wrap">
   <header><img src="img/allwyn.png" alt=""><h1>4️⃣ Οι 45 ΚΙΝΟ</h1></header>
-  <p class="lead">Μόνο οι <b>45 αριθμοί</b> που σε όλο το ιστορικό (651.211 κληρώσεις) έβγαζαν πάντα τουλάχιστον 4 ανά κλήρωση, σε πίνακα <b>9 × 5</b>. Σε κάθε κλήρωση φαίνονται μόνο όσοι από αυτούς βγήκαν. Η πρόβλεψη βγαίνει μόνο από τους 45: <b>1–2 καυτοί</b> και οι υπόλοιποι από όσους <b>τείνουν να γίνουν καυτοί</b>, με όσους αριθμούς διαλέξεις (1–12).</p>
+  <p class="lead">Μόνο οι <b>45 αριθμοί</b> που σε όλο το ιστορικό (651.211 κληρώσεις) έβγαζαν πάντα τουλάχιστον 4 ανά κλήρωση, σε πίνακα <b>9 × 5</b>. Σε κάθε κλήρωση φαίνονται μόνο όσοι από αυτούς βγήκαν. Ο πίνακας των 45 είναι μόνο για να βλέπεις. Η πρόβλεψη βγαίνει από τους <b>40</b> (πίνακας 8 × 5, με ενδείξεις καυτοί / τείνουν / κρύοι): <b>1–2 καυτοί</b> και οι υπόλοιποι από όσους <b>τείνουν να γίνουν καυτοί</b>, με την αναλογία <b>μονών/ζυγών</b> και <b>αριστερών/δεξιών</b> των τελευταίων κληρώσεων, με όσους αριθμούς διαλέξεις (1–12).</p>
 
   <div class="card"><div class="st"><span class="dot" id="dot"></span><span id="st">Φόρτωση κληρώσεων…</span></div></div>
 
@@ -98,7 +99,7 @@ footer a{color:inherit}
       <label class="f">🎟️ Παίζεται για<select id="NK"></select></label>
       <label class="f">🔥 Καυτός = πιο συχνός στις<select id="HW"><option value="20">20 τελευταίες</option><option value="50">50 τελευταίες</option><option value="100">100 τελευταίες</option></select></label>
     </div>
-    <p class="muted" style="margin:10px 0 0">Καυτός = βγήκε τις περισσότερες φορές στις τελευταίες κληρώσεις. Τείνει να γίνει καυτός = βγαίνει πιο συχνά στο πιο πρόσφατο μισό από ό,τι στο παλιότερο (↑ στον πίνακα). Στήλη έως 5 αριθμών: 1 καυτός· 6 και πάνω: 2 καυτοί. Τα δελτία της ημέρας ξεκινούν στις 00:00 και ανανεώνονται κάθε Ν κληρώσεις· η πρόβλεψη κάθε δελτίου φτιάχνεται μόνο με τις κληρώσεις πριν από αυτό. Κέρδη με μία στήλη 0,50€.</p>
+    <p class="muted" style="margin:10px 0 0">Καυτός = βγήκε τις περισσότερες φορές στις τελευταίες κληρώσεις. Τείνει να γίνει καυτός = βγαίνει πιο συχνά στο πιο πρόσφατο μισό από ό,τι στο παλιότερο (↑ στον πίνακα). Κρύος = έως 2 φορές στις 20 (αναλογικά για 50/100). Στήλη έως 5 αριθμών: 1 καυτός· 6 και πάνω: 2 καυτοί. Αριστερά = αριθμοί που τελειώνουν σε 1–5 (οι 5 αριστερές στήλες του πίνακα ΚΙΝΟ), δεξιά = σε 6–0. Τα δελτία της ημέρας ξεκινούν στις 00:00 και ανανεώνονται κάθε Ν κληρώσεις· η πρόβλεψη κάθε δελτίου φτιάχνεται μόνο με τις κληρώσεις πριν από αυτό. Κέρδη με μία στήλη 0,50€.</p>
   </div>
 
   <div class="card" id="day"><div class="muted">Φόρτωση ημέρας…</div></div>
@@ -107,12 +108,12 @@ footer a{color:inherit}
     <h2>ℹ️ Πώς δουλεύει</h2>
     <div class="muted">
       <b>Οι 45</b> = η πιο μικρή ομάδα που βρέθηκε ώστε σε κάθε μία από τις 651.211 κληρώσεις (2018 – 27/11/2026) να βγαίνουν τουλάχιστον 4 από αυτούς. Βγαίνουν κατά μέσο όρο 11,25 ανά κλήρωση. Βρέθηκε από το παρελθόν, οπότε στο μέλλον αναμένεται να πέσει κάτω από 4 περίπου 2 φορές τον χρόνο.<br>
-      <b>Πρόβλεψη</b> = οι πιο καυτοί και όσοι ανεβαίνουν, μόνο ανάμεσα στους 45. Σε ισοπαλία μετράει όποιος ανεβαίνει περισσότερο, μετά ο μικρότερος.<br>
+      <b>Πρόβλεψη</b> = οι πιο καυτοί και όσοι ανεβαίνουν, μόνο ανάμεσα στους 40, ώστε η στήλη να έχει την ίδια αναλογία μονών/ζυγών και αριστερών/δεξιών με τους αριθμούς των 40 που βγήκαν στις τελευταίες κληρώσεις. Σε ισοπαλία μετράει όποιος ανεβαίνει περισσότερο, μετά ο μικρότερος.<br>
       <b>Η τύχη</b> = δίπλα στο καθαρό φαίνεται τι επιστρέφει κατά μέσο όρο μια στήλη με τόσους αριθμούς, όποιοι κι αν είναι (περίπου 0,35€ στα 0,50€).
     </div>
   </div>
 
-  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v85 · 28/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a></footer>
+  <footer><b>ΟΧΤΑΡΑΣ &amp; ΠΕΤΡΟΠΟΥΛΟΣ</b> · Allwyn πρακτορείο · Πάτρα · έκδοση v86 · 28/11/2026 · <a href="index.html">🏠 Αρχική</a> · <a href="general.html">🗂️ General</a></footer>
 </div>
 <script>
 (function(){
@@ -124,6 +125,10 @@ var API='https://api.opap.gr/draws/v3.0/1100';
 /* οι 45 αριθμοί σε πίνακα 9 × 5 */
 var S45=[27,28,30,31,33,34,35,36,37,40,41,44,45,46,47,48,49,50,51,53,54,55,56,57,58,59,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79];
 var IN45={}; S45.forEach(function(n){ IN45[n]=1; });
+/* οι 40: οι 45 χωρίς το 40, 44, 67, 69, 77· σε όλο το ιστορικό μόνο 2 κληρώσεις έφεραν λιγότερους από 3 */
+var S40=[27,28,30,31,33,34,35,36,37,41,45,46,47,48,49,50,51,53,54,55,56,57,58,59,61,62,63,64,65,66,68,70,71,72,73,74,75,76,78,79];
+var IN40={}; S40.forEach(function(n){ IN40[n]=1; });
+function isOdd(n){ return n%2===1; } function isLeft(n){ var u=n%10; return u>=1&&u<=5; }
 
 /* κέρδη για στήλη 0,50€ (ίδιος πίνακας με την Εννιάδα 10/90) */
 var PAYS={1:{1:1.25},2:{1:0.5,2:2.5},3:{2:1.25,3:12.5},4:{2:0.5,3:2,4:50},5:{3:1,4:10,5:225},6:{3:0.5,4:3.5,5:25,6:800},7:{3:0.5,4:1.5,5:10,6:50,7:2500},8:{4:1,5:5,6:25,7:500,8:7500},9:{4:0.5,5:2.5,6:12.5,7:100,8:2000,9:20000},10:{0:1,5:1,6:10,7:40,8:250,9:5000,10:50000},11:{0:1,5:0.5,6:5,7:25,8:125,9:750,10:7500,11:250000},12:{0:2,6:2.5,7:12.5,8:75,9:500,10:1250,11:12500,12:500000}};
@@ -164,58 +169,66 @@ function ensurePrev(id){ var need=[]; for(var i=id-HW;i<id;i++) if(!NUMS[i]){ ne
 
 /* ---------- καυτοί και ανερχόμενοι, μόνο μέσα στους 45 ---------- */
 function statsAt(id){ var cnt={}, rec={}, have=0, half=Math.floor(HW/2);
-  S45.forEach(function(n){ cnt[n]=0; rec[n]=0; });
-  for(var i=id-HW;i<id;i++){ var d=NUMS[i]; if(!d) continue; have++; d.forEach(function(n){ if(IN45[n]){ cnt[n]++; if(i>=id-half) rec[n]++; } }); }
+  S40.forEach(function(n){ cnt[n]=0; rec[n]=0; });
+  for(var i=id-HW;i<id;i++){ var d=NUMS[i]; if(!d) continue; have++; d.forEach(function(n){ if(IN40[n]){ cnt[n]++; if(i>=id-half) rec[n]++; } }); }
   return {cnt:cnt,rec:rec,have:have,half:half}; }
 function predict(s){ var st=statsAt(s); if(st.have<Math.min(HW,15)) return null;
   var c=st.cnt, r=st.rec, trend=function(n){ return 2*r[n]-c[n]; };
-  var byHot=S45.slice().sort(function(a,b){ return c[b]-c[a]||trend(b)-trend(a)||a-b; });
+  /* μονά/ζυγά και αριστερά/δεξιά: η αναλογία ανάμεσα στους αριθμούς των 40 που βγήκαν στις τελευταίες κληρώσεις */
+  var tot=0, odd=0, left=0; S40.forEach(function(n){ tot+=c[n]; if(isOdd(n)) odd+=c[n]; if(isLeft(n)) left+=c[n]; });
+  var fOdd=tot?odd/tot:0.5, fLeft=tot?left/tot:0.5, tOdd=Math.round(K*fOdd), tLeft=Math.round(K*fLeft);
+  var byHot=S40.slice().sort(function(a,b){ return c[b]-c[a]||trend(b)-trend(a)||a-b; });
   var nh=Math.min(K,K>=6?2:1), hot=byHot.slice(0,nh), used={}; hot.forEach(function(n){ used[n]=1; });
-  var rising=S45.filter(function(n){ return !used[n]&&trend(n)>0; }).sort(function(a,b){ return trend(b)-trend(a)||c[b]-c[a]||a-b; });
-  var rest=rising.slice(0,K-nh); rest.forEach(function(n){ used[n]=1; });
-  if(hot.length+rest.length<K) byHot.forEach(function(n){ if(!used[n]&&hot.length+rest.length<K){ rest.push(n); used[n]=1; } });
-  return {hot:hot, up:rest, c:hot.concat(rest).sort(function(a,b){return a-b;}), st:st}; }
+  var pool=S40.filter(function(n){ return !used[n]; }).sort(function(a,b){ var ta=trend(a)>0?1:0, tb=trend(b)>0?1:0; return tb-ta||trend(b)-trend(a)||c[b]-c[a]||a-b; });
+  var pick=hot.slice(), rest=[];
+  while(pick.length<K&&pool.length){
+    var o=pick.filter(isOdd).length, l=pick.filter(isLeft).length, left_=K-pick.length;
+    var needO=tOdd-o, needE=(K-tOdd)-(pick.length-o), needL=tLeft-l, needR=(K-tLeft)-(pick.length-l), best=-1, bs=-1e9;
+    for(var j=0;j<pool.length;j++){ var n=pool[j], sc=-j*0.01;
+      sc+= isOdd(n)?(needO>0?1:-1):(needE>0?1:-1); sc+= isLeft(n)?(needL>0?1:-1):(needR>0?1:-1);
+      if(sc>bs){ bs=sc; best=j; } }
+    var nn=pool.splice(best,1)[0]; pick.push(nn); rest.push(nn); }
+  var hotAll=S40.filter(function(n){ return c[n]>=Math.ceil(HW*0.4); }), upAll=S40.filter(function(n){ return trend(n)>0; }), coldAll=S40.filter(function(n){ return c[n]<=Math.floor(HW*0.1); });
+  hot.forEach(function(n){ if(hotAll.indexOf(n)<0) hotAll.push(n); });
+  var cc=pick.slice().sort(function(a,b){return a-b;});
+  return {hot:hot, up:rest, c:cc, st:st, hotAll:hotAll, upAll:upAll, coldAll:coldAll, fOdd:fOdd, fLeft:fLeft,
+          odd:cc.filter(isOdd).length, left:cc.filter(isLeft).length}; }
 function ticketStart(id){ var ad=athDate(TIMES[id]), ids=dayIds(ad), first=ids[0]; return first+Math.floor((id-first)/NK)*NK; }
 function hits(p,d){ return d?p.c.filter(function(n){ return d.indexOf(n)>=0; }).length:null; }
 
 /* ---------- εμφάνιση ---------- */
-function board(p,dr){
-  var h='<div class="grid" aria-label="Οι 45 αριθμοί">', hs={}, us={};
-  if(p){ p.hot.forEach(function(n){ hs[n]=1; }); p.up.forEach(function(n){ us[n]=1; }); }
-  S45.forEach(function(n){ var cl=[]; if(p&&p.c.indexOf(n)>=0) cl.push('in'); if(dr&&dr.indexOf(n)>=0) cl.push('w'); if(hs[n]) cl.push('hot'); else if(us[n]) cl.push('up');
+function board45(dr){
+  var h='<div class="grid" aria-label="Οι 45 αριθμοί">';
+  S45.forEach(function(n){ h+='<i class="'+(dr&&dr.indexOf(n)>=0?'w':'')+'">'+n+'</i>'; });
+  return h+'</div>';
+}
+function board40(p,dr){
+  var h='<div class="grid g8" aria-label="Οι 40 αριθμοί">', hs={}, us={}, cs={};
+  if(p){ p.hotAll.forEach(function(n){ hs[n]=1; }); p.upAll.forEach(function(n){ us[n]=1; }); p.coldAll.forEach(function(n){ cs[n]=1; }); }
+  S40.forEach(function(n){ var cl=[]; if(p&&p.c.indexOf(n)>=0) cl.push('in'); if(dr&&dr.indexOf(n)>=0) cl.push('w'); if(hs[n]) cl.push('hot'); else if(cs[n]) cl.push('cold'); else if(us[n]) cl.push('up');
     h+='<i class="'+cl.join(' ')+'">'+n+'</i>'; });
   return h+'</div>';
 }
-
-/* ---------- οι 40: από τους 41 έφυγε και το 44· σε όλο το ιστορικό μόνο 2 κληρώσεις έφεραν λιγότερους από 3 ---------- */
-var S40=[27,28,30,31,33,34,35,36,37,41,45,46,47,48,49,50,51,53,54,55,56,57,58,59,61,62,63,64,65,66,68,70,71,72,73,74,75,76,78,79];
-var IN40={}; S40.forEach(function(n){ IN40[n]=1; });
-function show40(id){ var d=NUMS[id];
-  var h='<h2>3️⃣ Οι 40 (τουλάχιστον 3 σχεδόν σε κάθε κλήρωση)</h2><div class="muted">Οι 41 χωρίς το 44. Σε όλες τις 651.223 κληρώσεις του ιστορικού έβγαλαν τουλάχιστον 3, εκτός από 2 κληρώσεις που έβγαλαν 2 (20/04/2023 και 14/04/2024). Έξω από τους 45 μένουν και το 40, το 67, το 69 και το 77.</div><div class="grid g8">';
-  S40.forEach(function(n){ h+='<i class="'+(d&&d.indexOf(n)>=0?'w':'')+'">'+n+'</i>'; });
-  h+='</div>';
-  if(d){ var k=d.filter(function(n){ return IN40[n]; }).length; h+='<div class="verdict '+(k>=3?'ok':'no')+'">'+k+' από τους 40'+(k>=3?' ✓':' ✗')+'</div>';
-    var ids=dayIds(athDate(TIMES[id])).filter(function(i){ return NUMS[i]; }), low=0, mn=99, sum=0;
-    ids.forEach(function(i){ var c=NUMS[i].filter(function(n){ return IN40[n]; }).length; if(c<3) low++; if(c<mn) mn=c; sum+=c; });
-    h+='<div class="muted">Σήμερα: '+ids.length+' κληρώσεις · μέσος όρος '+(sum/ids.length).toFixed(1).replace('.',',')+' · ελάχιστο '+mn+' · κάτω από 3: <b class="'+(low?'no':'ok')+'">'+low+'</b></div>'; }
-  else h+='<div class="muted">Η κλήρωση δεν έχει γίνει ακόμα.</div>';
-  h+='<div class="muted" style="margin-top:6px">Βγαίνουν κατά μέσο όρο 10 από τους 40, όσο και από οποιουσδήποτε 40 αριθμούς. Στο μέλλον αναμένεται να φέρουν λιγότερους από 3 περίπου 2–3 φορές τον χρόνο.</div>';
-  $('c40').innerHTML=h; }
+function pct(x){ return Math.round(x*100)+'%'; }
 function show(id){
-  CUR=id; $('nId').value=id; show40(id);
+  CUR=id; $('nId').value=id;
   var s=ticketStart(id), p=predict(s), dr=NUMS[id]||null, t=TIMES[id], k0=id-s+1;
-  var in45=dr?dr.filter(function(n){ return IN45[n]; }):null;
-  var h='<div class="big">Κλήρωση #'+id+'</div><div class="muted">'+(t?fmtDay(t)+' · '+hm(t):'')+(dr?' · βγήκαν <b>'+in45.length+'</b> από τους 45':' · <b style="color:var(--gold)">δεν έχει γίνει ακόμα</b>')+'</div>';
-  if(!p){ $('view').innerHTML=h+board(null,dr)+'<div class="muted">Δεν υπάρχουν αρκετές προηγούμενες κληρώσεις.</div>'; return; }
+  var in45=dr?dr.filter(function(n){ return IN45[n]; }):null, in40=dr?dr.filter(function(n){ return IN40[n]; }):null;
+  var head='<div class="big">Κλήρωση #'+id+'</div><div class="muted">'+(t?fmtDay(t)+' · '+hm(t):'')+(dr?'':' · <b style="color:var(--gold)">δεν έχει γίνει ακόμα</b>')+'</div>';
+  $('view').innerHTML=head+'<div class="muted" style="margin-top:6px">4️⃣ Οι 45'+(dr?' · βγήκαν <b>'+in45.length+'</b>':'')+'</div>'+board45(dr);
+  var h='<h2>3️⃣ Οι 40 · ενδείξεις και πρόβλεψη</h2><div class="muted">Οι 45 χωρίς το 40, 44, 67, 69, 77. Σε όλο το ιστορικό έβγαλαν τουλάχιστον 3 σε κάθε κλήρωση εκτός από 2 (20/04/2023, 14/04/2024).'+(dr?' Τώρα βγήκαν <b>'+in40.length+'</b> από τους 40.':'')+'</div>';
+  if(!p){ $('c40').innerHTML=h+board40(null,dr)+'<div class="muted">Δεν υπάρχουν αρκετές προηγούμενες κληρώσεις.</div>'; return; }
   var x=hits(p,dr);
-  h+=board(p,dr);
-  h+='<div class="key"><span><i style="background:var(--yel)"></i>βγήκε</span><span><i style="background:#3a3410;box-shadow:inset 0 0 0 2px var(--gold)"></i>η πρόβλεψη</span><span><i style="background:var(--red);border-radius:50%"></i>καυτός</span><span><b style="color:var(--tq)">↑</b> τείνει να γίνει καυτός</span></div>';
+  h+=board40(p,dr);
+  h+='<div class="key"><span><i style="background:var(--yel)"></i>βγήκε</span><span><i style="background:#3a3410;box-shadow:inset 0 0 0 2px var(--gold)"></i>πρόβλεψη</span><span><i style="background:var(--red);border-radius:50%"></i>καυτός</span><span><b style="color:var(--tq)">↑</b> τείνει</span><span>❄ κρύος</span></div>';
   h+='<div style="margin-top:8px">Στήλη '+K+(K===1?' αριθμού':' αριθμών')+': <span class="nums">'+p.c.join(' ')+'</span> <span class="muted">· καυτοί '+p.hot.join(', ')+'</span></div>';
+  h+='<div class="muted">Μονά/ζυγά '+p.odd+'/'+(K-p.odd)+' (τελευταίες: '+pct(p.fOdd)+' μονά) · αριστερά/δεξιά '+p.left+'/'+(K-p.left)+' (τελευταίες: '+pct(p.fLeft)+' αριστερά)</div>';
   if(dr) h+='<div class="verdict '+(good(K,x)?'ok':'')+'">'+x+'/'+K+(pay(K,x)?' · '+eur(pay(K,x)):'')+'</div>';
   else h+='<div class="verdict" style="color:var(--gold)">Παίζεται τώρα</div>';
   if(NK>1){ var rows=[],won=0; for(var i=s;i<s+NK;i++){ var d=NUMS[i]; if(!d) continue; var q=hits(p,d); won+=pay(K,q); rows.push('<span class="chip'+(i===id?' cur':'')+(good(K,q)?' good':'')+'" data-id="'+i+'">'+(TIMES[i]?hm(TIMES[i]):'#'+i)+'<br><b>'+q+'</b></span>'); }
     h+='<div class="muted">🎟️ Δελτίο '+NK+' κληρώσεων από την #'+s+(TIMES[s]?' ('+hm(TIMES[s])+')':'')+' · αυτή είναι η <b>'+k0+'η από '+NK+'</b> · παίχτηκαν '+rows.length+' ('+eur(rows.length*0.5)+') · κέρδη '+eur(won)+'</div><div class="chips">'+rows.join('')+'</div>'; }
-  $('view').innerHTML=h;
+  h+='<div class="muted" style="margin-top:8px">Έλεγχος σε 200.000 κληρώσεις: στην επόμενη κλήρωση βγήκαν οι καυτοί 24,9%, όσοι τείνουν 25,1%, οι κρύοι 25,1%, οι γείτονες καυτών 25,1% · η τύχη δίνει 25%.</div>';
+  $('c40').innerHTML=h;
 }
 function renderDay(ad){
   var ids=dayIds(ad).filter(function(i){ return NUMS[i]; });
